@@ -54,3 +54,14 @@ def patch_specific_user(passenger_id: int, passenger: schemas.PatchPassenger, db
     db.commit()
     db.refresh(passenger_db)
     return passenger_db
+
+@app.get('/passengers/{passenger_id}')
+def get_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> schemas.Passenger:
+    passenger_db = db.query(models.Passenger).filter(models.Passenger.id == passenger_id).first()
+    if not passenger_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Passenger not found."
+        )
+    
+    return passenger_db
