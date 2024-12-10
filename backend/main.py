@@ -65,3 +65,16 @@ def get_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> 
         )
     
     return passenger_db
+
+@app.delete('/passengers/{passenger_id}')
+def delete_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> schemas.Passenger:
+    passenger_db = db.query(models.Passenger).filter(models.Passenger.id == passenger_id).first()
+    if not passenger_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Passenger not found."
+        )
+        
+    db.delete(passenger_db)
+    db.commit()
+    return passenger_db
