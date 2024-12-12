@@ -78,3 +78,41 @@ def delete_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) 
     db.delete(passenger_db)
     db.commit()
     return passenger_db
+
+
+@app.post('/drivers')
+def create_driver(driver: schemas.Driver, db: Session = Depends(get_db)) -> schemas.Driver:
+    existing_driver = db.query(models.Driver).filter(models.Driver.license_number == driver.license_number).first()
+    if existing_driver:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="License number already exists."
+        )
+    
+    new_driver = models.Driver(
+        name=driver.name,
+        lastname=driver.lastname,
+        phone_number=driver.phone_number,
+        birth_date=driver.birth_date,
+        license_number =driver.license_number,
+        experience_years=driver.experience_years
+    )
+
+    db.add(new_driver)
+    
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurrred while creating the driver."
+        )
+    
+    db.refresh(new_driver)
+    return new_driver
+
+@app.get('/drivers')
+def get_all_drivers(db: Session = Depends(get_db)) -> list[schemas.Driver]:
+    drivers = db.query(models.Driver).all()
+    return drivers
