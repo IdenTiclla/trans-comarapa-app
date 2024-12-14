@@ -147,3 +147,16 @@ def patch_specific_driver(driver: schemas.PatchDriver, driver_id: int, db: Sessi
     db.refresh(driver_db)
 
     return driver_db
+
+
+@app.delete('/drivers/{driver_id}')
+def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
+    driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+    if not driver:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Driver not found."
+        )
+    db.delete(driver)
+    db.commit()
+    return driver
