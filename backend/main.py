@@ -116,3 +116,27 @@ def create_driver(driver: schemas.Driver, db: Session = Depends(get_db)) -> sche
 def get_all_drivers(db: Session = Depends(get_db)) -> list[schemas.Driver]:
     drivers = db.query(models.Driver).all()
     return drivers
+
+@app.patch('/drivers/{driver_id}')
+def patch_specific_driver(driver: schemas.PatchDriver, driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
+    driver_db = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+    if not driver_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Driver not found."
+        )
+    
+    update_data = driver.dict(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please enter some driver's information."
+        )
+
+    for field, value in update_data.items():
+        setattr(driver_db, field, value)
+
+    db.commit()
+    db.refresh(driver_db)
+
+    return driver_db
