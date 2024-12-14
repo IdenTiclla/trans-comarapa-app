@@ -14,8 +14,16 @@ def index():
 
 
 
-@app.post('/passengers')
-def create_passenger(passenger: schemas.Passenger, db: Session = Depends(get_db)) -> schemas.Passenger:
+@app.post(
+    '/passengers',
+    tags=["Passengers"],
+    response_model=schemas.Passenger,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a single passenger.",
+    description="This endpoint is fo creating the passenger who will use the service."
+)
+
+def create_passenger(passenger: schemas.Passenger, db: Session = Depends(get_db)):
     new_passenger = models.Passenger(
         name=passenger.name,
         lastname=passenger.lastname,
@@ -28,13 +36,26 @@ def create_passenger(passenger: schemas.Passenger, db: Session = Depends(get_db)
     db.refresh(new_passenger)
     return new_passenger
 
-@app.get('/passengers')
-def get_all_passengers(db: Session = Depends(get_db)) -> list[schemas.Passenger]:
+@app.get('/passengers',
+    tags=["Passengers"],
+    response_model=list[schemas.Passenger],
+    status_code=status.HTTP_200_OK,
+    summary="Get all the passengers.",
+    description="Endpoint for getting all the passengers in database."
+    
+)
+def get_all_passengers(db: Session = Depends(get_db)):
     passengers = db.query(models.Passenger).all()
     return passengers
 
-@app.patch('/passengers/{passenger_id}')
-def patch_specific_user(passenger_id: int, passenger: schemas.PatchPassenger, db: Session = Depends(get_db)) -> schemas.Passenger:
+@app.patch('/passengers/{passenger_id}'
+    ,tags=["Passengers"],
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.Passenger,
+    summary="Patch a single passenger.",
+    description="This endpoint is for patching the passengers information."
+)
+def patch_specific_passenger(passenger_id: int, passenger: schemas.PatchPassenger, db: Session = Depends(get_db)):
     passenger_db = db.query(models.Passenger).filter(models.Passenger.id == passenger_id).first()
     if passenger_db is None:
         raise HTTPException(
@@ -55,8 +76,14 @@ def patch_specific_user(passenger_id: int, passenger: schemas.PatchPassenger, db
     db.refresh(passenger_db)
     return passenger_db
 
-@app.get('/passengers/{passenger_id}')
-def get_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> schemas.Passenger:
+@app.get('/passengers/{passenger_id}',
+    tags=["Passengers"],
+    response_model=schemas.Passenger,
+    status_code=status.HTTP_200_OK,
+    summary="Get a specific passenger by using id.",
+    description="Get a specific passenger by using id."
+)
+def get_specific_passenger(passenger_id: int, db: Session = Depends(get_db)):
     passenger_db = db.query(models.Passenger).filter(models.Passenger.id == passenger_id).first()
     if not passenger_db:
         raise HTTPException(
@@ -66,8 +93,14 @@ def get_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> 
     
     return passenger_db
 
-@app.delete('/passengers/{passenger_id}')
-def delete_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) -> schemas.Passenger:
+@app.delete('/passengers/{passenger_id}',
+    tags=["Passengers"],
+    response_model=schemas.Passenger, 
+    status_code=status.HTTP_200_OK,
+    summary="Delete a specific passenger.",
+    description="Enpoint for deleting specific passenger by using the id of the passenger."
+)
+def delete_specific_passenger(passenger_id: int, db: Session = Depends(get_db)):
     passenger_db = db.query(models.Passenger).filter(models.Passenger.id == passenger_id).first()
     if not passenger_db:
         raise HTTPException(
@@ -80,7 +113,7 @@ def delete_specific_passenger(passenger_id: int, db: Session = Depends(get_db)) 
     return passenger_db
 
 
-@app.post('/drivers')
+@app.post('/drivers', tags=["Drivers"])
 def create_driver(driver: schemas.Driver, db: Session = Depends(get_db)) -> schemas.Driver:
     existing_driver = db.query(models.Driver).filter(models.Driver.license_number == driver.license_number).first()
     if existing_driver:
@@ -112,12 +145,12 @@ def create_driver(driver: schemas.Driver, db: Session = Depends(get_db)) -> sche
     db.refresh(new_driver)
     return new_driver
 
-@app.get('/drivers')
+@app.get('/drivers', tags=["Drivers"])
 def get_all_drivers(db: Session = Depends(get_db)) -> list[schemas.Driver]:
     drivers = db.query(models.Driver).all()
     return drivers
 
-@app.get('/drivers/{driver_id}')
+@app.get('/drivers/{driver_id}', tags=["Drivers"])
 def get_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
     driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
     if not driver:
@@ -127,7 +160,7 @@ def get_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> schema
         )
     return driver
 
-@app.patch('/drivers/{driver_id}')
+@app.patch('/drivers/{driver_id}', tags=["Drivers"])
 def patch_specific_driver(driver: schemas.PatchDriver, driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
     driver_db = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
     driver_with_license = db.query(models.Driver).filter(models.Driver.license_number == driver.license_number).first()
@@ -159,7 +192,7 @@ def patch_specific_driver(driver: schemas.PatchDriver, driver_id: int, db: Sessi
     return driver_db
 
 
-@app.delete('/drivers/{driver_id}')
+@app.delete('/drivers/{driver_id}', tags=["Drivers"])
 def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
     driver = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
     if not driver:
