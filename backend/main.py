@@ -120,6 +120,13 @@ def get_all_drivers(db: Session = Depends(get_db)) -> list[schemas.Driver]:
 @app.patch('/drivers/{driver_id}')
 def patch_specific_driver(driver: schemas.PatchDriver, driver_id: int, db: Session = Depends(get_db)) -> schemas.Driver:
     driver_db = db.query(models.Driver).filter(models.Driver.id == driver_id).first()
+    driver_with_license = db.query(models.Driver).filter(models.Driver.license_number == driver.license_number).first()
+    
+    if driver_with_license and driver_db != driver_with_license:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="License number already exists."
+        )
     if not driver_db:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
