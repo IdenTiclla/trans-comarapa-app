@@ -214,3 +214,34 @@ def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> sch
 def get_all_busses(db: Session = Depends(get_db)):
     buses = db.query(models.Bus).all()
     return buses
+
+@app.post('/buses',
+    tags=['buses'],
+    response_model=schemas.Bus,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new bus.",
+    description="This endpoint is used for creating a new bus."
+)
+def create_new_bus(bus: schemas.Bus, db: Session = Depends(get_db)):
+    bus_with_existing_license_plate = db.query(models.Bus).filter(models.Bus.license_plate == bus.license_plate).first()
+    if bus_with_existing_license_plate:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="License plate is already taken."
+        )
+    new_bus = models.Bus(
+        license_plate=bus.license_plate,
+        capacity=bus.capacity,
+        model=bus.model
+    )
+    db.add(new_bus)
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while creating a new Bus."
+        )
+    db.refresh(new_bus)
+    return bus
