@@ -21,3 +21,12 @@ class Driver(Base):
     birth_date = Column(Date())
     license_number = Column(String(8), unique=True)
     experience_years = Column(Integer)
+
+
+class Bus(Base):
+    __tablename__ = "buses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    license_plate = Column(String(10), unique=True)
+    capacity = Column(Integer)
+    model = Column(String(100))

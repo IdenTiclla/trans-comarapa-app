@@ -203,3 +203,14 @@ def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> sch
     db.delete(driver)
     db.commit()
     return driver
+
+@app.get('/buses',
+    tags=['buses'],
+    response_model=list[schemas.Bus],
+    status_code=status.HTTP_200_OK,
+    summary="Get all Buses.",
+    description="This endpoint is used to see all buses infomation."
+)
+def get_all_busses(db: Session = Depends(get_db)):
+    buses = db.query(models.Bus).all()
+    return buses
