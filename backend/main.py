@@ -205,7 +205,7 @@ def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> sch
     return driver
 
 @app.get('/buses',
-    tags=['buses'],
+    tags=['Buses'],
     response_model=list[schemas.Bus],
     status_code=status.HTTP_200_OK,
     summary="Get all Buses.",
@@ -216,7 +216,7 @@ def get_all_busses(db: Session = Depends(get_db)):
     return buses
 
 @app.post('/buses',
-    tags=['buses'],
+    tags=['Buses'],
     response_model=schemas.Bus,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new bus.",
@@ -244,4 +244,20 @@ def create_new_bus(bus: schemas.Bus, db: Session = Depends(get_db)):
             detail="An error occurred while creating a new Bus."
         )
     db.refresh(new_bus)
+    return bus
+
+@app.delete('/buses/{bus_id}',
+    response_model=schemas.Bus,
+    tags=['Buses']
+)
+def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
+    bus = db.query(models.Bus).filter(models.Bus.id == bus_id).first()
+    if not bus:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bus not found."
+        )
+
+    db.delete(bus)
+    db.commit()
     return bus
