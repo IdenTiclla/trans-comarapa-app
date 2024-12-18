@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from ..database import Base
-
+from ..db.base import Base
 class Bus(Base):
     __tablename__ = "buses"
 

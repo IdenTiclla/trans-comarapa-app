@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from backend.schemas.passenger import PassengerCreate, PassengerPatch
 from backend.models.passenger import Passenger
-from backend.database import get_db
+from backend.db.session import get_db
 
 router = APIRouter(
     prefix='/passengers',

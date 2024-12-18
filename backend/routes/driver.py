@@ -2,8 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from backend.schemas.driver import DriverCreate, DriverPatch
 from backend.models.driver import Driver
-from backend.database import get_db
-
+from backend.db.session import get_db
 router = APIRouter(
     prefix='/drivers',
     tags=['Drivers']

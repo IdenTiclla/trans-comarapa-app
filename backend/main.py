@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from .routes import passenger, driver, bus
-from backend.database import Base, engine
-
+from backend.db.base import Base
+from backend.db.session import engine
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
