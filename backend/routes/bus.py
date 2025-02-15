@@ -9,8 +9,7 @@ router = APIRouter(
     prefix='/busses',
     tags=['Busses']
 )
-@router.get('/buses',
-    tags=['Buses'],
+@router.get('',
     response_model=list[BusCreate],
     status_code=status.HTTP_200_OK,
     summary="Get all Buses.",
@@ -20,8 +19,7 @@ def get_all_busses(db: Session = Depends(get_db)):
     buses = db.query(Bus).all()
     return buses
 
-@router.post('/buses',
-    tags=['Buses'],
+@router.post('',
     response_model=BusCreate,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new bus.",
@@ -49,11 +47,10 @@ def create_new_bus(bus: BusCreate, db: Session = Depends(get_db)):
             detail="An error occurred while creating a new Bus."
         )
     db.refresh(new_bus)
-    return bus
+    return new_bus
 
-@router.delete('/buses/{bus_id}',
+@router.delete('/{bus_id}',
     response_model=BusCreate,
-    tags=['Buses']
 )
 def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
     bus = db.query(Bus).filter(Bus.id == bus_id).first()
