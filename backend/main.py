@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routes import passenger, driver, bus
+from .routes import passenger, driver, bus, assistant
 from backend.db.base import Base
 from backend.db.session import engine
 from dotenv import load_dotenv
@@ -20,6 +20,7 @@ app = FastAPI(
 app.include_router(passenger.router)
 app.include_router(driver.router)
 app.include_router(bus.router)
+app.include_router(assistant.router)
 
 @app.get('/')
 def index():
