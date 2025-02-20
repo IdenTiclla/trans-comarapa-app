@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from backend.models.assistant import Assistant
-from backend.schemas.assistant import AssistantCreate
+from backend.schemas.assistant import AssistantCreate, Assistant as AssistantSchema
 from sqlalchemy.orm import Session
 from backend.db.session import get_db
 
@@ -12,7 +12,7 @@ router = APIRouter(
 
 @router.get(
     '',
-    response_model=list[AssistantCreate],
+    response_model=list[AssistantSchema],
     status_code=status.HTTP_200_OK,
     summary="Get all the assistants.",
     description="This endpoint is used to see all the assistants on the platform."
@@ -23,7 +23,7 @@ def get_all_assistants(db: Session = Depends(get_db)):
 
 @router.post(
     '',
-    response_model=AssistantCreate,
+    response_model=AssistantSchema,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new assistant.",
     description="This endpoint is used to create a new trip assistant."

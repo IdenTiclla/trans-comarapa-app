@@ -1,2 +1,23 @@
+# Python bytecode files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
 .env
+*.env
+
+# Logs
+*.log
+
+# Database files
+*.sqlite3
+
+# Virtual environment folders
+venv/
+# Additional ignores:
+.vscode/
+.idea/
+dist/
+build/
+*.egg-info/

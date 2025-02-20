@@ -10,5 +10,4 @@ class Assistant(Base):
     first_name = Column(String(100))  # example field for assistant's name
     phone_number = Column(String(8))
 
-    # Optionally, add a back-reference relationship to Trip if necessary:
-    # trips = relationship("Trip", back_populates="assistant")
+    trips = relationship("Trip", back_populates="assistant")
