@@ -1,15 +1,13 @@
-# Sistema de Gestión de Transporte - Trans Comarapa
+# Backend - Trans Comarapa
 
-API REST para la gestión de boletos, paquetes y viajes de una empresa de transporte. Desarrollada con FastAPI y SQLAlchemy.
+API REST para la gestión de boletos, paquetes y viajes desarrollada con FastAPI.
 
-## Características
+## Tecnologías Principales
 
-- Gestión de pasajeros
-- Gestión de conductores
-- Gestión de buses
-- Gestión de asistentes de viaje
-- Gestión de viajes
-- Base de datos relacional con SQLAlchemy
+- FastAPI: Framework web moderno y rápido
+- SQLAlchemy: ORM para la base de datos
+- Pydantic: Validación de datos
+- UV: Gestor de paquetes moderno para Python
 
 ## Requisitos previos
 
@@ -17,123 +15,136 @@ API REST para la gestión de boletos, paquetes y viajes de una empresa de transp
 - uv (gestor de paquetes moderno para Python)
 - Base de datos compatible con SQLAlchemy (por defecto SQLite)
 
-## Instalación
+## Configuración del Entorno de Desarrollo
 
-1. Clonar el repositorio:
-```bash
-git clone https://github.com/[tu-usuario]/trans-comarapa-app.git
-cd trans-comarapa-app
-```
-
-2. Instalar uv (si aún no lo tienes):
-```bash
-python -m pip install uv
-```
-
-3. Crear y activar un entorno virtual con uv:
-```bash
-uv venv
-source .venv/bin/activate  # En Linux/Mac
-# o
-.venv\Scripts\activate  # En Windows
-```
-
-4. Instalar dependencias con uv:
+1. Asegúrate de estar en el directorio backend:
 ```bash
 cd backend
+```
+
+2. Crear entorno virtual con uv especificando la versión de Python:
+```bash
+uv venv --python=3.12.0
+```
+
+3. Activar el entorno virtual:
+```bash
+source ../.venv/bin/activate  # En Linux/Mac
+# o
+..\.venv\Scripts\activate     # En Windows
+```
+
+4. Instalar dependencias:
+```bash
 uv pip install -r requirements.txt
 ```
 
 5. Configurar variables de entorno:
-Crear un archivo `.env` en la carpeta `backend` con las siguientes variables:
+Crear un archivo `.env` con:
 ```env
+DATABASE_URL="mysql+pymysql://root:somepasswordhere!@localhost:3306/dbname"
+SECRET_KEY="your-secret-key"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 DEBUG=True
-DATABASE_URL=sqlite:///./sql_app.db  # O tu URL de base de datos
 ```
-
-## Ejecución
-
-Para ejecutar el servidor de desarrollo:
-
-```bash
-cd backend
-uvicorn main:app --reload
-fastapi dev main.py
-```
-
-El servidor estará disponible en `http://localhost:8000`
-
-## Documentación de la API
-
-Una vez que el servidor esté corriendo, puedes acceder a:
-
-- Documentación Swagger UI: `http://localhost:8000/docs`
-- Documentación ReDoc: `http://localhost:8000/redoc`
 
 ## Estructura del Proyecto
 
 ```
-backend/
+.
 ├── __init__.py
 ├── main.py                 # Punto de entrada de la aplicación
 ├── requirements.txt        # Dependencias del proyecto
 ├── db/                     # Configuración de la base de datos
+│   ├── __init__.py
+│   ├── base.py            # Configuración base de SQLAlchemy
+│   └── session.py         # Gestión de sesiones de DB
 ├── models/                 # Modelos SQLAlchemy
-├── routes/                 # Rutas de la API
-└── schemas/               # Esquemas Pydantic para validación
+│   ├── assistant.py       # Modelo de asistentes
+│   ├── bus.py            # Modelo de buses
+│   ├── driver.py         # Modelo de conductores
+│   ├── passenger.py      # Modelo de pasajeros
+│   └── trip.py           # Modelo de viajes
+├── routes/                # Rutas de la API
+│   ├── assistant.py      # Endpoints de asistentes
+│   ├── bus.py           # Endpoints de buses
+│   ├── driver.py        # Endpoints de conductores
+│   ├── passenger.py     # Endpoints de pasajeros
+│   └── trip.py          # Endpoints de viajes
+└── schemas/              # Esquemas Pydantic
+    ├── assistant.py     # Validación de datos de asistentes
+    ├── bus.py          # Validación de datos de buses
+    ├── driver.py       # Validación de datos de conductores
+    ├── passenger.py    # Validación de datos de pasajeros
+    └── trip.py         # Validación de datos de viajes
 ```
 
-## Endpoints principales
+## Ejecución del Servidor
 
-- `/passengers`: Gestión de pasajeros
-- `/drivers`: Gestión de conductores
-- `/busses`: Gestión de buses
-- `/assistants`: Gestión de asistentes
-- `/trips`: Gestión de viajes
+Para desarrollo local:
+```bash
+uvicorn main:app --reload
+```
 
-Cada endpoint soporta operaciones CRUD estándar.
+El servidor estará disponible en `http://localhost:8000`
+
+## API Endpoints
+
+### Pasajeros
+- GET `/passengers`: Listar todos los pasajeros
+- POST `/passengers`: Crear nuevo pasajero
+- GET `/passengers/{id}`: Obtener pasajero específico
+- PATCH `/passengers/{id}`: Actualizar pasajero
+- DELETE `/passengers/{id}`: Eliminar pasajero
+
+### Conductores
+- GET `/drivers`: Listar conductores
+- POST `/drivers`: Crear conductor
+- GET `/drivers/{id}`: Obtener conductor
+- PATCH `/drivers/{id}`: Actualizar conductor
+- DELETE `/drivers/{id}`: Eliminar conductor
+
+### Buses
+- GET `/busses`: Listar buses
+- POST `/busses`: Registrar bus
+- DELETE `/busses/{id}`: Eliminar bus
+
+### Asistentes
+- GET `/assistants`: Listar asistentes
+- POST `/assistants`: Registrar asistente
+
+### Viajes
+- GET `/trips`: Listar viajes
+- POST `/trips`: Crear viaje
 
 ## Desarrollo
 
-### Gestión de dependencias
+### Gestión de Dependencias con UV
 
-Usamos `uv` como gestor de paquetes por su velocidad y eficiencia. Algunos comandos útiles:
-
-- Agregar una nueva dependencia:
+#### Agregar nuevas dependencias
 ```bash
-uv pip install nombre-paquete
-```
-
-- Actualizar requirements.txt después de agregar dependencias:
-```bash
+uv pip install paquete-nuevo
 uv pip freeze > requirements.txt
 ```
 
-- Instalar todas las dependencias en un nuevo ambiente:
+#### Actualizar dependencias
 ```bash
-uv pip install -r requirements.txt
-```
-
-Para contribuir al proyecto:
-
-1. Crear una rama para tu característica:
-```bash
-git checkout -b nombre-caracteristica
-```
-
-2. Instalar dependencias de desarrollo:
-```bash
-uv pip install -r requirements.txt
-```
-
-3. Realizar los cambios y pruebas necesarias
-
-4. Actualizar requirements.txt si agregaste nuevas dependencias:
-```bash
+uv pip install -U paquete-a-actualizar
 uv pip freeze > requirements.txt
 ```
 
-5. Enviar un pull request
+### Buenas Prácticas
+
+1. Mantener las dependencias actualizadas
+2. Seguir las convenciones de código PEP 8
+3. Documentar nuevos endpoints
+4. Escribir tests para nuevas funcionalidades
+5. Validar cambios localmente antes de commit
+
+## Tests
+
+Por implementar
 
 ## Licencia
 
