@@ -34,10 +34,15 @@ source ../.venv/bin/activate  # En Linux/Mac
 ..\.venv\Scripts\activate     # En Windows
 ```
 
-4. Instalar dependencias usando pyproject.toml:
-```bash
-uv pip install .
-```
+4. Instalar dependencias:
+   - Opción 1 (recomendada): Usar uv sync para instalar versiones exactas:
+   ```bash
+   uv sync
+   ```
+   - Opción 2: Instalar con posibles actualizaciones de versiones:
+   ```bash
+   uv pip install .
+   ```
 
 5. Configurar variables de entorno:
 Crear un archivo `.env` con:
@@ -149,6 +154,19 @@ uv pip install .
 3. Documentar nuevos endpoints
 4. Escribir tests para nuevas funcionalidades
 5. Validar cambios localmente antes de commit
+
+## Comandos UV Útiles
+
+UV ofrece varios comandos útiles para gestionar dependencias:
+
+- `uv sync` - Instalar dependencias usando versiones exactas del archivo lock
+- `uv pip install .` - Instalar el proyecto con posibles actualizaciones de versiones
+- `uv pip install -e .` - Instalar en modo desarrollo
+- `uv pip list` - Listar todos los paquetes instalados
+- `uv pip show [paquete]` - Mostrar información detallada de un paquete
+- `uv pip uninstall [paquete]` - Desinstalar un paquete específico
+- `uv pip freeze` - Mostrar todas las dependencias con sus versiones exactas
+- `uv pip install [paquete]` - Instalar un paquete específico
 
 ## Tests
 
