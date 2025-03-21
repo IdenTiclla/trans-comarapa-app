@@ -34,9 +34,9 @@ source ../.venv/bin/activate  # En Linux/Mac
 ..\.venv\Scripts\activate     # En Windows
 ```
 
-4. Instalar dependencias:
+4. Instalar dependencias usando pyproject.toml:
 ```bash
-uv pip install -r requirements.txt
+uv pip install .
 ```
 
 5. Configurar variables de entorno:
@@ -55,7 +55,7 @@ DEBUG=True
 .
 ├── __init__.py
 ├── main.py                 # Punto de entrada de la aplicación
-├── requirements.txt        # Dependencias del proyecto
+├── pyproject.toml         # Configuración del proyecto y dependencias
 ├── db/                     # Configuración de la base de datos
 │   ├── __init__.py
 │   ├── base.py            # Configuración base de SQLAlchemy
@@ -126,18 +126,20 @@ Endpoints principales:
 
 ## Desarrollo
 
-### Gestión de Dependencias con UV
+### Gestión de Dependencias
 
 #### Agregar nuevas dependencias
-```bash
-uv pip install paquete-nuevo
-uv pip freeze > requirements.txt
+Para agregar una nueva dependencia, edita el archivo `pyproject.toml`:
+```toml
+[project]
+dependencies = [
+    "nueva-dependencia>=1.0.0",
+]
 ```
 
-#### Actualizar dependencias
+Luego actualiza el entorno:
 ```bash
-uv pip install -U paquete-a-actualizar
-uv pip freeze > requirements.txt
+uv pip install .
 ```
 
 ### Buenas Prácticas
