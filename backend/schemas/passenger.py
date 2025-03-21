@@ -9,8 +9,7 @@ class PassengerCreate(BaseModel):
     birth_date:  Optional[date]  = Field(None, description="Passenger birth date (YYYY-MM-DD).", example="1998-01-29")
 
     class Config:
-        orm_mode = True
-
+        from_attributes = True
 
 class PassengerPatch(BaseModel):
     name: Optional[str] = Field(None, max_length=100, description='Passenger name.', example="Carlos")
@@ -19,4 +18,4 @@ class PassengerPatch(BaseModel):
     birth_date: Optional[date] = Field(None, description="Passenger birth date (YYYY-MM-DD).", example="1998-01-29")
 
     class Config:
-        orm_mode = True
+        from_attributes = True

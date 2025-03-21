@@ -7,4 +7,4 @@ class BusCreate(BaseModel):
     model: str = Field(..., description="Bus model", example="Nissan")
 
     class Config:
-        orm_mode = True
+        from_attributes = True

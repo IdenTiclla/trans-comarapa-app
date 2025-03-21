@@ -3,7 +3,7 @@ This module defines Pydantic schemas for Trip.
 Includes examples and field descriptions.
 """
 
-from pydantic import BaseModel, Field  # Added Field import
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date
 
@@ -25,4 +25,4 @@ class Trip(TripBase):
     id: int = Field(..., description="Trip identifier", example=1)
 
     class Config:
-        orm_mode = True
+        from_attributes = True

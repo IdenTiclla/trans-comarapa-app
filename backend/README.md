@@ -84,10 +84,16 @@ DEBUG=True
 
 Para desarrollo local:
 ```bash
-uvicorn main:app --reload
+# Desde el directorio raíz del proyecto (trans-comarapa-app)
+uvicorn backend.main:app --reload
 ```
 
 El servidor estará disponible en `http://localhost:8000`
+
+Endpoints principales:
+- Documentación Swagger UI: `http://localhost:8000/docs`
+- Documentación ReDoc: `http://localhost:8000/redoc`
+- API OpenAPI JSON: `http://localhost:8000/openapi.json`
 
 ## API Endpoints
 

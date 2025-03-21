@@ -10,6 +10,11 @@ class AssistantCreate(AssistantBase):
     """
     pass
 
-# schema for reading an assistant
+    class Config:
+        from_attributes = True
+
 class Assistant(AssistantBase):
     id: int = Field(..., description="Identifier for the bus assistant.", example=1)
+
+    class Config:
+        from_attributes = True
