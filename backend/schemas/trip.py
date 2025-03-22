@@ -12,6 +12,7 @@ class TripBase(BaseModel):
     trip_date: date = Field(..., description="Trip date (YYYY-MM-DD)", example="2023-10-01")
     driver_id: int = Field(..., description="Driver identifier", example=1)
     assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
+    bus_id: int = Field(..., description="Bus identifier", example=3)
 
 # Schema for creating a new trip
 class TripCreate(TripBase):

@@ -18,7 +18,8 @@ def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     duplicate_trip = db.query(TripModel).filter(
         TripModel.trip_date == trip.trip_date,
         TripModel.driver_id == trip.driver_id,
-        TripModel.assistant_id == trip.assistant_id
+        TripModel.assistant_id == trip.assistant_id,
+        TripModel.bus_id == trip.bus_id
     ).first()
     if duplicate_trip:
         raise HTTPException(status_code=400, detail="Trip already exists")

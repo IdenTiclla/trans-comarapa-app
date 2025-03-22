@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from backend.models.bus import Bus
-from backend.schemas.bus import BusCreate
+from backend.schemas.bus import BusCreate, Bus as BusSchema
 from sqlalchemy.orm import Session
 from backend.db.session import get_db
 
@@ -10,7 +10,7 @@ router = APIRouter(
     tags=['Busses']
 )
 @router.get('',
-    response_model=list[BusCreate],
+    response_model=list[BusSchema],
     status_code=status.HTTP_200_OK,
     summary="Get all Buses.",
     description="This endpoint is used to see all buses infomation."
@@ -20,7 +20,7 @@ def get_all_busses(db: Session = Depends(get_db)):
     return buses
 
 @router.post('',
-    response_model=BusCreate,
+    response_model=BusSchema,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new bus.",
     description="This endpoint is used for creating a new bus."
@@ -50,7 +50,7 @@ def create_new_bus(bus: BusCreate, db: Session = Depends(get_db)):
     return new_bus
 
 @router.delete('/{bus_id}',
-    response_model=BusCreate,
+    response_model=BusSchema,
 )
 def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
     bus = db.query(Bus).filter(Bus.id == bus_id).first()
