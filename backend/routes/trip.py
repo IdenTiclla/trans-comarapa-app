@@ -14,9 +14,9 @@ def get_trips(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TripSchema, status_code=status.HTTP_201_CREATED)
 def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
-    # Check for duplicate trip based on trip_date, driver_id, and assistant_id
+    # Check for duplicate trip based on trip_datetime, driver_id, and assistant_id
     duplicate_trip = db.query(TripModel).filter(
-        TripModel.trip_date == trip.trip_date,
+        TripModel.trip_datetime == trip.trip_datetime,
         TripModel.driver_id == trip.driver_id,
         TripModel.assistant_id == trip.assistant_id,
         TripModel.bus_id == trip.bus_id

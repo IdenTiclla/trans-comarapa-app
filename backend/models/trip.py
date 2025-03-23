@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Column, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -8,7 +8,7 @@ class Trip(Base):
     __tablename__ = 'trips'
 
     id = Column(Integer, primary_key=True)
-    trip_date = Column(Date, nullable=False)
+    trip_datetime = Column(DateTime, nullable=False)
     
     driver_id = Column(Integer, ForeignKey('drivers.id'))
     driver = relationship("Driver", back_populates="trips")
