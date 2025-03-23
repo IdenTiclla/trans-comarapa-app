@@ -1,0 +1,10 @@
+%% Diagrama de Actividad: Proceso de Compra/Reserva
+flowchart TD
+    A[Cliente selecciona viaje y asiento] --> B[Inicia reserva]
+    B --> C{¿Realiza pago?}
+    C -- Sí --> D[Procesar pago]
+    D --> E[Confirmar reserva y generar Ticket]
+    E --> F[Finalizar proceso]
+    C -- No --> G[Esperar confirmación o caducar reserva]
+    G --> H[Notificar al cliente y liberar asiento]
+    H --> F

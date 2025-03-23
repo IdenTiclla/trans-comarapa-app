@@ -1,0 +1,9 @@
+
+%% Diagrama de Estados: Ticket
+stateDiagram-v2
+    [*] --> Reservado
+    Reservado --> Pagado : Pago confirmado
+    Pagado --> Usado : Ticket validado en viaje
+    Usado --> [*]
+    Reservado --> Cancelado : Reserva cancelada o expirada
+    Cancelado --> [*]

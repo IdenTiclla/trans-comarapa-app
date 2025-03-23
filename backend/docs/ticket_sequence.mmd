@@ -1,0 +1,14 @@
+%% Diagrama de Secuencia: Compra de Boleto
+sequenceDiagram
+    participant Cliente
+    participant Sistema
+    participant Pago
+    participant Reserva
+    
+    Cliente->>Sistema: Selecciona viaje y asiento
+    Sistema->>Reserva: Crea reserva (estado: pendiente)
+    Cliente->>Sistema: Inicia proceso de pago
+    Sistema->>Pago: Procesa pago
+    Pago-->>Sistema: Confirmación de pago
+    Sistema->>Reserva: Actualiza estado a confirmada\n y genera Ticket
+    Sistema->>Cliente: Emite Ticket y confirma compra

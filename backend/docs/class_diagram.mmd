@@ -1,0 +1,114 @@
+classDiagram
+    class Client {
+        - id: UUID
+        - name: String
+        - email: String
+        - phone: String
+    }
+    class Ticket {
+        - id: UUID
+        - client_id: UUID
+        - trip_id: UUID
+        - seat_number: Int
+        - status: String
+        - transaction_id: UUID
+    }
+    class Trip {
+        - id: UUID
+        - bus_id: UUID
+        - route_id: UUID
+        - departure_date: Date
+        - departure_time: Time
+        - duration: Time
+        - driver_id: UUID
+        - assistant_id: UUID
+        - secretary_id: UUID
+    }
+    class Route {
+        - id: UUID
+        - start_location_id: UUID
+        - end_location_id: UUID
+    }
+    class Location {
+        - id: UUID
+        - name: String
+    }
+    class Bus {
+        - id: UUID
+        - plate_number: String
+        - capacity: Int
+    }
+    class SingleDeckBus {
+        - id: UUID
+        - capacity: Int
+    }
+    class DoubleDeckBus {
+        - id: UUID
+        - capacity: Int
+        - lower_deck_capacity: Int
+    }
+    class Reservation {
+        - id: UUID
+        - client_id: UUID
+        - trip_id: UUID
+        - expiration_date: Date
+    }
+    class Package {
+        - id: UUID
+        - sender_id: UUID
+        - recipient_id: UUID
+        - trip_id: UUID
+        - transaction_id: UUID
+    }
+    class Office {
+        - id: UUID
+        - name: String
+        - location_id: UUID
+    }
+    class Secretary {
+        - id: UUID
+        - name: String
+        - office_id: UUID
+    }
+    class Driver {
+        - id: UUID
+        - name: String
+    }
+    class Assistant {
+        - id: UUID
+        - name: String
+    }
+    class PaymentMethod {
+        - id: UUID
+        - type: String
+    }
+    class Transaction {
+        - id: UUID
+        - client_id: UUID
+        - amount: Float
+        - payment_method_id: UUID
+    }
+    Client "1" -- "*" Ticket : purchases
+    Client "1" -- "*" Reservation : reserves
+    Client "1" -- "*" Package : sends/receives
+    Client "1" -- "*" Transaction : makes
+    Ticket "*" -- "1" Trip : belongs to
+    Ticket "1" -- "1" Transaction : paid via
+    Reservation "*" -- "1" Trip : linked to
+    Trip "1" -- "1" Route : follows
+    Trip "1" -- "1" Bus : assigned to
+    Trip "1" -- "1" Driver : driven by
+    Trip "1" -- "0..1" Assistant : assisted by
+    Trip "1" -- "1" Secretary : dispatched by
+    Route "1" -- "1" Location : starts from
+    Route "1" -- "1" Location : ends at
+    Package "*" -- "1" Trip : transported in
+    Package "1" -- "1" Transaction : paid via
+    Secretary "1" -- "*" Ticket : sells
+    Secretary "1" -- "*" Package : handles
+    Secretary "1" -- "*" Trip : dispatches
+    Secretary "1" -- "1" Office : works in
+    Office "1" -- "*" Secretary : employs
+    Transaction "1" -- "1" PaymentMethod : used via
+    Bus <|-- SingleDeckBus
+    Bus <|-- DoubleDeckBus

@@ -1,0 +1,106 @@
+{
+    "entities": {
+      "Client": {
+        "attributes": ["id", "name", "email", "phone"],
+        "relationships": {
+          "has": ["Ticket", "Reservation", "Transaction", "Package"]
+        }
+      },
+      "Secretary": {
+        "attributes": ["id", "name", "office_id"],
+        "relationships": {
+          "works_at": "Office",
+          "manages": ["Ticket", "Package", "Trip"]
+        }
+      },
+      "Driver": {
+        "attributes": ["id", "name", "license_number"],
+        "relationships": {
+          "drives": "Trip"
+        }
+      },
+      "Assistant": {
+        "attributes": ["id", "name"],
+        "relationships": {
+          "assists": "Trip"
+        }
+      },
+      "Bus": {
+        "attributes": ["id", "capacity", "type"],
+        "subclasses": {
+          "SingleDeckBus": {},
+          "DoubleDeckBus": {"additional_attribute": "lower_deck_capacity"}
+        },
+        "relationships": {
+          "assigned_to": "Trip"
+        }
+      },
+      "Trip": {
+        "attributes": ["id", "date", "departure_time", "arrival_time"],
+        "relationships": {
+          "has": ["Ticket", "Package"],
+          "follows": "Route",
+          "operated_by": ["Driver", "Assistant"],
+          "dispatched_by": "Secretary",
+          "uses": "Bus"
+        }
+      },
+      "Route": {
+        "attributes": ["id", "start_location", "end_location"],
+        "relationships": {
+          "includes": "RouteStop"
+        }
+      },
+      "RouteStop": {
+        "attributes": ["id", "location", "sequence_number"],
+        "relationships": {
+          "belongs_to": "Route"
+        }
+      },
+      "Reservation": {
+        "attributes": ["id", "client_id", "trip_id", "status", "expiry_date"],
+        "relationships": {
+          "belongs_to": ["Client", "Trip"]
+        }
+      },
+      "Ticket": {
+        "attributes": ["id", "seat_id", "trip_id", "client_id", "transaction_id"],
+        "relationships": {
+          "belongs_to": ["Client", "Trip", "Transaction"],
+          "assigned_to": "Seat"
+        }
+      },
+      "Seat": {
+        "attributes": ["id", "bus_id", "deck"],
+        "relationships": {
+          "assigned_to": "Ticket"
+        }
+      },
+      "Package": {
+        "attributes": ["id", "sender_id", "receiver_id", "trip_id", "transaction_id"],
+        "relationships": {
+          "belongs_to": ["Client", "Trip", "Transaction"]
+        }
+      },
+      "Office": {
+        "attributes": ["id", "location"],
+        "relationships": {
+          "employs": "Secretary"
+        }
+      },
+      "Transaction": {
+        "attributes": ["id", "client_id", "amount", "payment_method_id", "type"],
+        "relationships": {
+          "belongs_to": ["Client", "PaymentMethod"],
+          "linked_to": ["Ticket", "Package"]
+        }
+      },
+      "PaymentMethod": {
+        "attributes": ["id", "method_name"],
+        "relationships": {
+          "used_in": "Transaction"
+        }
+      }
+    }
+  }
+  

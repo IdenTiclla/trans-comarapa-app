@@ -1,0 +1,23 @@
+%% Diagrama de Casos de Uso
+actor Cliente
+actor Secretario
+actor Conductor
+actor Asistente
+
+usecase "Comprar Boleto" as UC1
+usecase "Reservar Asiento" as UC2
+usecase "Cancelar Reserva" as UC3
+usecase "Enviar/Recibir Paquete" as UC4
+usecase "Despachar Viaje" as UC5
+usecase "Procesar Pago" as UC6
+
+Cliente --> UC1
+Cliente --> UC2
+Cliente --> UC3
+Cliente --> UC4
+Secretario --> UC5
+Secretario --> UC1
+Secretario --> UC4
+Conductor --> UC5
+Asistente --> UC5
+UC1 --> UC6
