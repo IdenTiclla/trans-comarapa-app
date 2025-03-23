@@ -8,6 +8,7 @@ from backend.models.trip import Trip
 from backend.db.session import get_db
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -69,7 +70,7 @@ def seed_db():
         # Create sample trips
         for i in range(5):
             trip = Trip(
-                trip_date=f"2023-10-{i+1:02d}",
+                trip_datetime=datetime(2023, 10, 1, 14, 30),
                 driver_id=drivers[i].id,
                 assistant_id=assistants[i].id,
                 bus_id=buses[i].id
