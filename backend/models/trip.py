@@ -18,3 +18,6 @@ class Trip(Base):
 
     bus_id = Column(Integer, ForeignKey('buses.id'))
     bus = relationship("Bus", back_populates="trips")
+
+    route_id = Column(Integer, ForeignKey('routes.id'), nullable=False)
+    route = relationship("Route", back_populates="trips")

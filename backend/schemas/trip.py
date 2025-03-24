@@ -13,6 +13,7 @@ class TripBase(BaseModel):
     driver_id: int = Field(..., description="Driver identifier", example=1)
     assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
     bus_id: int = Field(..., description="Bus identifier", example=3)
+    route_id: int = Field(..., description="Route identifier", example=4)
 
 # Schema for creating a new trip
 class TripCreate(TripBase):

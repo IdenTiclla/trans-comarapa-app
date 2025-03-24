@@ -6,6 +6,7 @@ from backend.models.bus import Bus
 from backend.models.assistant import Assistant
 from backend.models.trip import Trip
 from backend.models.route import Route
+from backend.models.location import Location
 from backend.db.session import get_db
 from dotenv import load_dotenv
 import os
@@ -21,46 +22,107 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def seed_db():
     db = SessionLocal()
     try:
-        # Create sample routes
-        routes = []
+        # Create sample locations first
+        location_data = [
+            {
+                "name": "Terminal Bimodal Santa Cruz",
+                "latitude": -17.783333,
+                "longitude": -63.182222,
+                "address": "Av. Omar Chávez Ortiz",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Terminal principal de Santa Cruz"
+            },
+            {
+                "name": "Terminal Comarapa",
+                "latitude": -17.916667,
+                "longitude": -64.533333,
+                "address": "Av. Principal",
+                "city": "Comarapa",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Terminal de buses de Comarapa"
+            },
+            {
+                "name": "Terminal Cochabamba",
+                "latitude": -17.393888,
+                "longitude": -66.156944,
+                "address": "Av. Aroma",
+                "city": "Cochabamba",
+                "state": "Cochabamba",
+                "country": "Bolivia",
+                "description": "Terminal de buses de Cochabamba"
+            },
+            {
+                "name": "Terminal Samaipata",
+                "latitude": -18.183333,
+                "longitude": -63.866667,
+                "address": "Calle Principal",
+                "city": "Samaipata",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Terminal de Samaipata"
+            },
+            {
+                "name": "Terminal Mairana",
+                "latitude": -18.116667,
+                "longitude": -63.95,
+                "address": "Av. Principal",
+                "city": "Mairana",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Terminal de Mairana"
+            }
+        ]
+        
+        locations = {}
+        for location_info in location_data:
+            location = Location(**location_info)
+            db.add(location)
+            db.flush()  # Flush to get IDs
+            locations[location_info["name"]] = location
+        
+        # Create sample routes with location references
         route_data = [
             {
-                "origin": "Santa Cruz",
-                "destination": "Comarapa",
+                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
+                "destination_location_id": locations["Terminal Comarapa"].id,
                 "distance": 240.5,
                 "duration": 4.5,
                 "price": 35.0
             },
             {
-                "origin": "Comarapa",
-                "destination": "Cochabamba",
+                "origin_location_id": locations["Terminal Comarapa"].id,
+                "destination_location_id": locations["Terminal Cochabamba"].id,
                 "distance": 195.0,
                 "duration": 3.5,
                 "price": 40.0
             },
             {
-                "origin": "Santa Cruz",
-                "destination": "Samaipata",
+                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
+                "destination_location_id": locations["Terminal Samaipata"].id,
                 "distance": 120.0,
                 "duration": 2.0,
                 "price": 25.0
             },
             {
-                "origin": "Comarapa",
-                "destination": "Samaipata",
+                "origin_location_id": locations["Terminal Comarapa"].id,
+                "destination_location_id": locations["Terminal Samaipata"].id,
                 "distance": 120.5,
                 "duration": 2.5,
                 "price": 20.0
             },
             {
-                "origin": "Santa Cruz",
-                "destination": "Mairana",
+                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
+                "destination_location_id": locations["Terminal Mairana"].id,
                 "distance": 150.0,
                 "duration": 2.75,
                 "price": 30.0
             }
         ]
         
+        routes = []
         for route_info in route_data:
             route = Route(**route_info)
             db.add(route)
