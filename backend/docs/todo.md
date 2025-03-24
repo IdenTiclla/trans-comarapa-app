@@ -5,7 +5,7 @@
 - [ ] Implementar la clase `Ticket`.  <!-- Pendiente -->
 - [x] Implementar la clase `Trip`.  <!-- Completado -->
 - [x] Implementar la clase `Route`.  <!-- Completado -->
-- [ ] Implementar la clase `Location`.  <!-- Pendiente -->
+- [x] Implementar la clase `Location`.  <!-- Completado -->
 - [x] Implementar la clase `Bus`.  <!-- Completado -->
 - [ ] Implementar las clases `SingleDeckBus` y `DoubleDeckBus`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Reservation`.  <!-- Pendiente -->
@@ -29,7 +29,7 @@
 - [x] Definir las relaciones entre `Trip` y `Driver`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Assistant`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Trip` y `Secretary`.  <!-- Pendiente -->
-- [ ] Definir las relaciones entre `Route` y `Location`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Route` y `Location`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Package` y `Trip`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Secretary` y `Ticket`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Secretary` y `Package`.  <!-- Pendiente -->
@@ -50,19 +50,19 @@
   - [x] Read  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
   - [ ] Update (patch)  <!-- Pendiente -->
-- [ ] Implementar CRUD completo para Route:
-  - [ ] Create  <!-- Pendiente -->
-  - [ ] Read (list & get by id)  <!-- Pendiente -->
-  - [ ] Update (patch)  <!-- Pendiente -->
-  - [ ] Delete  <!-- Pendiente -->
-  - [ ] Búsqueda por origen/destino  <!-- Pendiente -->
-- [ ] Implementar CRUD completo para Location:
-  - [ ] Modelo y esquema  <!-- Pendiente -->
-  - [ ] Create  <!-- Pendiente -->
-  - [ ] Read (list & get by id)  <!-- Pendiente -->
-  - [ ] Update (patch)  <!-- Pendiente -->
-  - [ ] Delete  <!-- Pendiente -->
-  - [ ] Validación de coordenadas  <!-- Pendiente -->
+- [x] Implementar CRUD completo para Route:
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+  - [x] Búsqueda por origen/destino  <!-- Completado -->
+- [x] Implementar CRUD completo para Location:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+  - [x] Validación de coordenadas  <!-- Completado -->
 - [ ] Implementar CRUD completo para Office:
   - [ ] Modelo y esquema  <!-- Pendiente -->
   - [ ] Create  <!-- Pendiente -->
