@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from backend.models.assistant import Assistant
-from backend.schemas.assistant import AssistantCreate, Assistant as AssistantSchema
+from models.assistant import Assistant
+from schemas.assistant import AssistantCreate, Assistant as AssistantSchema
 from sqlalchemy.orm import Session
-from backend.db.session import get_db
+from db.session import get_db
 
 
 router = APIRouter(

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-from ..db.base import Base
+from db.base import Base
 
 class Trip(Base):
     __tablename__ = 'trips'

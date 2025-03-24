@@ -1,18 +1,18 @@
 from fastapi import FastAPI
-from .routes import passenger, driver, bus, assistant, trip, location, route  # import route router
-from backend.db.base import Base
-from backend.db.session import engine
+from routes import passenger, driver, bus, assistant, trip, location, route  # import route router
+from db.base import Base
+from db.session import engine
 from dotenv import load_dotenv
 import os
 
 # Import all models to ensure they are registered with SQLAlchemy
-from backend.models.passenger import Passenger
-from backend.models.driver import Driver
-from backend.models.bus import Bus
-from backend.models.assistant import Assistant
-from backend.models.trip import Trip
-from backend.models.route import Route
-from backend.models.location import Location
+from models.passenger import Passenger
+from models.driver import Driver
+from models.bus import Bus
+from models.assistant import Assistant
+from models.trip import Trip
+from models.route import Route
+from models.location import Location
 
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")

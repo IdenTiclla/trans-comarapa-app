@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, Depends, HTTPException
-from backend.models.bus import Bus
-from backend.schemas.bus import BusCreate, Bus as BusSchema
+from models.bus import Bus
+from schemas.bus import BusCreate, Bus as BusSchema
 from sqlalchemy.orm import Session
-from backend.db.session import get_db
+from db.session import get_db
 
 
 router = APIRouter(

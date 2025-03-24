@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from backend.schemas.driver import DriverCreate, DriverPatch, Driver as DriverSchema
-from backend.models.driver import Driver
-from backend.db.session import get_db
+from schemas.driver import DriverCreate, DriverPatch, Driver as DriverSchema
+from models.driver import Driver
+from db.session import get_db
 
 router = APIRouter(
     prefix='/drivers',

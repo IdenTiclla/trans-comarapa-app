@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Optional
-from ..db.session import get_db
-from ..models.location import Location as LocationModel
-from ..schemas.location import LocationCreate, Location as LocationSchema, LocationUpdate
+from db.session import get_db
+from models.location import Location as LocationModel
+from schemas.location import LocationCreate, Location as LocationSchema, LocationUpdate
 
 router = APIRouter(
     prefix="/locations",

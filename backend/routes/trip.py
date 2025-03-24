@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from backend.models.trip import Trip as TripModel
-from backend.schemas.trip import TripCreate, Trip as TripSchema
-from backend.db.session import get_db  # dependency to get a new session
+from models.trip import Trip as TripModel
+from schemas.trip import TripCreate, Trip as TripSchema
+from db.session import get_db  # dependency to get a new session
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 

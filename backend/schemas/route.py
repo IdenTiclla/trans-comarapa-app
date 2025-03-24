@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from .location import Location
+from schemas.location import Location
 
 class RouteBase(BaseModel):
     origin_location_id: int = Field(..., description="ID of the origin location")
