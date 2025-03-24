@@ -1,13 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.models.passenger import Passenger
-from backend.models.driver import Driver
-from backend.models.bus import Bus
-from backend.models.assistant import Assistant
-from backend.models.trip import Trip
-from backend.models.route import Route
-from backend.models.location import Location
-from backend.db.session import get_db
+from models.passenger import Passenger
+from models.driver import Driver
+from models.bus import Bus
+from models.assistant import Assistant
+from models.trip import Trip
+from models.route import Route
+from models.location import Location
+from db.session import get_db
 from dotenv import load_dotenv
 import os
 from datetime import datetime, date
