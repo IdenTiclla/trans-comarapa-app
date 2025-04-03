@@ -21,3 +21,5 @@ class Trip(Base):
 
     route_id = Column(Integer, ForeignKey('routes.id'), nullable=False)
     route = relationship("Route", back_populates="trips")
+    
+    tickets = relationship("Ticket", back_populates="trip")

@@ -25,7 +25,8 @@ def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     if duplicate_trip:
         raise HTTPException(status_code=400, detail="Trip already exists")
     
-    db_trip = TripModel(**trip.dict())
+    # Updated to use model_dump() instead of dict() for Pydantic v2 compatibility
+    db_trip = TripModel(**trip.model_dump())
     try:
         db.add(db_trip)
         db.commit()

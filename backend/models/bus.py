@@ -11,3 +11,4 @@ class Bus(Base):
     model = Column(String(100))
 
     trips = relationship("Trip", back_populates="bus")
+    seats = relationship("Seat", back_populates="bus")

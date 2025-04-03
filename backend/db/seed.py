@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from models.passenger import Passenger
 from models.driver import Driver
@@ -7,10 +7,15 @@ from models.assistant import Assistant
 from models.trip import Trip
 from models.route import Route
 from models.location import Location
+from models.client import Client
+from models.seat import Seat
+from models.ticket import Ticket
+from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+import random
 
 # Load environment variables
 load_dotenv()
@@ -18,6 +23,29 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def clear_db():
+    db = SessionLocal()
+    try:
+        # Delete all data in reverse order of dependencies
+        db.query(Ticket).delete()
+        db.query(Seat).delete()
+        db.query(Trip).delete()
+        db.query(Client).delete()
+        db.query(Route).delete()
+        db.query(Assistant).delete()
+        db.query(Driver).delete()
+        db.query(Bus).delete()
+        db.query(Location).delete()
+        db.query(Passenger).delete()
+        
+        db.commit()
+        print("Database cleared successfully!")
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing database: {e}")
+    finally:
+        db.close()
 
 def seed_db():
     db = SessionLocal()
@@ -128,80 +156,218 @@ def seed_db():
             db.add(route)
             routes.append(route)
 
-        # Create sample passengers with realistic Bolivian names
-        passenger_data = [
-            ("Carlos", "Rodríguez", "77612321", date(1990, 5, 15)),
-            ("María", "Flores", "77612322", date(1985, 8, 22)),
-            ("Juan", "Gutiérrez", "77612323", date(1992, 3, 10)),
-            ("Ana", "Mendoza", "77612324", date(1988, 11, 28)),
-            ("Luis", "Vargas", "77612325", date(1995, 7, 4))
+        # Create sample clients with realistic Bolivian names and data
+        client_data = [
+            {
+                "name": "Carlos Rodríguez",
+                "email": "carlos.rodriguez@gmail.com",
+                "phone": "77612321",
+                "address": "Av. Banzer #123",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "birth_date": date(1990, 5, 15)
+            },
+            {
+                "name": "María Flores",
+                "email": "maria.flores@gmail.com",
+                "phone": "77612322",
+                "address": "Calle Los Pinos #456",
+                "city": "Cochabamba",
+                "state": "Cochabamba",
+                "birth_date": date(1985, 8, 22)
+            },
+            {
+                "name": "Juan Gutiérrez",
+                "email": "juan.gutierrez@gmail.com",
+                "phone": "77612323",
+                "address": "Av. América #789",
+                "city": "La Paz",
+                "state": "La Paz",
+                "birth_date": date(1992, 3, 10)
+            },
+            {
+                "name": "Ana Mendoza",
+                "email": "ana.mendoza@gmail.com",
+                "phone": "77612324",
+                "address": "Calle Ballivián #234",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "birth_date": date(1988, 11, 28)
+            },
+            {
+                "name": "Luis Vargas",
+                "email": "luis.vargas@gmail.com",
+                "phone": "77612325",
+                "address": "Av. Centenario #567",
+                "city": "Cobija",
+                "state": "Pando",
+                "birth_date": date(1995, 7, 4)
+            },
+            {
+                "name": "Elena Torrez",
+                "email": "elena.torrez@gmail.com",
+                "phone": "77612326",
+                "address": "Calle Jordan #890",
+                "city": "Cochabamba",
+                "state": "Cochabamba",
+                "birth_date": date(1991, 2, 18)
+            },
+            {
+                "name": "Jorge Villanueva",
+                "email": "jorge.villanueva@gmail.com",
+                "phone": "77612327",
+                "address": "Av. Santos Dumont #345",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "birth_date": date(1987, 9, 30)
+            },
+            {
+                "name": "Patricia Rojas",
+                "email": "patricia.rojas@gmail.com",
+                "phone": "77612328",
+                "address": "Calle 6 de Agosto #678",
+                "city": "La Paz",
+                "state": "La Paz",
+                "birth_date": date(1993, 6, 12)
+            },
+            {
+                "name": "Roberto Mercado",
+                "email": "roberto.mercado@gmail.com",
+                "phone": "77612329",
+                "address": "Av. Irala #901",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "birth_date": date(1984, 12, 5)
+            },
+            {
+                "name": "Clara Quispe",
+                "email": "clara.quispe@gmail.com",
+                "phone": "77612330",
+                "address": "Calle Murillo #234",
+                "city": "Oruro",
+                "state": "Oruro",
+                "birth_date": date(1996, 4, 25)
+            }
         ]
         
-        for name, lastname, phone, birth in passenger_data:
-            passenger = Passenger(
-                name=name,
-                lastname=lastname,
-                phone_number=phone,
-                birth_date=birth
-            )
-            db.add(passenger)
+        clients = []
+        for client_info in client_data:
+            client = Client(**client_info)
+            db.add(client)
+            clients.append(client)
 
-        # Create sample drivers
+        # Create sample drivers with realistic Bolivian data
         driver_data = [
-            ("Roberto", "Mercado", "77612326", date(1980, 6, 12), "LC123456", 15),
-            ("Miguel", "Suárez", "77612327", date(1975, 9, 8), "LC234567", 20),
-            ("David", "Castro", "77612328", date(1982, 4, 25), "LC345678", 12),
-            ("Pedro", "Torres", "77612329", date(1978, 12, 3), "LC456789", 18),
-            ("José", "Peredo", "77612330", date(1985, 2, 15), "LC567890", 10)
+            {
+                "name": "Roberto",
+                "lastname": "Mercado",
+                "phone_number": "77612326",
+                "birth_date": date(1980, 6, 12),
+                "license_number": "LC123456",
+                "experience_years": 15
+            },
+            {
+                "name": "Miguel",
+                "lastname": "Suárez",
+                "phone_number": "77612327",
+                "birth_date": date(1975, 9, 8),
+                "license_number": "LC234567",
+                "experience_years": 20
+            },
+            {
+                "name": "David",
+                "lastname": "Castro",
+                "phone_number": "77612328",
+                "birth_date": date(1982, 4, 25),
+                "license_number": "LC345678",
+                "experience_years": 12
+            },
+            {
+                "name": "Pedro",
+                "lastname": "Torres",
+                "phone_number": "77612329",
+                "birth_date": date(1978, 12, 3),
+                "license_number": "LC456789",
+                "experience_years": 18
+            },
+            {
+                "name": "José",
+                "lastname": "Peredo",
+                "phone_number": "77612330",
+                "birth_date": date(1985, 2, 15),
+                "license_number": "LC567890",
+                "experience_years": 10
+            }
         ]
         
         drivers = []
-        for name, lastname, phone, birth, license, exp in driver_data:
-            driver = Driver(
-                name=name,
-                lastname=lastname,
-                phone_number=phone,
-                birth_date=birth,
-                license_number=license,
-                experience_years=exp
-            )
+        for driver_info in driver_data:
+            driver = Driver(**driver_info)
             db.add(driver)
             drivers.append(driver)
 
         # Create sample buses with realistic models
         bus_data = [
-            ("2312ABC", 45, "Mercedes Benz O-500"),
-            ("2313DEF", 50, "Volvo 9800"),
-            ("2314GHI", 42, "Scania K410"),
-            ("2315JKL", 48, "Mercedes Benz O-400"),
-            ("2316MNO", 46, "Volvo B420R")
+            {
+                "license_plate": "2312ABC",
+                "capacity": 45,
+                "model": "Mercedes Benz O-500"
+            },
+            {
+                "license_plate": "2313DEF",
+                "capacity": 50,
+                "model": "Volvo 9800"
+            },
+            {
+                "license_plate": "2314GHI",
+                "capacity": 42,
+                "model": "Scania K410"
+            },
+            {
+                "license_plate": "2315JKL",
+                "capacity": 48,
+                "model": "Mercedes Benz O-400"
+            },
+            {
+                "license_plate": "2316MNO",
+                "capacity": 46,
+                "model": "Volvo B420R"
+            }
         ]
         
         buses = []
-        for plate, capacity, model in bus_data:
-            bus = Bus(
-                license_plate=plate,
-                capacity=capacity,
-                model=model
-            )
+        for bus_info in bus_data:
+            bus = Bus(**bus_info)
             db.add(bus)
             buses.append(bus)
 
         # Create sample assistants
         assistant_data = [
-            ("Fernando", "77612331"),
-            ("Patricia", "77612332"),
-            ("Ricardo", "77612333"),
-            ("Carmen", "77612334"),
-            ("Daniel", "77612335")
+            {
+                "first_name": "Fernando",
+                "phone_number": "77612331"
+            },
+            {
+                "first_name": "Patricia",
+                "phone_number": "77612332"
+            },
+            {
+                "first_name": "Ricardo",
+                "phone_number": "77612333"
+            },
+            {
+                "first_name": "Carmen",
+                "phone_number": "77612334"
+            },
+            {
+                "first_name": "Daniel",
+                "phone_number": "77612335"
+            }
         ]
         
         assistants = []
-        for name, phone in assistant_data:
-            assistant = Assistant(
-                first_name=name,
-                phone_number=phone
-            )
+        for assistant_info in assistant_data:
+            assistant = Assistant(**assistant_info)
             db.add(assistant)
             assistants.append(assistant)
 
@@ -217,6 +383,7 @@ def seed_db():
             datetime(2024, 3, 24, 16, 0)    # 4:00 PM next day
         ]
 
+        trips = []
         for i in range(5):
             trip = Trip(
                 trip_datetime=trip_times[i],
@@ -226,7 +393,76 @@ def seed_db():
                 route_id=routes[i].id
             )
             db.add(trip)
-
+            trips.append(trip)
+        
+        db.commit()
+        
+        # Create seats for each bus
+        for bus in buses:
+            # Create realistic seat layout based on bus capacity
+            capacity = bus.capacity
+            # For simplicity, we'll create single deck buses with seats arranged in rows
+            # Each row has 4 seats (2 on each side of aisle)
+            rows = capacity // 4
+            remaining = capacity % 4
+            
+            seat_count = 1
+            # Add seats in rows
+            for row in range(1, rows + 1):
+                for position in ["A", "B", "C", "D"]:
+                    seat = Seat(
+                        bus_id=bus.id,
+                        seat_number=seat_count,
+                        deck="main"  # For now, all buses are single deck
+                    )
+                    db.add(seat)
+                    seat_count += 1
+            
+            # Add remaining seats
+            for i in range(remaining):
+                seat = Seat(
+                    bus_id=bus.id,
+                    seat_number=seat_count,
+                    deck="main"
+                )
+                db.add(seat)
+                seat_count += 1
+        
+        db.commit()
+        
+        # Get all seats for reference
+        all_seats = db.query(Seat).all()
+        seats_by_bus = {}
+        for seat in all_seats:
+            if seat.bus_id not in seats_by_bus:
+                seats_by_bus[seat.bus_id] = []
+            seats_by_bus[seat.bus_id].append(seat)
+        
+        # Create tickets for some trips
+        ticket_states = ["reserved", "purchased", "cancelled", "used"]
+        
+        for trip in trips:
+            # For each trip, create 10-20 tickets
+            num_tickets = random.randint(10, 20)
+            # Get seats for this bus
+            bus_seats = seats_by_bus.get(trip.bus_id, [])
+            
+            if bus_seats:
+                # Randomly select seats for this trip
+                selected_seats = random.sample(bus_seats, min(num_tickets, len(bus_seats)))
+                
+                for seat in selected_seats:
+                    # Randomly select a client
+                    client = random.choice(clients)
+                    # Create ticket
+                    ticket = Ticket(
+                        seat_id=seat.id,
+                        client_id=client.id,
+                        trip_id=trip.id,
+                        state=random.choice(ticket_states)
+                    )
+                    db.add(ticket)
+        
         # Final commit
         db.commit()
         print("Database seeded successfully!")
@@ -238,4 +474,5 @@ def seed_db():
         db.close()
 
 if __name__ == "__main__":
+    clear_db()
     seed_db()

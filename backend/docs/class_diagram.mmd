@@ -1,114 +1,212 @@
 classDiagram
     class Client {
-        - id: UUID
+        - id: Int
         - name: String
         - email: String
         - phone: String
+        - address: String
+        - city: String
+        - state: String
+        - birth_date: Date
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Ticket {
-        - id: UUID
-        - client_id: UUID
-        - trip_id: UUID
-        - seat_number: Int
-        - status: String
-        - transaction_id: UUID
+        - id: Int
+        - seat_id: Int
+        - client_id: Int
+        - trip_id: Int
+        - state: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Trip {
-        - id: UUID
-        - bus_id: UUID
-        - route_id: UUID
-        - departure_date: Date
-        - departure_time: Time
-        - duration: Time
-        - driver_id: UUID
-        - assistant_id: UUID
-        - secretary_id: UUID
+        - id: Int
+        - trip_datetime: DateTime
+        - driver_id: Int
+        - assistant_id: Int
+        - bus_id: Int
+        - route_id: Int
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Route {
-        - id: UUID
-        - start_location_id: UUID
-        - end_location_id: UUID
+        - id: Int
+        - origin_location_id: Int
+        - destination_location_id: Int
+        - distance: Float
+        - duration: Float
+        - price: Float
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Location {
-        - id: UUID
+        - id: Int
         - name: String
+        - latitude: Float
+        - longitude: Float
+        - address: String
+        - city: String
+        - state: String
+        - country: String
+        - postal_code: String
+        - description: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Bus {
-        - id: UUID
+        - id: Int
         - plate_number: String
         - capacity: Int
+        - brand: String
+        - model: String
+        - year: Int
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class SingleDeckBus {
-        - id: UUID
+        - id: Int
         - capacity: Int
     }
     class DoubleDeckBus {
-        - id: UUID
+        - id: Int
         - capacity: Int
         - lower_deck_capacity: Int
+        - upper_deck_capacity: Int
+    }
+    class Seat {
+        - id: Int
+        - bus_id: Int
+        - seat_number: Int
+        - deck: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Reservation {
-        - id: UUID
-        - client_id: UUID
-        - trip_id: UUID
-        - expiration_date: Date
+        - id: Int
+        - client_id: Int
+        - trip_id: Int
+        - seat_id: Int
+        - status: String
+        - expiration_datetime: DateTime
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Package {
-        - id: UUID
-        - sender_id: UUID
-        - recipient_id: UUID
-        - trip_id: UUID
-        - transaction_id: UUID
+        - id: Int
+        - sender_id: Int
+        - recipient_id: Int
+        - trip_id: Int
+        - weight: Float
+        - dimensions: String
+        - description: String
+        - status: String
+        - transaction_id: Int
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Office {
-        - id: UUID
+        - id: Int
         - name: String
-        - location_id: UUID
+        - location_id: Int
+        - phone: String
+        - email: String
+        - manager_name: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Secretary {
-        - id: UUID
+        - id: Int
         - name: String
-        - office_id: UUID
+        - office_id: Int
+        - email: String
+        - phone: String
+        - document_id: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Driver {
-        - id: UUID
+        - id: Int
         - name: String
+        - license_number: String
+        - license_type: String
+        - license_expiry: Date
+        - phone: String
+        - address: String
+        - email: String
+        - status: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Assistant {
-        - id: UUID
+        - id: Int
         - name: String
+        - phone: String
+        - document_id: String
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class PaymentMethod {
-        - id: UUID
-        - type: String
+        - id: Int
+        - name: String
+        - description: String
+        - is_active: Boolean
+        - created_at: DateTime
+        - updated_at: DateTime
     }
     class Transaction {
-        - id: UUID
-        - client_id: UUID
+        - id: Int
+        - client_id: Int
         - amount: Float
-        - payment_method_id: UUID
+        - payment_method_id: Int
+        - status: String
+        - reference_number: String
+        - payment_date: DateTime
+        - created_at: DateTime
+        - updated_at: DateTime
     }
+    class User {
+        - id: Int
+        - username: String
+        - email: String
+        - password_hash: String
+        - role: String
+        - is_active: Boolean
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    
     Client "1" -- "*" Ticket : purchases
     Client "1" -- "*" Reservation : reserves
     Client "1" -- "*" Package : sends/receives
     Client "1" -- "*" Transaction : makes
     Ticket "*" -- "1" Trip : belongs to
+    Ticket "1" -- "1" Seat : occupies
     Ticket "1" -- "1" Transaction : paid via
     Reservation "*" -- "1" Trip : linked to
+    Reservation "1" -- "1" Seat : reserves
     Trip "1" -- "1" Route : follows
     Trip "1" -- "1" Bus : assigned to
     Trip "1" -- "1" Driver : driven by
-    Trip "1" -- "0..1" Assistant : assisted by
+    Trip "0..1" -- "1" Assistant : assisted by
     Trip "1" -- "1" Secretary : dispatched by
+    Trip "*" -- "*" Seat : contains>seats
     Route "1" -- "1" Location : starts from
     Route "1" -- "1" Location : ends at
+    Bus "1" -- "*" Seat : contains
     Package "*" -- "1" Trip : transported in
     Package "1" -- "1" Transaction : paid via
     Secretary "1" -- "*" Ticket : sells
     Secretary "1" -- "*" Package : handles
     Secretary "1" -- "*" Trip : dispatches
     Secretary "1" -- "1" Office : works in
+    Secretary "1" -- "1" User : has account
     Office "1" -- "*" Secretary : employs
+    Office "1" -- "1" Location : located at
     Transaction "1" -- "1" PaymentMethod : used via
     Bus <|-- SingleDeckBus
     Bus <|-- DoubleDeckBus
+    
+    note for Seat "New entity to manage bus seats\nTickets are now linked to seats"
+    note for Reservation "Improved with expiration\nand status tracking"
+    note for User "Added for authentication\nand authorization"
