@@ -115,13 +115,32 @@ def update_single_bus(bus_id: int, bus: BusCreate, db: Session = Depends(get_db)
     return bus_data
 
 @router.delete("/{bus_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
+async def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
+    # First check if the bus exists
     bus = db.query(BusModel).filter(BusModel.id == bus_id).first()
     if not bus:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Bus not found."
         )
+    
+    # Check for dependent seats
+    seats = db.query(SeatModel).filter(SeatModel.bus_id == bus_id).all()
+    if seats:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete bus with id {bus_id} because it has {len(seats)} associated seats. Delete the seats first."
+        )
+    
+    # Check for dependent trips
+    trips = db.query(TripModel).filter(TripModel.bus_id == bus_id).all()
+    if trips:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete bus with id {bus_id} because it has {len(trips)} associated trips. Delete the trips first."
+        )
+    
+    # If no dependencies, proceed with deletion
     db.delete(bus)
     db.commit()
     return None

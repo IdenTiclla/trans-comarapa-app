@@ -1,12 +1,20 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, Literal
 
 class TicketBase(BaseModel):
     state: str = Field(..., description="State of the ticket", example="pending")
-    seat_id: int = Field(..., description="ID of the seat", example=1)
-    client_id: int = Field(..., description="ID of the client", example=1)
-    trip_id: int = Field(..., description="ID of the trip", example=1)
+    seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
+    client_id: int = Field(..., description="ID of the client", example=1, gt=0)
+    trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
+
+    @field_validator('state')
+    @classmethod
+    def validate_state(cls, v):
+        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        if v.lower() not in valid_states:
+            raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
+        return v.lower()
 
     class Config:
         from_attributes = True
@@ -23,8 +31,16 @@ class ClientTicketCreate(BaseModel):
     Does not include client_id as it's derived from the path parameter.
     """
     state: str = Field(..., description="State of the ticket", example="pending")
-    seat_id: int = Field(..., description="ID of the seat", example=1)
-    trip_id: int = Field(..., description="ID of the trip", example=1)
+    seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
+    trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
+    
+    @field_validator('state')
+    @classmethod
+    def validate_state(cls, v):
+        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        if v.lower() not in valid_states:
+            raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
+        return v.lower()
 
 class TicketUpdate(TicketBase):
     """
