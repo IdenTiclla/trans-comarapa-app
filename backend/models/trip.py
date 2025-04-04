@@ -23,3 +23,4 @@ class Trip(Base):
     route = relationship("Route", back_populates="trips")
     
     tickets = relationship("Ticket", back_populates="trip")
+    packages = relationship("Package", back_populates="trip")

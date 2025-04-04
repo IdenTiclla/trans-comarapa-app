@@ -18,4 +18,8 @@ class Client(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     
     tickets = relationship('Ticket', back_populates='client')
-    # Add other relationships as needed
+    # Las relaciones con Package ahora se manejan a través de backref en el modelo Package
+    # sent_packages y received_packages
+
+
+    # Passw0rd!

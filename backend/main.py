@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import driver, bus, assistant, trip, location, route, ticket, seat, client  # import seat router
+from routes import driver, bus, assistant, trip, location, route, ticket, seat, client, package  # import seat router
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
@@ -15,6 +15,7 @@ from models.location import Location
 from models.seat import Seat
 from models.client import Client
 from models.ticket import Ticket
+from models.package import Package
 
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")
@@ -38,6 +39,7 @@ app.include_router(route.router)  # include route routes
 app.include_router(ticket.router)  # include ticket routes
 app.include_router(seat.router)  # include seat routes
 app.include_router(client.router)  # include client routes
+app.include_router(package.router)  # include package routes
 
 @app.get('/')
 def index():
