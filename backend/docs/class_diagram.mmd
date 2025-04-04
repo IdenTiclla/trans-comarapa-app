@@ -105,6 +105,13 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+    class PackageState {
+        - id: Int
+        - name: String
+        - description: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
     class Office {
         - id: Int
         - name: String
@@ -196,6 +203,7 @@ classDiagram
     Bus "1" -- "*" Seat : contains
     Package "*" -- "1" Trip : transported in
     Package "1" -- "1" Transaction : paid via
+    Package "1" -- "1" PackageState : has status
     Secretary "1" -- "*" Ticket : sells
     Secretary "1" -- "*" Package : handles
     Secretary "1" -- "*" Trip : dispatches
@@ -210,3 +218,4 @@ classDiagram
     note for Seat "New entity to manage bus seats\nTickets are now linked to seats"
     note for Reservation "Improved with expiration\nand status tracking"
     note for User "Added for authentication\nand authorization"
+    note for PackageState "New class to manage states of packages"

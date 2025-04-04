@@ -2,7 +2,7 @@
 
 ## Definir Clases y Modelos
 - [x] Implementar la clase `Client`.  <!-- Completado como Passenger -->
-- [ ] Implementar la clase `Ticket`.  <!-- Pendiente -->
+- [x] Implementar la clase `Ticket`.  <!-- Completado -->
 - [x] Implementar la clase `Trip`.  <!-- Completado -->
 - [x] Implementar la clase `Route`.  <!-- Completado -->
 - [x] Implementar la clase `Location`.  <!-- Completado -->
@@ -16,13 +16,14 @@
 - [x] Implementar la clase `Assistant`.  <!-- Completado -->
 - [ ] Implementar la clase `PaymentMethod`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Transaction`.  <!-- Pendiente -->
+- [x] Implementar la clase `Seat`.  <!-- Completado -->
 
 ## Establecer Relaciones
-- [ ] Definir las relaciones entre `Client` y `Ticket`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Client` y `Ticket`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Client` y `Reservation`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Client` y `Package`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Client` y `Transaction`.  <!-- Pendiente -->
-- [ ] Definir las relaciones entre `Ticket` y `Trip`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Ticket` y `Trip`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Reservation` y `Trip`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Trip` y `Route`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Bus`.  <!-- Completado -->
@@ -36,6 +37,8 @@
 - [ ] Definir las relaciones entre `Secretary` y `Trip`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Secretary` y `Office`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Transaction` y `PaymentMethod`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Ticket` y `Seat`.  <!-- Completado -->
+- [x] Definir las relaciones entre `Seat` y `Bus`.  <!-- Completado -->
 
 ## Implementar Funcionalidades Básicas (CRUD)
 - [x] Implementar CRUD completo para Passenger:
@@ -45,11 +48,11 @@
   - [x] Delete  <!-- Completado -->
 - [x] Implementar CRUD completo para Driver  <!-- Completado -->
 - [x] Implementar CRUD básico para Bus  <!-- Completado -->
-- [ ] Implementar CRUD completo para Bus:
+- [x] Implementar CRUD completo para Bus:
   - [x] Create  <!-- Completado -->
   - [x] Read  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
-  - [ ] Update (patch)  <!-- Pendiente -->
+  - [x] Update (patch)  <!-- Completado -->
 - [x] Implementar CRUD completo para Route:
   - [x] Create  <!-- Completado -->
   - [x] Read (list & get by id)  <!-- Completado -->
@@ -77,6 +80,188 @@
   - [ ] Update (patch)  <!-- Pendiente -->
   - [ ] Delete  <!-- Pendiente -->
   - [ ] Asignación a Office  <!-- Pendiente -->
+- [x] Implementar CRUD completo para Seats:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+- [x] Implementar CRUD básico para Tickets:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [ ] Update (patch)  <!-- Pendiente -->
+  - [ ] Delete  <!-- Pendiente -->
+
+## Lista de Endpoints por Implementar
+
+### Endpoints de Autenticación y Usuarios
+- [ ] `POST /auth/login` - Autenticación de usuarios
+- [ ] `POST /auth/refresh` - Refrescar token JWT
+- [ ] `POST /auth/logout` - Cerrar sesión
+- [ ] `GET /users/me` - Obtener información del usuario actual
+- [ ] `PUT /users/me` - Actualizar información del usuario actual
+- [ ] `POST /users` - Crear nuevo usuario (admin)
+- [ ] `GET /users` - Listar usuarios (admin)
+- [ ] `GET /users/{id}` - Obtener usuario por ID (admin)
+- [ ] `PUT /users/{id}` - Actualizar usuario por ID (admin)
+- [ ] `DELETE /users/{id}` - Eliminar usuario (admin)
+- [ ] `PATCH /users/{id}/role` - Cambiar rol de usuario (admin)
+
+### Endpoints de Clientes
+- [x] `POST /clients` - Crear cliente <!-- Completado -->
+- [x] `GET /clients` - Listar clientes <!-- Completado -->
+- [x] `GET /clients/{id}` - Obtener cliente por ID <!-- Completado -->
+- [x] `PUT /clients/{id}` - Actualizar cliente <!-- Completado -->
+- [x] `DELETE /clients/{id}` - Eliminar cliente <!-- Completado -->
+- [ ] `GET /clients/{id}/tickets` - Listar tickets de un cliente
+- [ ] `GET /clients/{id}/transactions` - Listar transacciones de un cliente
+- [ ] `GET /clients/{id}/packages` - Listar paquetes de un cliente
+- [ ] `GET /clients/{id}/reservations` - Listar reservas de un cliente
+
+### Endpoints de Conductores
+- [x] `POST /drivers` - Crear conductor <!-- Completado -->
+- [x] `GET /drivers` - Listar conductores <!-- Completado -->
+- [x] `GET /drivers/{id}` - Obtener conductor por ID <!-- Completado -->
+- [x] `PUT /drivers/{id}` - Actualizar conductor <!-- Completado -->
+- [x] `DELETE /drivers/{id}` - Eliminar conductor <!-- Completado -->
+- [ ] `GET /drivers/{id}/trips` - Listar viajes asignados a un conductor
+- [ ] `GET /drivers/available` - Listar conductores disponibles en una fecha
+
+### Endpoints de Asistentes
+- [x] `POST /assistants` - Crear asistente <!-- Completado -->
+- [x] `GET /assistants` - Listar asistentes <!-- Completado -->
+- [x] `GET /assistants/{id}` - Obtener asistente por ID <!-- Completado -->
+- [x] `PUT /assistants/{id}` - Actualizar asistente <!-- Completado -->
+- [x] `DELETE /assistants/{id}` - Eliminar asistente <!-- Completado -->
+- [ ] `GET /assistants/{id}/trips` - Listar viajes asignados a un asistente
+- [ ] `GET /assistants/available` - Listar asistentes disponibles en una fecha
+
+### Endpoints de Buses
+- [x] `POST /buses` - Crear bus <!-- Completado -->
+- [x] `GET /buses` - Listar buses <!-- Completado -->
+- [x] `GET /buses/{id}` - Obtener bus por ID <!-- Completado -->
+- [x] `PUT /buses/{id}` - Actualizar bus <!-- Completado -->
+- [x] `DELETE /buses/{id}` - Eliminar bus <!-- Completado -->
+- [x] `GET /buses/{id}/seats` - Listar asientos de un bus <!-- Completado -->
+- [ ] `POST /buses/{id}/seats/bulk` - Crear múltiples asientos para un bus
+- [ ] `GET /buses/available` - Listar buses disponibles en una fecha
+
+### Endpoints de Asientos
+- [x] `POST /seats` - Crear asiento <!-- Completado -->
+- [x] `GET /seats` - Listar asientos <!-- Completado -->
+- [x] `GET /seats/{id}` - Obtener asiento por ID <!-- Completado -->
+- [x] `PUT /seats/{id}` - Actualizar asiento <!-- Completado -->
+- [x] `DELETE /seats/{id}` - Eliminar asiento <!-- Completado -->
+- [ ] `GET /seats/trip/{trip_id}` - Listar asientos disponibles para un viaje
+- [ ] `GET /seats/{id}/tickets` - Listar tickets asociados a un asiento
+
+### Endpoints de Ubicaciones
+- [x] `POST /locations` - Crear ubicación <!-- Completado -->
+- [x] `GET /locations` - Listar ubicaciones <!-- Completado -->
+- [x] `GET /locations/{id}` - Obtener ubicación por ID <!-- Completado -->
+- [x] `PUT /locations/{id}` - Actualizar ubicación <!-- Completado -->
+- [x] `DELETE /locations/{id}` - Eliminar ubicación <!-- Completado -->
+- [ ] `GET /locations/search` - Buscar ubicaciones por nombre o coordenadas
+
+### Endpoints de Rutas
+- [x] `POST /routes` - Crear ruta <!-- Completado -->
+- [x] `GET /routes` - Listar rutas <!-- Completado -->
+- [x] `GET /routes/{id}` - Obtener ruta por ID <!-- Completado -->
+- [x] `PUT /routes/{id}` - Actualizar ruta <!-- Completado -->
+- [x] `DELETE /routes/{id}` - Eliminar ruta <!-- Completado -->
+- [x] `GET /routes/search` - Buscar rutas por origen/destino <!-- Completado -->
+- [ ] `GET /routes/{id}/trips` - Listar viajes para una ruta
+- [ ] `POST /routes/{id}/stops` - Añadir parada a una ruta
+- [ ] `GET /routes/{id}/stops` - Listar paradas de una ruta
+- [ ] `DELETE /routes/{id}/stops/{stop_id}` - Eliminar parada de una ruta
+
+### Endpoints de Viajes
+- [x] `POST /trips` - Crear viaje <!-- Completado -->
+- [x] `GET /trips` - Listar viajes <!-- Completado -->
+- [x] `GET /trips/{id}` - Obtener viaje por ID <!-- Completado -->
+- [x] `PUT /trips/{id}` - Actualizar viaje <!-- Completado -->
+- [x] `DELETE /trips/{id}` - Eliminar viaje <!-- Completado -->
+- [ ] `GET /trips/search` - Buscar viajes por origen/destino/fecha
+- [ ] `GET /trips/{id}/tickets` - Listar tickets para un viaje
+- [ ] `GET /trips/{id}/seats` - Listar asientos para un viaje (con estado)
+- [ ] `GET /trips/{id}/availability` - Verificar disponibilidad de asientos
+- [ ] `GET /trips/upcoming` - Listar próximos viajes
+- [ ] `PATCH /trips/{id}/status` - Actualizar estado de un viaje
+
+### Endpoints de Tickets
+- [x] `POST /tickets` - Crear ticket <!-- Completado -->
+- [x] `GET /tickets` - Listar tickets <!-- Completado -->
+- [x] `GET /tickets/{id}` - Obtener ticket por ID <!-- Completado -->
+- [ ] `PUT /tickets/{id}` - Actualizar ticket
+- [ ] `DELETE /tickets/{id}` - Eliminar ticket
+- [x] `GET /tickets/trip/{trip_id}` - Listar tickets por viaje <!-- Completado -->
+- [ ] `POST /clients/{id}/tickets` - Crear ticket para un cliente
+- [ ] `PATCH /tickets/{id}/status` - Actualizar estado de un ticket
+
+### Endpoints de Reservas
+- [ ] `POST /reservations` - Crear reserva
+- [ ] `GET /reservations` - Listar reservas
+- [ ] `GET /reservations/{id}` - Obtener reserva por ID
+- [ ] `DELETE /reservations/{id}` - Cancelar reserva
+- [ ] `GET /reservations/trip/{trip_id}` - Listar reservas por viaje
+- [ ] `GET /reservations/client/{client_id}` - Listar reservas por cliente
+- [ ] `PATCH /reservations/{id}/status` - Actualizar estado de una reserva
+- [ ] `POST /reservations/{id}/confirm` - Confirmar una reserva
+
+### Endpoints de Oficinas
+- [ ] `POST /offices` - Crear oficina
+- [ ] `GET /offices` - Listar oficinas
+- [ ] `GET /offices/{id}` - Obtener oficina por ID
+- [ ] `PUT /offices/{id}` - Actualizar oficina
+- [ ] `DELETE /offices/{id}` - Eliminar oficina
+- [ ] `GET /offices/{id}/secretaries` - Listar secretarios de una oficina
+- [ ] `GET /offices/location/{location_id}` - Buscar oficinas por ubicación
+
+### Endpoints de Secretarios
+- [ ] `POST /secretaries` - Crear secretario
+- [ ] `GET /secretaries` - Listar secretarios
+- [ ] `GET /secretaries/{id}` - Obtener secretario por ID
+- [ ] `PUT /secretaries/{id}` - Actualizar secretario
+- [ ] `DELETE /secretaries/{id}` - Eliminar secretario
+- [ ] `GET /secretaries/{id}/tickets` - Listar tickets vendidos por un secretario
+- [ ] `GET /secretaries/{id}/trips` - Listar viajes despachados por un secretario
+
+### Endpoints de Paquetes
+- [ ] `POST /packages` - Crear paquete
+- [ ] `GET /packages` - Listar paquetes
+- [ ] `GET /packages/{id}` - Obtener paquete por ID
+- [ ] `PUT /packages/{id}` - Actualizar paquete
+- [ ] `DELETE /packages/{id}` - Eliminar paquete
+- [ ] `GET /packages/sender/{client_id}` - Listar paquetes por remitente
+- [ ] `GET /packages/recipient/{client_id}` - Listar paquetes por destinatario
+- [ ] `GET /packages/trip/{trip_id}` - Listar paquetes por viaje
+- [ ] `PATCH /packages/{id}/status` - Actualizar estado de un paquete
+
+### Endpoints de Métodos de Pago
+- [ ] `POST /payment-methods` - Crear método de pago
+- [ ] `GET /payment-methods` - Listar métodos de pago
+- [ ] `GET /payment-methods/{id}` - Obtener método de pago por ID
+- [ ] `PUT /payment-methods/{id}` - Actualizar método de pago
+- [ ] `DELETE /payment-methods/{id}` - Eliminar método de pago
+- [ ] `PATCH /payment-methods/{id}/status` - Activar/desactivar método de pago
+
+### Endpoints de Transacciones
+- [ ] `POST /transactions` - Crear transacción
+- [ ] `GET /transactions` - Listar transacciones
+- [ ] `GET /transactions/{id}` - Obtener transacción por ID
+- [ ] `GET /transactions/client/{client_id}` - Listar transacciones por cliente
+- [ ] `GET /transactions/payment-method/{method_id}` - Listar transacciones por método de pago
+- [ ] `PATCH /transactions/{id}/status` - Actualizar estado de una transacción
+- [ ] `POST /transactions/{id}/refund` - Procesar reembolso de una transacción
+
+### Endpoints de Reportes
+- [ ] `GET /reports/sales/daily` - Reporte de ventas diarias
+- [ ] `GET /reports/sales/monthly` - Reporte de ventas mensuales
+- [ ] `GET /reports/trips/upcoming` - Reporte de próximos viajes
+- [ ] `GET /reports/trips/popularity` - Reporte de popularidad de rutas
+- [ ] `GET /reports/clients/top` - Reporte de clientes más frecuentes
+- [ ] `GET /reports/occupancy/trip/{trip_id}` - Reporte de ocupación por viaje
 
 ## Implementar Funcionalidades de Negocio
 - [ ] Gestión de Rutas y Ubicaciones:
@@ -89,13 +274,13 @@
 
 - [ ] Gestión de Buses:
   - [ ] Implementar herencia SingleDeckBus/DoubleDeckBus
-  - [ ] Gestionar layout de asientos
+  - [x] Gestionar layout de asientos <!-- Completado -->
   - [ ] Control de mantenimiento
   - [ ] Registro de kilometraje
   - [ ] Asignación inteligente a rutas
 
 - [ ] Gestión de Personal:
-  - [ ] Asignación de conductores a rutas
+  - [x] Asignación de conductores a rutas <!-- Completado -->
   - [ ] Control de horarios y turnos
   - [ ] Gestión de licencias y documentos
   - [ ] Sistema de rotación de personal
@@ -109,10 +294,10 @@
   - [ ] Métricas de rendimiento
 
 ## Implementar Sistema de Reservas
-- [ ] Modelo de Asientos:
-  - [ ] Diseño flexible por tipo de bus
-  - [ ] Estado de asientos (libre/ocupado/reservado)
-  - [ ] Numeración automática
+- [x] Modelo de Asientos:
+  - [x] Diseño flexible por tipo de bus <!-- Completado -->
+  - [x] Estado de asientos (libre/ocupado/reservado) <!-- Implementado a través de tickets -->
+  - [x] Numeración automática <!-- Completado -->
   - [ ] Precios diferenciados por ubicación
   - [ ] Bloqueo temporal durante reserva
 
@@ -191,10 +376,10 @@
 - [ ] Agregar validación de tokens
 
 ## Manejo de Asientos
-- [ ] Implementar modelo `Seat` para gestión de asientos
-- [ ] Crear endpoints para gestionar asientos por bus
-- [ ] Implementar lógica de reserva de asientos
-- [ ] Agregar validación de disponibilidad de asientos
+- [x] Implementar modelo `Seat` para gestión de asientos <!-- Completado -->
+- [x] Crear endpoints para gestionar asientos por bus <!-- Completado -->
+- [x] Implementar lógica de reserva de asientos a través de tickets <!-- Completado parcialmente -->
+- [x] Agregar validación de disponibilidad de asientos <!-- Completado -->
 - [ ] Implementar bloqueo temporal de asientos durante reserva
 
 ## Gestión de Pagos
@@ -205,7 +390,7 @@
 - [ ] Crear endpoints para consulta de estado de pagos
 
 ## Validación y Manejo de Errores
-- [ ] Implementar validación avanzada de datos con Pydantic
+- [x] Implementar validación avanzada de datos con Pydantic <!-- Completado -->
 - [ ] Crear manejadores de excepciones personalizados
 - [ ] Agregar logging de errores
 - [ ] Implementar sistema de notificaciones de errores
