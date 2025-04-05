@@ -62,3 +62,17 @@ async def delete_package(package_id: int, db: Session = Depends(get_db)):
     
     # Devolver un mensaje en lugar del objeto eliminado
     return {"message": f"Package with ID {package_id} has been successfully deleted"}
+
+@router.get("/sender/{client_id}", response_model=List[PackageSchema])
+async def get_packages_by_sender(client_id: int, db: Session = Depends(get_db)):
+    packages = db.query(PackageModel).filter(PackageModel.sender_id == client_id).all()
+    if not packages:
+        raise HTTPException(status_code=404, detail="No packages found for this sender")
+    return packages
+
+@router.get("/recipient/{client_id}", response_model=List[PackageSchema])
+async def get_packages_by_recipient(client_id: int, db: Session = Depends(get_db)):
+    packages = db.query(PackageModel).filter(PackageModel.recipient_id == client_id).all()
+    if not packages:
+        raise HTTPException(status_code=404, detail="No packages found for this recipient")
+    return packages
