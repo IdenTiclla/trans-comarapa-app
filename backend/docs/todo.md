@@ -9,7 +9,7 @@
 - [x] Implementar la clase `Bus`.  <!-- Completado -->
 - [ ] Implementar las clases `SingleDeckBus` y `DoubleDeckBus`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Reservation`.  <!-- Pendiente -->
-- [ ] Implementar la clase `Package`.  <!-- Pendiente -->
+- [x] Implementar la clase `Package`.  <!-- Completado -->
 - [ ] Implementar la clase `Office`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Secretary`.  <!-- Pendiente -->
 - [x] Implementar la clase `Driver`.  <!-- Completado -->
@@ -21,7 +21,7 @@
 ## Establecer Relaciones
 - [x] Definir las relaciones entre `Client` y `Ticket`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Client` y `Reservation`.  <!-- Pendiente -->
-- [ ] Definir las relaciones entre `Client` y `Package`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Client` y `Package`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Client` y `Transaction`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Ticket` y `Trip`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Reservation` y `Trip`.  <!-- Pendiente -->
@@ -31,7 +31,7 @@
 - [x] Definir las relaciones entre `Trip` y `Assistant`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Trip` y `Secretary`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Route` y `Location`.  <!-- Completado -->
-- [ ] Definir las relaciones entre `Package` y `Trip`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Package` y `Trip`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Secretary` y `Ticket`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Secretary` y `Package`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Secretary` y `Trip`.  <!-- Pendiente -->
@@ -86,12 +86,12 @@
   - [x] Read (list & get by id)  <!-- Completado -->
   - [x] Update (patch)  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
-- [x] Implementar CRUD básico para Tickets:
+- [x] Implementar CRUD completo para Tickets:
   - [x] Modelo y esquema  <!-- Completado -->
   - [x] Create  <!-- Completado -->
   - [x] Read (list & get by id)  <!-- Completado -->
-  - [ ] Update (patch)  <!-- Pendiente -->
-  - [ ] Delete  <!-- Pendiente -->
+  - [x] Update (put)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
 
 ## Lista de Endpoints por Implementar
 
@@ -114,9 +114,10 @@
 - [x] `GET /clients/{id}` - Obtener cliente por ID <!-- Completado -->
 - [x] `PUT /clients/{id}` - Actualizar cliente <!-- Completado -->
 - [x] `DELETE /clients/{id}` - Eliminar cliente <!-- Completado -->
-- [ ] `GET /clients/{id}/tickets` - Listar tickets de un cliente
+- [x] `GET /clients/{id}/tickets` - Listar tickets de un cliente <!-- Completado -->
 - [ ] `GET /clients/{id}/transactions` - Listar transacciones de un cliente
-- [ ] `GET /clients/{id}/packages` - Listar paquetes de un cliente
+- [ ] `GET /clients/{id}/packages/sent` - Listar paquetes enviados por un cliente
+- [ ] `GET /clients/{id}/packages/received` - Listar paquetes recibidos por un cliente
 - [ ] `GET /clients/{id}/reservations` - Listar reservas de un cliente
 
 ### Endpoints de Conductores
@@ -154,7 +155,7 @@
 - [x] `PUT /seats/{id}` - Actualizar asiento <!-- Completado -->
 - [x] `DELETE /seats/{id}` - Eliminar asiento <!-- Completado -->
 - [ ] `GET /seats/trip/{trip_id}` - Listar asientos disponibles para un viaje
-- [ ] `GET /seats/{id}/tickets` - Listar tickets asociados a un asiento
+- [x] `GET /seats/{id}/tickets` - Listar tickets asociados a un asiento <!-- Completado via /tickets/seat/{seat_id} -->
 
 ### Endpoints de Ubicaciones
 - [x] `POST /locations` - Crear ubicación <!-- Completado -->
@@ -193,10 +194,13 @@
 - [x] `POST /tickets` - Crear ticket <!-- Completado -->
 - [x] `GET /tickets` - Listar tickets <!-- Completado -->
 - [x] `GET /tickets/{id}` - Obtener ticket por ID <!-- Completado -->
-- [ ] `PUT /tickets/{id}` - Actualizar ticket
-- [ ] `DELETE /tickets/{id}` - Eliminar ticket
+- [x] `PUT /tickets/{id}` - Actualizar ticket <!-- Completado -->
+- [x] `DELETE /tickets/{id}` - Eliminar ticket <!-- Completado -->
 - [x] `GET /tickets/trip/{trip_id}` - Listar tickets por viaje <!-- Completado -->
-- [ ] `POST /clients/{id}/tickets` - Crear ticket para un cliente
+- [x] `GET /tickets/client/{client_id}` - Listar tickets por cliente <!-- Completado -->
+- [x] `GET /tickets/seat/{seat_id}` - Listar tickets por asiento <!-- Completado -->
+- [x] `POST /clients/{id}/tickets` - Crear ticket para un cliente <!-- Completado -->
+- [x] `GET /clients/{id}/tickets/{ticket_id}` - Obtener ticket específico de un cliente <!-- Completado -->
 - [ ] `PATCH /tickets/{id}/status` - Actualizar estado de un ticket
 
 ### Endpoints de Reservas
@@ -228,11 +232,11 @@
 - [ ] `GET /secretaries/{id}/trips` - Listar viajes despachados por un secretario
 
 ### Endpoints de Paquetes
-- [ ] `POST /packages` - Crear paquete
-- [ ] `GET /packages` - Listar paquetes
-- [ ] `GET /packages/{id}` - Obtener paquete por ID
-- [ ] `PUT /packages/{id}` - Actualizar paquete
-- [ ] `DELETE /packages/{id}` - Eliminar paquete
+- [x] `POST /packages` - Crear paquete <!-- Completado -->
+- [x] `GET /packages` - Listar paquetes <!-- Completado -->
+- [x] `GET /packages/{id}` - Obtener paquete por ID <!-- Completado -->
+- [x] `PUT /packages/{id}` - Actualizar paquete <!-- Completado -->
+- [x] `DELETE /packages/{id}` - Eliminar paquete <!-- Completado -->
 - [ ] `GET /packages/sender/{client_id}` - Listar paquetes por remitente
 - [ ] `GET /packages/recipient/{client_id}` - Listar paquetes por destinatario
 - [ ] `GET /packages/trip/{trip_id}` - Listar paquetes por viaje
@@ -423,14 +427,14 @@
 - [ ] Crear guía de troubleshooting
 
 ## DevOps y Despliegue
-- [ ] Configurar Docker y docker-compose
+- [x] Configurar Docker y docker-compose <!-- Completado -->
 - [ ] Implementar pipeline de CI/CD
 - [ ] Crear scripts de backup de base de datos
 - [ ] Configurar monitoreo y alertas
 - [ ] Implementar sistema de logs
-- [ ] Crear scripts de migración de datos
+- [x] Crear scripts de migración de datos <!-- Completado via scripts/db -->
 - [ ] Documentar proceso de despliegue
-- [ ] Configurar variables de entorno para producción
+- [x] Configurar variables de entorno para producción <!-- Completado via .env.docker -->
 
 ## Funcionalidades Adicionales
 - [ ] Implementar sistema de notificaciones
@@ -440,3 +444,26 @@
 - [ ] Agregar búsqueda y filtrado avanzado
 - [ ] Implementar sistema de cupones y descuentos
 - [ ] Agregar manejo de múltiples monedas
+
+## Próximos Pasos Recomendados
+
+### Prioridad Alta
+- [ ] Implementar sistema de autenticación y autorización (JWT)
+- [ ] Completar endpoints para paquetes (sender/recipient/trip)
+- [ ] Implementar endpoints para buscar viajes por origen/destino/fecha
+- [ ] Agregar paginación a todos los endpoints que devuelven listas
+- [ ] Implementar pruebas unitarias para los modelos y endpoints principales
+
+### Prioridad Media
+- [ ] Implementar sistema de reservas
+- [ ] Agregar endpoints para verificar disponibilidad de asientos
+- [ ] Implementar sistema de notificaciones para confirmación de tickets
+- [ ] Mejorar validaciones de negocio (conflictos, disponibilidad)
+- [ ] Crear documentación detallada de la API
+
+### Prioridad Baja
+- [ ] Implementar sistema de pagos
+- [ ] Agregar funcionalidades de reportes
+- [ ] Implementar sistema de oficinas y secretarios
+- [ ] Mejorar la estructura de la base de datos (indices, optimizaciones)
+- [ ] Configurar CI/CD para despliegue automático
