@@ -115,9 +115,9 @@
 - [x] `PUT /clients/{id}` - Actualizar cliente <!-- Completado -->
 - [x] `DELETE /clients/{id}` - Eliminar cliente <!-- Completado -->
 - [x] `GET /clients/{id}/tickets` - Listar tickets de un cliente <!-- Completado -->
-- [ ] `GET /clients/{id}/transactions` - Listar transacciones de un cliente
-- [ ] `GET /clients/{id}/packages/sent` - Listar paquetes enviados por un cliente
-- [ ] `GET /clients/{id}/packages/received` - Listar paquetes recibidos por un cliente
+- [ ] `GET /clients/{id}/transactions` - Listar transacciones de un cliente <!-- Pendiente -->
+- [ ] `GET /clients/{id}/packages/sent` - Listar paquetes enviados por un cliente <!-- Pendiente, pero el modelo ya tiene la relación -->
+- [ ] `GET /clients/{id}/packages/received` - Listar paquetes recibidos por un cliente <!-- Pendiente, pero el modelo ya tiene la relación -->
 - [ ] `GET /clients/{id}/reservations` - Listar reservas de un cliente
 
 ### Endpoints de Conductores
@@ -183,9 +183,9 @@
 - [x] `GET /trips/{id}` - Obtener viaje por ID <!-- Completado -->
 - [x] `PUT /trips/{id}` - Actualizar viaje <!-- Completado -->
 - [x] `DELETE /trips/{id}` - Eliminar viaje <!-- Completado -->
-- [ ] `GET /trips/search` - Buscar viajes por origen/destino/fecha
-- [ ] `GET /trips/{id}/tickets` - Listar tickets para un viaje
-- [ ] `GET /trips/{id}/seats` - Listar asientos para un viaje (con estado)
+- [ ] `GET /trips/search` - Buscar viajes por origen/destino/fecha <!-- Pendiente, pero ya existe la funcionalidad similar en routes -->
+- [x] `GET /tickets/trip/{trip_id}` - Listar tickets para un viaje <!-- Completado en /tickets/trip/{trip_id} -->
+- [x] `GET /seats/trip/{trip_id}` - Listar asientos para un viaje <!-- Completado en /seats/trip/{trip_id} -->
 - [ ] `GET /trips/{id}/availability` - Verificar disponibilidad de asientos
 - [ ] `GET /trips/upcoming` - Listar próximos viajes
 - [ ] `PATCH /trips/{id}/status` - Actualizar estado de un viaje
@@ -237,9 +237,9 @@
 - [x] `GET /packages/{id}` - Obtener paquete por ID <!-- Completado -->
 - [x] `PUT /packages/{id}` - Actualizar paquete <!-- Completado -->
 - [x] `DELETE /packages/{id}` - Eliminar paquete <!-- Completado -->
-- [ ] `GET /packages/sender/{client_id}` - Listar paquetes por remitente
-- [ ] `GET /packages/recipient/{client_id}` - Listar paquetes por destinatario
-- [ ] `GET /packages/trip/{trip_id}` - Listar paquetes por viaje
+- [ ] `GET /packages/sender/{client_id}` - Listar paquetes por remitente <!-- Pendiente, pero el modelo ya tiene la relación -->
+- [ ] `GET /packages/recipient/{client_id}` - Listar paquetes por destinatario <!-- Pendiente, pero el modelo ya tiene la relación -->
+- [ ] `GET /packages/trip/{trip_id}` - Listar paquetes por viaje <!-- Pendiente, pero el modelo ya tiene la relación -->
 - [ ] `PATCH /packages/{id}/status` - Actualizar estado de un paquete
 
 ### Endpoints de Métodos de Pago
@@ -370,14 +370,14 @@
   - [ ] Eficiencia operativa
 
 ## Seguridad y Autenticación
-- [ ] Implementar sistema de autenticación JWT
-- [ ] Crear modelo y esquemas para usuarios del sistema
-- [ ] Implementar roles y permisos (admin, secretario, etc.)
-- [ ] Agregar middleware de autenticación
-- [ ] Implementar endpoints para login/logout
-- [ ] Agregar protección CORS
-- [ ] Implementar rate limiting para endpoints públicos
-- [ ] Agregar validación de tokens
+- [ ] Implementar sistema de autenticación JWT <!-- Pendiente, pero ya están configuradas las variables de entorno -->
+- [ ] Crear modelo y esquemas para usuarios del sistema <!-- Pendiente, pero ya está definido en el diagrama de clases -->
+- [ ] Implementar roles y permisos (admin, secretario, etc.) <!-- Pendiente -->
+- [ ] Agregar middleware de autenticación <!-- Pendiente -->
+- [ ] Implementar endpoints para login/logout <!-- Pendiente -->
+- [ ] Agregar protección CORS <!-- Pendiente -->
+- [ ] Implementar rate limiting para endpoints públicos <!-- Pendiente -->
+- [ ] Agregar validación de tokens <!-- Pendiente -->
 
 ## Manejo de Asientos
 - [x] Implementar modelo `Seat` para gestión de asientos <!-- Completado -->
@@ -451,7 +451,8 @@
 - [ ] Implementar sistema de autenticación y autorización (JWT)
 - [ ] Completar endpoints para paquetes (sender/recipient/trip)
 - [ ] Implementar endpoints para buscar viajes por origen/destino/fecha
-- [ ] Agregar paginación a todos los endpoints que devuelven listas
+- [x] Agregar paginación a algunos endpoints que devuelven listas (routes, locations) <!-- Parcialmente completado -->
+- [ ] Extender paginación a todos los endpoints restantes
 - [ ] Implementar pruebas unitarias para los modelos y endpoints principales
 
 ### Prioridad Media
@@ -467,3 +468,13 @@
 - [ ] Implementar sistema de oficinas y secretarios
 - [ ] Mejorar la estructura de la base de datos (indices, optimizaciones)
 - [ ] Configurar CI/CD para despliegue automático
+
+## Mejoras Recientes Completadas
+
+### Mejoras de Configuración
+- [x] Agregar archivo `.python-version` para especificar la versión de Python para uv <!-- Completado -->
+- [x] Mejorar el archivo README.md con instrucciones detalladas de instalación y ejecución <!-- Completado -->
+- [x] Crear archivo CONTRIBUTING.md con guías para desarrolladores <!-- Completado -->
+- [x] Solucionar problemas de importación al clonar el repositorio <!-- Completado -->
+- [x] Crear script run.py para facilitar la ejecución del proyecto <!-- Completado -->
+- [x] Actualizar archivo todo.md con el estado actual del proyecto <!-- Completado -->
