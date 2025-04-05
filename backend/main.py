@@ -1,9 +1,18 @@
+import os
+import sys
+from pathlib import Path
+
+# Asegurarse de que las importaciones funcionen correctamente
+# independientemente de desde dónde se ejecute
+BASE_DIR = Path(__file__).resolve().parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 from fastapi import FastAPI
 from routes import driver, bus, assistant, trip, location, route, ticket, seat, client, package  # import seat router
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
-import os
 
 # Import all models to ensure they are registered with SQLAlchemy
 from models.driver import Driver

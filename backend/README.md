@@ -87,10 +87,27 @@ DEBUG=True
 
 ## Ejecución del Servidor
 
-Para desarrollo local:
+Hay varias formas de ejecutar el servidor para desarrollo local:
+
+### Opción 1: Usando el script run.py (recomendado)
+```bash
+# Desde el directorio backend
+python run.py
+```
+
+### Opción 2: Usando uvicorn directamente
 ```bash
 # Desde el directorio raíz del proyecto (trans-comarapa-app)
 uvicorn backend.main:app --reload
+
+# O desde el directorio backend
+uvicorn main:app --reload
+```
+
+### Opción 3: Usando Docker (ver README-Docker.md para más detalles)
+```bash
+# Desde el directorio raíz del proyecto
+docker-compose up
 ```
 
 El servidor estará disponible en `http://localhost:8000`
