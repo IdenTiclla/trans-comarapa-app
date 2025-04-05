@@ -6,6 +6,10 @@ Includes examples and field descriptions.
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime, timedelta
+from schemas.driver import Driver as DriverSchema
+from schemas.assistant import Assistant as AssistantSchema
+from schemas.bus import Bus as BusSchema
+from schemas.route import Route as RouteSchema
 
 # Base model with common attributes
 class TripBase(BaseModel):
@@ -39,6 +43,10 @@ class TripCreate(TripBase):
 # Schema for reading trip details; includes id and ORM mode
 class Trip(TripBase):
     id: int = Field(..., description="Trip identifier", example=1)
+    driver: Optional[DriverSchema] = Field(None, description="Driver details")
+    assistant: Optional[AssistantSchema] = Field(None, description="Assistant details")
+    bus: Optional[BusSchema] = Field(None, description="Bus details")
+    route: Optional[RouteSchema] = Field(default=..., description="Route details")
 
     class Config:
         from_attributes = True
