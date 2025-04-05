@@ -10,6 +10,7 @@ from models.route import Route as RouteModel
 from models.ticket import Ticket as TicketModel
 from schemas.trip import TripCreate, Trip as TripSchema
 from schemas.driver import Driver as DriverSchema
+from schemas.assistant import Assistant as AssistantSchema
 from db.session import get_db  # dependency to get a new session
 from datetime import datetime, timedelta
 from typing import List
@@ -153,7 +154,7 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     return db_trip
 
 @router.get("/{trip_id}", response_model=TripSchema)
-async def get_trip(trip_id: int, db: Session = Depends(get_db)):
+def get_trip(trip_id: int, db: Session = Depends(get_db)):
     """
     Get a trip by ID
     """
@@ -166,7 +167,7 @@ async def get_trip(trip_id: int, db: Session = Depends(get_db)):
     return trip
 
 @router.get("/{trip_id}/driver", response_model=DriverSchema)
-async def get_trip_driver(trip_id: int, db: Session = Depends(get_db)):
+def get_trip_driver(trip_id: int, db: Session = Depends(get_db)):
     """
     Get the driver assigned to a specific trip
     
@@ -196,6 +197,29 @@ async def get_trip_driver(trip_id: int, db: Session = Depends(get_db)):
         )
     
     return driver
+
+
+@router.get("/{trip_id}/assistant", response_model=AssistantSchema)
+def get_trip_assistant(trip_id: int, db: Session = Depends(get_db)):
+    """Get the assistant assigned to a specific trip"""
+    
+    
+    db_trip = db.query(TripModel).filter(TripModel.id == trip_id).first()
+    if not db_trip:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Trip with id {trip_id} not found"
+        )
+    
+    # Use the relationship directly since it's already loaded
+    assistant = db_trip.assistant
+    if not assistant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No assistant assigned to trip {trip_id}"
+        )
+    
+    return assistant
 
 @router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_trip(trip_id: int, db: Session = Depends(get_db)):
