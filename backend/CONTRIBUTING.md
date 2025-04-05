@@ -20,7 +20,13 @@ cd trans-comarapa-app
 2. Crear y activar un entorno virtual:
 ```bash
 cd backend
-uv venv --python=3.12.0
+# uv detectará automáticamente la versión 3.12.0 del archivo .python-version
+uv venv
+
+# O especificar explícitamente la versión de Python:
+# uv venv --python=3.12.0
+
+# Activar el entorno virtual
 source .venv/bin/activate  # En Linux/Mac
 # o
 .\.venv\Scripts\activate   # En Windows
