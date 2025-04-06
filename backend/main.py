@@ -9,12 +9,15 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from fastapi import FastAPI
-from routes import driver, bus, assistant, trip, location, route, ticket, seat, client, package  # import seat router
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
+from api.v1.api import api_router as api_router_v1
 
 # Import all models to ensure they are registered with SQLAlchemy
+# Estas importaciones son necesarias para que SQLAlchemy cree las tablas
+# aunque no se usen directamente en este archivo
+# pylint: disable=unused-import
 from models.driver import Driver
 from models.bus import Bus
 from models.assistant import Assistant
@@ -25,6 +28,7 @@ from models.seat import Seat
 from models.client import Client
 from models.ticket import Ticket
 from models.package import Package
+# pylint: enable=unused-import
 
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")
@@ -33,23 +37,33 @@ DEBUG = os.getenv("DEBUG", "True")
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Bus Ticketing Application",
-    description="API for managing bus tickets, packages, trips, and more.",
+    title="Trans Comarapa API",
+    description="API para la gestión de boletos, paquetes y viajes de Trans Comarapa.",
     version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     debug=DEBUG
 )
 
-app.include_router(driver.router)
-app.include_router(bus.router)
-app.include_router(assistant.router)
-app.include_router(trip.router)
-app.include_router(location.router)
-app.include_router(route.router)  # include route routes
-app.include_router(ticket.router)  # include ticket routes
-app.include_router(seat.router)  # include seat routes
-app.include_router(client.router)  # include client routes
-app.include_router(package.router)  # include package routes
+# Incluir el router de la versión 1 con el prefijo /api/v1
+app.include_router(api_router_v1, prefix="/api/v1")
+
+# También podemos incluir otras versiones en el futuro, por ejemplo:
+# from api.v2.api import api_router as api_router_v2
+# app.include_router(api_router_v2, prefix="/api/v2")
 
 @app.get('/')
 def index():
-    return "hello world"
+    return {
+        "app_name": "Trans Comarapa API",
+        "version": "1.0.0",
+        "description": "API para la gestión de boletos, paquetes y viajes",
+        "api_versions": {
+            "v1": "/api/v1"
+        },
+        "documentation": {
+            "swagger": "/docs",
+            "redoc": "/redoc"
+        }
+    }

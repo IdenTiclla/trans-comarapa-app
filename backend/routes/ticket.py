@@ -11,7 +11,6 @@ from typing import List
 from datetime import datetime, timedelta
 
 router = APIRouter(
-    prefix="/tickets",
     tags=["Tickets"]
 )
 

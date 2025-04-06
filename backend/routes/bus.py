@@ -14,7 +14,6 @@ from schemas.client import Client as ClientSchema
 
 
 router = APIRouter(
-    prefix='/busses',
     tags=['Busses']
 )
 @router.get('',
@@ -91,7 +90,7 @@ def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Bus has clients and cannot be deleted."
         )
-    
+
     db.delete(bus)
     db.commit()
     return bus
@@ -111,7 +110,7 @@ def update_single_bus(bus_id: int, bus: BusCreate, db: Session = Depends(get_db)
     bus_data = bus.model_dump()
     bus_data["id"] = bus_id
     db.query(BusModel).filter(BusModel.id == bus_id).update(bus_data)
-    db.commit() 
+    db.commit()
     return bus_data
 
 @router.delete("/{bus_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -123,7 +122,7 @@ async def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Bus not found."
         )
-    
+
     # Check for dependent seats
     seats = db.query(SeatModel).filter(SeatModel.bus_id == bus_id).all()
     if seats:
@@ -131,7 +130,7 @@ async def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete bus with id {bus_id} because it has {len(seats)} associated seats. Delete the seats first."
         )
-    
+
     # Check for dependent trips
     trips = db.query(TripModel).filter(TripModel.bus_id == bus_id).all()
     if trips:
@@ -139,7 +138,7 @@ async def delete_single_bus(bus_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete bus with id {bus_id} because it has {len(trips)} associated trips. Delete the trips first."
         )
-    
+
     # If no dependencies, proceed with deletion
     db.delete(bus)
     db.commit()

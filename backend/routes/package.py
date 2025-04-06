@@ -9,7 +9,6 @@ from schemas.trip import Trip
 from db.session import get_db
 
 router = APIRouter(
-    prefix="/packages",
     tags=["Packages"]
 )
 

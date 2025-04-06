@@ -478,3 +478,8 @@
 - [x] Solucionar problemas de importación al clonar el repositorio <!-- Completado -->
 - [x] Crear script run.py para facilitar la ejecución del proyecto <!-- Completado -->
 - [x] Actualizar archivo todo.md con el estado actual del proyecto <!-- Completado -->
+
+### Mejoras de Arquitectura
+- [x] Implementar versionado de API (API Versioning) <!-- Completado -->
+- [x] Reorganizar estructura de carpetas para soportar versionado <!-- Completado -->
+- [x] Actualizar documentación para reflejar el versionado de la API <!-- Completado -->

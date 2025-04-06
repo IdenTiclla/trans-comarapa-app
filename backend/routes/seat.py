@@ -8,7 +8,6 @@ from models.ticket import Ticket as TicketModel
 from typing import List
 
 router = APIRouter(
-    prefix="/seats",
     tags=["Seats"]
 )
 

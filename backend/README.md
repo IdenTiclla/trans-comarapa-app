@@ -147,6 +147,11 @@ EXIT;
 │   ├── seat.py            # Modelo de asientos
 │   ├── ticket.py          # Modelo de boletos
 │   └── trip.py            # Modelo de viajes
+├── api/                   # Versionado de la API
+│   ├── __init__.py
+│   └── v1/                # Versión 1 de la API
+│       ├── __init__.py
+│       └── api.py         # Router principal para la versión 1
 ├── routes/                # Rutas de la API (endpoints)
 │   ├── __init__.py
 │   ├── assistant.py       # Endpoints de asistentes
@@ -223,6 +228,19 @@ Para más detalles sobre la configuración de Docker, consulta el archivo `READM
 
 Una vez iniciado, el servidor estará disponible en:
 - URL base: `http://localhost:8000`
+- API v1: `http://localhost:8000/api/v1`
+
+### Versionado de la API
+
+La API utiliza versionado en la URL para garantizar la compatibilidad a lo largo del tiempo:
+
+- **Versión 1 (v1)**: `/api/v1`
+  - Ejemplo: `http://localhost:8000/api/v1/clients`
+
+Esto permite:
+- Mantener compatibilidad con clientes existentes
+- Implementar cambios importantes sin romper integraciones existentes
+- Deprecar versiones antiguas de forma gradual
 
 ### Documentación de la API
 
@@ -244,6 +262,8 @@ La API incluye documentación interactiva generada automáticamente:
 ## API Endpoints
 
 A continuación se detallan los principales endpoints disponibles en la API. Para una documentación completa e interactiva, visita `http://localhost:8000/docs` después de iniciar el servidor.
+
+**Nota**: Todos los endpoints deben ser prefijados con `/api/v1`. Por ejemplo, para acceder al endpoint de clientes, la URL completa sería `http://localhost:8000/api/v1/clients`.
 
 ### Clientes
 - GET `/clients`: Listar todos los clientes

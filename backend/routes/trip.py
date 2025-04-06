@@ -15,7 +15,9 @@ from db.session import get_db  # dependency to get a new session
 from datetime import datetime, timedelta
 from typing import List
 
-router = APIRouter(prefix="/trips", tags=["trips"])
+router = APIRouter(
+    tags=["trips"]
+)
 
 @router.get("/", response_model=List[TripSchema])
 async def get_trips(db: Session = Depends(get_db)):

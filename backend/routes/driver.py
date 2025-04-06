@@ -5,7 +5,6 @@ from models.driver import Driver
 from db.session import get_db
 
 router = APIRouter(
-    prefix='/drivers',
     tags=['Drivers']
 )
 

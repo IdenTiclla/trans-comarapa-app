@@ -12,6 +12,10 @@ __pycache__/
 
 # Database files
 *.sqlite3
+*.sqlite
+*.db
+*.db-journal
+*.sqlite-journal
 
 # Virtual environment folders
 venv/
@@ -21,3 +25,17 @@ venv/
 dist/
 build/
 *.egg-info/
+
+# Temporary files
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Editor backup files
+*.orig
+*.rej
+*.save

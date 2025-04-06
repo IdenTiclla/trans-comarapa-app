@@ -7,7 +7,6 @@ from models.location import Location as LocationModel
 from schemas.location import LocationCreate, Location as LocationSchema, LocationUpdate
 
 router = APIRouter(
-    prefix="/locations",
     tags=["Locations"]
 )
 

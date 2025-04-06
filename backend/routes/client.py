@@ -10,7 +10,6 @@ from models.seat import Seat as SeatModel
 from schemas.seat import Seat as SeatSchema
 
 router = APIRouter(
-    prefix="/clients",
     tags=["Clients"]
 )
 
@@ -69,7 +68,7 @@ def get_client_ticket(client_id: int, ticket_id: int, db: Session = Depends(get_
     ticket = db.query(TicketModel).filter(TicketModel.client_id == client_id, TicketModel.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-    
+
     return ticket
 
 
@@ -80,23 +79,23 @@ def create_client_ticket(client_id: int, ticket: TicketCreate, db: Session = Dep
     client = db.query(ClientModel).filter(ClientModel.id == client_id).first()
     if not client:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
-    
+
     # Get the ticket data as a dictionary
     ticket_data = ticket.model_dump()
-    
+
     # Verify that the client_id in the path matches the one in the request body
     # If not, raise an exception to prevent confusion
     if ticket_data.get("client_id") != client_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Client ID in path ({client_id}) does not match client ID in request body ({ticket_data.get('client_id')})"
         )
-    
+
     # Create the ticket with the validated data
     new_ticket = TicketModel(**ticket_data)
     db.add(new_ticket)
     db.commit()
-    db.refresh(new_ticket)  
+    db.refresh(new_ticket)
     return new_ticket
 
 @router.post("/{client_id}/tickets", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
@@ -106,11 +105,11 @@ def create_client_ticket_simplified(client_id: int, ticket: ClientTicketCreate, 
     client = db.query(ClientModel).filter(ClientModel.id == client_id).first()
     if not client:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
-    
+
     # Get the ticket data as a dictionary and add the client_id from the path
     ticket_data = ticket.model_dump()
     ticket_data["client_id"] = client_id
-    
+
     # Create the ticket
     new_ticket = TicketModel(**ticket_data)
     db.add(new_ticket)

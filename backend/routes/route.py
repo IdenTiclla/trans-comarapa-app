@@ -8,7 +8,6 @@ from models.location import Location as LocationModel
 from schemas.route import RouteCreate, Route as RouteSchema, RouteUpdate
 
 router = APIRouter(
-    prefix="/routes",
     tags=["Routes"]
 )
 
