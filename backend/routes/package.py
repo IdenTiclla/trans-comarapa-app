@@ -75,3 +75,11 @@ async def get_packages_by_recipient(client_id: int, db: Session = Depends(get_db
     if not packages:
         raise HTTPException(status_code=404, detail="No packages found for this recipient")
     return packages
+
+
+@router.get("/trip/{trip_id}", response_model=List[PackageSchema])
+async def get_packages_by_trip(trip_id: int, db: Session = Depends(get_db)):
+    packages = db.query(PackageModel).filter(PackageModel.trip_id == trip_id).all()
+    if not packages:
+        raise HTTPException(status_code=404, detail="No packages found for this trip")
+    return packages
