@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from models.passenger import Passenger
+# Passenger model has been removed
 from models.driver import Driver
 from models.bus import Bus
 from models.assistant import Assistant
@@ -10,6 +10,8 @@ from models.location import Location
 from models.client import Client
 from models.seat import Seat
 from models.ticket import Ticket
+from models.secretary import Secretary
+from models.package import Package
 from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
@@ -29,6 +31,7 @@ def clear_db():
     try:
         # Delete all data in reverse order of dependencies
         db.query(Ticket).delete()
+        db.query(Package).delete()
         db.query(Seat).delete()
         db.query(Trip).delete()
         db.query(Client).delete()
@@ -37,8 +40,9 @@ def clear_db():
         db.query(Driver).delete()
         db.query(Bus).delete()
         db.query(Location).delete()
-        db.query(Passenger).delete()
-        
+        db.query(Secretary).delete()
+        # Passenger model has been removed
+
         db.commit()
         print("Database cleared successfully!")
     except Exception as e:
@@ -103,14 +107,14 @@ def seed_db():
                 "description": "Terminal de Mairana"
             }
         ]
-        
+
         locations = {}
         for location_info in location_data:
             location = Location(**location_info)
             db.add(location)
             db.flush()  # Flush to get IDs
             locations[location_info["name"]] = location
-        
+
         # Create sample routes with location references
         route_data = [
             {
@@ -149,7 +153,7 @@ def seed_db():
                 "price": 30.0
             }
         ]
-        
+
         routes = []
         for route_info in route_data:
             route = Route(**route_info)
@@ -249,7 +253,7 @@ def seed_db():
                 "birth_date": date(1996, 4, 25)
             }
         ]
-        
+
         clients = []
         for client_info in client_data:
             client = Client(**client_info)
@@ -299,7 +303,7 @@ def seed_db():
                 "experience_years": 10
             }
         ]
-        
+
         drivers = []
         for driver_info in driver_data:
             driver = Driver(**driver_info)
@@ -334,12 +338,47 @@ def seed_db():
                 "model": "Volvo B420R"
             }
         ]
-        
+
         buses = []
         for bus_info in bus_data:
             bus = Bus(**bus_info)
             db.add(bus)
             buses.append(bus)
+
+        # Create sample secretaries with realistic Bolivian names and data
+        secretary_data = [
+            {
+                "name": "Laura Mendoza",
+                "email": "laura.mendoza@transcomarapa.com",
+                "phone": "77612340"
+            },
+            {
+                "name": "Carlos Vaca",
+                "email": "carlos.vaca@transcomarapa.com",
+                "phone": "77612341"
+            },
+            {
+                "name": "Daniela Suárez",
+                "email": "daniela.suarez@transcomarapa.com",
+                "phone": "77612342"
+            },
+            {
+                "name": "Javier Montaño",
+                "email": "javier.montano@transcomarapa.com",
+                "phone": "77612343"
+            },
+            {
+                "name": "Valeria Rojas",
+                "email": "valeria.rojas@transcomarapa.com",
+                "phone": "77612344"
+            }
+        ]
+
+        secretaries = []
+        for secretary_info in secretary_data:
+            secretary = Secretary(**secretary_info)
+            db.add(secretary)
+            secretaries.append(secretary)
 
         # Create sample assistants
         assistant_data = [
@@ -364,7 +403,7 @@ def seed_db():
                 "phone_number": "77612335"
             }
         ]
-        
+
         assistants = []
         for assistant_info in assistant_data:
             assistant = Assistant(**assistant_info)
@@ -390,13 +429,14 @@ def seed_db():
                 driver_id=drivers[i].id,
                 assistant_id=assistants[i].id,
                 bus_id=buses[i].id,
-                route_id=routes[i].id
+                route_id=routes[i].id,
+                secretary_id=secretaries[i].id  # Assign a secretary to each trip
             )
             db.add(trip)
             trips.append(trip)
-        
+
         db.commit()
-        
+
         # Create seats for each bus
         for bus in buses:
             # Create realistic seat layout based on bus capacity
@@ -405,7 +445,7 @@ def seed_db():
             # Each row has 4 seats (2 on each side of aisle)
             rows = capacity // 4
             remaining = capacity % 4
-            
+
             seat_count = 1
             # Add seats in rows
             for row in range(1, rows + 1):
@@ -417,7 +457,7 @@ def seed_db():
                     )
                     db.add(seat)
                     seat_count += 1
-            
+
             # Add remaining seats
             for i in range(remaining):
                 seat = Seat(
@@ -427,9 +467,9 @@ def seed_db():
                 )
                 db.add(seat)
                 seat_count += 1
-        
+
         db.commit()
-        
+
         # Get all seats for reference
         all_seats = db.query(Seat).all()
         seats_by_bus = {}
@@ -437,20 +477,20 @@ def seed_db():
             if seat.bus_id not in seats_by_bus:
                 seats_by_bus[seat.bus_id] = []
             seats_by_bus[seat.bus_id].append(seat)
-        
+
         # Create tickets for some trips
         ticket_states = ["reserved", "purchased", "cancelled", "used"]
-        
+
         for trip in trips:
             # For each trip, create 10-20 tickets
             num_tickets = random.randint(10, 20)
             # Get seats for this bus
             bus_seats = seats_by_bus.get(trip.bus_id, [])
-            
+
             if bus_seats:
                 # Randomly select seats for this trip
                 selected_seats = random.sample(bus_seats, min(num_tickets, len(bus_seats)))
-                
+
                 for seat in selected_seats:
                     # Randomly select a client
                     client = random.choice(clients)
@@ -459,14 +499,42 @@ def seed_db():
                         seat_id=seat.id,
                         client_id=client.id,
                         trip_id=trip.id,
-                        state=random.choice(ticket_states)
+                        state=random.choice(ticket_states),
+                        secretary_id=random.choice(secretaries).id  # Assign a random secretary to each ticket
                     )
                     db.add(ticket)
-        
+
+        # Create sample packages
+        package_statuses = ["pending", "in_transit", "delivered", "cancelled"]
+        package_names = ["Documentos", "Ropa", "Electrónicos", "Alimentos", "Medicamentos", "Libros", "Herramientas"]
+
+        for trip in trips:
+            # For each trip, create 3-8 packages
+            num_packages = random.randint(3, 8)
+
+            for _ in range(num_packages):
+                # Randomly select sender and recipient (different clients)
+                sender = random.choice(clients)
+                recipient = random.choice([c for c in clients if c.id != sender.id])
+
+                # Create package
+                package = Package(
+                    name=random.choice(package_names),
+                    description=f"Paquete de {sender.name} para {recipient.name}",
+                    weight=round(random.uniform(0.5, 20.0), 2),  # Weight between 0.5 and 20 kg
+                    price=round(random.uniform(10.0, 100.0), 2),  # Price between 10 and 100 Bs
+                    status=random.choice(package_statuses),
+                    sender_id=sender.id,
+                    recipient_id=recipient.id,
+                    trip_id=trip.id,
+                    secretary_id=random.choice(secretaries).id  # Assign a random secretary to each package
+                )
+                db.add(package)
+
         # Final commit
         db.commit()
         print("Database seeded successfully!")
-        
+
     except Exception as e:
         db.rollback()
         print(f"Error seeding database: {e}")

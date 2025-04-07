@@ -28,6 +28,7 @@ from models.seat import Seat
 from models.client import Client
 from models.ticket import Ticket
 from models.package import Package
+from models.secretary import Secretary
 # pylint: enable=unused-import
 
 load_dotenv()

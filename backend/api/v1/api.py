@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from routes import driver, bus, assistant, trip, location, route, ticket, seat, client, package
+from routes import driver, bus, assistant, trip, location, route, ticket, seat, client, package, secretary
 
 # Crear un router principal para la versión 1 de la API
 api_router = APIRouter()
@@ -15,5 +15,6 @@ api_router.include_router(ticket.router, prefix="/tickets")
 api_router.include_router(seat.router, prefix="/seats")
 api_router.include_router(client.router, prefix="/clients")
 api_router.include_router(package.router, prefix="/packages")
+api_router.include_router(secretary.router, prefix="/secretaries")
 
 # Nota: El prefijo '/busses' se cambia a '/buses' para seguir convenciones REST

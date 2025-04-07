@@ -1,12 +1,15 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, Any, Literal
+from schemas.client import Client as ClientSchema
+from schemas.secretary import Secretary as SecretarySchema
 
 class TicketBase(BaseModel):
     state: str = Field(..., description="State of the ticket", example="pending")
     seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
     client_id: int = Field(..., description="ID of the client", example=1, gt=0)
     trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
+    secretary_id: int = Field(..., description="ID of the secretary", example=1, gt=0)
 
     @field_validator('state')
     @classmethod
@@ -58,6 +61,8 @@ class Ticket(TicketBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    client: ClientSchema
+    secretary: SecretarySchema
 
     class Config:
         from_attributes = True

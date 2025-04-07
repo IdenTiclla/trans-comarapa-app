@@ -27,4 +27,5 @@ class Package(Base):
     trip_id = Column(Integer, ForeignKey('trips.id'))
     trip = relationship("Trip", back_populates="packages")  # A trip can contain many packages
 
-
+    secretary_id = Column(Integer, ForeignKey('secretaries.id'), nullable=False)
+    secretary = relationship("Secretary", back_populates="packages")

@@ -24,3 +24,7 @@ class Trip(Base):
     
     tickets = relationship("Ticket", back_populates="trip")
     packages = relationship("Package", back_populates="trip")
+
+    secretary_id = Column(Integer, ForeignKey('secretaries.id'), nullable=False)
+    secretary = relationship("Secretary", back_populates="trips")
+    

@@ -10,6 +10,7 @@ from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from schemas.bus import Bus as BusSchema
 from schemas.route import Route as RouteSchema
+from schemas.secretary import Secretary as SecretarySchema
 
 # Base model with common attributes
 class TripBase(BaseModel):
@@ -18,6 +19,7 @@ class TripBase(BaseModel):
     assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
     bus_id: int = Field(..., description="Bus identifier", example=3, gt=0)
     route_id: int = Field(..., description="Route identifier", example=4, gt=0)
+    secretary_id: int = Field(..., description="Secretary identifier", example=5, gt=0)
     
     @field_validator('assistant_id')
     @classmethod 
@@ -47,6 +49,7 @@ class Trip(TripBase):
     assistant: Optional[AssistantSchema] = Field(None, description="Assistant details")
     bus: Optional[BusSchema] = Field(None, description="Bus details")
     route: Optional[RouteSchema] = Field(default=..., description="Route details")
+    secretary: Optional[SecretarySchema] = Field(default=..., description="Secretary details")
 
     class Config:
         from_attributes = True
