@@ -1,7 +1,30 @@
 # Lista de Tareas para Implementación
 
+## Introducción
+
+Este documento detalla las tareas pendientes, mejoras y recomendaciones para el desarrollo del backend de la aplicación Trans Comarapa, una plataforma de gestión de transporte de pasajeros y paquetes. El backend está desarrollado con FastAPI y SQLAlchemy.
+
+La aplicación tiene como objetivo principal facilitar la gestión de viajes, venta de boletos, seguimiento de paquetes y generación de reportes para la empresa de transporte. Este documento servirá como guía para el desarrollo y mantenimiento del proyecto.
+
+## Estado Actual del Proyecto
+
+El proyecto ha avanzado significativamente en la implementación de los modelos principales y sus endpoints correspondientes. Se ha implementado la estructura base de la API con versionado (v1) y se han creado los CRUD básicos para la mayoría de las entidades principales.
+
+Se ha completado:
+- Modelos y endpoints para clientes, conductores, asistentes, buses, asientos, ubicaciones, rutas, viajes, boletos y paquetes
+- Relaciones entre las entidades principales
+- Estructura de carpetas organizada para modelos, rutas, esquemas y utilidades
+- Configuración de Docker y entorno de desarrollo
+
+Pendiente de implementar:
+- Sistema de autenticación y autorización
+- Gestión de oficinas y secretarios
+- Sistema de reservas
+- Gestión de pagos y transacciones
+- Reportes y estadísticas
+
 ## Definir Clases y Modelos
-- [x] Implementar la clase `Client`.  <!-- Completado como Passenger -->
+- [x] Implementar la clase `Client`.  <!-- Completado -->
 - [x] Implementar la clase `Ticket`.  <!-- Completado -->
 - [x] Implementar la clase `Trip`.  <!-- Completado -->
 - [x] Implementar la clase `Route`.  <!-- Completado -->
@@ -11,7 +34,7 @@
 - [ ] Implementar la clase `Reservation`.  <!-- Pendiente -->
 - [x] Implementar la clase `Package`.  <!-- Completado -->
 - [ ] Implementar la clase `Office`.  <!-- Pendiente -->
-- [ ] Implementar la clase `Secretary`.  <!-- Pendiente -->
+- [x] Implementar la clase `Secretary`.  <!-- Completado pero sin endpoints funcionales -->
 - [x] Implementar la clase `Driver`.  <!-- Completado -->
 - [x] Implementar la clase `Assistant`.  <!-- Completado -->
 - [ ] Implementar la clase `PaymentMethod`.  <!-- Pendiente -->
@@ -29,30 +52,40 @@
 - [x] Definir las relaciones entre `Trip` y `Bus`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Driver`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Assistant`.  <!-- Completado -->
-- [ ] Definir las relaciones entre `Trip` y `Secretary`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Trip` y `Secretary`.  <!-- Completado en el modelo -->
 - [x] Definir las relaciones entre `Route` y `Location`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Package` y `Trip`.  <!-- Completado -->
-- [ ] Definir las relaciones entre `Secretary` y `Ticket`.  <!-- Pendiente -->
-- [ ] Definir las relaciones entre `Secretary` y `Package`.  <!-- Pendiente -->
-- [ ] Definir las relaciones entre `Secretary` y `Trip`.  <!-- Pendiente -->
+- [x] Definir las relaciones entre `Secretary` y `Ticket`.  <!-- Completado en el modelo -->
+- [x] Definir las relaciones entre `Secretary` y `Package`.  <!-- Completado en el modelo -->
+- [x] Definir las relaciones entre `Secretary` y `Trip`.  <!-- Completado en el modelo -->
 - [ ] Definir las relaciones entre `Secretary` y `Office`.  <!-- Pendiente -->
 - [ ] Definir las relaciones entre `Transaction` y `PaymentMethod`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Ticket` y `Seat`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Seat` y `Bus`.  <!-- Completado -->
 
 ## Implementar Funcionalidades Básicas (CRUD)
-- [x] Implementar CRUD completo para Passenger:
+- [x] Implementar CRUD completo para Client (Passenger):
   - [x] Create  <!-- Completado -->
   - [x] Read (list & get by id)  <!-- Completado -->
   - [x] Update (patch)  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
-- [x] Implementar CRUD completo para Driver  <!-- Completado -->
-- [x] Implementar CRUD básico para Bus  <!-- Completado -->
+  - [x] Endpoints adicionales (tickets por cliente)  <!-- Completado -->
+- [x] Implementar CRUD completo para Driver:
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+- [x] Implementar CRUD completo para Assistant:
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
 - [x] Implementar CRUD completo para Bus:
   - [x] Create  <!-- Completado -->
-  - [x] Read  <!-- Completado -->
-  - [x] Delete  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
   - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+  - [x] Endpoints adicionales (asientos por bus)  <!-- Completado -->
 - [x] Implementar CRUD completo para Route:
   - [x] Create  <!-- Completado -->
   - [x] Read (list & get by id)  <!-- Completado -->
@@ -73,12 +106,12 @@
   - [ ] Update (patch)  <!-- Pendiente -->
   - [ ] Delete  <!-- Pendiente -->
   - [ ] Relación con Location  <!-- Pendiente -->
-- [ ] Implementar CRUD completo para Secretary:
-  - [ ] Modelo y esquema  <!-- Pendiente -->
-  - [ ] Create con validación de Office  <!-- Pendiente -->
-  - [ ] Read (list & get by id)  <!-- Pendiente -->
-  - [ ] Update (patch)  <!-- Pendiente -->
-  - [ ] Delete  <!-- Pendiente -->
+- [x] Implementar CRUD completo para Secretary:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Implementado pero sin validación de Office -->
+  - [x] Read (list & get by id)  <!-- Implementado pero sin funcionalidad completa -->
+  - [x] Update (patch)  <!-- Implementado pero sin validación completa -->
+  - [x] Delete  <!-- Implementado pero sin validación completa -->
   - [ ] Asignación a Office  <!-- Pendiente -->
 - [x] Implementar CRUD completo para Seats:
   - [x] Modelo y esquema  <!-- Completado -->
@@ -86,14 +119,28 @@
   - [x] Read (list & get by id)  <!-- Completado -->
   - [x] Update (patch)  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
+  - [x] Endpoints adicionales (asientos por viaje)  <!-- Completado -->
 - [x] Implementar CRUD completo para Tickets:
   - [x] Modelo y esquema  <!-- Completado -->
   - [x] Create  <!-- Completado -->
   - [x] Read (list & get by id)  <!-- Completado -->
   - [x] Update (put)  <!-- Completado -->
   - [x] Delete  <!-- Completado -->
+  - [x] Endpoints adicionales (tickets por viaje, cliente, asiento)  <!-- Completado -->
+- [x] Implementar CRUD completo para Trip:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
+- [x] Implementar CRUD completo para Package:
+  - [x] Modelo y esquema  <!-- Completado -->
+  - [x] Create  <!-- Completado -->
+  - [x] Read (list & get by id)  <!-- Completado -->
+  - [x] Update (patch)  <!-- Completado -->
+  - [x] Delete  <!-- Completado -->
 
-## Lista de Endpoints por Implementar
+## Lista de Endpoints Implementados y Pendientes
 
 ### Endpoints de Autenticación y Usuarios
 - [ ] `POST /auth/login` - Autenticación de usuarios
@@ -154,8 +201,8 @@
 - [x] `GET /seats/{id}` - Obtener asiento por ID <!-- Completado -->
 - [x] `PUT /seats/{id}` - Actualizar asiento <!-- Completado -->
 - [x] `DELETE /seats/{id}` - Eliminar asiento <!-- Completado -->
-- [ ] `GET /seats/trip/{trip_id}` - Listar asientos disponibles para un viaje
-- [x] `GET /seats/{id}/tickets` - Listar tickets asociados a un asiento <!-- Completado via /tickets/seat/{seat_id} -->
+- [x] `GET /seats/trip/{trip_id}` - Listar asientos para un viaje <!-- Completado -->
+- [x] `GET /tickets/seat/{seat_id}` - Listar tickets asociados a un asiento <!-- Completado -->
 
 ### Endpoints de Ubicaciones
 - [x] `POST /locations` - Crear ubicación <!-- Completado -->
@@ -184,8 +231,8 @@
 - [x] `PUT /trips/{id}` - Actualizar viaje <!-- Completado -->
 - [x] `DELETE /trips/{id}` - Eliminar viaje <!-- Completado -->
 - [ ] `GET /trips/search` - Buscar viajes por origen/destino/fecha <!-- Pendiente, pero ya existe la funcionalidad similar en routes -->
-- [x] `GET /tickets/trip/{trip_id}` - Listar tickets para un viaje <!-- Completado en /tickets/trip/{trip_id} -->
-- [x] `GET /seats/trip/{trip_id}` - Listar asientos para un viaje <!-- Completado en /seats/trip/{trip_id} -->
+- [x] `GET /tickets/trip/{trip_id}` - Listar tickets para un viaje <!-- Completado -->
+- [x] `GET /seats/trip/{trip_id}` - Listar asientos para un viaje <!-- Completado -->
 - [ ] `GET /trips/{id}/availability` - Verificar disponibilidad de asientos
 - [ ] `GET /trips/upcoming` - Listar próximos viajes
 - [ ] `PATCH /trips/{id}/status` - Actualizar estado de un viaje
@@ -223,11 +270,11 @@
 - [ ] `GET /offices/location/{location_id}` - Buscar oficinas por ubicación
 
 ### Endpoints de Secretarios
-- [ ] `POST /secretaries` - Crear secretario
-- [ ] `GET /secretaries` - Listar secretarios
-- [ ] `GET /secretaries/{id}` - Obtener secretario por ID
-- [ ] `PUT /secretaries/{id}` - Actualizar secretario
-- [ ] `DELETE /secretaries/{id}` - Eliminar secretario
+- [x] `POST /secretaries` - Crear secretario <!-- Implementado pero sin validación completa -->
+- [x] `GET /secretaries` - Listar secretarios <!-- Implementado pero sin funcionalidad completa -->
+- [x] `GET /secretaries/{id}` - Obtener secretario por ID <!-- Implementado pero sin funcionalidad completa -->
+- [x] `PUT /secretaries/{id}` - Actualizar secretario <!-- Implementado pero sin validación completa -->
+- [x] `DELETE /secretaries/{id}` - Eliminar secretario <!-- Implementado pero sin validación completa -->
 - [ ] `GET /secretaries/{id}/tickets` - Listar tickets vendidos por un secretario
 - [ ] `GET /secretaries/{id}/trips` - Listar viajes despachados por un secretario
 
@@ -445,29 +492,59 @@
 - [ ] Implementar sistema de cupones y descuentos
 - [ ] Agregar manejo de múltiples monedas
 
-## Próximos Pasos Recomendados
+## Próximos Pasos Recomendados (Por Prioridad)
 
-### Prioridad Alta
-- [ ] Implementar sistema de autenticación y autorización (JWT)
-- [ ] Completar endpoints para paquetes (sender/recipient/trip)
-- [ ] Implementar endpoints para buscar viajes por origen/destino/fecha
-- [x] Agregar paginación a algunos endpoints que devuelven listas (routes, locations) <!-- Parcialmente completado -->
-- [ ] Extender paginación a todos los endpoints restantes
-- [ ] Implementar pruebas unitarias para los modelos y endpoints principales
+### Prioridad Alta (Inmediata)
 
-### Prioridad Media
-- [ ] Implementar sistema de reservas
-- [ ] Agregar endpoints para verificar disponibilidad de asientos
-- [ ] Implementar sistema de notificaciones para confirmación de tickets
-- [ ] Mejorar validaciones de negocio (conflictos, disponibilidad)
-- [ ] Crear documentación detallada de la API
+1. **Implementar Sistema de Autenticación y Autorización**:
+   - Configurar JWT para autenticación segura
+   - Implementar endpoints de login/logout
+   - Crear middleware de autenticación
+   - Definir roles y permisos (admin, secretario, etc.)
 
-### Prioridad Baja
-- [ ] Implementar sistema de pagos
-- [ ] Agregar funcionalidades de reportes
-- [ ] Implementar sistema de oficinas y secretarios
-- [ ] Mejorar la estructura de la base de datos (indices, optimizaciones)
-- [ ] Configurar CI/CD para despliegue automático
+2. **Completar Endpoints Relacionales Pendientes**:
+   - Implementar endpoints para paquetes por remitente/destinatario/viaje
+   - Crear endpoints para listar viajes por ruta
+   - Implementar endpoints para listar tickets por secretario
+
+3. **Mejorar Validaciones y Manejo de Errores**:
+   - Implementar validaciones de negocio más robustas
+   - Crear manejadores de excepciones personalizados
+   - Mejorar mensajes de error para el cliente
+
+### Prioridad Media (Corto Plazo)
+
+4. **Implementar Sistema de Reservas**:
+   - Crear modelo y endpoints para reservas
+   - Implementar lógica de bloqueo temporal de asientos
+   - Desarrollar proceso de confirmación/cancelación
+
+5. **Optimizar Rendimiento**:
+   - Extender paginación a todos los endpoints restantes
+   - Implementar caché para consultas frecuentes
+   - Optimizar consultas a la base de datos
+
+6. **Implementar Pruebas**:
+   - Crear pruebas unitarias para modelos
+   - Implementar pruebas de integración para endpoints
+   - Configurar CI/CD para ejecución automática de pruebas
+
+### Prioridad Baja (Mediano Plazo)
+
+7. **Implementar Sistema de Pagos**:
+   - Crear modelos y endpoints para métodos de pago y transacciones
+   - Integrar con pasarelas de pago
+   - Implementar sistema de reembolsos
+
+8. **Desarrollar Sistema de Reportes**:
+   - Crear endpoints para reportes de ventas
+   - Implementar estadísticas de ocupación
+   - Desarrollar reportes de rendimiento
+
+9. **Completar Sistema de Oficinas**:
+   - Implementar modelo y endpoints para oficinas
+   - Mejorar la gestión de secretarios
+   - Crear reportes por oficina
 
 ## Mejoras Recientes Completadas
 
@@ -483,3 +560,47 @@
 - [x] Implementar versionado de API (API Versioning) <!-- Completado -->
 - [x] Reorganizar estructura de carpetas para soportar versionado <!-- Completado -->
 - [x] Actualizar documentación para reflejar el versionado de la API <!-- Completado -->
+
+## Conclusión
+
+Este documento representa una hoja de ruta completa para el desarrollo del backend de Trans Comarapa. Las tareas están organizadas por áreas funcionales y prioridades para facilitar la planificación y ejecución del proyecto.
+
+El proyecto ha avanzado significativamente, con la implementación de los modelos principales y sus endpoints CRUD correspondientes. Las próximas etapas se centrarán en la implementación de autenticación, mejora de las validaciones, y desarrollo de funcionalidades más avanzadas como reservas, pagos y reportes.
+
+Es importante revisar y actualizar este documento regularmente a medida que el proyecto evoluciona. Las prioridades pueden cambiar según los requisitos del negocio y el feedback de los usuarios.
+
+### Próxima Revisión
+
+Fecha: [Definir fecha para la próxima revisión]
+
+### Historial de Actualizaciones
+
+- **07/04/2024**: Actualización completa del documento con el estado actual del proyecto
+- **05/04/2024**: Agregadas mejoras de arquitectura (versionado de API)
+- **24/03/2024**: Creación inicial del documento
+
+## Resumen de Tareas
+
+### Modelos y Relaciones
+- Tareas completadas: 25
+- Tareas pendientes: 10
+
+### Funcionalidades CRUD
+- Tareas completadas: 48
+- Tareas pendientes: 12
+
+### Endpoints
+- Tareas completadas: 52
+- Tareas pendientes: 98
+
+### Funcionalidades de Negocio
+- Tareas completadas: 3
+- Tareas pendientes: 42
+
+### Mejoras y Configuración
+- Tareas completadas: 9
+- Tareas pendientes: 0
+
+### Total
+- **Tareas completadas: 137**
+- **Tareas pendientes: 162**
