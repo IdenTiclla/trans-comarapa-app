@@ -289,9 +289,9 @@ Parcialmente implementado:
 - [x] `GET /packages/{id}` - Obtener paquete por ID <!-- Completado -->
 - [x] `PUT /packages/{id}` - Actualizar paquete <!-- Completado -->
 - [x] `DELETE /packages/{id}` - Eliminar paquete <!-- Completado -->
-- [ ] `GET /packages/sender/{client_id}` - Listar paquetes por remitente <!-- Pendiente, pero el modelo ya tiene la relación -->
-- [ ] `GET /packages/recipient/{client_id}` - Listar paquetes por destinatario <!-- Pendiente, pero el modelo ya tiene la relación -->
-- [ ] `GET /packages/trip/{trip_id}` - Listar paquetes por viaje <!-- Pendiente, pero el modelo ya tiene la relación -->
+- [x] `GET /packages/by-sender/{client_id}` - Listar paquetes por remitente <!-- Completado -->
+- [x] `GET /packages/by-recipient/{client_id}` - Listar paquetes por destinatario <!-- Completado -->
+- [x] `GET /packages/by-trip/{trip_id}` - Listar paquetes por viaje <!-- Completado -->
 - [ ] `PATCH /packages/{id}/status` - Actualizar estado de un paquete
 
 ### Endpoints de Métodos de Pago
@@ -526,7 +526,7 @@ Parcialmente implementado:
    - [ ] Proteger los endpoints existentes
 
 2. **Completar Endpoints Relacionales Pendientes**:
-   - [ ] Implementar endpoints para paquetes por remitente/destinatario/viaje
+   - [x] Implementar endpoints para paquetes por remitente/destinatario/viaje
    - [ ] Crear endpoints para listar viajes por ruta
    - [x] Implementar endpoints para listar tickets por secretario
 
@@ -613,8 +613,8 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 12
 
 ### Endpoints
-- Tareas completadas: 53
-- Tareas pendientes: 111
+- Tareas completadas: 56
+- Tareas pendientes: 108
 
 ### Funcionalidades de Negocio
 - Tareas completadas: 3
@@ -629,5 +629,5 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 150**
-- **Tareas pendientes: 183**
+- **Tareas completadas: 153**
+- **Tareas pendientes: 180**

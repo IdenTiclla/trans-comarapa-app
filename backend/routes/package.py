@@ -51,35 +51,58 @@ async def delete_package(package_id: int, db: Session = Depends(get_db)):
     db_package = db.query(PackageModel).filter(PackageModel.id == package_id).first()
     if not db_package:
         raise HTTPException(status_code=404, detail="Package not found")
-    
+
     # Guardar el ID para el mensaje de éxito
     package_id = db_package.id
-    
+
     # Eliminar el paquete
     db.delete(db_package)
     db.commit()
-    
+
     # Devolver un mensaje en lugar del objeto eliminado
     return {"message": f"Package with ID {package_id} has been successfully deleted"}
 
-@router.get("/sender/{client_id}", response_model=List[PackageSchema])
+@router.get("/by-sender/{client_id}", response_model=List[PackageSchema])
 async def get_packages_by_sender(client_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene todos los paquetes enviados por un cliente específico.
+
+    Args:
+        client_id: ID del cliente remitente
+        db: Sesión de base de datos
+
+    Returns:
+        Lista de paquetes enviados por el cliente
+    """
     packages = db.query(PackageModel).filter(PackageModel.sender_id == client_id).all()
-    if not packages:
-        raise HTTPException(status_code=404, detail="No packages found for this sender")
     return packages
 
-@router.get("/recipient/{client_id}", response_model=List[PackageSchema])
+@router.get("/by-recipient/{client_id}", response_model=List[PackageSchema])
 async def get_packages_by_recipient(client_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene todos los paquetes recibidos por un cliente específico.
+
+    Args:
+        client_id: ID del cliente destinatario
+        db: Sesión de base de datos
+
+    Returns:
+        Lista de paquetes recibidos por el cliente
+    """
     packages = db.query(PackageModel).filter(PackageModel.recipient_id == client_id).all()
-    if not packages:
-        raise HTTPException(status_code=404, detail="No packages found for this recipient")
     return packages
 
-
-@router.get("/trip/{trip_id}", response_model=List[PackageSchema])
+@router.get("/by-trip/{trip_id}", response_model=List[PackageSchema])
 async def get_packages_by_trip(trip_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene todos los paquetes asociados a un viaje específico.
+
+    Args:
+        trip_id: ID del viaje
+        db: Sesión de base de datos
+
+    Returns:
+        Lista de paquetes asociados al viaje
+    """
     packages = db.query(PackageModel).filter(PackageModel.trip_id == trip_id).all()
-    if not packages:
-        raise HTTPException(status_code=404, detail="No packages found for this trip")
     return packages
