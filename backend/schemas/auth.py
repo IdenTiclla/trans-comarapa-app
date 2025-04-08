@@ -38,3 +38,13 @@ class User(UserBase):
 
 class UserInDB(User):
     hashed_password: str
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email del usuario que quiere restablecer su contraseña")
+
+class PasswordReset(BaseModel):
+    token: str = Field(..., description="Token de restablecimiento de contraseña")
+    new_password: str = Field(..., min_length=8, description="Nueva contraseña", example="NuevaContraseña123")
+
+class PasswordResetResponse(BaseModel):
+    message: str

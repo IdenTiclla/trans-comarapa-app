@@ -17,11 +17,13 @@ Se ha completado:
 - Configuración de Docker y entorno de desarrollo
 
 Pendiente de implementar:
-- Sistema de autenticación y autorización
 - Gestión de oficinas y secretarios
 - Sistema de reservas
 - Gestión de pagos y transacciones
 - Reportes y estadísticas
+
+Parcialmente implementado:
+- Sistema de autenticación y autorización (JWT implementado con lista negra de tokens)
 
 ## Definir Clases y Modelos
 - [x] Implementar la clase `Client`.  <!-- Completado -->
@@ -143,20 +145,20 @@ Pendiente de implementar:
 ## Lista de Endpoints Implementados y Pendientes
 
 ### Endpoints de Autenticación y Usuarios
-- [ ] `POST /api/v1/auth/login` - Autenticación de usuarios
-- [ ] `POST /api/v1/auth/refresh` - Refrescar token JWT
-- [ ] `POST /api/v1/auth/logout` - Cerrar sesión
-- [ ] `GET /api/v1/auth/me` - Obtener información del usuario actual
-- [ ] `PUT /api/v1/auth/me` - Actualizar información del usuario actual
-- [ ] `POST /api/v1/auth/register` - Registrar nuevo usuario
-- [ ] `POST /api/v1/auth/reset-password` - Solicitar restablecimiento de contraseña
-- [ ] `POST /api/v1/auth/reset-password/{token}` - Confirmar restablecimiento de contraseña
-- [ ] `POST /api/v1/users` - Crear nuevo usuario (admin)
-- [ ] `GET /api/v1/users` - Listar usuarios (admin)
-- [ ] `GET /api/v1/users/{id}` - Obtener usuario por ID (admin)
-- [ ] `PUT /api/v1/users/{id}` - Actualizar usuario por ID (admin)
-- [ ] `DELETE /api/v1/users/{id}` - Eliminar usuario (admin)
-- [ ] `PATCH /api/v1/users/{id}/role` - Cambiar rol de usuario (admin)
+- [x] `POST /api/v1/auth/login` - Autenticación de usuarios <!-- Completado -->
+- [x] `POST /api/v1/auth/refresh` - Refrescar token JWT <!-- Completado -->
+- [x] `POST /api/v1/auth/logout` - Cerrar sesión <!-- Completado con lista negra de tokens -->
+- [x] `GET /api/v1/auth/me` - Obtener información del usuario actual <!-- Completado -->
+- [x] `PUT /api/v1/auth/me` - Actualizar información del usuario actual <!-- Completado -->
+- [x] `POST /api/v1/auth/register` - Registrar nuevo usuario <!-- Completado -->
+- [ ] `POST /api/v1/auth/reset-password` - Solicitar restablecimiento de contraseña <!-- Pendiente -->
+- [ ] `POST /api/v1/auth/reset-password/{token}` - Confirmar restablecimiento de contraseña <!-- Pendiente -->
+- [x] `POST /api/v1/auth/users` - Crear nuevo usuario (admin) <!-- Completado -->
+- [ ] `GET /api/v1/users` - Listar usuarios (admin) <!-- Pendiente -->
+- [ ] `GET /api/v1/users/{id}` - Obtener usuario por ID (admin) <!-- Pendiente -->
+- [ ] `PUT /api/v1/users/{id}` - Actualizar usuario por ID (admin) <!-- Pendiente -->
+- [ ] `DELETE /api/v1/users/{id}` - Eliminar usuario (admin) <!-- Pendiente -->
+- [ ] `PATCH /api/v1/users/{id}/role` - Cambiar rol de usuario (admin) <!-- Pendiente -->
 
 ### Endpoints de Clientes
 - [x] `POST /clients` - Crear cliente <!-- Completado -->
@@ -424,38 +426,24 @@ Pendiente de implementar:
 - [x] Configurar esquema OAuth2PasswordBearer <!-- Completado -->
 - [x] Configurar esquema HTTPBearer para soporte directo de tokens <!-- Completado -->
 - [x] Personalizar el esquema OpenAPI para incluir múltiples esquemas de autenticación <!-- Completado -->
-- [ ] Crear modelo y esquemas para usuarios del sistema <!-- Pendiente, pero ya está definido en el diagrama de clases -->
-- [ ] Implementar roles y permisos (admin, secretario, etc.) <!-- Pendiente -->
-- [ ] Adaptar función get_current_user para verificar roles de secretarios <!-- Pendiente -->
+- [x] Crear modelo y esquemas para usuarios del sistema <!-- Completado -->
+- [x] Implementar roles y permisos básicos (admin, usuario) <!-- Completado -->
+- [x] Adaptar función get_current_user para verificar roles <!-- Completado -->
 - [ ] Integrar el sistema de autenticación con el modelo Secretary <!-- Pendiente -->
 - [ ] Proteger todos los endpoints existentes con autenticación <!-- Pendiente -->
 - [ ] Agregar middleware de autenticación <!-- Pendiente -->
-- [ ] Implementar endpoints para login/logout <!-- Pendiente -->
+- [x] Implementar endpoints para login/logout <!-- Completado -->
 - [ ] Agregar protección CORS <!-- Pendiente -->
 - [ ] Implementar rate limiting para endpoints públicos <!-- Pendiente -->
-- [ ] Crear sistema de registro de nuevos usuarios <!-- Pendiente -->
+- [x] Crear sistema de registro de nuevos usuarios <!-- Completado -->
 - [ ] Implementar sistema de recuperación de contraseñas <!-- Pendiente -->
-- [ ] Agregar validación de tokens <!-- Completado parcialmente -->
-- [ ] Implementar refrescado de tokens <!-- Pendiente -->
-- [ ] Configurar expiración de tokens apropiada para el contexto de negocio <!-- Pendiente -->
+- [x] Agregar validación de tokens <!-- Completado con lista negra de tokens -->
+- [x] Implementar refrescado de tokens <!-- Completado -->
+- [x] Configurar expiración de tokens apropiada para el contexto de negocio <!-- Completado -->
 - [ ] Crear documentación detallada sobre el flujo de autenticación <!-- Pendiente -->
 - [ ] Implementar pruebas para el sistema de autenticación <!-- Pendiente -->
 
-### Endpoints de Autenticación y Usuarios
-- [ ] `POST /api/v1/auth/login` - Autenticación de usuarios
-- [ ] `POST /api/v1/auth/refresh` - Refrescar token JWT
-- [ ] `POST /api/v1/auth/logout` - Cerrar sesión
-- [ ] `GET /api/v1/auth/me` - Obtener información del usuario actual
-- [ ] `PUT /api/v1/auth/me` - Actualizar información del usuario actual
-- [ ] `POST /api/v1/auth/register` - Registrar nuevo usuario
-- [ ] `POST /api/v1/auth/reset-password` - Solicitar restablecimiento de contraseña
-- [ ] `POST /api/v1/auth/reset-password/{token}` - Confirmar restablecimiento de contraseña
-- [ ] `POST /api/v1/users` - Crear nuevo usuario (admin)
-- [ ] `GET /api/v1/users` - Listar usuarios (admin)
-- [ ] `GET /api/v1/users/{id}` - Obtener usuario por ID (admin)
-- [ ] `PUT /api/v1/users/{id}` - Actualizar usuario por ID (admin)
-- [ ] `DELETE /api/v1/users/{id}` - Eliminar usuario (admin)
-- [ ] `PATCH /api/v1/users/{id}/role` - Cambiar rol de usuario (admin)
+
 
 ## Manejo de Asientos
 - [x] Implementar modelo `Seat` para gestión de asientos <!-- Completado -->
@@ -530,10 +518,11 @@ Pendiente de implementar:
 1. **Completar Sistema de Autenticación y Autorización**:
    - [x] Configurar JWT para autenticación segura
    - [x] Implementar múltiples esquemas de autenticación (OAuth2 y HTTPBearer)
-   - [ ] Implementar endpoints de login/logout
+   - [x] Implementar endpoints de login/logout
+   - [x] Implementar lista negra de tokens para logout
+   - [x] Definir roles y permisos básicos (admin, usuario)
    - [ ] Adaptar sistema para trabajar con el modelo Secretary
    - [ ] Integrar con el flujo de negocio existente
-   - [ ] Definir roles y permisos (admin, secretario, etc.)
    - [ ] Proteger los endpoints existentes
 
 2. **Completar Endpoints Relacionales Pendientes**:
@@ -632,13 +621,13 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 42
 
 ### Seguridad y Autenticación
-- Tareas completadas: 4
-- Tareas pendientes: 16
+- Tareas completadas: 12
+- Tareas pendientes: 8
 
 ### Mejoras y Configuración
 - Tareas completadas: 9
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 142**
-- **Tareas pendientes: 191**
+- **Tareas completadas: 150**
+- **Tareas pendientes: 183**

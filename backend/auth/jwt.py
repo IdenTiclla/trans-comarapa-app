@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from models.user import User
 from schemas.auth import TokenData
+from auth.blacklist import token_blacklist
 import os
 from dotenv import load_dotenv
 
@@ -55,6 +56,10 @@ def verify_token(token: str, credentials_exception):
     Returns:
         Datos del token
     """
+    # Verificar si el token está en la lista negra
+    if token_blacklist.is_token_blacklisted(token):
+        raise credentials_exception
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
@@ -87,11 +92,11 @@ async def get_token(
     # Si hay un token OAuth2, úsalo
     if oauth2_token:
         return oauth2_token
-    
+
     # Si hay credenciales de HTTPBearer, usa el token
     if http_auth:
         return http_auth.credentials
-    
+
     # Si no hay token, lanza una excepción
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
