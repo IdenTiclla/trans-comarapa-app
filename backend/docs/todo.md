@@ -143,17 +143,20 @@ Pendiente de implementar:
 ## Lista de Endpoints Implementados y Pendientes
 
 ### Endpoints de Autenticación y Usuarios
-- [ ] `POST /auth/login` - Autenticación de usuarios
-- [ ] `POST /auth/refresh` - Refrescar token JWT
-- [ ] `POST /auth/logout` - Cerrar sesión
-- [ ] `GET /users/me` - Obtener información del usuario actual
-- [ ] `PUT /users/me` - Actualizar información del usuario actual
-- [ ] `POST /users` - Crear nuevo usuario (admin)
-- [ ] `GET /users` - Listar usuarios (admin)
-- [ ] `GET /users/{id}` - Obtener usuario por ID (admin)
-- [ ] `PUT /users/{id}` - Actualizar usuario por ID (admin)
-- [ ] `DELETE /users/{id}` - Eliminar usuario (admin)
-- [ ] `PATCH /users/{id}/role` - Cambiar rol de usuario (admin)
+- [ ] `POST /api/v1/auth/login` - Autenticación de usuarios
+- [ ] `POST /api/v1/auth/refresh` - Refrescar token JWT
+- [ ] `POST /api/v1/auth/logout` - Cerrar sesión
+- [ ] `GET /api/v1/auth/me` - Obtener información del usuario actual
+- [ ] `PUT /api/v1/auth/me` - Actualizar información del usuario actual
+- [ ] `POST /api/v1/auth/register` - Registrar nuevo usuario
+- [ ] `POST /api/v1/auth/reset-password` - Solicitar restablecimiento de contraseña
+- [ ] `POST /api/v1/auth/reset-password/{token}` - Confirmar restablecimiento de contraseña
+- [ ] `POST /api/v1/users` - Crear nuevo usuario (admin)
+- [ ] `GET /api/v1/users` - Listar usuarios (admin)
+- [ ] `GET /api/v1/users/{id}` - Obtener usuario por ID (admin)
+- [ ] `PUT /api/v1/users/{id}` - Actualizar usuario por ID (admin)
+- [ ] `DELETE /api/v1/users/{id}` - Eliminar usuario (admin)
+- [ ] `PATCH /api/v1/users/{id}/role` - Cambiar rol de usuario (admin)
 
 ### Endpoints de Clientes
 - [x] `POST /clients` - Crear cliente <!-- Completado -->
@@ -417,14 +420,42 @@ Pendiente de implementar:
   - [ ] Eficiencia operativa
 
 ## Seguridad y Autenticación
-- [ ] Implementar sistema de autenticación JWT <!-- Pendiente, pero ya están configuradas las variables de entorno -->
+- [x] Implementar sistema de autenticación JWT <!-- Completado -->
+- [x] Configurar esquema OAuth2PasswordBearer <!-- Completado -->
+- [x] Configurar esquema HTTPBearer para soporte directo de tokens <!-- Completado -->
+- [x] Personalizar el esquema OpenAPI para incluir múltiples esquemas de autenticación <!-- Completado -->
 - [ ] Crear modelo y esquemas para usuarios del sistema <!-- Pendiente, pero ya está definido en el diagrama de clases -->
 - [ ] Implementar roles y permisos (admin, secretario, etc.) <!-- Pendiente -->
+- [ ] Adaptar función get_current_user para verificar roles de secretarios <!-- Pendiente -->
+- [ ] Integrar el sistema de autenticación con el modelo Secretary <!-- Pendiente -->
+- [ ] Proteger todos los endpoints existentes con autenticación <!-- Pendiente -->
 - [ ] Agregar middleware de autenticación <!-- Pendiente -->
 - [ ] Implementar endpoints para login/logout <!-- Pendiente -->
 - [ ] Agregar protección CORS <!-- Pendiente -->
 - [ ] Implementar rate limiting para endpoints públicos <!-- Pendiente -->
-- [ ] Agregar validación de tokens <!-- Pendiente -->
+- [ ] Crear sistema de registro de nuevos usuarios <!-- Pendiente -->
+- [ ] Implementar sistema de recuperación de contraseñas <!-- Pendiente -->
+- [ ] Agregar validación de tokens <!-- Completado parcialmente -->
+- [ ] Implementar refrescado de tokens <!-- Pendiente -->
+- [ ] Configurar expiración de tokens apropiada para el contexto de negocio <!-- Pendiente -->
+- [ ] Crear documentación detallada sobre el flujo de autenticación <!-- Pendiente -->
+- [ ] Implementar pruebas para el sistema de autenticación <!-- Pendiente -->
+
+### Endpoints de Autenticación y Usuarios
+- [ ] `POST /api/v1/auth/login` - Autenticación de usuarios
+- [ ] `POST /api/v1/auth/refresh` - Refrescar token JWT
+- [ ] `POST /api/v1/auth/logout` - Cerrar sesión
+- [ ] `GET /api/v1/auth/me` - Obtener información del usuario actual
+- [ ] `PUT /api/v1/auth/me` - Actualizar información del usuario actual
+- [ ] `POST /api/v1/auth/register` - Registrar nuevo usuario
+- [ ] `POST /api/v1/auth/reset-password` - Solicitar restablecimiento de contraseña
+- [ ] `POST /api/v1/auth/reset-password/{token}` - Confirmar restablecimiento de contraseña
+- [ ] `POST /api/v1/users` - Crear nuevo usuario (admin)
+- [ ] `GET /api/v1/users` - Listar usuarios (admin)
+- [ ] `GET /api/v1/users/{id}` - Obtener usuario por ID (admin)
+- [ ] `PUT /api/v1/users/{id}` - Actualizar usuario por ID (admin)
+- [ ] `DELETE /api/v1/users/{id}` - Eliminar usuario (admin)
+- [ ] `PATCH /api/v1/users/{id}/role` - Cambiar rol de usuario (admin)
 
 ## Manejo de Asientos
 - [x] Implementar modelo `Seat` para gestión de asientos <!-- Completado -->
@@ -496,21 +527,24 @@ Pendiente de implementar:
 
 ### Prioridad Alta (Inmediata)
 
-1. **Implementar Sistema de Autenticación y Autorización**:
-   - Configurar JWT para autenticación segura
-   - Implementar endpoints de login/logout
-   - Crear middleware de autenticación
-   - Definir roles y permisos (admin, secretario, etc.)
+1. **Completar Sistema de Autenticación y Autorización**:
+   - [x] Configurar JWT para autenticación segura
+   - [x] Implementar múltiples esquemas de autenticación (OAuth2 y HTTPBearer)
+   - [ ] Implementar endpoints de login/logout
+   - [ ] Adaptar sistema para trabajar con el modelo Secretary
+   - [ ] Integrar con el flujo de negocio existente
+   - [ ] Definir roles y permisos (admin, secretario, etc.)
+   - [ ] Proteger los endpoints existentes
 
 2. **Completar Endpoints Relacionales Pendientes**:
-   - Implementar endpoints para paquetes por remitente/destinatario/viaje
-   - Crear endpoints para listar viajes por ruta
-   - Implementar endpoints para listar tickets por secretario
+   - [ ] Implementar endpoints para paquetes por remitente/destinatario/viaje
+   - [ ] Crear endpoints para listar viajes por ruta
+   - [x] Implementar endpoints para listar tickets por secretario
 
 3. **Mejorar Validaciones y Manejo de Errores**:
-   - Implementar validaciones de negocio más robustas
-   - Crear manejadores de excepciones personalizados
-   - Mejorar mensajes de error para el cliente
+   - [ ] Implementar validaciones de negocio más robustas
+   - [ ] Crear manejadores de excepciones personalizados
+   - [ ] Mejorar mensajes de error para el cliente
 
 ### Prioridad Media (Corto Plazo)
 
@@ -590,17 +624,21 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 12
 
 ### Endpoints
-- Tareas completadas: 52
-- Tareas pendientes: 98
+- Tareas completadas: 53
+- Tareas pendientes: 111
 
 ### Funcionalidades de Negocio
 - Tareas completadas: 3
 - Tareas pendientes: 42
+
+### Seguridad y Autenticación
+- Tareas completadas: 4
+- Tareas pendientes: 16
 
 ### Mejoras y Configuración
 - Tareas completadas: 9
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 137**
-- **Tareas pendientes: 162**
+- **Tareas completadas: 142**
+- **Tareas pendientes: 191**

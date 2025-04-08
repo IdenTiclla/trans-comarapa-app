@@ -9,6 +9,8 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from fastapi import FastAPI
+from fastapi.openapi.models import SecurityScheme
+from fastapi.openapi.utils import get_openapi
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
@@ -53,6 +55,35 @@ app.include_router(api_router_v1, prefix="/api/v1")
 # También podemos incluir otras versiones en el futuro, por ejemplo:
 # from api.v2.api import api_router as api_router_v2
 # app.include_router(api_router_v2, prefix="/api/v2")
+
+# Personalizar el esquema OpenAPI para incluir múltiples esquemas de autenticación
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Añadir el esquema de seguridad HTTPBearer
+    openapi_schema["components"]["securitySchemes"]["HTTPBearer"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Ingresa tu token JWT directamente. Útil para pruebas y clientes API."
+    }
+    
+    # Asegurarse de que el esquema OAuth2 existente se mantenga
+    if "OAuth2PasswordBearer" in openapi_schema["components"]["securitySchemes"]:
+        openapi_schema["components"]["securitySchemes"]["OAuth2PasswordBearer"]["description"] = "Flujo OAuth2 con usuario y contraseña para generar token JWT."
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 @app.get('/')
 def index():
