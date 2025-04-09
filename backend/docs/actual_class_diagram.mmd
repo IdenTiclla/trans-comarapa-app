@@ -1,0 +1,163 @@
+```mermaid
+classDiagram
+    %% Entidades principales
+    class User {
+        +id: Integer
+        +email: String
+        +role: String
+        +hashed_password: String
+        +full_name: String
+        +is_active: Boolean
+        +is_admin: Boolean
+        +created_at: DateTime
+        +updated_at: DateTime
+        +verify_password(plain_password, hashed_password): Boolean
+        +get_password_hash(password): String
+    }
+
+    class Client {
+        +id: Integer
+        +name: String
+        +email: String
+        +phone: String
+        +address: String
+        +city: String
+        +state: String
+        +birth_date: Date
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Secretary {
+        +id: Integer
+        +name: String
+        +email: String
+        +phone: String
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Driver {
+        +id: Integer
+        +name: String
+        +lastname: String
+        +phone_number: String
+        +birth_date: Date
+        +license_number: String
+        +experience_years: Integer
+    }
+
+    class Assistant {
+        +id: Integer
+        +name: String
+        +lastname: String
+        +phone_number: String
+        +birth_date: Date
+    }
+
+    class Bus {
+        +id: Integer
+        +license_plate: String
+        +capacity: Integer
+        +model: String
+    }
+
+    class Seat {
+        +id: Integer
+        +bus_id: Integer
+        +seat_number: Integer
+        +deck: String
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Location {
+        +id: Integer
+        +name: String
+        +latitude: Float
+        +longitude: Float
+        +address: String
+        +city: String
+        +state: String
+        +country: String
+        +postal_code: String
+        +description: String
+    }
+
+    class Route {
+        +id: Integer
+        +origin_location_id: Integer
+        +destination_location_id: Integer
+        +distance: Float
+        +duration: Float
+        +price: Float
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Trip {
+        +id: Integer
+        +trip_datetime: DateTime
+        +driver_id: Integer
+        +assistant_id: Integer
+        +bus_id: Integer
+        +route_id: Integer
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Ticket {
+        +id: Integer
+        +state: String
+        +seat_id: Integer
+        +client_id: Integer
+        +trip_id: Integer
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Package {
+        +id: Integer
+        +name: String
+        +description: String
+        +weight: Float
+        +price: Float
+        +status: String
+        +sender_id: Integer
+        +recipient_id: Integer
+        +trip_id: Integer
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    %% Relaciones
+    Client "1" -- "*" Ticket : has
+    Client "1" -- "*" Package : sends >
+    Client "1" -- "*" Package : receives >
+    
+    Secretary "1" -- "*" Ticket : sells
+    Secretary "1" -- "*" Trip : dispatches
+    Secretary "1" -- "*" Package : handles
+    
+    Driver "1" -- "*" Trip : drives
+    
+    Assistant "1" -- "*" Trip : assists
+    
+    Bus "1" -- "*" Seat : contains
+    Bus "1" -- "*" Trip : assigned to
+    
+    Seat "1" -- "*" Ticket : assigned to
+    
+    Location "1" -- "*" Route : origin of >
+    Location "1" -- "*" Route : destination of >
+    
+    Route "1" -- "*" Trip : followed by
+    
+    Trip "1" -- "*" Ticket : has
+    Trip "1" -- "*" Package : transports
+    
+    %% Notas
+    note for User "Implementado para autenticación JWT"
+    note for Package "Mejorado con relaciones a remitente y destinatario"
+    note for Ticket "Vinculado a asiento específico"
+```

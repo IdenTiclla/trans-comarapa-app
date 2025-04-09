@@ -5,7 +5,9 @@ from typing import List, Optional
 from db.session import get_db
 from models.route import Route as RouteModel
 from models.location import Location as LocationModel
+from models.trip import Trip as TripModel
 from schemas.route import RouteCreate, Route as RouteSchema, RouteUpdate
+from schemas.trip import Trip as TripSchema
 
 router = APIRouter(
     tags=["Routes"]
@@ -21,7 +23,7 @@ def create_route(route: RouteCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Origin location with id {route.origin_location_id} not found"
         )
-    
+
     destination = db.query(LocationModel).filter(LocationModel.id == route.destination_location_id).first()
     if not destination:
         raise HTTPException(
@@ -39,7 +41,7 @@ def create_route(route: RouteCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail="Route between these locations already exists"
         )
-    
+
     # Create new route
     db_route = RouteModel(**route.model_dump())
     try:
@@ -78,17 +80,17 @@ def get_routes(
     if origin:
         query = query.join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
                     .filter(LocationModel.name.ilike(f"%{origin}%"))
-    
+
     if destination:
         query = query.join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
                     .filter(LocationModel.name.ilike(f"%{destination}%"))
-    
+
     if min_price is not None:
         query = query.filter(RouteModel.price >= min_price)
-    
+
     if max_price is not None:
         query = query.filter(RouteModel.price <= max_price)
-    
+
     return query.offset(skip).limit(limit).all()
 
 @router.get("/{route_id}", response_model=RouteSchema)
@@ -124,7 +126,7 @@ def update_route(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Origin location with id {route_update.origin_location_id} not found"
             )
-    
+
     if route_update.destination_location_id is not None:
         destination = db.query(LocationModel).filter(LocationModel.id == route_update.destination_location_id).first()
         if not destination:
@@ -170,7 +172,7 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Route not found"
         )
-    
+
     try:
         db.delete(route)
         db.commit()
@@ -181,3 +183,27 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Cannot delete route as it is being referenced by other records"
         )
+
+@router.get("/{route_id}/trips", response_model=List[TripSchema])
+def get_trips_by_route(route_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene todos los viajes asociados a una ruta específica.
+
+    Args:
+        route_id: ID de la ruta
+        db: Sesión de base de datos
+
+    Returns:
+        Lista de viajes asociados a la ruta
+    """
+    # Verificar que la ruta existe
+    route = db.query(RouteModel).filter(RouteModel.id == route_id).first()
+    if not route:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Route with id {route_id} not found"
+        )
+
+    # Obtener todos los viajes asociados a la ruta
+    trips = db.query(TripModel).filter(TripModel.route_id == route_id).all()
+    return trips

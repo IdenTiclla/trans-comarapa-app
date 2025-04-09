@@ -224,7 +224,7 @@ Parcialmente implementado:
 - [x] `PUT /routes/{id}` - Actualizar ruta <!-- Completado -->
 - [x] `DELETE /routes/{id}` - Eliminar ruta <!-- Completado -->
 - [x] `GET /routes/search` - Buscar rutas por origen/destino <!-- Completado -->
-- [ ] `GET /routes/{id}/trips` - Listar viajes para una ruta
+- [x] `GET /routes/{id}/trips` - Listar viajes para una ruta <!-- Completado -->
 - [ ] `POST /routes/{id}/stops` - Añadir parada a una ruta
 - [ ] `GET /routes/{id}/stops` - Listar paradas de una ruta
 - [ ] `DELETE /routes/{id}/stops/{stop_id}` - Eliminar parada de una ruta
@@ -515,59 +515,71 @@ Parcialmente implementado:
 
 ### Prioridad Alta (Inmediata)
 
-1. **Completar Sistema de Autenticación y Autorización**:
-   - [x] Configurar JWT para autenticación segura
-   - [x] Implementar múltiples esquemas de autenticación (OAuth2 y HTTPBearer)
-   - [x] Implementar endpoints de login/logout
-   - [x] Implementar lista negra de tokens para logout
-   - [x] Definir roles y permisos básicos (admin, usuario)
+1. **Finalizar Sistema de Autenticación y Autorización**:
    - [ ] Adaptar sistema para trabajar con el modelo Secretary
    - [ ] Integrar con el flujo de negocio existente
-   - [ ] Proteger los endpoints existentes
+   - [ ] Proteger todos los endpoints existentes con autenticación
+   - [ ] Implementar middleware para verificación de permisos por rol
+   - [ ] Crear documentación detallada sobre el flujo de autenticación
 
-2. **Completar Endpoints Relacionales Pendientes**:
-   - [x] Implementar endpoints para paquetes por remitente/destinatario/viaje
-   - [ ] Crear endpoints para listar viajes por ruta
-   - [x] Implementar endpoints para listar tickets por secretario
-
-3. **Mejorar Validaciones y Manejo de Errores**:
+2. **Mejorar Validaciones y Manejo de Errores**:
    - [ ] Implementar validaciones de negocio más robustas
    - [ ] Crear manejadores de excepciones personalizados
    - [ ] Mejorar mensajes de error para el cliente
+   - [ ] Implementar logging centralizado de errores
+   - [ ] Crear middleware para manejo uniforme de excepciones
+
+3. **Implementar Endpoints para Estado de Entidades**:
+   - [ ] Crear endpoint `PATCH /tickets/{id}/status` para actualizar estado de tickets
+   - [ ] Crear endpoint `PATCH /packages/{id}/status` para actualizar estado de paquetes
+   - [ ] Crear endpoint `PATCH /trips/{id}/status` para actualizar estado de viajes
+   - [ ] Implementar notificaciones de cambios de estado
 
 ### Prioridad Media (Corto Plazo)
 
 4. **Implementar Sistema de Reservas**:
-   - Crear modelo y endpoints para reservas
-   - Implementar lógica de bloqueo temporal de asientos
-   - Desarrollar proceso de confirmación/cancelación
+   - [ ] Crear modelo y esquema para reservas
+   - [ ] Implementar endpoints CRUD para reservas
+   - [ ] Desarrollar lógica de bloqueo temporal de asientos
+   - [ ] Implementar proceso de confirmación/cancelación
+   - [ ] Crear endpoint para convertir reserva en ticket
 
-5. **Optimizar Rendimiento**:
-   - Extender paginación a todos los endpoints restantes
-   - Implementar caché para consultas frecuentes
-   - Optimizar consultas a la base de datos
+5. **Optimizar Rendimiento y Usabilidad**:
+   - [ ] Extender paginación a todos los endpoints restantes
+   - [ ] Implementar caché para consultas frecuentes
+   - [ ] Optimizar consultas a la base de datos
+   - [ ] Agregar filtros avanzados a endpoints de listado
+   - [ ] Implementar ordenamiento personalizable
 
-6. **Implementar Pruebas**:
-   - Crear pruebas unitarias para modelos
-   - Implementar pruebas de integración para endpoints
-   - Configurar CI/CD para ejecución automática de pruebas
+6. **Implementar Pruebas Automatizadas**:
+   - [ ] Crear pruebas unitarias para modelos
+   - [ ] Implementar pruebas de integración para endpoints
+   - [ ] Desarrollar pruebas de rendimiento
+   - [ ] Configurar CI/CD para ejecución automática de pruebas
+   - [ ] Implementar cobertura de código
 
 ### Prioridad Baja (Mediano Plazo)
 
 7. **Implementar Sistema de Pagos**:
-   - Crear modelos y endpoints para métodos de pago y transacciones
-   - Integrar con pasarelas de pago
-   - Implementar sistema de reembolsos
+   - [ ] Crear modelos y endpoints para métodos de pago
+   - [ ] Implementar modelo de transacciones
+   - [ ] Integrar con pasarelas de pago (PayPal, tarjetas de crédito)
+   - [ ] Desarrollar sistema de reembolsos
+   - [ ] Implementar facturación electrónica
 
 8. **Desarrollar Sistema de Reportes**:
-   - Crear endpoints para reportes de ventas
-   - Implementar estadísticas de ocupación
-   - Desarrollar reportes de rendimiento
+   - [ ] Crear endpoints para reportes de ventas diarias/mensuales
+   - [ ] Implementar estadísticas de ocupación por ruta
+   - [ ] Desarrollar reportes de rendimiento por oficina
+   - [ ] Crear dashboard con métricas clave
+   - [ ] Implementar exportación de reportes a PDF/Excel
 
 9. **Completar Sistema de Oficinas**:
-   - Implementar modelo y endpoints para oficinas
-   - Mejorar la gestión de secretarios
-   - Crear reportes por oficina
+   - [ ] Implementar modelo y endpoints para oficinas
+   - [ ] Mejorar la gestión de secretarios
+   - [ ] Crear reportes por oficina
+   - [ ] Implementar asignación de inventario por oficina
+   - [ ] Desarrollar sistema de comunicación entre oficinas
 
 ## Mejoras Recientes Completadas
 
@@ -613,8 +625,8 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 12
 
 ### Endpoints
-- Tareas completadas: 56
-- Tareas pendientes: 108
+- Tareas completadas: 57
+- Tareas pendientes: 107
 
 ### Funcionalidades de Negocio
 - Tareas completadas: 3
@@ -629,5 +641,5 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 153**
-- **Tareas pendientes: 180**
+- **Tareas completadas: 154**
+- **Tareas pendientes: 179**
