@@ -1,16 +1,22 @@
 classDiagram
-    class Client {
+    %% Clase base Persona
+    class Person {
         - id: Int
         - name: String
         - email: String
         - phone: String
-        - address: String
-        - city: String
-        - state: String
         - birth_date: Date
         - created_at: DateTime
         - updated_at: DateTime
     }
+
+    %% Clases principales
+    class Client {
+        - address: String
+        - city: String
+        - state: String
+    }
+
     class Ticket {
         - id: Int
         - seat_id: Int
@@ -20,6 +26,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Trip {
         - id: Int
         - trip_datetime: DateTime
@@ -30,6 +37,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Route {
         - id: Int
         - origin_location_id: Int
@@ -40,6 +48,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Location {
         - id: Int
         - name: String
@@ -54,6 +63,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Bus {
         - id: Int
         - plate_number: String
@@ -64,16 +74,19 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class SingleDeckBus {
         - id: Int
         - capacity: Int
     }
+
     class DoubleDeckBus {
         - id: Int
         - capacity: Int
         - lower_deck_capacity: Int
         - upper_deck_capacity: Int
     }
+
     class Seat {
         - id: Int
         - bus_id: Int
@@ -82,6 +95,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Reservation {
         - id: Int
         - client_id: Int
@@ -92,6 +106,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Package {
         - id: Int
         - sender_id: Int
@@ -105,6 +120,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class PackageState {
         - id: Int
         - name: String
@@ -112,6 +128,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Office {
         - id: Int
         - name: String
@@ -122,37 +139,29 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Secretary {
-        - id: Int
-        - name: String
         - office_id: Int
-        - email: String
-        - phone: String
         - document_id: String
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Driver {
-        - id: Int
-        - name: String
         - license_number: String
         - license_type: String
         - license_expiry: Date
-        - phone: String
-        - address: String
-        - email: String
         - status: String
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Assistant {
-        - id: Int
-        - name: String
-        - phone: String
         - document_id: String
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class PaymentMethod {
         - id: Int
         - name: String
@@ -161,6 +170,7 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class Transaction {
         - id: Int
         - client_id: Int
@@ -172,50 +182,67 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
     }
+
     class User {
-        - id: Int
         - username: String
-        - email: String
         - password_hash: String
         - role: String
         - is_active: Boolean
         - created_at: DateTime
         - updated_at: DateTime
     }
-    
+
+    %% Relaciones (herencia, composición, agregación y demás)
+    Person <|-- Client
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+
     Client "1" -- "*" Ticket : purchases
     Client "1" -- "*" Reservation : reserves
     Client "1" -- "*" Package : sends/receives
     Client "1" -- "*" Transaction : makes
-    Ticket "*" -- "1" Trip : belongs to
+
+    Trip "1" o-- "*" Ticket : (Agregación)  
     Ticket "1" -- "1" Seat : occupies
     Ticket "1" -- "1" Transaction : paid via
+
     Reservation "*" -- "1" Trip : linked to
     Reservation "1" -- "1" Seat : reserves
+
     Trip "1" -- "1" Route : follows
     Trip "1" -- "1" Bus : assigned to
     Trip "1" -- "1" Driver : driven by
     Trip "0..1" -- "1" Assistant : assisted by
     Trip "1" -- "1" Secretary : dispatched by
-    Trip "*" -- "*" Seat : contains>seats
+    Trip "*" -- "*" Seat : uses>seats  %% Relación normal (no es composición ni agregación para seats en Trip)
+
     Route "1" -- "1" Location : starts from
     Route "1" -- "1" Location : ends at
-    Bus "1" -- "*" Seat : contains
+
+    Bus "1" *-- "*" Seat : (Composición)
+
     Package "*" -- "1" Trip : transported in
     Package "1" -- "1" Transaction : paid via
     Package "1" -- "1" PackageState : has status
+
     Secretary "1" -- "*" Ticket : sells
     Secretary "1" -- "*" Package : handles
     Secretary "1" -- "*" Trip : dispatches
     Secretary "1" -- "1" Office : works in
     Secretary "1" -- "1" User : has account
+
     Office "1" -- "*" Secretary : employs
     Office "1" -- "1" Location : located at
+
     Transaction "1" -- "1" PaymentMethod : used via
+
     Bus <|-- SingleDeckBus
     Bus <|-- DoubleDeckBus
-    
-    note for Seat "New entity to manage bus seats\nTickets are now linked to seats"
-    note for Reservation "Improved with expiration\nand status tracking"
-    note for User "Added for authentication\nand authorization"
-    note for PackageState "New class to manage states of packages"
+
+    %% Notas
+    note for Seat "Composición con Bus:\nsi se elimina el Bus, se eliminan los Seats"
+    note for Ticket "Agregación con Trip:\nlos Tickets pueden sobrevivir sin el Trip"
+    note for Reservation "Incluye expiración y estado"
+    note for User "Para autenticación y autorización"
+    note for PackageState "Clasifica el estado de los paquetes"
