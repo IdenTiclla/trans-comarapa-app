@@ -2,6 +2,7 @@ classDiagram
     %% Clase base Persona
     class Person {
         - id: Int
+        - ci: String
         - name: String
         - email: String
         - phone: String
@@ -142,7 +143,6 @@ classDiagram
 
     class Secretary {
         - office_id: Int
-        - document_id: String
         - created_at: DateTime
         - updated_at: DateTime
     }
@@ -157,7 +157,11 @@ classDiagram
     }
 
     class Assistant {
-        - document_id: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+
+    class Administrator {
         - created_at: DateTime
         - updated_at: DateTime
     }
@@ -197,13 +201,16 @@ classDiagram
     Person <|-- Secretary
     Person <|-- Driver
     Person <|-- Assistant
+    Person <|-- Administrator
 
     Client "1" -- "*" Ticket : purchases
     Client "1" -- "*" Reservation : reserves
     Client "1" -- "*" Package : sends/receives
     Client "1" -- "*" Transaction : makes
 
-    Trip "1" o-- "*" Ticket : (Agregación)  
+    %% Agregación (rombo vacío) desde Trip a Ticket
+    Trip "1" o-- "*" Ticket : (Agregación)
+
     Ticket "1" -- "1" Seat : occupies
     Ticket "1" -- "1" Transaction : paid via
 
@@ -215,22 +222,23 @@ classDiagram
     Trip "1" -- "1" Driver : driven by
     Trip "0..1" -- "1" Assistant : assisted by
     Trip "1" -- "1" Secretary : dispatched by
-    Trip "*" -- "*" Seat : uses>seats  %% Relación normal (no es composición ni agregación para seats en Trip)
+    Trip "*" -- "*" Seat : uses>seats  %% Relación normal
 
     Route "1" -- "1" Location : starts from
     Route "1" -- "1" Location : ends at
 
+    %% Composición (rombo lleno) desde Bus a Seat
     Bus "1" *-- "*" Seat : (Composición)
 
     Package "*" -- "1" Trip : transported in
     Package "1" -- "1" Transaction : paid via
     Package "1" -- "1" PackageState : has status
 
-    Secretary "1" -- "*" Ticket : sells
-    Secretary "1" -- "*" Package : handles
-    Secretary "1" -- "*" Trip : dispatches
-    Secretary "1" -- "1" Office : works in
+    %% Relaciones de autenticación
     Secretary "1" -- "1" User : has account
+    Driver "1" -- "1" User : has account
+    Assistant "1" -- "1" User : has account
+    Administrator "1" -- "1" User : has account
 
     Office "1" -- "*" Secretary : employs
     Office "1" -- "1" Location : located at
@@ -241,8 +249,9 @@ classDiagram
     Bus <|-- DoubleDeckBus
 
     %% Notas
-    note for Seat "Composición con Bus:\nsi se elimina el Bus, se eliminan los Seats"
-    note for Ticket "Agregación con Trip:\nlos Tickets pueden sobrevivir sin el Trip"
+    note for Seat "Composición con Bus:\nsi se elimina el Bus, se eliminan sus Seats"
+    note for Ticket "Agregación con Trip:\nun Ticket puede seguir existiendo por sí solo"
+    note for Administrator "Usuarios con acceso total al sistema"
     note for Reservation "Incluye expiración y estado"
-    note for User "Para autenticación y autorización"
-    note for PackageState "Clasifica el estado de los paquetes"
+    note for User "Para autenticación y autorización\n(role determina privilegios)"
+    note for PackageState "Clasifica los estados de los paquetes"
