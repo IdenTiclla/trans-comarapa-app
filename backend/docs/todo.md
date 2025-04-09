@@ -35,6 +35,7 @@ Parcialmente implementado:
 - [ ] Implementar las clases `SingleDeckBus` y `DoubleDeckBus`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Reservation`.  <!-- Pendiente -->
 - [x] Implementar la clase `Package`.  <!-- Completado -->
+- [ ] Implementar la clase `PackageState`.  <!-- Pendiente: Para manejar estados de paquetes de forma estructurada -->
 - [ ] Implementar la clase `Office`.  <!-- Pendiente -->
 - [x] Implementar la clase `Secretary`.  <!-- Completado pero sin endpoints funcionales -->
 - [x] Implementar la clase `Driver`.  <!-- Completado -->
@@ -42,6 +43,9 @@ Parcialmente implementado:
 - [ ] Implementar la clase `PaymentMethod`.  <!-- Pendiente -->
 - [ ] Implementar la clase `Transaction`.  <!-- Pendiente -->
 - [x] Implementar la clase `Seat`.  <!-- Completado -->
+- [ ] Implementar la clase `RouteStop`.  <!-- Pendiente: Para manejar paradas intermedias en rutas -->
+- [ ] Implementar la clase `TripState`.  <!-- Pendiente: Para manejar estados de viajes de forma estructurada -->
+- [x] Implementar la clase `User`.  <!-- Completado para autenticación JWT -->
 
 ## Establecer Relaciones
 - [x] Definir las relaciones entre `Client` y `Ticket`.  <!-- Completado -->
@@ -50,20 +54,28 @@ Parcialmente implementado:
 - [ ] Definir las relaciones entre `Client` y `Transaction`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Ticket` y `Trip`.  <!-- Completado -->
 - [ ] Definir las relaciones entre `Reservation` y `Trip`.  <!-- Pendiente -->
+- [ ] Definir las relaciones entre `Reservation` y `Seat`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Trip` y `Route`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Bus`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Driver`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Assistant`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Trip` y `Secretary`.  <!-- Completado en el modelo -->
+- [ ] Definir las relaciones entre `Trip` y `TripState`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Route` y `Location`.  <!-- Completado -->
+- [ ] Definir las relaciones entre `Route` y `RouteStop`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Package` y `Trip`.  <!-- Completado -->
+- [ ] Definir las relaciones entre `Package` y `PackageState`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Secretary` y `Ticket`.  <!-- Completado en el modelo -->
 - [x] Definir las relaciones entre `Secretary` y `Package`.  <!-- Completado en el modelo -->
 - [x] Definir las relaciones entre `Secretary` y `Trip`.  <!-- Completado en el modelo -->
 - [ ] Definir las relaciones entre `Secretary` y `Office`.  <!-- Pendiente -->
+- [ ] Definir las relaciones entre `Secretary` y `User`.  <!-- Pendiente: Relación uno a uno para autenticación -->
 - [ ] Definir las relaciones entre `Transaction` y `PaymentMethod`.  <!-- Pendiente -->
+- [ ] Definir las relaciones entre `Transaction` y `Ticket`.  <!-- Pendiente -->
+- [ ] Definir las relaciones entre `Transaction` y `Package`.  <!-- Pendiente -->
 - [x] Definir las relaciones entre `Ticket` y `Seat`.  <!-- Completado -->
 - [x] Definir las relaciones entre `Seat` y `Bus`.  <!-- Completado -->
+- [ ] Definir las relaciones entre `Office` y `Location`.  <!-- Pendiente -->
 
 ## Implementar Funcionalidades Básicas (CRUD)
 - [x] Implementar CRUD completo para Client (Passenger):
@@ -517,6 +529,7 @@ Parcialmente implementado:
 
 1. **Finalizar Sistema de Autenticación y Autorización**:
    - [ ] Adaptar sistema para trabajar con el modelo Secretary
+   - [ ] Implementar relación uno a uno entre `Secretary` y `User`
    - [ ] Integrar con el flujo de negocio existente
    - [ ] Proteger todos los endpoints existentes con autenticación
    - [ ] Implementar middleware para verificación de permisos por rol
@@ -529,7 +542,14 @@ Parcialmente implementado:
    - [ ] Implementar logging centralizado de errores
    - [ ] Crear middleware para manejo uniforme de excepciones
 
-3. **Implementar Endpoints para Estado de Entidades**:
+3. **Implementar Mejoras en el Modelo de Datos**:
+   - [ ] Crear modelo `Office` y relacionarlo con `Secretary` y `Location`
+   - [ ] Implementar modelo `TripState` para manejar estados de viajes
+   - [ ] Implementar modelo `PackageState` para manejar estados de paquetes
+   - [ ] Agregar campo de estado al modelo `Trip`
+   - [ ] Mejorar auditoría con campos `created_by` y `updated_by`
+
+4. **Implementar Endpoints para Estado de Entidades**:
    - [ ] Crear endpoint `PATCH /tickets/{id}/status` para actualizar estado de tickets
    - [ ] Crear endpoint `PATCH /packages/{id}/status` para actualizar estado de paquetes
    - [ ] Crear endpoint `PATCH /trips/{id}/status` para actualizar estado de viajes
@@ -537,21 +557,28 @@ Parcialmente implementado:
 
 ### Prioridad Media (Corto Plazo)
 
-4. **Implementar Sistema de Reservas**:
+5. **Implementar Sistema de Reservas**:
    - [ ] Crear modelo y esquema para reservas
    - [ ] Implementar endpoints CRUD para reservas
    - [ ] Desarrollar lógica de bloqueo temporal de asientos
    - [ ] Implementar proceso de confirmación/cancelación
    - [ ] Crear endpoint para convertir reserva en ticket
 
-5. **Optimizar Rendimiento y Usabilidad**:
+6. **Implementar Paradas Intermedias en Rutas**:
+   - [ ] Crear modelo `RouteStop` para paradas intermedias
+   - [ ] Implementar endpoints para gestionar paradas
+   - [ ] Desarrollar lógica para calcular precios por tramo
+   - [ ] Actualizar endpoints de rutas para incluir paradas
+   - [ ] Implementar búsqueda de rutas con paradas intermedias
+
+7. **Optimizar Rendimiento y Usabilidad**:
    - [ ] Extender paginación a todos los endpoints restantes
    - [ ] Implementar caché para consultas frecuentes
    - [ ] Optimizar consultas a la base de datos
    - [ ] Agregar filtros avanzados a endpoints de listado
    - [ ] Implementar ordenamiento personalizable
 
-6. **Implementar Pruebas Automatizadas**:
+8. **Implementar Pruebas Automatizadas**:
    - [ ] Crear pruebas unitarias para modelos
    - [ ] Implementar pruebas de integración para endpoints
    - [ ] Desarrollar pruebas de rendimiento
@@ -560,26 +587,35 @@ Parcialmente implementado:
 
 ### Prioridad Baja (Mediano Plazo)
 
-7. **Implementar Sistema de Pagos**:
+9. **Implementar Sistema de Pagos**:
    - [ ] Crear modelos y endpoints para métodos de pago
    - [ ] Implementar modelo de transacciones
+   - [ ] Relacionar transacciones con tickets y paquetes
    - [ ] Integrar con pasarelas de pago (PayPal, tarjetas de crédito)
    - [ ] Desarrollar sistema de reembolsos
    - [ ] Implementar facturación electrónica
 
-8. **Desarrollar Sistema de Reportes**:
-   - [ ] Crear endpoints para reportes de ventas diarias/mensuales
-   - [ ] Implementar estadísticas de ocupación por ruta
-   - [ ] Desarrollar reportes de rendimiento por oficina
-   - [ ] Crear dashboard con métricas clave
-   - [ ] Implementar exportación de reportes a PDF/Excel
+10. **Implementar Herencia para Buses**:
+    - [ ] Crear clases `SingleDeckBus` y `DoubleDeckBus` heredando de `Bus`
+    - [ ] Adaptar endpoints para manejar diferentes tipos de buses
+    - [ ] Implementar lógica específica para cada tipo de bus
+    - [ ] Actualizar la generación de asientos según el tipo de bus
+    - [ ] Mejorar la visualización de asientos en la API
 
-9. **Completar Sistema de Oficinas**:
-   - [ ] Implementar modelo y endpoints para oficinas
-   - [ ] Mejorar la gestión de secretarios
-   - [ ] Crear reportes por oficina
-   - [ ] Implementar asignación de inventario por oficina
-   - [ ] Desarrollar sistema de comunicación entre oficinas
+11. **Desarrollar Sistema de Reportes**:
+    - [ ] Crear endpoints para reportes de ventas diarias/mensuales
+    - [ ] Implementar estadísticas de ocupación por ruta
+    - [ ] Desarrollar reportes de rendimiento por oficina
+    - [ ] Crear dashboard con métricas clave
+    - [ ] Implementar exportación de reportes a PDF/Excel
+
+12. **Completar Sistema de Oficinas**:
+    - [ ] Implementar modelo y endpoints para oficinas
+    - [ ] Relacionar oficinas con ubicaciones
+    - [ ] Mejorar la gestión de secretarios
+    - [ ] Crear reportes por oficina
+    - [ ] Implementar asignación de inventario por oficina
+    - [ ] Desarrollar sistema de comunicación entre oficinas
 
 ## Mejoras Recientes Completadas
 
@@ -600,7 +636,9 @@ Parcialmente implementado:
 
 Este documento representa una hoja de ruta completa para el desarrollo del backend de Trans Comarapa. Las tareas están organizadas por áreas funcionales y prioridades para facilitar la planificación y ejecución del proyecto.
 
-El proyecto ha avanzado significativamente, con la implementación de los modelos principales y sus endpoints CRUD correspondientes. Las próximas etapas se centrarán en la implementación de autenticación, mejora de las validaciones, y desarrollo de funcionalidades más avanzadas como reservas, pagos y reportes.
+El proyecto ha avanzado significativamente, con la implementación de los modelos principales y sus endpoints CRUD correspondientes. Se ha completado la implementación básica del sistema de autenticación JWT con lista negra de tokens y se han implementado endpoints relacionales importantes.
+
+Las próximas etapas se centrarán en mejorar el modelo de datos con nuevas entidades como `Office`, `RouteStop`, `TripState` y `PackageState`, así como en implementar relaciones adicionales entre los modelos existentes. También se trabajará en la integración del sistema de autenticación con el modelo de secretarios y en la protección de endpoints.
 
 Es importante revisar y actualizar este documento regularmente a medida que el proyecto evoluciona. Las prioridades pueden cambiar según los requisitos del negocio y el feedback de los usuarios.
 
@@ -610,6 +648,7 @@ Fecha: [Definir fecha para la próxima revisión]
 
 ### Historial de Actualizaciones
 
+- **08/04/2024**: Actualización del modelo de datos y próximos pasos basados en el diagrama de clases
 - **07/04/2024**: Actualización completa del documento con el estado actual del proyecto
 - **05/04/2024**: Agregadas mejoras de arquitectura (versionado de API)
 - **24/03/2024**: Creación inicial del documento
@@ -618,7 +657,7 @@ Fecha: [Definir fecha para la próxima revisión]
 
 ### Modelos y Relaciones
 - Tareas completadas: 25
-- Tareas pendientes: 10
+- Tareas pendientes: 18
 
 ### Funcionalidades CRUD
 - Tareas completadas: 48
@@ -630,7 +669,7 @@ Fecha: [Definir fecha para la próxima revisión]
 
 ### Funcionalidades de Negocio
 - Tareas completadas: 3
-- Tareas pendientes: 42
+- Tareas pendientes: 52
 
 ### Seguridad y Autenticación
 - Tareas completadas: 12
@@ -642,4 +681,4 @@ Fecha: [Definir fecha para la próxima revisión]
 
 ### Total
 - **Tareas completadas: 154**
-- **Tareas pendientes: 179**
+- **Tareas pendientes: 197**
