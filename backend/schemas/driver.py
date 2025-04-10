@@ -1,35 +1,37 @@
-from pydantic import BaseModel, Field
-from datetime import date
+from pydantic import Field
 from typing import Optional
+from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
-class DriverBase(BaseModel):
-    name: str = Field(..., description="Driver's name", example="John")
-    lastname: str = Field(..., description="Driver lastname", example="Doe")
-    phone_number: str = Field(..., description="Driver phone number", example="77612322")
-    birth_date: date = Field(..., description="Driver birth date.", example="1998-01-29")
-    license_number: str = Field(..., description="License number.", example="12345678")
-    experience_years:  int = Field(..., description="Driver's years of experience", example=5)
-
-class DriverCreate(DriverBase):
+class DriverBase(PersonBase):
     """
-    Schema for creating a new driver.
+    Esquema base para conductores, hereda de PersonBase.
+    """
+    license_number: str = Field(..., description="Driver's license number", example="LC123456")
+    experience_years: int = Field(..., description="Driver's years of experience", example=5)
+
+class DriverCreate(PersonCreate, DriverBase):
+    """
+    Esquema para crear un nuevo conductor.
     """
     pass
-
-    class Config:
-        from_attributes = True
 
 class DriverPatch(DriverBase):
     """
-    Schema for updating a driver.
+    Esquema para actualizar un conductor.
     """
     pass
 
     class Config:
         from_attributes = True
 
-class Driver(DriverBase):
-    id: int = Field(..., description="Driver identifier", example=1)
+class Driver(PersonSchema, DriverBase):
+    """
+    Esquema para representar un conductor.
+    """
+    # Campos específicos de Driver en la respuesta (si los hubiera)
 
     class Config:
         from_attributes = True
+        arbitrary_types_allowed = True
+        # Excluir el campo user para evitar la recursión
+        exclude = {"user"}

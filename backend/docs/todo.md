@@ -664,8 +664,8 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 12
 
 ### Endpoints
-- Tareas completadas: 57
-- Tareas pendientes: 107
+- Tareas completadas: 61
+- Tareas pendientes: 103
 
 ### Funcionalidades de Negocio
 - Tareas completadas: 3
@@ -680,5 +680,5 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 154**
-- **Tareas pendientes: 197**
+- **Tareas completadas: 158**
+- **Tareas pendientes: 193**

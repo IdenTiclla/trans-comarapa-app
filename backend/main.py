@@ -31,6 +31,9 @@ from models.client import Client
 from models.ticket import Ticket
 from models.package import Package
 from models.secretary import Secretary
+from models.administrator import Administrator
+from models.office import Office
+from models.user import User
 # pylint: enable=unused-import
 
 load_dotenv()

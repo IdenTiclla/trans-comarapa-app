@@ -1,15 +1,19 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from db.base import Base
+from models.person import Person
 
-class Driver(Base):
+class Driver(Person):
     __tablename__ = "drivers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), index=True)
-    lastname = Column(String(100), index=True)
-    phone_number = Column(String(8))
-    birth_date = Column(Date())
-    license_number = Column(String(8), unique=True)
-    experience_years = Column(Integer)
+    # Campos específicos de Driver según el UML
+    license_number = Column(String(50), unique=True)
+    license_type = Column(String(50))
+    license_expiry = Column(Date)
+    status = Column(String(20), default="active")
+
+    # Relación con User (uno a uno)
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=True)
+    user = relationship("User", back_populates="driver")
+    
+    # Relaciones específicas de Driver
     trips = relationship("Trip", back_populates="driver")

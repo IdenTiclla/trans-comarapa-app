@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-# Passenger model has been removed
 from models.driver import Driver
 from models.bus import Bus
 from models.assistant import Assistant
@@ -12,12 +11,20 @@ from models.seat import Seat
 from models.ticket import Ticket
 from models.secretary import Secretary
 from models.package import Package
+from models.user import User, UserRole
+from models.administrator import Administrator
+from models.office import Office
 from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
 import os
 from datetime import datetime, date, timedelta
 import random
+import warnings
+from faker import Faker
+
+# Suprimir advertencias de passlib/bcrypt
+warnings.filterwarnings("ignore", message=".*error reading bcrypt version.*")
 
 # Load environment variables
 load_dotenv()
@@ -39,9 +46,11 @@ def clear_db():
         db.query(Assistant).delete()
         db.query(Driver).delete()
         db.query(Bus).delete()
+        db.query(Office).delete()
         db.query(Location).delete()
         db.query(Secretary).delete()
-        # Passenger model has been removed
+        db.query(Administrator).delete()
+        db.query(User).delete()
 
         db.commit()
         print("Database cleared successfully!")
@@ -53,6 +62,8 @@ def clear_db():
 
 def seed_db():
     db = SessionLocal()
+    # Inicializar Faker con localización española para nombres más realistas
+    fake = Faker(['es_ES'])
     try:
         # Create sample locations first
         location_data = [
@@ -115,6 +126,47 @@ def seed_db():
             db.flush()  # Flush to get IDs
             locations[location_info["name"]] = location
 
+        # Crear oficinas en las ubicaciones
+        office_data = [
+            {
+                "name": "Oficina Central Santa Cruz",
+                "phone": "33445566",
+                "email": "santacruz@transcomarapa.com",
+                "location_id": locations["Terminal Bimodal Santa Cruz"].id
+            },
+            {
+                "name": "Oficina Cochabamba",
+                "phone": "44556677",
+                "email": "cochabamba@transcomarapa.com",
+                "location_id": locations["Terminal Cochabamba"].id
+            },
+            {
+                "name": "Oficina Comarapa",
+                "phone": "77889900",
+                "email": "comarapa@transcomarapa.com",
+                "location_id": locations["Terminal Comarapa"].id
+            },
+            {
+                "name": "Oficina Samaipata",
+                "phone": "66778899",
+                "email": "samaipata@transcomarapa.com",
+                "location_id": locations["Terminal Samaipata"].id
+            },
+            {
+                "name": "Oficina Mairana",
+                "phone": "55667788",
+                "email": "mairana@transcomarapa.com",
+                "location_id": locations["Terminal Mairana"].id
+            }
+        ]
+
+        offices = {}
+        for office_info in office_data:
+            office = Office(**office_info)
+            db.add(office)
+            db.flush()  # Flush to get IDs
+            offices[office_info["name"]] = office
+
         # Create sample routes with location references
         route_data = [
             {
@@ -160,99 +212,47 @@ def seed_db():
             db.add(route)
             routes.append(route)
 
-        # Create sample clients with realistic Bolivian names and data
-        client_data = [
-            {
-                "name": "Carlos Rodríguez",
-                "email": "carlos.rodriguez@gmail.com",
-                "phone": "77612321",
-                "address": "Av. Banzer #123",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "birth_date": date(1990, 5, 15)
-            },
-            {
-                "name": "María Flores",
-                "email": "maria.flores@gmail.com",
-                "phone": "77612322",
-                "address": "Calle Los Pinos #456",
-                "city": "Cochabamba",
-                "state": "Cochabamba",
-                "birth_date": date(1985, 8, 22)
-            },
-            {
-                "name": "Juan Gutiérrez",
-                "email": "juan.gutierrez@gmail.com",
-                "phone": "77612323",
-                "address": "Av. América #789",
-                "city": "La Paz",
-                "state": "La Paz",
-                "birth_date": date(1992, 3, 10)
-            },
-            {
-                "name": "Ana Mendoza",
-                "email": "ana.mendoza@gmail.com",
-                "phone": "77612324",
-                "address": "Calle Ballivián #234",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "birth_date": date(1988, 11, 28)
-            },
-            {
-                "name": "Luis Vargas",
-                "email": "luis.vargas@gmail.com",
-                "phone": "77612325",
-                "address": "Av. Centenario #567",
-                "city": "Cobija",
-                "state": "Pando",
-                "birth_date": date(1995, 7, 4)
-            },
-            {
-                "name": "Elena Torrez",
-                "email": "elena.torrez@gmail.com",
-                "phone": "77612326",
-                "address": "Calle Jordan #890",
-                "city": "Cochabamba",
-                "state": "Cochabamba",
-                "birth_date": date(1991, 2, 18)
-            },
-            {
-                "name": "Jorge Villanueva",
-                "email": "jorge.villanueva@gmail.com",
-                "phone": "77612327",
-                "address": "Av. Santos Dumont #345",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "birth_date": date(1987, 9, 30)
-            },
-            {
-                "name": "Patricia Rojas",
-                "email": "patricia.rojas@gmail.com",
-                "phone": "77612328",
-                "address": "Calle 6 de Agosto #678",
-                "city": "La Paz",
-                "state": "La Paz",
-                "birth_date": date(1993, 6, 12)
-            },
-            {
-                "name": "Roberto Mercado",
-                "email": "roberto.mercado@gmail.com",
-                "phone": "77612329",
-                "address": "Av. Irala #901",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "birth_date": date(1984, 12, 5)
-            },
-            {
-                "name": "Clara Quispe",
-                "email": "clara.quispe@gmail.com",
-                "phone": "77612330",
-                "address": "Calle Murillo #234",
-                "city": "Oruro",
-                "state": "Oruro",
-                "birth_date": date(1996, 4, 25)
+        # Crear usuarios para clientes primero
+        client_user_data = []
+        for i in range(10):
+            # Generar un nombre de usuario único con un timestamp
+            timestamp = int(datetime.now().timestamp()) + i
+            client_user = {
+                "username": f"cliente{i+1}_{timestamp}",
+                "email": fake.email(),
+                "role": "client",
+                "hashed_password": User.get_password_hash(f"cliente{i+1}"),
+                "full_name": fake.name(),
+                "is_active": True,
+                "is_admin": False
             }
-        ]
+            client_user_data.append(client_user)
+
+        client_users = []
+        for user_info in client_user_data:
+            user = User(**user_info)
+            db.add(user)
+            client_users.append(user)
+
+        # Commit para obtener IDs de usuarios
+        db.commit()
+
+        # Crear clientes con datos realistas bolivianos
+        client_data = []
+        bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija"]
+        bolivian_states = ["Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija", "Oruro", "Potosí", "Beni", "Pando"]
+
+        for i, user in enumerate(client_users):
+            client_info = {
+                "name": user.full_name,  # Nombre completo
+                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
+                "address": fake.street_address(),
+                "city": random.choice(bolivian_cities),
+                "state": random.choice(bolivian_states),
+                "birth_date": fake.date_of_birth(minimum_age=18, maximum_age=70),
+                "user_id": user.id
+            }
+            client_data.append(client_info)
 
         clients = []
         for client_info in client_data:
@@ -260,49 +260,52 @@ def seed_db():
             db.add(client)
             clients.append(client)
 
-        # Create sample drivers with realistic Bolivian data
-        driver_data = [
-            {
-                "name": "Roberto",
-                "lastname": "Mercado",
-                "phone_number": "77612326",
-                "birth_date": date(1980, 6, 12),
-                "license_number": "LC123456",
-                "experience_years": 15
-            },
-            {
-                "name": "Miguel",
-                "lastname": "Suárez",
-                "phone_number": "77612327",
-                "birth_date": date(1975, 9, 8),
-                "license_number": "LC234567",
-                "experience_years": 20
-            },
-            {
-                "name": "David",
-                "lastname": "Castro",
-                "phone_number": "77612328",
-                "birth_date": date(1982, 4, 25),
-                "license_number": "LC345678",
-                "experience_years": 12
-            },
-            {
-                "name": "Pedro",
-                "lastname": "Torres",
-                "phone_number": "77612329",
-                "birth_date": date(1978, 12, 3),
-                "license_number": "LC456789",
-                "experience_years": 18
-            },
-            {
-                "name": "José",
-                "lastname": "Peredo",
-                "phone_number": "77612330",
-                "birth_date": date(1985, 2, 15),
-                "license_number": "LC567890",
-                "experience_years": 10
+        # Crear usuarios para conductores primero
+        driver_user_data = []
+        for i in range(5):
+            # Generar un nombre de usuario único con un timestamp
+            timestamp = int(datetime.now().timestamp()) + i + 100
+            driver_user = {
+                "username": f"conductor{i+1}_{timestamp}",
+                "email": fake.email(),
+                "role": "driver",
+                "hashed_password": User.get_password_hash(f"conductor{i+1}"),
+                "full_name": fake.name(),
+                "is_active": True,
+                "is_admin": False
             }
-        ]
+            driver_user_data.append(driver_user)
+
+        driver_users = []
+        for user_info in driver_user_data:
+            user = User(**user_info)
+            db.add(user)
+            driver_users.append(user)
+
+        # Commit para obtener IDs de usuarios
+        db.commit()
+
+        # Crear conductores con datos realistas bolivianos
+        driver_data = []
+        license_types = ["A", "B", "C", "P"]
+        status_options = ["active", "on_leave", "suspended", "inactive"]
+
+        for i, user in enumerate(driver_users):
+            # Fecha de vencimiento de licencia entre 1 y 5 años en el futuro
+            expiry_years = random.randint(1, 5)
+            license_expiry = date.today().replace(year=date.today().year + expiry_years)
+
+            driver_info = {
+                "name": user.full_name,  # Nombre completo
+                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
+                "birth_date": fake.date_of_birth(minimum_age=25, maximum_age=60),
+                "license_number": f"LC{random.randint(100000, 999999)}",
+                "license_type": random.choice(license_types),
+                "license_expiry": license_expiry,
+                "status": random.choice(status_options),
+                "user_id": user.id
+            }
+            driver_data.append(driver_info)
 
         drivers = []
         for driver_info in driver_data:
@@ -311,33 +314,21 @@ def seed_db():
             drivers.append(driver)
 
         # Create sample buses with realistic models
-        bus_data = [
-            {
-                "license_plate": "2312ABC",
-                "capacity": 45,
-                "model": "Mercedes Benz O-500"
-            },
-            {
-                "license_plate": "2313DEF",
-                "capacity": 50,
-                "model": "Volvo 9800"
-            },
-            {
-                "license_plate": "2314GHI",
-                "capacity": 42,
-                "model": "Scania K410"
-            },
-            {
-                "license_plate": "2315JKL",
-                "capacity": 48,
-                "model": "Mercedes Benz O-400"
-            },
-            {
-                "license_plate": "2316MNO",
-                "capacity": 46,
-                "model": "Volvo B420R"
+        bus_models = ["Mercedes Benz O-500", "Volvo 9800", "Scania K410", "Mercedes Benz O-400", "Volvo B420R"]
+        bus_capacities = [45, 50, 42, 48, 46]
+        bus_data = []
+
+        for i in range(5):
+            # Generar placas únicas con timestamp
+            timestamp = str(int(datetime.now().timestamp()) + i)[-4:]
+            license_plate = f"{timestamp}ABC{i}"
+
+            bus_info = {
+                "license_plate": license_plate,
+                "capacity": bus_capacities[i],
+                "model": bus_models[i]
             }
-        ]
+            bus_data.append(bus_info)
 
         buses = []
         for bus_info in bus_data:
@@ -345,34 +336,72 @@ def seed_db():
             db.add(bus)
             buses.append(bus)
 
-        # Create sample secretaries with realistic Bolivian names and data
-        secretary_data = [
-            {
-                "name": "Laura Mendoza",
-                "email": "laura.mendoza@transcomarapa.com",
-                "phone": "77612340"
-            },
-            {
-                "name": "Carlos Vaca",
-                "email": "carlos.vaca@transcomarapa.com",
-                "phone": "77612341"
-            },
-            {
-                "name": "Daniela Suárez",
-                "email": "daniela.suarez@transcomarapa.com",
-                "phone": "77612342"
-            },
-            {
-                "name": "Javier Montaño",
-                "email": "javier.montano@transcomarapa.com",
-                "phone": "77612343"
-            },
-            {
-                "name": "Valeria Rojas",
-                "email": "valeria.rojas@transcomarapa.com",
-                "phone": "77612344"
+        # Crear usuario administrador
+        # Generar un nombre de usuario y email únicos con un timestamp
+        timestamp = int(datetime.now().timestamp())
+        admin_user = User(
+            username=f"admin_{timestamp}",
+            email=f"admin_{timestamp}@transcomarapa.com",
+            role="admin",
+            hashed_password=User.get_password_hash("admin123"),
+            full_name="Administrador Sistema",
+            is_active=True,
+            is_admin=True
+        )
+        db.add(admin_user)
+        db.commit()
+
+        # Crear administrador asociado al usuario admin
+        administrator = Administrator(
+            name="Administrador Sistema",
+            phone="77000000",
+            birth_date=date(1980, 1, 1),
+            user_id=admin_user.id
+        )
+        db.add(administrator)
+        db.commit()
+
+        # Crear usuarios para secretarios
+        secretary_user_data = []
+        for i in range(5):
+            # Generar un nombre de usuario único con un timestamp
+            timestamp = int(datetime.now().timestamp()) + i + 300
+            secretary_user = {
+                "username": f"secretario{i+1}_{timestamp}",
+                "email": fake.email(),
+                "role": "secretary",
+                "hashed_password": User.get_password_hash(f"secretario{i+1}"),
+                "full_name": fake.name(),
+                "is_active": True,
+                "is_admin": False
             }
-        ]
+            secretary_user_data.append(secretary_user)
+
+        secretary_users = []
+        for user_info in secretary_user_data:
+            user = User(**user_info)
+            db.add(user)
+            secretary_users.append(user)
+
+        # Commit para obtener IDs de usuarios
+        db.commit()
+
+        # Crear secretarios con datos realistas bolivianos
+        secretary_data = []
+        office_names = list(offices.keys())
+
+        for i, user in enumerate(secretary_users):
+            # Asignar una oficina aleatoria a cada secretario
+            office_name = random.choice(office_names)
+
+            secretary_info = {
+                "name": user.full_name,  # Nombre completo
+                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
+                "birth_date": fake.date_of_birth(minimum_age=22, maximum_age=55),
+                "office_id": offices[office_name].id,
+                "user_id": user.id
+            }
+            secretary_data.append(secretary_info)
 
         secretaries = []
         for secretary_info in secretary_data:
@@ -380,29 +409,42 @@ def seed_db():
             db.add(secretary)
             secretaries.append(secretary)
 
-        # Create sample assistants
-        assistant_data = [
-            {
-                "first_name": "Fernando",
-                "phone_number": "77612331"
-            },
-            {
-                "first_name": "Patricia",
-                "phone_number": "77612332"
-            },
-            {
-                "first_name": "Ricardo",
-                "phone_number": "77612333"
-            },
-            {
-                "first_name": "Carmen",
-                "phone_number": "77612334"
-            },
-            {
-                "first_name": "Daniel",
-                "phone_number": "77612335"
+        # Crear usuarios para asistentes primero
+        assistant_user_data = []
+        for i in range(5):
+            # Generar un nombre de usuario único con un timestamp
+            timestamp = int(datetime.now().timestamp()) + i + 200
+            assistant_user = {
+                "username": f"asistente{i+1}_{timestamp}",
+                "email": fake.email(),
+                "role": "assistant",
+                "hashed_password": User.get_password_hash(f"asistente{i+1}"),
+                "full_name": fake.name(),
+                "is_active": True,
+                "is_admin": False
             }
-        ]
+            assistant_user_data.append(assistant_user)
+
+        assistant_users = []
+        for user_info in assistant_user_data:
+            user = User(**user_info)
+            db.add(user)
+            assistant_users.append(user)
+
+        # Commit para obtener IDs de usuarios
+        db.commit()
+
+        # Crear asistentes con datos realistas bolivianos
+        assistant_data = []
+
+        for i, user in enumerate(assistant_users):
+            assistant_info = {
+                "name": user.full_name,  # Nombre completo
+                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
+                "birth_date": fake.date_of_birth(minimum_age=20, maximum_age=50),
+                "user_id": user.id
+            }
+            assistant_data.append(assistant_info)
 
         assistants = []
         for assistant_info in assistant_data:
@@ -413,24 +455,45 @@ def seed_db():
         # Commit first batch to get IDs
         db.commit()
 
-        # Create sample trips with different dates and times
-        trip_times = [
-            datetime(2024, 3, 23, 8, 0),   # 8:00 AM
-            datetime(2024, 3, 23, 14, 30),  # 2:30 PM
-            datetime(2024, 3, 23, 20, 0),   # 8:00 PM
-            datetime(2024, 3, 24, 6, 0),    # 6:00 AM next day
-            datetime(2024, 3, 24, 16, 0)    # 4:00 PM next day
+        # Crear viajes con fechas y horas variadas
+        trips = []
+
+        # Generar fechas para los próximos 30 días
+        today = date.today()
+        future_dates = [today + timedelta(days=i) for i in range(30)]
+
+        # Horarios comunes de salida
+        departure_times = [
+            (6, 0),    # 6:00 AM
+            (8, 30),   # 8:30 AM
+            (11, 0),   # 11:00 AM
+            (14, 30),  # 2:30 PM
+            (17, 0),   # 5:00 PM
+            (20, 0),   # 8:00 PM
+            (22, 30)   # 10:30 PM
         ]
 
-        trips = []
-        for i in range(5):
+        # Crear 20 viajes con combinaciones aleatorias
+        for _ in range(20):
+            # Seleccionar fecha y hora aleatorias
+            trip_date = random.choice(future_dates)
+            hour, minute = random.choice(departure_times)
+            trip_datetime = datetime.combine(trip_date, datetime.min.time()).replace(hour=hour, minute=minute)
+
+            # Seleccionar conductor, asistente, bus, ruta y secretario aleatorios
+            driver = random.choice(drivers)
+            assistant = random.choice(assistants)
+            bus = random.choice(buses)
+            route = random.choice(routes)
+            secretary = random.choice(secretaries)
+
             trip = Trip(
-                trip_datetime=trip_times[i],
-                driver_id=drivers[i].id,
-                assistant_id=assistants[i].id,
-                bus_id=buses[i].id,
-                route_id=routes[i].id,
-                secretary_id=secretaries[i].id  # Assign a secretary to each trip
+                trip_datetime=trip_datetime,
+                driver_id=driver.id,
+                assistant_id=assistant.id,
+                bus_id=bus.id,
+                route_id=route.id,
+                secretary_id=secretary.id
             )
             db.add(trip)
             trips.append(trip)
@@ -478,56 +541,71 @@ def seed_db():
                 seats_by_bus[seat.bus_id] = []
             seats_by_bus[seat.bus_id].append(seat)
 
-        # Create tickets for some trips
+        # Crear tickets para algunos viajes
         ticket_states = ["reserved", "purchased", "cancelled", "used"]
 
         for trip in trips:
-            # For each trip, create 10-20 tickets
+            # Para cada viaje, crear entre 10-20 tickets
             num_tickets = random.randint(10, 20)
-            # Get seats for this bus
+            # Obtener asientos para este bus
             bus_seats = seats_by_bus.get(trip.bus_id, [])
 
             if bus_seats:
-                # Randomly select seats for this trip
+                # Seleccionar asientos aleatorios para este viaje
                 selected_seats = random.sample(bus_seats, min(num_tickets, len(bus_seats)))
 
                 for seat in selected_seats:
-                    # Randomly select a client
+                    # Seleccionar un cliente aleatorio
                     client = random.choice(clients)
-                    # Create ticket
+                    # Crear ticket
                     ticket = Ticket(
                         seat_id=seat.id,
                         client_id=client.id,
                         trip_id=trip.id,
                         state=random.choice(ticket_states),
-                        secretary_id=random.choice(secretaries).id  # Assign a random secretary to each ticket
+                        secretary_id=random.choice(secretaries).id  # Asignar un secretario aleatorio a cada ticket
                     )
                     db.add(ticket)
 
-        # Create sample packages
+        # Crear paquetes de muestra
         package_statuses = ["pending", "in_transit", "delivered", "cancelled"]
         package_names = ["Documentos", "Ropa", "Electrónicos", "Alimentos", "Medicamentos", "Libros", "Herramientas"]
+        package_descriptions = [
+            "Documentos importantes",
+            "Ropa de temporada",
+            "Equipos electrónicos delicados",
+            "Productos alimenticios no perecederos",
+            "Medicamentos urgentes",
+            "Material educativo",
+            "Herramientas de trabajo"
+        ]
 
         for trip in trips:
-            # For each trip, create 3-8 packages
+            # Para cada viaje, crear entre 3-8 paquetes
             num_packages = random.randint(3, 8)
 
             for _ in range(num_packages):
-                # Randomly select sender and recipient (different clients)
+                # Seleccionar remitente y destinatario aleatorios (clientes diferentes)
                 sender = random.choice(clients)
                 recipient = random.choice([c for c in clients if c.id != sender.id])
 
-                # Create package
+                # Seleccionar nombre y descripción aleatorios
+                name_index = random.randint(0, len(package_names) - 1)
+                name = package_names[name_index]
+                # Acortar la descripción para evitar errores de longitud
+                description = package_descriptions[name_index][:50]
+
+                # Crear paquete
                 package = Package(
-                    name=random.choice(package_names),
-                    description=f"Paquete de {sender.name} para {recipient.name}",
-                    weight=round(random.uniform(0.5, 20.0), 2),  # Weight between 0.5 and 20 kg
-                    price=round(random.uniform(10.0, 100.0), 2),  # Price between 10 and 100 Bs
+                    name=name,
+                    description=description,
+                    weight=round(random.uniform(0.5, 20.0), 2),  # Peso entre 0.5 y 20 kg
+                    price=round(random.uniform(10.0, 100.0), 2),  # Precio entre 10 y 100 Bs
                     status=random.choice(package_statuses),
                     sender_id=sender.id,
                     recipient_id=recipient.id,
                     trip_id=trip.id,
-                    secretary_id=random.choice(secretaries).id  # Assign a random secretary to each package
+                    secretary_id=random.choice(secretaries).id  # Asignar un secretario aleatorio a cada paquete
                 )
                 db.add(package)
 
@@ -542,5 +620,6 @@ def seed_db():
         db.close()
 
 if __name__ == "__main__":
-    clear_db()
+    # Comentamos la limpieza de la base de datos para evitar problemas con las claves foráneas
+    # clear_db()
     seed_db()

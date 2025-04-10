@@ -2,8 +2,9 @@ classDiagram
     %% Entidades principales
     class User {
         +id: Integer
+        +username: String
         +email: String
-        +role: String
+        +role: UserRole [ADMIN, SECRETARY, DRIVER, ASSISTANT, CLIENT, USER]
         +hashed_password: String
         +full_name: String
         +is_active: Boolean
@@ -14,44 +15,48 @@ classDiagram
         +get_password_hash(password): String
     }
 
-    class Client {
+    %% Clase base Person
+    class Person {
+        <<abstract>>
         +id: Integer
         +name: String
-        +email: String
         +phone: String
-        +address: String
-        +city: String
-        +state: String
         +birth_date: Date
         +created_at: DateTime
         +updated_at: DateTime
+    }
+
+    class Client {
+        +id: Integer
+        +address: String
+        +city: String
+        +state: String
+        +user_id: Integer
     }
 
     class Secretary {
         +id: Integer
-        +name: String
-        +email: String
-        +phone: String
-        +created_at: DateTime
-        +updated_at: DateTime
+        +office_id: Integer
+        +user_id: Integer
     }
 
     class Driver {
         +id: Integer
-        +name: String
-        +lastname: String
-        +phone_number: String
-        +birth_date: Date
         +license_number: String
-        +experience_years: Integer
+        +license_type: String
+        +license_expiry: Date
+        +status: String
+        +user_id: Integer
     }
 
     class Assistant {
         +id: Integer
-        +name: String
-        +lastname: String
-        +phone_number: String
-        +birth_date: Date
+        +user_id: Integer
+    }
+
+    class Administrator {
+        +id: Integer
+        +user_id: Integer
     }
 
     class Bus {
@@ -129,33 +134,53 @@ classDiagram
         +updated_at: DateTime
     }
 
+    %% Herencia
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+    Person <|-- Client
+    Person <|-- Administrator
+
+    %% Relaciones con User
+    User "1" -- "0..1" Secretary : has >
+    User "1" -- "0..1" Driver : has >
+    User "1" -- "0..1" Assistant : has >
+    User "1" -- "0..1" Client : has >
+    User "1" -- "0..1" Administrator : has >
+
     %% Relaciones
     Client "1" -- "*" Ticket : has
     Client "1" -- "*" Package : sends >
     Client "1" -- "*" Package : receives >
-    
+
     Secretary "1" -- "*" Ticket : sells
     Secretary "1" -- "*" Trip : dispatches
     Secretary "1" -- "*" Package : handles
-    
+
     Driver "1" -- "*" Trip : drives
-    
+
     Assistant "1" -- "*" Trip : assists
-    
+
     Bus "1" -- "*" Seat : contains
     Bus "1" -- "*" Trip : assigned to
-    
+
     Seat "1" -- "*" Ticket : assigned to
-    
+
     Location "1" -- "*" Route : origin of >
     Location "1" -- "*" Route : destination of >
-    
+
     Route "1" -- "*" Trip : followed by
-    
+
     Trip "1" -- "*" Ticket : has
     Trip "1" -- "*" Package : transports
-    
+
     %% Notas
-    note for User "Implementado para autenticación JWT"
+    note for User "Implementado para autenticación JWT con roles (ADMIN, SECRETARY, DRIVER, ASSISTANT, CLIENT, USER). Único modelo con campo email."
+    note for Person "Clase base abstracta para Secretary, Driver, Assistant, Client y Administrator. No tiene relación de herencia con User."
+    note for Secretary "Hereda de Person, asociado a User mediante relación uno a uno"
+    note for Driver "Hereda de Person, asociado a User mediante relación uno a uno"
+    note for Assistant "Hereda de Person, asociado a User mediante relación uno a uno"
+    note for Client "Hereda de Person, asociado a User mediante relación uno a uno, obtiene email de User"
+    note for Administrator "Hereda de Person, asociado a User mediante relación uno a uno, obtiene email de User"
     note for Package "Mejorado con relaciones a remitente y destinatario"
     note for Ticket "Vinculado a asiento específico"

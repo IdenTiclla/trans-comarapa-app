@@ -1,23 +1,32 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 from datetime import datetime
+from typing import Optional
+from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
-class SecretaryBase(BaseModel):
-    name: str = Field(..., description="Secretary's name", example="John Doe")
-    email: str = Field(..., description="Secretary's email", example="john.doe@example.com")
-    phone: str = Field(..., description="Secretary's phone number", example="12345678")
-
-class SecretaryCreate(SecretaryBase):
+class SecretaryBase(PersonBase):
     """
-    Schema for creating a new secretary.
+    Esquema base para secretarios, hereda de PersonBase.
+    """
+    # Campos específicos de Secretary (si los hubiera)
+    # office_id: Optional[int] = Field(None, description="Secretary's office ID", example=1)
+
+class SecretaryCreate(PersonCreate, SecretaryBase):
+    """
+    Esquema para crear un nuevo secretario.
     """
     pass
 
-class Secretary(SecretaryBase):
-    id: int = Field(..., description="Secretary identifier", example=1)
-    created_at: datetime = Field(..., description="Creation date", example=datetime.now())
-    updated_at: datetime = Field(..., description="Last update date", example=datetime.now())
-    
+class Secretary(PersonSchema, SecretaryBase):
+    """
+    Esquema para representar un secretario.
+    """
+    user: Optional["User"] = None
 
     class Config:
         from_attributes = True
         arbitrary_types_allowed = True
+        # Excluir el campo user para evitar la recursión
+        exclude = {"user"}
+
+# Importación al final para evitar ciclos de importación
+from schemas.auth import User

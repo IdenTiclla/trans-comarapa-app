@@ -1,20 +1,29 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
+from typing import Optional
+from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
-class AssistantBase(BaseModel):
-    first_name: str = Field(..., description="Assistant first name", example="John")
-    phone_number: str = Field(max_length=8, description="Assistant phone number", example="64487591")
-
-class AssistantCreate(AssistantBase):
+class AssistantBase(PersonBase):
     """
-    Schema for creating a new assistant.
+    Esquema base para asistentes, hereda de PersonBase.
+    """
+    # Campos específicos de Assistant (si los hubiera)
+    # certification: Optional[str] = Field(None, description="Assistant's certification", example="First Aid")
+    pass
+
+class AssistantCreate(PersonCreate, AssistantBase):
+    """
+    Esquema para crear un nuevo asistente.
     """
     pass
 
+class Assistant(PersonSchema, AssistantBase):
+    """
+    Esquema para representar un asistente.
+    """
+    # Campos específicos de Assistant en la respuesta (si los hubiera)
+
     class Config:
         from_attributes = True
-
-class Assistant(AssistantBase):
-    id: int = Field(..., description="Identifier for the bus assistant.", example=1)
-
-    class Config:
-        from_attributes = True
+        arbitrary_types_allowed = True
+        # Excluir el campo user para evitar la recursión
+        exclude = {"user"}

@@ -1,11 +1,22 @@
 from pydantic import BaseModel, Field, EmailStr, validator
 from datetime import datetime
-from typing import Optional
-
+from typing import Optional, Annotated
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class TokenWithSecretaryInfo(Token):
+    secretary_id: Optional[int] = None
+    secretary_name: Optional[str] = None
+
+class TokenWithRoleInfo(Token):
+    secretary_id: Optional[int] = None
+    secretary_name: Optional[str] = None
+    driver_id: Optional[int] = None
+    driver_name: Optional[str] = None
+    assistant_id: Optional[int] = None
+    assistant_name: Optional[str] = None
 
 class TokenData(BaseModel):
     email: EmailStr | None = None
@@ -29,12 +40,14 @@ class User(UserBase):
     id: int
     created_at: datetime
     updated_at: datetime
-
+    
     class Config:
         from_attributes = True
         json_encoders = {
             datetime: lambda dt: dt.isoformat()
         }
+        # Excluir el campo secretary para evitar la recursión
+        exclude = {"secretary"}
 
 class UserInDB(User):
     hashed_password: str
@@ -48,3 +61,6 @@ class PasswordReset(BaseModel):
 
 class PasswordResetResponse(BaseModel):
     message: str
+
+# Importación al final para evitar ciclos de importación
+from schemas.secretary import Secretary

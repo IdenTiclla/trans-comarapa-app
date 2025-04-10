@@ -1,22 +1,19 @@
-from pydantic import BaseModel
-from datetime import datetime, date
-from typing import List, Optional, Any
+from pydantic import Field
+from datetime import date
+from typing import Optional
+from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
-class ClientBase(BaseModel):
-    name: str
-    email: str
-    phone: str
-    address: str
-    city: str
-    state: str
-    birth_date: date
-
-    class Config:
-        from_attributes = True
-
-class ClientCreate(ClientBase):
+class ClientBase(PersonBase):
     """
-    Schema for creating a new client
+    Esquema base para clientes, hereda de PersonBase.
+    """
+    address: str = Field(..., description="Client's address", example="123 Main St")
+    city: str = Field(..., description="Client's city", example="Springfield")
+    state: str = Field(..., description="Client's state", example="IL")
+
+class ClientCreate(PersonCreate, ClientBase):
+    """
+    Esquema para crear un nuevo cliente.
     """
     pass
 
@@ -25,18 +22,20 @@ class ClientUpdate(ClientBase):
     Schema for updating a client
     """
     name: Optional[str] = None
-    email: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     birth_date: Optional[date] = None
+    user_id: Optional[int] = None
 
-class Client(ClientBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
+class Client(PersonSchema, ClientBase):
+    """
+    Esquema para representar un cliente.
+    """
 
     class Config:
         from_attributes = True
         arbitrary_types_allowed = True
+        # Excluir el campo user para evitar la recursión
+        exclude = {"user"}

@@ -19,3 +19,4 @@ class Location(Base):
     # Relationships
     origin_routes = relationship("Route", back_populates="origin_location", foreign_keys="Route.origin_location_id")
     destination_routes = relationship("Route", back_populates="destination_location", foreign_keys="Route.destination_location_id")
+    offices = relationship("Office", back_populates="location")
