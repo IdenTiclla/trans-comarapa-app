@@ -4,10 +4,12 @@ API REST para la gestión de boletos, paquetes y viajes desarrollada con FastAPI
 
 ## Tecnologías Principales
 
-- FastAPI: Framework web moderno y rápido
-- SQLAlchemy: ORM para la base de datos
-- Pydantic: Validación de datos
-- UV: Gestor de paquetes moderno para Python
+- **FastAPI**: Framework web moderno y rápido
+- **SQLAlchemy**: ORM para la base de datos
+- **Pydantic**: Validación de datos
+- **UV**: Gestor de paquetes moderno para Python
+- **JWT**: Autenticación basada en tokens
+- **Faker**: Generación de datos falsos para desarrollo y pruebas
 
 ## Requisitos previos
 
@@ -117,6 +119,35 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
+### Generar datos falsos para desarrollo
+
+El proyecto incluye un script para generar datos falsos que facilitan el desarrollo y las pruebas. Este script crea usuarios, clientes, conductores, asistentes, secretarios, administradores, buses, rutas, viajes, tickets y paquetes con datos realistas.
+
+Para ejecutar el script:
+
+```bash
+# Asegúrate de estar en el directorio backend y tener el entorno virtual activado
+source .venv/bin/activate
+
+# Ejecuta el script de seed
+python db/seed.py
+```
+
+El script utiliza la biblioteca Faker para generar datos realistas en español, como nombres, direcciones, correos electrónicos, etc. Los datos generados incluyen:
+
+- Un administrador con credenciales únicas
+- 5 secretarios con credenciales únicas
+- 5 conductores con credenciales únicas
+- 5 asistentes con credenciales únicas
+- 10 clientes con credenciales únicas
+- 5 ubicaciones (terminales) en diferentes ciudades
+- 5 oficinas asociadas a estas ubicaciones
+- 5 rutas entre diferentes ubicaciones
+- 5 buses con diferentes modelos y capacidades
+- 20 viajes programados para los próximos 30 días
+- Múltiples tickets para los viajes
+- Múltiples paquetes para los viajes
+
 ## Estructura del Proyecto
 
 ```
@@ -137,16 +168,21 @@ EXIT;
 │   └── create_database.py # Script para crear la base de datos
 ├── models/                # Modelos SQLAlchemy (definición de tablas)
 │   ├── __init__.py
+│   ├── administrator.py   # Modelo de administradores
 │   ├── assistant.py       # Modelo de asistentes
 │   ├── bus.py             # Modelo de buses
 │   ├── client.py          # Modelo de clientes
 │   ├── driver.py          # Modelo de conductores
 │   ├── location.py        # Modelo de ubicaciones
+│   ├── office.py          # Modelo de oficinas
 │   ├── package.py         # Modelo de paquetes
+│   ├── person.py          # Modelo base abstracto para personas
 │   ├── route.py           # Modelo de rutas
 │   ├── seat.py            # Modelo de asientos
+│   ├── secretary.py       # Modelo de secretarios
 │   ├── ticket.py          # Modelo de boletos
-│   └── trip.py            # Modelo de viajes
+│   ├── trip.py            # Modelo de viajes
+│   └── user.py            # Modelo de usuarios para autenticación
 ├── api/                   # Versionado de la API
 │   ├── __init__.py
 │   └── v1/                # Versión 1 de la API
@@ -154,28 +190,39 @@ EXIT;
 │       └── api.py         # Router principal para la versión 1
 ├── routes/                # Rutas de la API (endpoints)
 │   ├── __init__.py
+│   ├── administrator.py   # Endpoints de administradores
 │   ├── assistant.py       # Endpoints de asistentes
+│   ├── auth.py            # Endpoints de autenticación y gestión de usuarios
 │   ├── bus.py             # Endpoints de buses
 │   ├── client.py          # Endpoints de clientes
 │   ├── driver.py          # Endpoints de conductores
 │   ├── location.py        # Endpoints de ubicaciones
+│   ├── office.py          # Endpoints de oficinas
 │   ├── package.py         # Endpoints de paquetes
 │   ├── route.py           # Endpoints de rutas
 │   ├── seat.py            # Endpoints de asientos
+│   ├── secretary.py       # Endpoints de secretarios
 │   ├── ticket.py          # Endpoints de boletos
 │   └── trip.py            # Endpoints de viajes
 ├── schemas/               # Esquemas Pydantic (validación de datos)
 │   ├── __init__.py
+│   ├── administrator.py   # Validación de datos de administradores
 │   ├── assistant.py       # Validación de datos de asistentes
+│   ├── auth.py            # Validación de datos de autenticación
 │   ├── bus.py             # Validación de datos de buses
 │   ├── client.py          # Validación de datos de clientes
 │   ├── driver.py          # Validación de datos de conductores
 │   ├── location.py        # Validación de datos de ubicaciones
+│   ├── office.py          # Validación de datos de oficinas
 │   ├── package.py         # Validación de datos de paquetes
+│   ├── person.py          # Validación de datos de personas
 │   ├── route.py           # Validación de datos de rutas
 │   ├── seat.py            # Validación de datos de asientos
+│   ├── secretary.py       # Validación de datos de secretarios
 │   ├── ticket.py          # Validación de datos de boletos
-│   └── trip.py            # Validación de datos de viajes
+│   ├── token.py           # Validación de datos de tokens JWT
+│   ├── trip.py            # Validación de datos de viajes
+│   └── user.py            # Validación de datos de usuarios
 ├── scripts/               # Scripts de utilidad
 │   ├── __init__.py
 │   ├── db/                # Scripts relacionados con la base de datos
@@ -184,7 +231,8 @@ EXIT;
 │   └── wait-for-db.sh     # Script para esperar a que la base de datos esté lista
 └── docs/                  # Documentación
     ├── __init__.py
-    ├── class_diagram.mmd  # Diagrama de clases en formato Mermaid
+    ├── class_diagram.mmd  # Diagrama de clases original en formato Mermaid
+    ├── actual_class_diagram.mmd # Diagrama de clases actualizado en formato Mermaid
     └── todo.md            # Lista de tareas pendientes
 ```
 
@@ -264,6 +312,17 @@ La API incluye documentación interactiva generada automáticamente:
 A continuación se detallan los principales endpoints disponibles en la API. Para una documentación completa e interactiva, visita `http://localhost:8000/docs` después de iniciar el servidor.
 
 **Nota**: Todos los endpoints deben ser prefijados con `/api/v1`. Por ejemplo, para acceder al endpoint de clientes, la URL completa sería `http://localhost:8000/api/v1/clients`.
+
+### Autenticación
+- POST `/auth/login`: Iniciar sesión y obtener token JWT
+- POST `/auth/register`: Registrar nuevo usuario
+- GET `/auth/me`: Obtener información del usuario actual
+- GET `/auth/me/person`: Obtener información de la persona asociada al usuario actual
+- GET `/auth/me/secretary`: Obtener información del secretario asociado al usuario actual
+- GET `/auth/me/driver`: Obtener información del conductor asociado al usuario actual
+- GET `/auth/me/assistant`: Obtener información del asistente asociado al usuario actual
+- GET `/auth/me/client`: Obtener información del cliente asociado al usuario actual
+- GET `/auth/me/administrator`: Obtener información del administrador asociado al usuario actual
 
 ### Clientes
 - GET `/clients`: Listar todos los clientes
@@ -412,13 +471,20 @@ Si encuentras problemas al ejecutar el proyecto con Docker:
 
 ## Próximos pasos
 
-El proyecto está en desarrollo activo. Algunas de las próximas características incluyen:
+El proyecto está en desarrollo activo. Algunas de las características ya implementadas y próximas incluyen:
 
-1. Implementación de autenticación y autorización con JWT
-2. Sistema de reservas
-3. Integración con pasarelas de pago
-4. Implementación de pruebas unitarias y de integración
-5. Mejoras en la documentación
+### Implementado
+1. ✅ Autenticación y autorización con JWT
+2. ✅ Modelo de herencia para personas (Person como clase base abstracta)
+3. ✅ Generación de datos falsos para desarrollo y pruebas
+4. ✅ Diagrama de clases actualizado
+
+### Próximas características
+1. Sistema de reservas
+2. Integración con pasarelas de pago
+3. Implementación de pruebas unitarias y de integración
+4. Mejoras en la documentación
+5. Implementación de frontend con Nuxt.js
 
 Para ver la lista completa de tareas pendientes, consulta el archivo `docs/todo.md`.
 
