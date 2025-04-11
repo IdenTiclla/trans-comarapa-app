@@ -441,11 +441,11 @@ Parcialmente implementado:
 - [x] Crear modelo y esquemas para usuarios del sistema <!-- Completado -->
 - [x] Implementar roles y permisos básicos (admin, usuario) <!-- Completado -->
 - [x] Adaptar función get_current_user para verificar roles <!-- Completado -->
-- [ ] Integrar el sistema de autenticación con el modelo Secretary <!-- Pendiente -->
+- [x] Integrar el sistema de autenticación con el modelo Secretary <!-- Completado -->
 - [ ] Proteger todos los endpoints existentes con autenticación <!-- Pendiente -->
 - [ ] Agregar middleware de autenticación <!-- Pendiente -->
 - [x] Implementar endpoints para login/logout <!-- Completado -->
-- [ ] Agregar protección CORS <!-- Pendiente -->
+- [x] Agregar protección CORS <!-- Completado -->
 - [ ] Implementar rate limiting para endpoints públicos <!-- Pendiente -->
 - [x] Crear sistema de registro de nuevos usuarios <!-- Completado -->
 - [ ] Implementar sistema de recuperación de contraseñas <!-- Pendiente -->
@@ -473,6 +473,7 @@ Parcialmente implementado:
 
 ## Validación y Manejo de Errores
 - [x] Implementar validación avanzada de datos con Pydantic <!-- Completado -->
+- [x] Corregir errores de validación en esquemas de respuesta <!-- Completado -->
 - [ ] Crear manejadores de excepciones personalizados
 - [ ] Agregar logging de errores
 - [ ] Implementar sistema de notificaciones de errores
@@ -527,20 +528,22 @@ Parcialmente implementado:
 
 ### Prioridad Alta (Inmediata)
 
-1. **Finalizar Sistema de Autenticación y Autorización**:
-   - [ ] Adaptar sistema para trabajar con el modelo Secretary
-   - [ ] Implementar relación uno a uno entre `Secretary` y `User`
-   - [ ] Integrar con el flujo de negocio existente
+1. **Completar Sistema de Autenticación y Autorización**:
+   - [x] Adaptar sistema para trabajar con el modelo Secretary
+   - [x] Implementar relación uno a uno entre `Secretary` y `User`
+   - [x] Integrar con el flujo de negocio existente
    - [ ] Proteger todos los endpoints existentes con autenticación
    - [ ] Implementar middleware para verificación de permisos por rol
    - [ ] Crear documentación detallada sobre el flujo de autenticación
+   - [ ] Implementar autenticación para el frontend (rutas protegidas)
 
-2. **Mejorar Validaciones y Manejo de Errores**:
+2. **Corregir Errores y Mejorar Validaciones**:
+   - [x] Corregir error de validación en el esquema Driver (campo experience_years)
+   - [ ] Revisar y corregir otros esquemas con posibles discrepancias
    - [ ] Implementar validaciones de negocio más robustas
    - [ ] Crear manejadores de excepciones personalizados
    - [ ] Mejorar mensajes de error para el cliente
    - [ ] Implementar logging centralizado de errores
-   - [ ] Crear middleware para manejo uniforme de excepciones
 
 3. **Implementar Mejoras en el Modelo de Datos**:
    - [ ] Crear modelo `Office` y relacionarlo con `Secretary` y `Location`
@@ -557,50 +560,50 @@ Parcialmente implementado:
 
 ### Prioridad Media (Corto Plazo)
 
-5. **Implementar Sistema de Reservas**:
+5. **Mejorar Integración Frontend-Backend**:
+   - [x] Configurar CORS para permitir conexiones desde el frontend
+   - [x] Mejorar estructura de respuesta de autenticación
+   - [ ] Implementar manejo de errores consistente entre frontend y backend
+   - [ ] Crear componentes frontend para consumir todos los endpoints
+   - [ ] Implementar actualización automática de token JWT
+
+6. **Implementar Sistema de Reservas**:
    - [ ] Crear modelo y esquema para reservas
    - [ ] Implementar endpoints CRUD para reservas
    - [ ] Desarrollar lógica de bloqueo temporal de asientos
    - [ ] Implementar proceso de confirmación/cancelación
    - [ ] Crear endpoint para convertir reserva en ticket
 
-6. **Implementar Paradas Intermedias en Rutas**:
+7. **Implementar Paradas Intermedias en Rutas**:
    - [ ] Crear modelo `RouteStop` para paradas intermedias
    - [ ] Implementar endpoints para gestionar paradas
    - [ ] Desarrollar lógica para calcular precios por tramo
    - [ ] Actualizar endpoints de rutas para incluir paradas
    - [ ] Implementar búsqueda de rutas con paradas intermedias
 
-7. **Optimizar Rendimiento y Usabilidad**:
+8. **Optimizar Rendimiento y Usabilidad**:
    - [ ] Extender paginación a todos los endpoints restantes
    - [ ] Implementar caché para consultas frecuentes
    - [ ] Optimizar consultas a la base de datos
    - [ ] Agregar filtros avanzados a endpoints de listado
    - [ ] Implementar ordenamiento personalizable
 
-8. **Implementar Pruebas Automatizadas**:
+### Prioridad Baja (Mediano Plazo)
+
+9. **Implementar Pruebas Automatizadas**:
    - [ ] Crear pruebas unitarias para modelos
    - [ ] Implementar pruebas de integración para endpoints
    - [ ] Desarrollar pruebas de rendimiento
    - [ ] Configurar CI/CD para ejecución automática de pruebas
    - [ ] Implementar cobertura de código
 
-### Prioridad Baja (Mediano Plazo)
-
-9. **Implementar Sistema de Pagos**:
-   - [ ] Crear modelos y endpoints para métodos de pago
-   - [ ] Implementar modelo de transacciones
-   - [ ] Relacionar transacciones con tickets y paquetes
-   - [ ] Integrar con pasarelas de pago (PayPal, tarjetas de crédito)
-   - [ ] Desarrollar sistema de reembolsos
-   - [ ] Implementar facturación electrónica
-
-10. **Implementar Herencia para Buses**:
-    - [ ] Crear clases `SingleDeckBus` y `DoubleDeckBus` heredando de `Bus`
-    - [ ] Adaptar endpoints para manejar diferentes tipos de buses
-    - [ ] Implementar lógica específica para cada tipo de bus
-    - [ ] Actualizar la generación de asientos según el tipo de bus
-    - [ ] Mejorar la visualización de asientos en la API
+10. **Implementar Sistema de Pagos**:
+    - [ ] Crear modelos y endpoints para métodos de pago
+    - [ ] Implementar modelo de transacciones
+    - [ ] Relacionar transacciones con tickets y paquetes
+    - [ ] Integrar con pasarelas de pago (PayPal, tarjetas de crédito)
+    - [ ] Desarrollar sistema de reembolsos
+    - [ ] Implementar facturación electrónica
 
 11. **Desarrollar Sistema de Reportes**:
     - [ ] Crear endpoints para reportes de ventas diarias/mensuales
@@ -615,9 +618,14 @@ Parcialmente implementado:
     - [ ] Mejorar la gestión de secretarios
     - [ ] Crear reportes por oficina
     - [ ] Implementar asignación de inventario por oficina
-    - [ ] Desarrollar sistema de comunicación entre oficinas
 
 ## Mejoras Recientes Completadas
+
+### Correcciones de Errores
+- [x] Corregir error de validación en el esquema Driver (campo experience_years) <!-- Completado 11/04/2024 -->
+- [x] Mejorar estructura de respuesta de autenticación para reducir campos nulos <!-- Completado 11/04/2024 -->
+- [x] Implementar sistema de autenticación para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado 11/04/2024 -->
+- [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
 
 ### Mejoras de Configuración
 - [x] Agregar archivo `.python-version` para especificar la versión de Python para uv <!-- Completado -->
@@ -631,6 +639,9 @@ Parcialmente implementado:
 - [x] Implementar versionado de API (API Versioning) <!-- Completado -->
 - [x] Reorganizar estructura de carpetas para soportar versionado <!-- Completado -->
 - [x] Actualizar documentación para reflejar el versionado de la API <!-- Completado -->
+- [x] Implementar sistema de autenticación para múltiples roles <!-- Completado -->
+- [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado -->
+- [x] Mejorar estructura de respuesta de autenticación <!-- Completado -->
 
 ## Conclusión
 
@@ -648,6 +659,7 @@ Fecha: [Definir fecha para la próxima revisión]
 
 ### Historial de Actualizaciones
 
+- **11/04/2024**: Actualización del sistema de autenticación para múltiples roles y corrección de errores
 - **08/04/2024**: Actualización del modelo de datos y próximos pasos basados en el diagrama de clases
 - **07/04/2024**: Actualización completa del documento con el estado actual del proyecto
 - **05/04/2024**: Agregadas mejoras de arquitectura (versionado de API)
@@ -672,13 +684,13 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 52
 
 ### Seguridad y Autenticación
-- Tareas completadas: 12
-- Tareas pendientes: 8
+- Tareas completadas: 14
+- Tareas pendientes: 6
 
 ### Mejoras y Configuración
-- Tareas completadas: 9
+- Tareas completadas: 12
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 158**
-- **Tareas pendientes: 193**
+- **Tareas completadas: 167**
+- **Tareas pendientes: 188**
