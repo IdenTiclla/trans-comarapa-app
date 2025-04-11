@@ -6,9 +6,9 @@ class PersonBase(BaseModel):
     """
     Esquema base para personas (Secretary, Driver, Assistant).
     """
-    name: str = Field(..., description="Person's name", example="John")
-    lastname: str = Field(..., description="Person's lastname", example="Doe")
-    phone: str = Field(..., description="Person's phone number", example="12345678")
+    firstname: str = Field(..., description="Person's first name", example="John")
+    lastname: str = Field(..., description="Person's last name", example="Doe")
+    phone: str = Field(None, description="Person's phone number", example="12345678")
     birth_date: Optional[date] = Field(None, description="Person's birth date", example="1990-01-01")
     user_id: Optional[int] = Field(None, description="ID of the associated user account", example=1)
 

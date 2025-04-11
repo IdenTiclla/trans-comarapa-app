@@ -222,10 +222,12 @@ def seed_db():
                 "email": fake.email(),
                 "role": "client",
                 "hashed_password": User.get_password_hash(f"cliente{i+1}"),
-                "full_name": fake.name(),
                 "is_active": True,
                 "is_admin": False
             }
+
+            # Guardar el nombre completo para usarlo después en el cliente
+            full_name = fake.name()
             client_user_data.append(client_user)
 
         client_users = []
@@ -242,9 +244,18 @@ def seed_db():
         bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija"]
         bolivian_states = ["Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija", "Oruro", "Potosí", "Beni", "Pando"]
 
+        # Generar nombres completos para los clientes
+        client_full_names = [fake.name() for _ in range(len(client_users))]
+
         for i, user in enumerate(client_users):
+            # Dividir el nombre completo en nombre y apellido
+            name_parts = client_full_names[i].split()
+            firstname = name_parts[0]
+            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
             client_info = {
-                "name": user.full_name,  # Nombre completo
+                "firstname": firstname,
+                "lastname": lastname,
                 "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
                 "address": fake.street_address(),
                 "city": random.choice(bolivian_cities),
@@ -270,7 +281,6 @@ def seed_db():
                 "email": fake.email(),
                 "role": "driver",
                 "hashed_password": User.get_password_hash(f"conductor{i+1}"),
-                "full_name": fake.name(),
                 "is_active": True,
                 "is_admin": False
             }
@@ -290,13 +300,22 @@ def seed_db():
         license_types = ["A", "B", "C", "P"]
         status_options = ["active", "on_leave", "suspended", "inactive"]
 
+        # Generar nombres completos para los conductores
+        driver_full_names = [fake.name() for _ in range(len(driver_users))]
+
         for i, user in enumerate(driver_users):
             # Fecha de vencimiento de licencia entre 1 y 5 años en el futuro
             expiry_years = random.randint(1, 5)
             license_expiry = date.today().replace(year=date.today().year + expiry_years)
 
+            # Dividir el nombre completo en nombre y apellido
+            name_parts = driver_full_names[i].split()
+            firstname = name_parts[0]
+            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
             driver_info = {
-                "name": user.full_name,  # Nombre completo
+                "firstname": firstname,
+                "lastname": lastname,
                 "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
                 "birth_date": fake.date_of_birth(minimum_age=25, maximum_age=60),
                 "license_number": f"LC{random.randint(100000, 999999)}",
@@ -344,7 +363,6 @@ def seed_db():
             email=f"admin_{timestamp}@transcomarapa.com",
             role="admin",
             hashed_password=User.get_password_hash("admin123"),
-            full_name="Administrador Sistema",
             is_active=True,
             is_admin=True
         )
@@ -353,7 +371,8 @@ def seed_db():
 
         # Crear administrador asociado al usuario admin
         administrator = Administrator(
-            name="Administrador Sistema",
+            firstname="Administrador",
+            lastname="Sistema",
             phone="77000000",
             birth_date=date(1980, 1, 1),
             user_id=admin_user.id
@@ -371,7 +390,6 @@ def seed_db():
                 "email": fake.email(),
                 "role": "secretary",
                 "hashed_password": User.get_password_hash(f"secretario{i+1}"),
-                "full_name": fake.name(),
                 "is_active": True,
                 "is_admin": False
             }
@@ -390,12 +408,21 @@ def seed_db():
         secretary_data = []
         office_names = list(offices.keys())
 
+        # Generar nombres completos para los secretarios
+        secretary_full_names = [fake.name() for _ in range(len(secretary_users))]
+
         for i, user in enumerate(secretary_users):
             # Asignar una oficina aleatoria a cada secretario
             office_name = random.choice(office_names)
 
+            # Dividir el nombre completo en nombre y apellido
+            name_parts = secretary_full_names[i].split()
+            firstname = name_parts[0]
+            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
             secretary_info = {
-                "name": user.full_name,  # Nombre completo
+                "firstname": firstname,
+                "lastname": lastname,
                 "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
                 "birth_date": fake.date_of_birth(minimum_age=22, maximum_age=55),
                 "office_id": offices[office_name].id,
@@ -419,7 +446,6 @@ def seed_db():
                 "email": fake.email(),
                 "role": "assistant",
                 "hashed_password": User.get_password_hash(f"asistente{i+1}"),
-                "full_name": fake.name(),
                 "is_active": True,
                 "is_admin": False
             }
@@ -437,9 +463,18 @@ def seed_db():
         # Crear asistentes con datos realistas bolivianos
         assistant_data = []
 
+        # Generar nombres completos para los asistentes
+        assistant_full_names = [fake.name() for _ in range(len(assistant_users))]
+
         for i, user in enumerate(assistant_users):
+            # Dividir el nombre completo en nombre y apellido
+            name_parts = assistant_full_names[i].split()
+            firstname = name_parts[0]
+            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
             assistant_info = {
-                "name": user.full_name,  # Nombre completo
+                "firstname": firstname,
+                "lastname": lastname,
                 "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
                 "birth_date": fake.date_of_birth(minimum_age=20, maximum_age=50),
                 "user_id": user.id

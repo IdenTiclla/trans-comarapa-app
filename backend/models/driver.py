@@ -14,6 +14,6 @@ class Driver(Person):
     # Relación con User (uno a uno)
     user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=True)
     user = relationship("User", back_populates="driver")
-    
+
     # Relaciones específicas de Driver
     trips = relationship("Trip", back_populates="driver")

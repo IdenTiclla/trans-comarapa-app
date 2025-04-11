@@ -11,7 +11,8 @@ class Person(Base):
     __abstract__ = True
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
+    firstname = Column(String(255), nullable=False)
+    lastname = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=True)
     birth_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.now)

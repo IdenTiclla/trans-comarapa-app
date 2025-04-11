@@ -8,15 +8,19 @@ class Token(BaseModel):
 
 class TokenWithSecretaryInfo(Token):
     secretary_id: Optional[int] = None
-    secretary_name: Optional[str] = None
+    secretary_firstname: Optional[str] = None
+    secretary_lastname: Optional[str] = None
 
 class TokenWithRoleInfo(Token):
     secretary_id: Optional[int] = None
-    secretary_name: Optional[str] = None
+    secretary_firstname: Optional[str] = None
+    secretary_lastname: Optional[str] = None
     driver_id: Optional[int] = None
-    driver_name: Optional[str] = None
+    driver_firstname: Optional[str] = None
+    driver_lastname: Optional[str] = None
     assistant_id: Optional[int] = None
-    assistant_name: Optional[str] = None
+    assistant_firstname: Optional[str] = None
+    assistant_lastname: Optional[str] = None
 
 class TokenData(BaseModel):
     email: EmailStr | None = None
@@ -27,7 +31,6 @@ class TokenData(BaseModel):
 
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: str
     role: str
     is_active: bool = True
     is_admin: bool = False
@@ -40,7 +43,7 @@ class User(UserBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
         json_encoders = {

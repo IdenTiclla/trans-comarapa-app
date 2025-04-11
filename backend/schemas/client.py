@@ -21,7 +21,8 @@ class ClientUpdate(ClientBase):
     """
     Schema for updating a client
     """
-    name: Optional[str] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None

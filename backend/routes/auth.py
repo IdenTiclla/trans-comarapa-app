@@ -253,7 +253,6 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_data"] = {
                 "id": secretary.id,
                 "name": secretary.name,
-                "lastname": secretary.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": secretary.phone
             }
@@ -267,7 +266,6 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_data"] = {
                 "id": driver.id,
                 "name": driver.name,
-                "lastname": driver.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": driver.phone,
                 "license_number": driver.license_number,
@@ -283,7 +281,6 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_data"] = {
                 "id": assistant.id,
                 "name": assistant.name,
-                "lastname": assistant.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": assistant.phone
             }
@@ -297,7 +294,6 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_data"] = {
                 "id": client.id,
                 "name": client.name,
-                "lastname": client.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": client.phone,
                 "address": client.address,
@@ -314,7 +310,6 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_data"] = {
                 "id": administrator.id,
                 "name": administrator.name,
-                "lastname": administrator.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": administrator.phone
             }
@@ -389,7 +384,6 @@ def get_current_user_driver(current_user: UserModel = Depends(get_current_user),
     return {
         "id": driver.id,
         "name": driver.name,
-        "lastname": driver.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": driver.phone,
         "license_number": driver.license_number,
@@ -428,7 +422,6 @@ def get_current_user_assistant(current_user: UserModel = Depends(get_current_use
     return {
         "id": assistant.id,
         "name": assistant.name,
-        "lastname": assistant.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": assistant.phone
     }
@@ -465,7 +458,6 @@ def get_current_user_client(current_user: UserModel = Depends(get_current_user),
     return {
         "id": client.id,
         "name": client.name,
-        "lastname": client.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": client.phone,
         "address": client.address,
@@ -505,7 +497,6 @@ def get_current_user_administrator(current_user: UserModel = Depends(get_current
     return {
         "id": administrator.id,
         "name": administrator.name,
-        "lastname": administrator.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": administrator.phone
     }

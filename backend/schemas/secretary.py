@@ -7,8 +7,8 @@ class SecretaryBase(PersonBase):
     """
     Esquema base para secretarios, hereda de PersonBase.
     """
-    # Campos específicos de Secretary (si los hubiera)
-    # office_id: Optional[int] = Field(None, description="Secretary's office ID", example=1)
+    # Campos específicos de Secretary
+    office_id: Optional[int] = Field(None, description="Secretary's office ID", example=1)
 
 class SecretaryCreate(PersonCreate, SecretaryBase):
     """
