@@ -1,4 +1,4 @@
-# TODO - Frontend Trans Comarapa
+# Lista de Tareas para Implementación - Frontend
 
 ## Introducción
 
@@ -6,161 +6,188 @@ Este documento detalla las tareas pendientes, mejoras y recomendaciones para el 
 
 La aplicación tiene como objetivo principal facilitar la gestión de viajes, venta de boletos, seguimiento de paquetes y generación de reportes para la empresa de transporte. Este documento servirá como guía para el desarrollo y mantenimiento del proyecto.
 
-## 1. Configuración y estructura
+## Estado Actual del Proyecto
 
-- [x] Inicializar proyecto Nuxt 3
-- [x] Configurar TailwindCSS
-- [ ] Establecer paleta de colores y variables CSS globales
-- [ ] Crear estructura de carpetas para componentes reutilizables
-- [ ] Configurar axios o fetch para consumir la API de backend
-- [ ] Configurar rutas y navegación
+El proyecto ha avanzado en la implementación de la estructura base y el sistema de autenticación. Se ha implementado la navegación principal y se han creado los componentes básicos reutilizables.
 
-## 2. Autenticación y Autorización
+Se ha completado:
+- Configuración inicial del proyecto Nuxt 3 con TailwindCSS
+- Sistema de autenticación con soporte para múltiples roles
+- Componentes básicos reutilizables (botones, tarjetas, alertas)
+- Layout principal con navegación dinámica según el estado de autenticación
+- Estructura base del dashboard con navegación específica por rol
 
-- [ ] Implementar página de inicio de sesión
-  - [ ] Formulario de login para secretarias
-  - [ ] Validación de formularios
-  - [ ] Manejo de errores de autenticación
-- [ ] Configurar almacenamiento de token JWT
-- [ ] Implementar guards de ruta para secciones protegidas
-- [ ] Crear store Pinia para manejo de autenticación
-- [ ] Implementar cierre de sesión
+Pendiente de implementar:
+- Gestión completa de viajes, boletos y paquetes
+- Visualización de asientos y reservas
+- Reportes y estadísticas
+- Funcionalidades específicas para cada rol
 
-## 3. Layout y Componentes Comunes
+Parcialmente implementado:
+- Sistema de autenticación y autorización (login implementado, falta protección de rutas)
 
-- [ ] Diseñar y crear layout principal
-  - [ ] Header con logo y navegación
-  - [ ] Sidebar para navegación principal
-  - [ ] Footer con información de contacto
-- [ ] Crear componentes reutilizables
-  - [ ] Botones primarios y secundarios
-  - [ ] Tarjetas para mostrar información
-  - [ ] Tablas para listar datos
-  - [ ] Modal para confirmaciones/formularios
-  - [ ] Componente de alertas y notificaciones
-  - [ ] Componente de paginación
+## Implementar Componentes Base
+- [x] Crear componente AppButton <!-- Completado -->
+- [x] Crear componente AppNavbar <!-- Completado -->
+- [x] Crear componente AppFooter <!-- Completado -->
+- [x] Crear componentes de tarjetas para dashboard <!-- Completado -->
+- [ ] Crear componente de tabla con paginación <!-- Pendiente -->
+- [ ] Crear componente de modal/diálogo <!-- Pendiente -->
+- [ ] Crear componente de formulario avanzado <!-- Pendiente -->
+- [ ] Crear componente de selección de asientos <!-- Pendiente -->
+- [ ] Crear componente de calendario/selector de fechas <!-- Pendiente -->
+- [ ] Crear componente de notificaciones toast <!-- Pendiente -->
 
-## 4. Gestión de Viajes
+## Seguridad y Autenticación
+- [x] Implementar página de inicio de sesión <!-- Completado -->
+- [x] Crear formulario de login para secretarias <!-- Completado -->
+- [x] Implementar validación de formularios <!-- Completado -->
+- [x] Configurar manejo de errores de autenticación <!-- Completado -->
+- [x] Configurar almacenamiento de token JWT <!-- Completado -->
+- [x] Crear store Pinia para manejo de autenticación <!-- Completado -->
+- [x] Implementar cierre de sesión <!-- Completado -->
+- [x] Ocultar/mostrar elementos de navegación según estado de autenticación <!-- Completado -->
+- [x] Implementar soporte para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado -->
+- [ ] Implementar guards de ruta para secciones protegidas <!-- Pendiente -->
+- [ ] Crear middleware de autenticación <!-- Pendiente -->
+- [ ] Implementar actualización automática de token JWT <!-- Pendiente -->
+- [ ] Crear página de recuperación de contraseña <!-- Pendiente -->
 
-- [ ] Implementar vista de listado de viajes
-  - [ ] Filtros por fecha, ruta, etc.
-  - [ ] Paginación de resultados
-- [ ] Crear página de detalle de viaje
-  - [ ] Mostrar información detallada del viaje
-  - [ ] Visualizar asientos disponibles/ocupados
-- [ ] Implementar formulario para crear nuevo viaje
-- [ ] Desarrollar funcionalidad para editar viaje
-- [ ] Integrar confirmación para cancelar viaje
+## Implementar Layout y Estructura de Páginas
+- [x] Diseñar y crear layout principal <!-- Completado -->
+- [x] Crear header con logo y navegación <!-- Completado -->
+- [x] Implementar footer con información de contacto <!-- Completado -->
+- [ ] Crear sidebar para navegación principal <!-- Pendiente -->
+- [x] Implementar página de inicio (landing page) <!-- Completado -->
+- [x] Crear página de dashboard <!-- Completado -->
+- [ ] Diseñar página de perfil de usuario <!-- Pendiente -->
+- [ ] Implementar página de configuración <!-- Pendiente -->
+- [ ] Crear página de ayuda/documentación <!-- Pendiente -->
 
-## 5. Gestión de Boletos
+## Implementar Gestión de Viajes
+- [ ] Crear vista de listado de viajes <!-- Pendiente -->
+- [ ] Implementar filtros por fecha, ruta, etc. <!-- Pendiente -->
+- [ ] Desarrollar paginación de resultados <!-- Pendiente -->
+- [ ] Crear página de detalle de viaje <!-- Pendiente -->
+- [ ] Mostrar información detallada del viaje <!-- Pendiente -->
+- [ ] Visualizar asientos disponibles/ocupados <!-- Pendiente -->
+- [ ] Implementar formulario para crear nuevo viaje <!-- Pendiente -->
+- [ ] Desarrollar funcionalidad para editar viaje <!-- Pendiente -->
+- [ ] Integrar confirmación para cancelar viaje <!-- Pendiente -->
 
-- [ ] Crear vista para venta de boletos
-  - [ ] Selección de viaje
-  - [ ] Selección de asiento(s)
-  - [ ] Ingreso de datos del cliente
-  - [ ] Confirmación de compra
-- [ ] Implementar listado de boletos vendidos
-  - [ ] Filtros por fecha, cliente, estado, etc.
-- [ ] Desarrollar funcionalidad para cambiar estado de boletos
-- [ ] Crear vista para imprimir boleto
+## Implementar Gestión de Boletos
+- [ ] Crear vista para venta de boletos <!-- Pendiente -->
+- [ ] Implementar selección de viaje <!-- Pendiente -->
+- [ ] Desarrollar selección de asiento(s) <!-- Pendiente -->
+- [ ] Crear formulario de ingreso de datos del cliente <!-- Pendiente -->
+- [ ] Implementar confirmación de compra <!-- Pendiente -->
+- [ ] Crear listado de boletos vendidos <!-- Pendiente -->
+- [ ] Implementar filtros por fecha, cliente, estado, etc. <!-- Pendiente -->
+- [ ] Desarrollar funcionalidad para cambiar estado de boletos <!-- Pendiente -->
+- [ ] Crear vista para imprimir boleto <!-- Pendiente -->
 
-## 6. Gestión de Clientes
+## Implementar Gestión de Clientes
+- [ ] Crear listado de clientes con búsqueda y filtros <!-- Pendiente -->
+- [ ] Implementar formulario para crear/editar cliente <!-- Pendiente -->
+- [ ] Desarrollar vista de historial de viajes por cliente <!-- Pendiente -->
+- [ ] Crear funcionalidad para eliminar cliente (con validaciones) <!-- Pendiente -->
+- [ ] Implementar autocomplete de clientes al vender boletos <!-- Pendiente -->
 
-- [ ] Implementar CRUD completo para clientes
-  - [ ] Listado de clientes con búsqueda y filtros
-  - [ ] Formulario para crear/editar cliente
-  - [ ] Ver historial de viajes por cliente
-  - [ ] Eliminar cliente (con validaciones)
-- [ ] Implementar autocomplete de clientes al vender boletos
+## Implementar Gestión de Paquetes
+- [ ] Crear vista para registro de paquetes <!-- Pendiente -->
+- [ ] Implementar formulario para datos del paquete <!-- Pendiente -->
+- [ ] Desarrollar selección de remitente/destinatario <!-- Pendiente -->
+- [ ] Crear asignación a viaje <!-- Pendiente -->
+- [ ] Implementar listado de paquetes <!-- Pendiente -->
+- [ ] Crear filtros por estado, fecha, etc. <!-- Pendiente -->
+- [ ] Desarrollar funcionalidad para actualizar estado de paquetes <!-- Pendiente -->
+- [ ] Implementar vista para imprimir guía de paquete <!-- Pendiente -->
 
-## 7. Gestión de Paquetes
+## Implementar Reportes y Estadísticas
+- [x] Crear estructura básica del dashboard <!-- Completado -->
+- [x] Implementar navegación específica por rol <!-- Completado -->
+- [ ] Desarrollar resumen de ventas diarias <!-- Pendiente -->
+- [ ] Crear estadísticas de viajes <!-- Pendiente -->
+- [ ] Implementar visualización de ocupación por rutas <!-- Pendiente -->
+- [ ] Desarrollar reporte de ventas por período <!-- Pendiente -->
+- [ ] Crear reporte de paquetes por período <!-- Pendiente -->
+- [ ] Implementar reporte de ocupación por ruta <!-- Pendiente -->
+- [ ] Desarrollar exportación de reportes a PDF/Excel <!-- Pendiente -->
 
-- [ ] Crear vista para registro de paquetes
-  - [ ] Formulario para datos del paquete
-  - [ ] Selección de remitente/destinatario
-  - [ ] Asignación a viaje
-- [ ] Implementar listado de paquetes
-  - [ ] Filtros por estado, fecha, etc.
-- [ ] Desarrollar funcionalidad para actualizar estado de paquetes
-- [ ] Crear vista para imprimir guía de paquete
+## Implementar Configuraciones y Administración
+- [ ] Crear CRUD para conductores <!-- Pendiente -->
+- [ ] Implementar CRUD para asistentes <!-- Pendiente -->
+- [ ] Desarrollar CRUD para secretarias <!-- Pendiente -->
+- [ ] Crear vistas para gestión de rutas <!-- Pendiente -->
+- [ ] Implementar gestión de buses y asientos <!-- Pendiente -->
 
-## 8. Reportes y Estadísticas
+## Mejoras y Optimización
+- [ ] Implementar modo offline para operaciones básicas <!-- Pendiente -->
+- [ ] Optimizar rendimiento y carga de páginas <!-- Pendiente -->
+- [ ] Implementar lazy loading para componentes grandes <!-- Pendiente -->
+- [ ] Añadir animaciones y transiciones <!-- Pendiente -->
+- [ ] Desarrollar versión responsive para dispositivos móviles <!-- Pendiente -->
 
-- [ ] Implementar dashboard para secretarias
-  - [ ] Resumen de ventas diarias
-  - [ ] Estadísticas de viajes
-  - [ ] Ocupación por rutas
-- [ ] Crear vistas para reportes
-  - [ ] Reporte de ventas por período
-  - [ ] Reporte de paquetes por período
-  - [ ] Reporte de ocupación por ruta
+## Testing y Calidad
+- [ ] Configurar y escribir tests unitarios <!-- Pendiente -->
+- [ ] Implementar tests de integración <!-- Pendiente -->
+- [ ] Realizar pruebas de usabilidad <!-- Pendiente -->
+- [ ] Optimizar accesibilidad <!-- Pendiente -->
+- [ ] Implementar validación automática de accesibilidad <!-- Pendiente -->
 
-## 9. Configuraciones y Administración
+## Despliegue y Producción
+- [ ] Configurar variables de entorno <!-- Pendiente -->
+- [ ] Optimizar build para producción <!-- Pendiente -->
+- [ ] Configurar CI/CD <!-- Pendiente -->
+- [ ] Documentar proceso de despliegue <!-- Pendiente -->
+- [ ] Implementar monitoreo de errores en producción <!-- Pendiente -->
 
-- [ ] Implementar gestión de personal
-  - [ ] CRUD para conductores
-  - [ ] CRUD para asistentes
-  - [ ] CRUD para secretarias
-- [ ] Crear vistas para gestión de rutas
-- [ ] Implementar gestión de buses y asientos
-
-## 10. Mejoras y Optimización
-
-- [ ] Implementar modo offline para operaciones básicas
-- [ ] Optimizar rendimiento y carga de páginas
-- [ ] Implementar lazy loading para componentes grandes
-- [ ] Añadir animaciones y transiciones
-- [ ] Desarrollar versión responsive para dispositivos móviles
-
-## 11. Testing y Calidad
-
-- [ ] Configurar y escribir tests unitarios
-- [ ] Implementar tests de integración
-- [ ] Realizar pruebas de usabilidad
-- [ ] Optimizar accesibilidad
-
-## 12. Despliegue
-
-- [ ] Configurar variables de entorno
-- [ ] Optimizar build para producción
-- [ ] Configurar CI/CD
-- [ ] Documentar proceso de despliegue
-
-## 13. Próximos Pasos Recomendados (Por Prioridad)
+## Próximos Pasos Recomendados (Por Prioridad)
 
 ### Prioridad Alta (Inmediata)
 
-1. **Desarrollar los Componentes Base**:
-   - Crear una biblioteca de componentes UI reutilizables (botones, formularios, tablas, modales)
-   - Implementar el sistema de diseño base con variables CSS y clases utilitarias
-   - Asegurar que todos los componentes sean responsive desde el inicio
+1. **Completar Sistema de Autenticación y Autorización**:
+   - [x] Implementar el sistema de login y manejo de sesiones
+   - [x] Establecer roles y permisos para diferentes tipos de usuarios
+   - [x] Implementar navegación dinámica según estado de autenticación
+   - [ ] Configurar guards de ruta y middleware de autenticación
+   - [ ] Implementar actualización automática de token JWT
+   - [ ] Mejorar manejo de errores de autenticación
 
-2. **Implementar Integración con Backend**:
-   - Configurar servicios/composables para conectar con la API
-   - Establecer interceptores para manejo de errores y tokens
-   - Crear stores Pinia para las entidades principales (viajes, boletos, clientes)
+2. **Completar Componentes Base**:
+   - [x] Crear componentes básicos (botones, tarjetas)
+   - [x] Implementar layout principal responsive
+   - [ ] Desarrollar componentes de formulario avanzados
+   - [ ] Crear componentes de tabla y paginación
+   - [ ] Implementar modales y diálogos de confirmación
 
-3. **Autenticación y Autorización**:
-   - Implementar el sistema de login y manejo de sesiones
-   - Configurar guards de ruta y middleware de autenticación
-   - Establecer roles y permisos para diferentes tipos de usuarios
+3. **Mejorar Integración con Backend**:
+   - [x] Configurar servicios para conectar con la API
+   - [x] Crear store Pinia para autenticación
+   - [ ] Implementar manejo de errores consistente
+   - [ ] Crear stores Pinia para las entidades principales (viajes, boletos, clientes)
+   - [ ] Optimizar peticiones a la API
 
 ### Prioridad Media (Corto Plazo)
 
-4. **Flujos de Usuario Críticos**:
-   - Implementar el flujo completo de venta de boletos
-   - Desarrollar la gestión de viajes (creación, edición, visualización)
-   - Crear el dashboard principal para secretarias
+4. **Implementar Dashboards Específicos por Rol**:
+   - [x] Crear estructura base del dashboard
+   - [x] Implementar navegación específica por rol
+   - [ ] Desarrollar dashboard para secretarias
+   - [ ] Implementar dashboard para administradores
+   - [ ] Crear dashboard para conductores
+   - [ ] Desarrollar dashboard para asistentes
+   - [ ] Implementar dashboard para clientes
 
-5. **Gestión de Clientes**:
-   - Implementar el CRUD completo de clientes
-   - Desarrollar la búsqueda y filtrado avanzado
-   - Crear el historial de viajes por cliente
+5. **Flujos de Usuario Críticos**:
+   - [ ] Implementar el flujo completo de venta de boletos
+   - [ ] Desarrollar la gestión de viajes (creación, edición, visualización)
+   - [ ] Crear visualización de asientos disponibles/ocupados
 
-6. **Reportes Básicos**:
-   - Implementar reportes de ventas diarias
-   - Desarrollar listados de viajes con filtros
-   - Crear exportación de datos básicos
+6. **Gestión de Clientes**:
+   - [ ] Implementar el CRUD completo de clientes
+   - [ ] Desarrollar la búsqueda y filtrado avanzado
+   - [ ] Crear el historial de viajes por cliente
 
 ### Prioridad Baja (Mediano Plazo)
 
@@ -311,6 +338,26 @@ La aplicación tiene como objetivo principal facilitar la gestión de viajes, ve
 - [ ] Establecer política de deprecación de funcionalidades
 - [ ] Configurar monitoreo de vulnerabilidades
 
+## Mejoras Recientes Completadas
+
+### Autenticación y Navegación
+- [x] Implementación completa del sistema de login para secretarias <!-- Completado 11/04/2024 -->
+- [x] Soporte para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado 11/04/2024 -->
+- [x] Navegación dinámica que se adapta al estado de autenticación <!-- Completado 11/04/2024 -->
+- [x] Ocultar/mostrar elementos de menú según el estado de autenticación <!-- Completado 11/04/2024 -->
+- [x] Implementación de cierre de sesión <!-- Completado 11/04/2024 -->
+
+### Componentes y UI
+- [x] Creación de componente AppButton reutilizable <!-- Completado 10/04/2024 -->
+- [x] Implementación de layout principal responsive <!-- Completado 10/04/2024 -->
+- [x] Creación de componentes de tarjeta para el dashboard <!-- Completado 11/04/2024 -->
+- [x] Diseño de dashboards específicos por rol <!-- Completado 11/04/2024 -->
+
+### Integración con Backend
+- [x] Configuración de CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
+- [x] Mejora de la estructura de respuesta de autenticación <!-- Completado 11/04/2024 -->
+- [x] Corrección de errores de validación en esquemas de respuesta <!-- Completado 11/04/2024 -->
+
 ## Conclusión
 
 Este documento representa una hoja de ruta completa para el desarrollo del frontend de Trans Comarapa. Las tareas están organizadas por áreas funcionales y prioridades para facilitar la planificación y ejecución del proyecto.
@@ -319,13 +366,50 @@ Es importante revisar y actualizar este documento regularmente a medida que el p
 
 Recuerda que el éxito del proyecto depende no solo de completar estas tareas, sino de mantener un enfoque centrado en el usuario, asegurando que la aplicación sea intuitiva, rápida y confiable.
 
-### Próxima Revisión
+## Estadísticas de Tareas
 
-Fecha: [Definir fecha para la próxima revisión]
+### Componentes Base
+- Tareas completadas: 4
+- Tareas pendientes: 6
 
-### Historial de Actualizaciones
+### Seguridad y Autenticación
+- Tareas completadas: 9
+- Tareas pendientes: 4
 
+### Layout y Estructura de Páginas
+- Tareas completadas: 5
+- Tareas pendientes: 4
+
+### Gestión de Entidades
+- Tareas completadas: 2
+- Tareas pendientes: 32
+
+### Reportes y Estadísticas
+- Tareas completadas: 2
+- Tareas pendientes: 7
+
+### Mejoras y Optimización
+- Tareas completadas: 0
+- Tareas pendientes: 15
+
+### Testing y Despliegue
+- Tareas completadas: 0
+- Tareas pendientes: 10
+
+### Total
+- **Tareas completadas: 22**
+- **Tareas pendientes: 78**
+
+## Historial de Actualizaciones
+
+- **11/04/2024**: Reestructuración completa del documento para seguir el formato del backend
+- **11/04/2024**: Agregada sección de mejoras recientes completadas
+- **11/04/2024**: Actualización del estado actual y próximos pasos
+- **11/04/2024**: Actualización de tareas completadas en autenticación y componentes
 - **07/04/2024**: Creación inicial del documento
 - **07/04/2024**: Agregadas secciones de próximos pasos y mejoras propuestas
 - **07/04/2024**: Ampliación con secciones adicionales (seguridad, internacionalización, etc.)
-- **07/04/2024**: Agregadas secciones de PWA y accesibilidad detallada
+
+## Próxima Revisión
+
+Fecha: 18/04/2024
