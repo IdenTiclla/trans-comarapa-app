@@ -31,19 +31,31 @@
     <div class="mt-8 text-center">
       <h2 class="text-2xl font-bold mb-4">¿Listo para viajar con nosotros?</h2>
       <AppButton variant="primary" class="mr-2" @click="navigateTo('/services')">Ver servicios</AppButton>
-      <AppButton variant="secondary" @click="navigateTo('/about')">Conocer más</AppButton>
+      <AppButton variant="secondary" class="mr-2" @click="navigateTo('/about')">Conocer más</AppButton>
+      <AppButton v-if="!authStore.isAuthenticated" variant="success" @click="navigateTo('/login')">Iniciar sesión</AppButton>
+      <AppButton v-else variant="success" @click="navigateTo('/dashboard')">Ir al Dashboard</AppButton>
     </div>
   </div>
 </template>
 
 <script setup>
 import { useAppStore } from '~/stores/app'
+import { useAuthStore } from '~/stores/auth'
+import { onMounted } from 'vue'
 
 definePageMeta({
   title: 'Inicio'
 })
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
+
+// Inicializar el estado de autenticación al montar el componente
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    authStore.initAuth()
+  }
+})
 
 function showAlert(feature) {
   alert(`Has hecho clic en ${feature}. Pronto tendremos más información disponible.`)

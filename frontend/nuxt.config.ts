@@ -12,6 +12,13 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
   ],
 
+  // Configuración de runtime
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000/api/v1'
+    }
+  },
+
   // Configuración de la aplicación
   app: {
     head: {

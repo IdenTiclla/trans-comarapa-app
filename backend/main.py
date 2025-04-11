@@ -11,6 +11,7 @@ if str(BASE_DIR) not in sys.path:
 from fastapi import FastAPI
 from fastapi.openapi.models import SecurityScheme
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
@@ -52,6 +53,15 @@ app = FastAPI(
     debug=DEBUG
 )
 
+# Configurar CORS - Configuración permisiva para desarrollo
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todos los orígenes durante el desarrollo
+    allow_credentials=False,  # No permitir cookies en solicitudes cross-origin cuando allow_origins=["*"]
+    allow_methods=["*"],     # Permitir todos los métodos HTTP
+    allow_headers=["*"],     # Permitir todos los encabezados
+)
+
 # Incluir el router de la versión 1 con el prefijo /api/v1
 app.include_router(api_router_v1, prefix="/api/v1")
 
@@ -63,14 +73,14 @@ app.include_router(api_router_v1, prefix="/api/v1")
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    
+
     # Añadir el esquema de seguridad HTTPBearer
     openapi_schema["components"]["securitySchemes"]["HTTPBearer"] = {
         "type": "http",
@@ -78,11 +88,11 @@ def custom_openapi():
         "bearerFormat": "JWT",
         "description": "Ingresa tu token JWT directamente. Útil para pruebas y clientes API."
     }
-    
+
     # Asegurarse de que el esquema OAuth2 existente se mantenga
     if "OAuth2PasswordBearer" in openapi_schema["components"]["securitySchemes"]:
         openapi_schema["components"]["securitySchemes"]["OAuth2PasswordBearer"]["description"] = "Flujo OAuth2 con usuario y contraseña para generar token JWT."
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

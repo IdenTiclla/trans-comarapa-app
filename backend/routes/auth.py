@@ -6,7 +6,8 @@ from db.session import get_db
 from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token
 from auth.blacklist import token_blacklist
 from auth.utils import authenticate_user, create_user
-from schemas.auth import Token, TokenWithSecretaryInfo, TokenWithRoleInfo, User, UserCreate
+from schemas.auth import TokenWithRoleInfo
+from schemas.user import User, UserCreate
 from schemas.secretary import Secretary as SecretarySchema
 from models.user import User as UserModel
 from models.secretary import Secretary as SecretaryModel
@@ -42,42 +43,79 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     # Crear token JWT
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role, "is_admin": user.is_admin, "is_active": user.is_active},
+        data={"sub": user.email, "role": str(user.role.value) if hasattr(user.role, 'value') else str(user.role), "is_admin": user.is_admin, "is_active": user.is_active},
         expires_delta=access_token_expires
     )
 
-    # Inicializar respuesta con token
+    # Inicializar respuesta con token y datos básicos
     response = {
         "access_token": access_token,
         "token_type": "bearer",
-        "secretary_id": None,
-        "secretary_name": None,
-        "driver_id": None,
-        "driver_name": None,
-        "assistant_id": None,
-        "assistant_name": None
+        "role": user.role,
+        "user_id": user.id
     }
 
     # Verificar el rol del usuario y agregar información adicional según corresponda
-    if user.role == "secretary":
-        secretary = db.query(SecretaryModel).filter(SecretaryModel.user_id == user.id).first()
-        if secretary:
-            response["secretary_id"] = secretary.id
-            response["secretary_name"] = secretary.name
+    # Usamos un enfoque más limpio y consistente para todos los roles
+    role_model_map = {
+        "secretary": {
+            "model": SecretaryModel,
+            "prefix": "secretary"
+        },
+        "driver": {
+            "model": None,  # Se importará dinámicamente para evitar importaciones circulares
+            "prefix": "driver"
+        },
+        "assistant": {
+            "model": None,  # Se importará dinámicamente para evitar importaciones circulares
+            "prefix": "assistant"
+        },
+        "admin": {
+            "model": None,  # Se importará dinámicamente para evitar importaciones circulares
+            "prefix": "admin"
+        },
+        "client": {
+            "model": None,  # Se importará dinámicamente para evitar importaciones circulares
+            "prefix": "client"
+        }
+    }
 
-    elif user.role == "driver":
+    # Importar modelos dinámicamente para evitar importaciones circulares
+    if user.role == "driver":
         from models.driver import Driver as DriverModel
-        driver = db.query(DriverModel).filter(DriverModel.user_id == user.id).first()
-        if driver:
-            response["driver_id"] = driver.id
-            response["driver_name"] = driver.name
-
+        role_model_map["driver"]["model"] = DriverModel
     elif user.role == "assistant":
         from models.assistant import Assistant as AssistantModel
-        assistant = db.query(AssistantModel).filter(AssistantModel.user_id == user.id).first()
-        if assistant:
-            response["assistant_id"] = assistant.id
-            response["assistant_name"] = assistant.name
+        role_model_map["assistant"]["model"] = AssistantModel
+    elif user.role == "admin":
+        from models.administrator import Administrator as AdminModel
+        role_model_map["admin"]["model"] = AdminModel
+    elif user.role == "client":
+        from models.client import Client as ClientModel
+        role_model_map["client"]["model"] = ClientModel
+
+    # Procesar el rol del usuario
+    if user.role in role_model_map:
+        role_info = role_model_map[user.role]
+        model = role_info["model"]
+        prefix = role_info["prefix"]
+
+        if model:
+            # Buscar la entidad asociada al usuario
+            entity = db.query(model).filter(model.user_id == user.id).first()
+
+            if entity:
+                # Agregar campos específicos del rol (para compatibilidad con código existente)
+                response[f"{prefix}_id"] = entity.id
+                response[f"{prefix}_firstname"] = entity.firstname
+                response[f"{prefix}_lastname"] = entity.lastname
+
+                # Agregar información en el formato unificado
+                response["user_info"] = {
+                    "id": entity.id,
+                    "firstname": entity.firstname,
+                    "lastname": entity.lastname
+                }
 
     return response
 
@@ -118,7 +156,7 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
     # Crear nuevo token JWT
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": current_user.email, "role": current_user.role, "is_admin": current_user.is_admin, "is_active": current_user.is_active},
+        data={"sub": current_user.email, "role": str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role), "is_admin": current_user.is_admin, "is_active": current_user.is_active},
         expires_delta=access_token_expires
     )
 
@@ -127,11 +165,14 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
         "access_token": access_token,
         "token_type": "bearer",
         "secretary_id": None,
-        "secretary_name": None,
+        "secretary_firstname": None,
+        "secretary_lastname": None,
         "driver_id": None,
-        "driver_name": None,
+        "driver_firstname": None,
+        "driver_lastname": None,
         "assistant_id": None,
-        "assistant_name": None
+        "assistant_firstname": None,
+        "assistant_lastname": None
     }
 
     # Verificar el rol del usuario y agregar información adicional según corresponda
@@ -139,21 +180,24 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
         secretary = db.query(SecretaryModel).filter(SecretaryModel.user_id == current_user.id).first()
         if secretary:
             response["secretary_id"] = secretary.id
-            response["secretary_name"] = secretary.name
+            response["secretary_firstname"] = secretary.firstname
+            response["secretary_lastname"] = secretary.lastname
 
     elif current_user.role == "driver":
         from models.driver import Driver as DriverModel
         driver = db.query(DriverModel).filter(DriverModel.user_id == current_user.id).first()
         if driver:
             response["driver_id"] = driver.id
-            response["driver_name"] = driver.name
+            response["driver_firstname"] = driver.firstname
+            response["driver_lastname"] = driver.lastname
 
     elif current_user.role == "assistant":
         from models.assistant import Assistant as AssistantModel
         assistant = db.query(AssistantModel).filter(AssistantModel.user_id == current_user.id).first()
         if assistant:
             response["assistant_id"] = assistant.id
-            response["assistant_name"] = assistant.name
+            response["assistant_firstname"] = assistant.firstname
+            response["assistant_lastname"] = assistant.lastname
 
     return response
 
@@ -215,7 +259,7 @@ def update_user_me(user_update: UserCreate, db: Session = Depends(get_db), curre
 
     # Actualizar datos del usuario
     current_user.email = user_update.email
-    current_user.full_name = user_update.full_name
+    current_user.username = user_update.username
 
     # Solo actualizar la contraseña si se proporciona una nueva
     if hasattr(user_update, 'password') and user_update.password:
@@ -252,7 +296,8 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_type"] = "secretary"
             result["person_data"] = {
                 "id": secretary.id,
-                "name": secretary.name,
+                "firstname": secretary.firstname,
+                "lastname": secretary.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": secretary.phone
             }
@@ -265,7 +310,8 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_type"] = "driver"
             result["person_data"] = {
                 "id": driver.id,
-                "name": driver.name,
+                "firstname": driver.firstname,
+                "lastname": driver.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": driver.phone,
                 "license_number": driver.license_number,
@@ -280,7 +326,8 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_type"] = "assistant"
             result["person_data"] = {
                 "id": assistant.id,
-                "name": assistant.name,
+                "firstname": assistant.firstname,
+                "lastname": assistant.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": assistant.phone
             }
@@ -293,7 +340,8 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_type"] = "client"
             result["person_data"] = {
                 "id": client.id,
-                "name": client.name,
+                "firstname": client.firstname,
+                "lastname": client.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": client.phone,
                 "address": client.address,
@@ -309,7 +357,8 @@ def get_current_user_person(current_user: UserModel = Depends(get_current_user),
             result["person_type"] = "administrator"
             result["person_data"] = {
                 "id": administrator.id,
-                "name": administrator.name,
+                "firstname": administrator.firstname,
+                "lastname": administrator.lastname,
                 "email": current_user.email,  # Obtener el email del usuario asociado
                 "phone": administrator.phone
             }
@@ -383,7 +432,8 @@ def get_current_user_driver(current_user: UserModel = Depends(get_current_user),
 
     return {
         "id": driver.id,
-        "name": driver.name,
+        "firstname": driver.firstname,
+        "lastname": driver.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": driver.phone,
         "license_number": driver.license_number,
@@ -421,7 +471,8 @@ def get_current_user_assistant(current_user: UserModel = Depends(get_current_use
 
     return {
         "id": assistant.id,
-        "name": assistant.name,
+        "firstname": assistant.firstname,
+        "lastname": assistant.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": assistant.phone
     }
@@ -457,7 +508,8 @@ def get_current_user_client(current_user: UserModel = Depends(get_current_user),
 
     return {
         "id": client.id,
-        "name": client.name,
+        "firstname": client.firstname,
+        "lastname": client.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": client.phone,
         "address": client.address,
@@ -496,13 +548,14 @@ def get_current_user_administrator(current_user: UserModel = Depends(get_current
 
     return {
         "id": administrator.id,
-        "name": administrator.name,
+        "firstname": administrator.firstname,
+        "lastname": administrator.lastname,
         "email": current_user.email,  # Obtener el email del usuario asociado
         "phone": administrator.phone
     }
 
 @router.post("/users", response_model=User)
-def create_new_user(user: UserCreate, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_admin_user)):
+def create_new_user(user: UserCreate, db: Session = Depends(get_db), _: UserModel = Depends(get_current_admin_user)):
     """
     Endpoint para crear un nuevo usuario (solo administradores).
 

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.user import User
-from schemas.auth import UserCreate
+from schemas.user import UserCreate
 
 def authenticate_user(db: Session, email: str, password: str):
     """
@@ -36,7 +36,7 @@ def create_user(db: Session, user: UserCreate):
     db_user = User(
         email=user.email,
         hashed_password=hashed_password,
-        full_name=user.full_name,
+        username=user.username,
         role=user.role,
         is_active=user.is_active,
         is_admin=user.is_admin
