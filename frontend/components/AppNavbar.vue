@@ -162,7 +162,7 @@
   </nav>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 import { onMounted, watch, ref } from 'vue'
@@ -175,11 +175,12 @@ const isMenuOpen = ref(false)
 onMounted(() => {
   // Verificar si estamos en el cliente (navegador)
   if (typeof window !== 'undefined') {
-    authStore.initAuth()
+    authStore.init()
 
     // Si el usuario está autenticado, intentar obtener información adicional
     if (authStore.isAuthenticated) {
-      setTimeout(() => authStore.fetchUserInfo(), 500)
+      // Nota: fetchUserInfo no existe en el store actual, lo comentamos por ahora
+      // setTimeout(() => authStore.fetchUserInfo(), 500)
     }
   }
 
@@ -197,7 +198,7 @@ watch(
   () => {
     // Verificar si estamos en el cliente (navegador)
     if (typeof window !== 'undefined') {
-      authStore.initAuth()
+      authStore.init()
       // Cerrar el menú móvil al cambiar de ruta
       isMenuOpen.value = false
     }

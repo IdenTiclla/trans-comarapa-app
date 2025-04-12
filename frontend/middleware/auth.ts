@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       const authStore = useAuthStore()
 
       // Inicializar el estado de autenticación desde localStorage
-      authStore.initAuth()
+      authStore.init()
 
       // Si el usuario no está autenticado y no está en la página de login, redirigir a login
       if (!authStore.isAuthenticated && to.path !== '/login') {

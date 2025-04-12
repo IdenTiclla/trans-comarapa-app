@@ -194,6 +194,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import tripService from '~/services/tripService'
 import AppButton from '~/components/AppButton.vue'
 import SeatSelection from '~/components/SeatSelection.vue'
 import BusSeatMapPrint from '~/components/BusSeatMapPrint.vue'
@@ -225,39 +226,10 @@ const fetchTripDetails = async () => {
   error.value = null
 
   try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch(`/api/trips/${route.params.id}`)
+    // Usar el servicio para obtener los detalles del viaje
+    trip.value = await tripService.getTripById(route.params.id)
 
-    // Simulación de datos para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Datos de ejemplo
-    trip.value = {
-      id: parseInt(route.params.id),
-      route: {
-        origin: 'Santa Cruz',
-        destination: 'Comarapa'
-      },
-      departure_date: '2023-04-15',
-      departure_time: '08:30',
-      status: 'scheduled',
-      total_seats: 40,
-      available_seats: 25,
-      driver: {
-        id: 1,
-        name: 'Juan Pérez'
-      },
-      assistant: {
-        id: 2,
-        name: 'María López'
-      },
-      bus: {
-        id: 1,
-        plate: 'ABC-123',
-        model: 'Mercedes Benz O-500',
-        type: 'single-deck' // 'single-deck' o 'double-deck'
-      }
-    }
+    console.log('Detalles del viaje cargados:', trip.value)
 
   } catch (err) {
     console.error('Error al cargar los detalles del viaje:', err)

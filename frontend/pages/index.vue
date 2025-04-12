@@ -53,7 +53,7 @@ const authStore = useAuthStore()
 // Inicializar el estado de autenticación al montar el componente
 onMounted(() => {
   if (typeof window !== 'undefined') {
-    authStore.initAuth()
+    authStore.init()
   }
 })
 

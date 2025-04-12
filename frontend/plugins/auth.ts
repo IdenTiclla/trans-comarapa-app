@@ -8,7 +8,7 @@ export default defineNuxtPlugin({
         // Importar dinámicamente para evitar problemas de inicialización
         import('~/stores/auth').then(({ useAuthStore }) => {
           const authStore = useAuthStore()
-          authStore.initAuth()
+          authStore.init()
         })
       }
     })

@@ -42,6 +42,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 
+// Servicios
+import tripService from '~/services/tripService'
+
 // Componentes
 import TripFilters from '~/components/TripFilters.vue'
 import TripTable from '~/components/TripTable.vue'
@@ -86,118 +89,16 @@ const fetchTrips = async () => {
   loading.value = true
 
   try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch(`/api/trips?page=${currentPage.value}&limit=${itemsPerPage.value}&sort=${sortBy.value}&direction=${sortDirection.value}`)
+    // Usar el servicio para obtener los viajes
+    const result = await tripService.getTrips(
+      filters, // Filtros
+      { by: sortBy.value, direction: sortDirection.value }, // Ordenamiento
+      { page: currentPage.value, itemsPerPage: itemsPerPage.value } // Paginación
+    )
 
-    // Simulación de datos para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Generar datos de ejemplo
-    const exampleTrips = generateExampleTrips()
-
-    // Filtrar según los filtros aplicados
-    let filteredTrips = exampleTrips
-
-    // Filtro de búsqueda rápida
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase()
-      filteredTrips = filteredTrips.filter(trip =>
-        trip.id.toString().includes(searchTerm) ||
-        trip.route.origin.toLowerCase().includes(searchTerm) ||
-        trip.route.destination.toLowerCase().includes(searchTerm)
-      )
-    }
-
-    // Filtros básicos
-    if (filters.origin) {
-      filteredTrips = filteredTrips.filter(trip => trip.route.origin === filters.origin)
-    }
-
-    if (filters.destination) {
-      filteredTrips = filteredTrips.filter(trip => trip.route.destination === filters.destination)
-    }
-
-    if (filters.status) {
-      filteredTrips = filteredTrips.filter(trip => trip.status === filters.status)
-    }
-
-    // Filtro de fecha simple
-    if (filters.date) {
-      const filterDate = new Date(filters.date).toISOString().split('T')[0]
-      filteredTrips = filteredTrips.filter(trip => trip.departure_date.startsWith(filterDate))
-    }
-
-    // Filtro de rango de fechas
-    if (filters.dateFrom) {
-      const fromDate = new Date(filters.dateFrom)
-      filteredTrips = filteredTrips.filter(trip => new Date(trip.departure_date) >= fromDate)
-    }
-
-    if (filters.dateTo) {
-      const toDate = new Date(filters.dateTo)
-      // Ajustar la fecha final para incluir todo el día
-      toDate.setHours(23, 59, 59, 999)
-      filteredTrips = filteredTrips.filter(trip => new Date(trip.departure_date) <= toDate)
-    }
-
-    // Filtro de asientos mínimos
-    if (filters.minSeats) {
-      const minSeats = parseInt(filters.minSeats)
-      if (!isNaN(minSeats)) {
-        filteredTrips = filteredTrips.filter(trip => trip.available_seats >= minSeats)
-      }
-    }
-
-    // Ordenar
-    filteredTrips.sort((a, b) => {
-      let valueA, valueB
-
-      switch (sortBy.value) {
-        case 'id':
-          valueA = a.id
-          valueB = b.id
-          break
-        case 'origin':
-          valueA = a.route.origin
-          valueB = b.route.origin
-          break
-        case 'destination':
-          valueA = a.route.destination
-          valueB = b.route.destination
-          break
-        case 'departure_date':
-          valueA = a.departure_date
-          valueB = b.departure_date
-          break
-        case 'departure_time':
-          valueA = a.departure_time
-          valueB = b.departure_time
-          break
-        case 'status':
-          valueA = a.status
-          valueB = b.status
-          break
-        case 'seats':
-          valueA = a.available_seats
-          valueB = b.available_seats
-          break
-        default:
-          valueA = a.departure_date
-          valueB = b.departure_date
-      }
-
-      if (sortDirection.value === 'asc') {
-        return valueA > valueB ? 1 : -1
-      } else {
-        return valueA < valueB ? 1 : -1
-      }
-    })
-
-    // Paginación
-    totalItems.value = filteredTrips.length
-    const start = (currentPage.value - 1) * itemsPerPage.value
-    const end = start + itemsPerPage.value
-    trips.value = filteredTrips.slice(start, end)
+    // Actualizar el estado con los datos obtenidos
+    trips.value = result.trips
+    totalItems.value = result.pagination.totalItems
 
   } catch (error) {
     console.error('Error al cargar los viajes:', error)
@@ -207,51 +108,7 @@ const fetchTrips = async () => {
   }
 }
 
-// Generar datos de ejemplo
-const generateExampleTrips = () => {
-  const statuses = ['scheduled', 'in_progress', 'completed', 'cancelled']
-  const routes = [
-    { origin: 'Santa Cruz', destination: 'Comarapa' },
-    { origin: 'Comarapa', destination: 'Santa Cruz' },
-    { origin: 'Santa Cruz', destination: 'Cochabamba' },
-    { origin: 'Cochabamba', destination: 'Santa Cruz' },
-    { origin: 'Santa Cruz', destination: 'La Paz' },
-    { origin: 'La Paz', destination: 'Santa Cruz' },
-    { origin: 'Cochabamba', destination: 'La Paz' },
-    { origin: 'La Paz', destination: 'Cochabamba' }
-  ]
 
-  const trips = []
-
-  for (let i = 1; i <= 50; i++) {
-    const route = routes[Math.floor(Math.random() * routes.length)]
-    const status = statuses[Math.floor(Math.random() * statuses.length)]
-    const totalSeats = 40
-    const availableSeats = status === 'cancelled' ? 0 : Math.floor(Math.random() * totalSeats)
-
-    // Generar fecha aleatoria en los próximos 30 días
-    const date = new Date()
-    date.setDate(date.getDate() + Math.floor(Math.random() * 30))
-    const departureDate = date.toISOString().split('T')[0]
-
-    // Generar hora aleatoria
-    const hours = String(Math.floor(Math.random() * 24)).padStart(2, '0')
-    const minutes = String(Math.floor(Math.random() * 60)).padStart(2, '0')
-    const departureTime = `${hours}:${minutes}`
-
-    trips.push({
-      id: i,
-      route,
-      departure_date: departureDate,
-      departure_time: departureTime,
-      status,
-      total_seats: totalSeats,
-      available_seats: availableSeats
-    })
-  }
-
-  return trips
-}
 
 // Manejar cambio de página
 const handlePageChange = (page) => {
