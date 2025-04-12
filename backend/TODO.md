@@ -8,22 +8,26 @@ La aplicación tiene como objetivo principal facilitar la gestión de viajes, ve
 
 ## Estado Actual del Proyecto
 
-El proyecto ha avanzado significativamente en la implementación de los modelos principales y sus endpoints correspondientes. Se ha implementado la estructura base de la API con versionado (v1) y se han creado los CRUD básicos para la mayoría de las entidades principales.
+El proyecto ha avanzado significativamente en la implementación de los modelos principales y sus endpoints correspondientes. Se ha implementado la estructura base de la API con versionado (v1) y se han creado los CRUD básicos para la mayoría de las entidades principales. Además, se ha logrado conectar el frontend con la API backend, permitiendo la autenticación de usuarios y la visualización de datos.
 
 Se ha completado:
 - Modelos y endpoints para clientes, conductores, asistentes, buses, asientos, ubicaciones, rutas, viajes, boletos y paquetes
 - Relaciones entre las entidades principales
 - Estructura de carpetas organizada para modelos, rutas, esquemas y utilidades
 - Configuración de Docker y entorno de desarrollo
+- Sistema de autenticación JWT con soporte para múltiples roles
+- Configuración de CORS para permitir la conexión con el frontend
+- Integración inicial del frontend con la API backend
 
 Pendiente de implementar:
 - Gestión de oficinas y secretarios
 - Sistema de reservas
 - Gestión de pagos y transacciones
 - Reportes y estadísticas
+- Protección completa de endpoints con autenticación
 
 Parcialmente implementado:
-- Sistema de autenticación y autorización (JWT implementado con lista negra de tokens)
+- Integración frontend-backend (autenticación implementada, falta completar otras funcionalidades)
 
 ## Definir Clases y Modelos
 - [x] Implementar la clase `Client`.  <!-- Completado -->
@@ -528,16 +532,25 @@ Parcialmente implementado:
 
 ### Prioridad Alta (Inmediata)
 
-1. **Completar Sistema de Autenticación y Autorización**:
+1. **Completar Integración Frontend-Backend**:
+   - [x] Configurar CORS para permitir conexiones desde el frontend
+   - [x] Implementar autenticación JWT en el frontend
+   - [x] Mejorar estructura de respuesta de autenticación
+   - [ ] Implementar manejo de errores consistente entre frontend y backend
+   - [ ] Completar la integración de endpoints de viajes en el frontend
+   - [ ] Implementar actualización automática de token JWT
+   - [ ] Mejorar la experiencia de usuario en la interfaz de autenticación
+
+2. **Completar Sistema de Autenticación y Autorización**:
    - [x] Adaptar sistema para trabajar con el modelo Secretary
    - [x] Implementar relación uno a uno entre `Secretary` y `User`
    - [x] Integrar con el flujo de negocio existente
    - [ ] Proteger todos los endpoints existentes con autenticación
    - [ ] Implementar middleware para verificación de permisos por rol
    - [ ] Crear documentación detallada sobre el flujo de autenticación
-   - [ ] Implementar autenticación para el frontend (rutas protegidas)
+   - [x] Implementar autenticación para el frontend (rutas protegidas)
 
-2. **Corregir Errores y Mejorar Validaciones**:
+3. **Corregir Errores y Mejorar Validaciones**:
    - [x] Corregir error de validación en el esquema Driver (campo experience_years)
    - [ ] Revisar y corregir otros esquemas con posibles discrepancias
    - [ ] Implementar validaciones de negocio más robustas
@@ -545,27 +558,20 @@ Parcialmente implementado:
    - [ ] Mejorar mensajes de error para el cliente
    - [ ] Implementar logging centralizado de errores
 
-3. **Implementar Mejoras en el Modelo de Datos**:
+4. **Implementar Mejoras en el Modelo de Datos**:
    - [ ] Crear modelo `Office` y relacionarlo con `Secretary` y `Location`
    - [ ] Implementar modelo `TripState` para manejar estados de viajes
    - [ ] Implementar modelo `PackageState` para manejar estados de paquetes
    - [ ] Agregar campo de estado al modelo `Trip`
    - [ ] Mejorar auditoría con campos `created_by` y `updated_by`
 
-4. **Implementar Endpoints para Estado de Entidades**:
+### Prioridad Media (Corto Plazo)
+
+5. **Implementar Endpoints para Estado de Entidades**:
    - [ ] Crear endpoint `PATCH /tickets/{id}/status` para actualizar estado de tickets
    - [ ] Crear endpoint `PATCH /packages/{id}/status` para actualizar estado de paquetes
    - [ ] Crear endpoint `PATCH /trips/{id}/status` para actualizar estado de viajes
    - [ ] Implementar notificaciones de cambios de estado
-
-### Prioridad Media (Corto Plazo)
-
-5. **Mejorar Integración Frontend-Backend**:
-   - [x] Configurar CORS para permitir conexiones desde el frontend
-   - [x] Mejorar estructura de respuesta de autenticación
-   - [ ] Implementar manejo de errores consistente entre frontend y backend
-   - [ ] Crear componentes frontend para consumir todos los endpoints
-   - [ ] Implementar actualización automática de token JWT
 
 6. **Implementar Sistema de Reservas**:
    - [ ] Crear modelo y esquema para reservas
@@ -621,11 +627,20 @@ Parcialmente implementado:
 
 ## Mejoras Recientes Completadas
 
+### Integración Frontend-Backend
+- [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
+- [x] Implementar autenticación JWT en el frontend <!-- Completado 12/04/2024 -->
+- [x] Mejorar estructura de respuesta de autenticación para reducir campos nulos <!-- Completado 11/04/2024 -->
+- [x] Implementar rutas protegidas en el frontend <!-- Completado 12/04/2024 -->
+- [x] Crear servicio de autenticación en el frontend <!-- Completado 12/04/2024 -->
+- [x] Implementar visualización de viajes en el frontend <!-- Completado 12/04/2024 -->
+- [x] Mejorar la experiencia de usuario en la página de login <!-- Completado 12/04/2024 -->
+
 ### Correcciones de Errores
 - [x] Corregir error de validación en el esquema Driver (campo experience_years) <!-- Completado 11/04/2024 -->
-- [x] Mejorar estructura de respuesta de autenticación para reducir campos nulos <!-- Completado 11/04/2024 -->
 - [x] Implementar sistema de autenticación para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado 11/04/2024 -->
-- [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
+- [x] Corregir formato de envío de credenciales en la autenticación frontend <!-- Completado 12/04/2024 -->
+- [x] Solucionar problemas con el manejo de tokens JWT en el frontend <!-- Completado 12/04/2024 -->
 
 ### Mejoras de Configuración
 - [x] Agregar archivo `.python-version` para especificar la versión de Python para uv <!-- Completado -->
@@ -633,7 +648,7 @@ Parcialmente implementado:
 - [x] Crear archivo CONTRIBUTING.md con guías para desarrolladores <!-- Completado -->
 - [x] Solucionar problemas de importación al clonar el repositorio <!-- Completado -->
 - [x] Crear script run.py para facilitar la ejecución del proyecto <!-- Completado -->
-- [x] Actualizar archivo todo.md con el estado actual del proyecto <!-- Completado -->
+- [x] Actualizar archivo todo.md con el estado actual del proyecto <!-- Completado 12/04/2024 -->
 
 ### Mejoras de Arquitectura
 - [x] Implementar versionado de API (API Versioning) <!-- Completado -->
@@ -642,23 +657,27 @@ Parcialmente implementado:
 - [x] Implementar sistema de autenticación para múltiples roles <!-- Completado -->
 - [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado -->
 - [x] Mejorar estructura de respuesta de autenticación <!-- Completado -->
+- [x] Crear servicios en el frontend para comunicación con la API <!-- Completado 12/04/2024 -->
 
 ## Conclusión
 
 Este documento representa una hoja de ruta completa para el desarrollo del backend de Trans Comarapa. Las tareas están organizadas por áreas funcionales y prioridades para facilitar la planificación y ejecución del proyecto.
 
-El proyecto ha avanzado significativamente, con la implementación de los modelos principales y sus endpoints CRUD correspondientes. Se ha completado la implementación básica del sistema de autenticación JWT con lista negra de tokens y se han implementado endpoints relacionales importantes.
+El proyecto ha avanzado significativamente, con la implementación de los modelos principales y sus endpoints CRUD correspondientes. Se ha completado la implementación básica del sistema de autenticación JWT con lista negra de tokens y se han implementado endpoints relacionales importantes. Además, se ha logrado una integración inicial del frontend con la API backend, permitiendo la autenticación de usuarios y la visualización de datos de viajes.
 
-Las próximas etapas se centrarán en mejorar el modelo de datos con nuevas entidades como `Office`, `RouteStop`, `TripState` y `PackageState`, así como en implementar relaciones adicionales entre los modelos existentes. También se trabajará en la integración del sistema de autenticación con el modelo de secretarios y en la protección de endpoints.
+Los avances recientes incluyen la configuración de CORS para permitir la comunicación entre el frontend y el backend, la implementación de autenticación JWT en el frontend, y la creación de servicios en el frontend para consumir los endpoints de la API. También se han corregido errores relacionados con la autenticación y se ha mejorado la experiencia de usuario en la interfaz de login.
+
+Las próximas etapas se centrarán en completar la integración frontend-backend, mejorar el modelo de datos con nuevas entidades como `Office`, `RouteStop`, `TripState` y `PackageState`, así como en implementar relaciones adicionales entre los modelos existentes. También se trabajará en la protección completa de endpoints con autenticación y en la implementación de un sistema de manejo de errores consistente entre el frontend y el backend.
 
 Es importante revisar y actualizar este documento regularmente a medida que el proyecto evoluciona. Las prioridades pueden cambiar según los requisitos del negocio y el feedback de los usuarios.
 
 ### Próxima Revisión
 
-Fecha: [Definir fecha para la próxima revisión]
+Fecha: 19/04/2024
 
 ### Historial de Actualizaciones
 
+- **12/04/2024**: Actualización con la integración del frontend con la API backend y mejoras en la autenticación
 - **11/04/2024**: Actualización del sistema de autenticación para múltiples roles y corrección de errores
 - **08/04/2024**: Actualización del modelo de datos y próximos pasos basados en el diagrama de clases
 - **07/04/2024**: Actualización completa del documento con el estado actual del proyecto
@@ -684,13 +703,17 @@ Fecha: [Definir fecha para la próxima revisión]
 - Tareas pendientes: 52
 
 ### Seguridad y Autenticación
-- Tareas completadas: 14
-- Tareas pendientes: 6
+- Tareas completadas: 17
+- Tareas pendientes: 3
+
+### Integración Frontend-Backend
+- Tareas completadas: 7
+- Tareas pendientes: 3
 
 ### Mejoras y Configuración
-- Tareas completadas: 12
+- Tareas completadas: 13
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 167**
-- **Tareas pendientes: 188**
+- **Tareas completadas: 174**
+- **Tareas pendientes: 191**

@@ -8,33 +8,40 @@ La aplicación tiene como objetivo principal facilitar la gestión de viajes, ve
 
 ## Estado Actual del Proyecto
 
-El proyecto ha avanzado en la implementación de la estructura base y el sistema de autenticación. Se ha implementado la navegación principal y se han creado los componentes básicos reutilizables.
+El proyecto ha avanzado significativamente en la implementación de la estructura base, el sistema de autenticación y la integración con el backend. Se ha implementado la navegación principal, se han creado los componentes básicos reutilizables y se ha logrado conectar el frontend con la API backend.
 
 Se ha completado:
 - Configuración inicial del proyecto Nuxt 3 con TailwindCSS
 - Sistema de autenticación con soporte para múltiples roles
-- Componentes básicos reutilizables (botones, tarjetas, alertas)
+- Componentes básicos reutilizables (botones, tarjetas, alertas, tablas)
 - Layout principal con navegación dinámica según el estado de autenticación
 - Estructura base del dashboard con navegación específica por rol
+- Integración con la API backend para autenticación y gestión de viajes
+- Implementación de servicios para comunicación con la API
+- Visualización de viajes con datos reales del backend
+- Mejoras en la experiencia de usuario y diseño responsive
 
 Pendiente de implementar:
-- Gestión completa de viajes, boletos y paquetes
-- Visualización de asientos y reservas
-- Reportes y estadísticas
-- Funcionalidades específicas para cada rol
+- Gestión completa de paquetes
+- Sistema de reservas
+- Reportes y estadísticas avanzadas
+- Funcionalidades específicas para conductores y asistentes
 
 Parcialmente implementado:
-- Sistema de autenticación y autorización (login implementado, falta protección de rutas)
+- Sistema de autenticación y autorización (login implementado, protección de rutas implementada, falta actualización automática de token)
+- Gestión de viajes y boletos (visualización implementada, falta completar la creación y edición con datos reales)
 
 ## Implementar Componentes Base
 - [x] Crear componente AppButton <!-- Completado -->
 - [x] Crear componente AppNavbar <!-- Completado -->
 - [x] Crear componente AppFooter <!-- Completado -->
 - [x] Crear componentes de tarjetas para dashboard <!-- Completado -->
-- [ ] Crear componente de tabla con paginación <!-- Pendiente -->
+- [x] Crear componente de tabla con paginación <!-- Completado 12/04/2024 -->
+- [x] Crear componente de filtros para tablas <!-- Completado 12/04/2024 -->
+- [x] Crear componente de formulario avanzado <!-- Completado 12/04/2024 -->
+- [x] Crear componente de selección de asientos <!-- Completado 12/04/2024 -->
+- [x] Mejorar componentes UI con transiciones y animaciones <!-- Completado 12/04/2024 -->
 - [ ] Crear componente de modal/diálogo <!-- Pendiente -->
-- [ ] Crear componente de formulario avanzado <!-- Pendiente -->
-- [ ] Crear componente de selección de asientos <!-- Pendiente -->
 - [ ] Crear componente de calendario/selector de fechas <!-- Pendiente -->
 - [ ] Crear componente de notificaciones toast <!-- Pendiente -->
 
@@ -48,8 +55,10 @@ Parcialmente implementado:
 - [x] Implementar cierre de sesión <!-- Completado -->
 - [x] Ocultar/mostrar elementos de navegación según estado de autenticación <!-- Completado -->
 - [x] Implementar soporte para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado -->
-- [ ] Implementar guards de ruta para secciones protegidas <!-- Pendiente -->
-- [ ] Crear middleware de autenticación <!-- Pendiente -->
+- [x] Implementar guards de ruta para secciones protegidas <!-- Completado 12/04/2024 -->
+- [x] Crear middleware de autenticación <!-- Completado 12/04/2024 -->
+- [x] Crear servicio de autenticación para comunicación con la API <!-- Completado 12/04/2024 -->
+- [x] Mejorar la experiencia de usuario en la página de login <!-- Completado 12/04/2024 -->
 - [ ] Implementar actualización automática de token JWT <!-- Pendiente -->
 - [ ] Crear página de recuperación de contraseña <!-- Pendiente -->
 
@@ -146,27 +155,34 @@ Parcialmente implementado:
 
 ### Prioridad Alta (Inmediata)
 
-1. **Completar Sistema de Autenticación y Autorización**:
+1. **Completar Integración con Backend**:
+   - [x] Configurar servicios para conectar con la API
+   - [x] Crear store Pinia para autenticación
+   - [x] Implementar servicio de viajes para comunicación con la API
+   - [x] Conectar la visualización de viajes con datos reales
+   - [ ] Implementar manejo de errores consistente
+   - [ ] Crear stores Pinia para las entidades principales (boletos, clientes)
+   - [ ] Optimizar peticiones a la API
+   - [ ] Completar la integración de creación y edición de viajes con datos reales
+
+2. **Completar Sistema de Autenticación y Autorización**:
    - [x] Implementar el sistema de login y manejo de sesiones
    - [x] Establecer roles y permisos para diferentes tipos de usuarios
    - [x] Implementar navegación dinámica según estado de autenticación
-   - [ ] Configurar guards de ruta y middleware de autenticación
+   - [x] Configurar guards de ruta y middleware de autenticación
+   - [x] Mejorar manejo de errores de autenticación
    - [ ] Implementar actualización automática de token JWT
-   - [ ] Mejorar manejo de errores de autenticación
+   - [ ] Crear página de recuperación de contraseña
 
-2. **Completar Componentes Base**:
+3. **Mejorar Experiencia de Usuario**:
    - [x] Crear componentes básicos (botones, tarjetas)
    - [x] Implementar layout principal responsive
-   - [ ] Desarrollar componentes de formulario avanzados
-   - [ ] Crear componentes de tabla y paginación
+   - [x] Desarrollar componentes de formulario avanzados
+   - [x] Crear componentes de tabla y paginación
+   - [x] Mejorar diseño responsive para dispositivos móviles
    - [ ] Implementar modales y diálogos de confirmación
-
-3. **Mejorar Integración con Backend**:
-   - [x] Configurar servicios para conectar con la API
-   - [x] Crear store Pinia para autenticación
-   - [ ] Implementar manejo de errores consistente
-   - [ ] Crear stores Pinia para las entidades principales (viajes, boletos, clientes)
-   - [ ] Optimizar peticiones a la API
+   - [ ] Optimizar tiempos de carga y respuesta
+   - [ ] Implementar feedback visual para acciones del usuario
 
 ### Prioridad Media (Corto Plazo)
 
@@ -340,12 +356,26 @@ Parcialmente implementado:
 
 ## Mejoras Recientes Completadas
 
+### Integración con Backend
+- [x] Configuración de CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
+- [x] Implementación de servicios para comunicación con la API <!-- Completado 12/04/2024 -->
+- [x] Creación de servicio de autenticación para login con la API <!-- Completado 12/04/2024 -->
+- [x] Creación de servicio de viajes para obtener datos reales <!-- Completado 12/04/2024 -->
+- [x] Corrección del formato de envío de credenciales en la autenticación <!-- Completado 12/04/2024 -->
+- [x] Implementación de transformación de datos entre frontend y backend <!-- Completado 12/04/2024 -->
+- [x] Visualización de viajes con datos reales del backend <!-- Completado 12/04/2024 -->
+- [x] Mejora del manejo de errores en la comunicación con la API <!-- Completado 12/04/2024 -->
+
 ### Autenticación y Navegación
 - [x] Implementación completa del sistema de login para secretarias <!-- Completado 11/04/2024 -->
 - [x] Soporte para múltiples roles (secretarias, administradores, conductores, asistentes, clientes) <!-- Completado 11/04/2024 -->
 - [x] Navegación dinámica que se adapta al estado de autenticación <!-- Completado 11/04/2024 -->
 - [x] Ocultar/mostrar elementos de menú según el estado de autenticación <!-- Completado 11/04/2024 -->
 - [x] Implementación de cierre de sesión <!-- Completado 11/04/2024 -->
+- [x] Implementación de guards de ruta para secciones protegidas <!-- Completado 12/04/2024 -->
+- [x] Creación de middleware de autenticación <!-- Completado 12/04/2024 -->
+- [x] Mejora de la experiencia de usuario en la página de login <!-- Completado 12/04/2024 -->
+- [x] Solución de problemas con el manejo de tokens JWT <!-- Completado 12/04/2024 -->
 
 ### Componentes y UI
 - [x] Creación de componente AppButton reutilizable <!-- Completado 10/04/2024 -->
@@ -357,12 +387,17 @@ Parcialmente implementado:
 - [x] Implementación de acciones rápidas y búsqueda rápida <!-- Completado 11/04/2024 -->
 - [x] Mejora del diseño responsive para dispositivos móviles y tablets <!-- Completado 12/04/2024 -->
 - [x] Desarrollo de componentes de formulario avanzados <!-- Completado 12/04/2024 -->
+- [x] Creación de componente de tabla con paginación <!-- Completado 12/04/2024 -->
+- [x] Implementación de componente de filtros para tablas <!-- Completado 12/04/2024 -->
+- [x] Mejora de la experiencia visual con transiciones y animaciones <!-- Completado 12/04/2024 -->
 
 ### Gestión de Viajes
 - [x] Implementación de listado de viajes con filtros y paginación <!-- Completado 11/04/2024 -->
 - [x] Creación de componentes para filtros y tabla de viajes <!-- Completado 11/04/2024 -->
 - [x] Desarrollo de página de detalle de viaje <!-- Completado 11/04/2024 -->
 - [x] Implementación de formularios para crear y editar viajes <!-- Completado 11/04/2024 -->
+- [x] Mejora de la visualización de datos en la tabla de viajes <!-- Completado 12/04/2024 -->
+- [x] Optimización de la experiencia de usuario en la página de viajes <!-- Completado 12/04/2024 -->
 
 ### Gestión de Boletos
 - [x] Implementación de componente de visualización de asientos <!-- Completado 11/04/2024 -->
@@ -371,14 +406,15 @@ Parcialmente implementado:
 - [x] Creación de formulario de venta de boletos <!-- Completado 11/04/2024 -->
 - [x] Implementación de página de confirmación de compra <!-- Completado 11/04/2024 -->
 
-### Integración con Backend
-- [x] Configuración de CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
-- [x] Mejora de la estructura de respuesta de autenticación <!-- Completado 11/04/2024 -->
-- [x] Corrección de errores de validación en esquemas de respuesta <!-- Completado 11/04/2024 -->
-
 ## Conclusión
 
 Este documento representa una hoja de ruta completa para el desarrollo del frontend de Trans Comarapa. Las tareas están organizadas por áreas funcionales y prioridades para facilitar la planificación y ejecución del proyecto.
+
+El proyecto ha avanzado significativamente, con la implementación de la estructura base, el sistema de autenticación y la integración inicial con el backend. Se ha logrado conectar el frontend con la API backend, permitiendo la autenticación de usuarios y la visualización de datos de viajes con información real.
+
+Los avances recientes incluyen la implementación de servicios para comunicación con la API, la creación de middleware de autenticación, la mejora de la experiencia de usuario en la página de login, y la visualización de viajes con datos reales del backend. También se han desarrollado componentes avanzados de UI como tablas con paginación, filtros y formularios, y se ha mejorado el diseño responsive para dispositivos móviles.
+
+Las próximas etapas se centrarán en completar la integración con el backend para la creación y edición de viajes, implementar un manejo de errores consistente, y mejorar la experiencia de usuario con feedback visual y optimización de tiempos de carga.
 
 Es importante revisar y actualizar este documento regularmente a medida que el proyecto evoluciona. Las prioridades pueden cambiar según los requisitos del negocio y el feedback de los usuarios.
 
@@ -391,35 +427,42 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 - Tareas pendientes: 3
 
 ### Seguridad y Autenticación
-- Tareas completadas: 9
-- Tareas pendientes: 4
+- Tareas completadas: 13
+- Tareas pendientes: 2
 
 ### Layout y Estructura de Páginas
 - Tareas completadas: 5
 - Tareas pendientes: 4
 
 ### Gestión de Entidades
-- Tareas completadas: 16
-- Tareas pendientes: 19
+- Tareas completadas: 18
+- Tareas pendientes: 17
+
+### Integración con Backend
+- Tareas completadas: 8
+- Tareas pendientes: 4
 
 ### Reportes y Estadísticas
 - Tareas completadas: 3
 - Tareas pendientes: 6
 
 ### Mejoras y Optimización
-- Tareas completadas: 0
-- Tareas pendientes: 15
+- Tareas completadas: 2
+- Tareas pendientes: 13
 
 ### Testing y Despliegue
 - Tareas completadas: 0
 - Tareas pendientes: 10
 
 ### Total
-- **Tareas completadas: 43**
+- **Tareas completadas: 58**
 - **Tareas pendientes: 59**
 
 ## Historial de Actualizaciones
 
+- **13/04/2024**: Actualización del documento con los avances en la integración con el backend y mejoras en la autenticación
+- **13/04/2024**: Implementación de servicios para comunicación con la API y visualización de datos reales
+- **13/04/2024**: Implementación de middleware de autenticación y guards de ruta para secciones protegidas
 - **12/04/2024**: Implementación de componentes de formulario avanzados con validación y mejoras de UX
 - **12/04/2024**: Mejora del diseño responsive en toda la aplicación para optimizar la experiencia en dispositivos móviles
 - **12/04/2024**: Corrección de la numeración de asientos y mejora de la consistencia visual en el mapa de asientos
@@ -438,4 +481,4 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 
 ## Próxima Revisión
 
-Fecha: 18/04/2024
+Fecha: 19/04/2024
