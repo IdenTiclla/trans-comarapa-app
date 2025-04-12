@@ -65,14 +65,14 @@ Parcialmente implementado:
 - [ ] Crear página de ayuda/documentación <!-- Pendiente -->
 
 ## Implementar Gestión de Viajes
-- [ ] Crear vista de listado de viajes <!-- Pendiente -->
-- [ ] Implementar filtros por fecha, ruta, etc. <!-- Pendiente -->
-- [ ] Desarrollar paginación de resultados <!-- Pendiente -->
-- [ ] Crear página de detalle de viaje <!-- Pendiente -->
-- [ ] Mostrar información detallada del viaje <!-- Pendiente -->
+- [x] Crear vista de listado de viajes <!-- Completado 11/04/2024 -->
+- [x] Implementar filtros por fecha, ruta, etc. <!-- Completado 11/04/2024 -->
+- [x] Desarrollar paginación de resultados <!-- Completado 11/04/2024 -->
+- [x] Crear página de detalle de viaje <!-- Completado 11/04/2024 -->
+- [x] Mostrar información detallada del viaje <!-- Completado 11/04/2024 -->
 - [ ] Visualizar asientos disponibles/ocupados <!-- Pendiente -->
-- [ ] Implementar formulario para crear nuevo viaje <!-- Pendiente -->
-- [ ] Desarrollar funcionalidad para editar viaje <!-- Pendiente -->
+- [x] Implementar formulario para crear nuevo viaje <!-- Completado 11/04/2024 -->
+- [x] Desarrollar funcionalidad para editar viaje <!-- Completado 11/04/2024 -->
 - [ ] Integrar confirmación para cancelar viaje <!-- Pendiente -->
 
 ## Implementar Gestión de Boletos
@@ -181,7 +181,7 @@ Parcialmente implementado:
 
 5. **Flujos de Usuario Críticos**:
    - [ ] Implementar el flujo completo de venta de boletos
-   - [ ] Desarrollar la gestión de viajes (creación, edición, visualización)
+   - [x] Desarrollar la gestión de viajes (creación, edición, visualización)
    - [ ] Crear visualización de asientos disponibles/ocupados
 
 6. **Gestión de Clientes**:
@@ -356,6 +356,12 @@ Parcialmente implementado:
 - [x] Creación de componentes para estadísticas, viajes próximos y ventas recientes <!-- Completado 11/04/2024 -->
 - [x] Implementación de acciones rápidas y búsqueda rápida <!-- Completado 11/04/2024 -->
 
+### Gestión de Viajes
+- [x] Implementación de listado de viajes con filtros y paginación <!-- Completado 11/04/2024 -->
+- [x] Creación de componentes para filtros y tabla de viajes <!-- Completado 11/04/2024 -->
+- [x] Desarrollo de página de detalle de viaje <!-- Completado 11/04/2024 -->
+- [x] Implementación de formularios para crear y editar viajes <!-- Completado 11/04/2024 -->
+
 ### Integración con Backend
 - [x] Configuración de CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
 - [x] Mejora de la estructura de respuesta de autenticación <!-- Completado 11/04/2024 -->
@@ -384,8 +390,8 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 - Tareas pendientes: 4
 
 ### Gestión de Entidades
-- Tareas completadas: 2
-- Tareas pendientes: 32
+- Tareas completadas: 9
+- Tareas pendientes: 25
 
 ### Reportes y Estadísticas
 - Tareas completadas: 3
@@ -400,11 +406,12 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 - Tareas pendientes: 10
 
 ### Total
-- **Tareas completadas: 26**
-- **Tareas pendientes: 74**
+- **Tareas completadas: 33**
+- **Tareas pendientes: 67**
 
 ## Historial de Actualizaciones
 
+- **11/04/2024**: Implementación completa de la gestión de viajes (listado, filtros, paginación, detalle, creación, edición)
 - **11/04/2024**: Implementación del dashboard completo para secretarias con estadísticas, viajes próximos y ventas recientes
 - **11/04/2024**: Reestructuración completa del documento para seguir el formato del backend
 - **11/04/2024**: Agregada sección de mejoras recientes completadas
