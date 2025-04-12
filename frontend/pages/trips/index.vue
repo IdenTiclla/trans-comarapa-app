@@ -4,22 +4,22 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-semibold text-gray-900">Viajes</h1>
-          <AppButton 
-            variant="primary" 
+          <AppButton
+            variant="primary"
             @click="navigateTo('/trips/new')"
           >
             Nuevo Viaje
           </AppButton>
         </div>
-        
+
         <!-- Filtros -->
-        <TripFilters 
+        <TripFilters
           :initial-filters="filters"
           @filter-change="handleFilterChange"
         />
-        
+
         <!-- Tabla de viajes -->
-        <TripTable 
+        <TripTable
           :trips="trips"
           :loading="loading"
           :current-page="currentPage"
@@ -62,7 +62,11 @@ const filters = reactive({
   origin: '',
   destination: '',
   date: '',
-  status: ''
+  status: '',
+  search: '',
+  dateFrom: '',
+  dateTo: '',
+  minSeats: ''
 })
 
 // Comprobar autenticación al montar el componente
@@ -72,7 +76,7 @@ onMounted(() => {
     router.push('/login')
     return
   }
-  
+
   // Cargar viajes
   fetchTrips()
 })
@@ -80,41 +84,74 @@ onMounted(() => {
 // Cargar viajes
 const fetchTrips = async () => {
   loading.value = true
-  
+
   try {
     // En un entorno real, aquí se haría una llamada a la API
     // const response = await fetch(`/api/trips?page=${currentPage.value}&limit=${itemsPerPage.value}&sort=${sortBy.value}&direction=${sortDirection.value}`)
-    
+
     // Simulación de datos para desarrollo
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // Generar datos de ejemplo
     const exampleTrips = generateExampleTrips()
-    
+
     // Filtrar según los filtros aplicados
     let filteredTrips = exampleTrips
-    
+
+    // Filtro de búsqueda rápida
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase()
+      filteredTrips = filteredTrips.filter(trip =>
+        trip.id.toString().includes(searchTerm) ||
+        trip.route.origin.toLowerCase().includes(searchTerm) ||
+        trip.route.destination.toLowerCase().includes(searchTerm)
+      )
+    }
+
+    // Filtros básicos
     if (filters.origin) {
       filteredTrips = filteredTrips.filter(trip => trip.route.origin === filters.origin)
     }
-    
+
     if (filters.destination) {
       filteredTrips = filteredTrips.filter(trip => trip.route.destination === filters.destination)
     }
-    
+
+    if (filters.status) {
+      filteredTrips = filteredTrips.filter(trip => trip.status === filters.status)
+    }
+
+    // Filtro de fecha simple
     if (filters.date) {
       const filterDate = new Date(filters.date).toISOString().split('T')[0]
       filteredTrips = filteredTrips.filter(trip => trip.departure_date.startsWith(filterDate))
     }
-    
-    if (filters.status) {
-      filteredTrips = filteredTrips.filter(trip => trip.status === filters.status)
+
+    // Filtro de rango de fechas
+    if (filters.dateFrom) {
+      const fromDate = new Date(filters.dateFrom)
+      filteredTrips = filteredTrips.filter(trip => new Date(trip.departure_date) >= fromDate)
     }
-    
+
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo)
+      // Ajustar la fecha final para incluir todo el día
+      toDate.setHours(23, 59, 59, 999)
+      filteredTrips = filteredTrips.filter(trip => new Date(trip.departure_date) <= toDate)
+    }
+
+    // Filtro de asientos mínimos
+    if (filters.minSeats) {
+      const minSeats = parseInt(filters.minSeats)
+      if (!isNaN(minSeats)) {
+        filteredTrips = filteredTrips.filter(trip => trip.available_seats >= minSeats)
+      }
+    }
+
     // Ordenar
     filteredTrips.sort((a, b) => {
       let valueA, valueB
-      
+
       switch (sortBy.value) {
         case 'id':
           valueA = a.id
@@ -148,20 +185,20 @@ const fetchTrips = async () => {
           valueA = a.departure_date
           valueB = b.departure_date
       }
-      
+
       if (sortDirection.value === 'asc') {
         return valueA > valueB ? 1 : -1
       } else {
         return valueA < valueB ? 1 : -1
       }
     })
-    
+
     // Paginación
     totalItems.value = filteredTrips.length
     const start = (currentPage.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
     trips.value = filteredTrips.slice(start, end)
-    
+
   } catch (error) {
     console.error('Error al cargar los viajes:', error)
     // Aquí se podría mostrar un mensaje de error
@@ -183,25 +220,25 @@ const generateExampleTrips = () => {
     { origin: 'Cochabamba', destination: 'La Paz' },
     { origin: 'La Paz', destination: 'Cochabamba' }
   ]
-  
+
   const trips = []
-  
+
   for (let i = 1; i <= 50; i++) {
     const route = routes[Math.floor(Math.random() * routes.length)]
     const status = statuses[Math.floor(Math.random() * statuses.length)]
     const totalSeats = 40
     const availableSeats = status === 'cancelled' ? 0 : Math.floor(Math.random() * totalSeats)
-    
+
     // Generar fecha aleatoria en los próximos 30 días
     const date = new Date()
     date.setDate(date.getDate() + Math.floor(Math.random() * 30))
     const departureDate = date.toISOString().split('T')[0]
-    
+
     // Generar hora aleatoria
     const hours = String(Math.floor(Math.random() * 24)).padStart(2, '0')
     const minutes = String(Math.floor(Math.random() * 60)).padStart(2, '0')
     const departureTime = `${hours}:${minutes}`
-    
+
     trips.push({
       id: i,
       route,
@@ -212,7 +249,7 @@ const generateExampleTrips = () => {
       available_seats: availableSeats
     })
   }
-  
+
   return trips
 }
 

@@ -8,9 +8,20 @@ export default defineNuxtConfig({
 
   // Módulos
   modules: [
-    '@pinia/nuxt',
+    ['@pinia/nuxt', {
+      autoImports: ['defineStore', 'acceptHMRUpdate'],
+      disableVuex: true,
+    }],
     '@nuxtjs/tailwindcss',
   ],
+
+  // Configuración de PostCSS
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
+  },
 
   // Configuración de runtime
   runtimeConfig: {

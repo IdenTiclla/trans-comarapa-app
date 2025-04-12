@@ -70,21 +70,21 @@ Parcialmente implementado:
 - [x] Desarrollar paginación de resultados <!-- Completado 11/04/2024 -->
 - [x] Crear página de detalle de viaje <!-- Completado 11/04/2024 -->
 - [x] Mostrar información detallada del viaje <!-- Completado 11/04/2024 -->
-- [ ] Visualizar asientos disponibles/ocupados <!-- Pendiente -->
+- [x] Visualizar asientos disponibles/ocupados <!-- Completado 11/04/2024 -->
 - [x] Implementar formulario para crear nuevo viaje <!-- Completado 11/04/2024 -->
 - [x] Desarrollar funcionalidad para editar viaje <!-- Completado 11/04/2024 -->
 - [ ] Integrar confirmación para cancelar viaje <!-- Pendiente -->
 
 ## Implementar Gestión de Boletos
-- [ ] Crear vista para venta de boletos <!-- Pendiente -->
-- [ ] Implementar selección de viaje <!-- Pendiente -->
-- [ ] Desarrollar selección de asiento(s) <!-- Pendiente -->
-- [ ] Crear formulario de ingreso de datos del cliente <!-- Pendiente -->
-- [ ] Implementar confirmación de compra <!-- Pendiente -->
+- [x] Crear vista para venta de boletos <!-- Completado 11/04/2024 -->
+- [x] Implementar selección de viaje <!-- Completado 11/04/2024 -->
+- [x] Desarrollar selección de asiento(s) <!-- Completado 11/04/2024 -->
+- [x] Crear formulario de ingreso de datos del cliente <!-- Completado 11/04/2024 -->
+- [x] Implementar confirmación de compra <!-- Completado 11/04/2024 -->
 - [ ] Crear listado de boletos vendidos <!-- Pendiente -->
 - [ ] Implementar filtros por fecha, cliente, estado, etc. <!-- Pendiente -->
 - [ ] Desarrollar funcionalidad para cambiar estado de boletos <!-- Pendiente -->
-- [ ] Crear vista para imprimir boleto <!-- Pendiente -->
+- [x] Crear vista para imprimir boleto <!-- Completado 11/04/2024 -->
 
 ## Implementar Gestión de Clientes
 - [ ] Crear listado de clientes con búsqueda y filtros <!-- Pendiente -->
@@ -180,9 +180,9 @@ Parcialmente implementado:
    - [ ] Implementar dashboard para clientes
 
 5. **Flujos de Usuario Críticos**:
-   - [ ] Implementar el flujo completo de venta de boletos
+   - [x] Implementar el flujo completo de venta de boletos
    - [x] Desarrollar la gestión de viajes (creación, edición, visualización)
-   - [ ] Crear visualización de asientos disponibles/ocupados
+   - [x] Crear visualización de asientos disponibles/ocupados
 
 6. **Gestión de Clientes**:
    - [ ] Implementar el CRUD completo de clientes
@@ -355,12 +355,21 @@ Parcialmente implementado:
 - [x] Implementación de dashboard completo para secretarias <!-- Completado 11/04/2024 -->
 - [x] Creación de componentes para estadísticas, viajes próximos y ventas recientes <!-- Completado 11/04/2024 -->
 - [x] Implementación de acciones rápidas y búsqueda rápida <!-- Completado 11/04/2024 -->
+- [x] Mejora del diseño responsive para dispositivos móviles y tablets <!-- Completado 12/04/2024 -->
+- [x] Desarrollo de componentes de formulario avanzados <!-- Completado 12/04/2024 -->
 
 ### Gestión de Viajes
 - [x] Implementación de listado de viajes con filtros y paginación <!-- Completado 11/04/2024 -->
 - [x] Creación de componentes para filtros y tabla de viajes <!-- Completado 11/04/2024 -->
 - [x] Desarrollo de página de detalle de viaje <!-- Completado 11/04/2024 -->
 - [x] Implementación de formularios para crear y editar viajes <!-- Completado 11/04/2024 -->
+
+### Gestión de Boletos
+- [x] Implementación de componente de visualización de asientos <!-- Completado 11/04/2024 -->
+- [x] Desarrollo de selección interactiva de asientos <!-- Completado 11/04/2024 -->
+- [x] Implementación de visualización de asientos según planilla tradicional <!-- Completado 12/04/2024 -->
+- [x] Creación de formulario de venta de boletos <!-- Completado 11/04/2024 -->
+- [x] Implementación de página de confirmación de compra <!-- Completado 11/04/2024 -->
 
 ### Integración con Backend
 - [x] Configuración de CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
@@ -378,7 +387,7 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 ## Estadísticas de Tareas
 
 ### Componentes Base
-- Tareas completadas: 7
+- Tareas completadas: 9
 - Tareas pendientes: 3
 
 ### Seguridad y Autenticación
@@ -390,8 +399,8 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 - Tareas pendientes: 4
 
 ### Gestión de Entidades
-- Tareas completadas: 9
-- Tareas pendientes: 25
+- Tareas completadas: 16
+- Tareas pendientes: 19
 
 ### Reportes y Estadísticas
 - Tareas completadas: 3
@@ -406,11 +415,17 @@ Recuerda que el éxito del proyecto depende no solo de completar estas tareas, s
 - Tareas pendientes: 10
 
 ### Total
-- **Tareas completadas: 33**
-- **Tareas pendientes: 67**
+- **Tareas completadas: 43**
+- **Tareas pendientes: 59**
 
 ## Historial de Actualizaciones
 
+- **12/04/2024**: Implementación de componentes de formulario avanzados con validación y mejoras de UX
+- **12/04/2024**: Mejora del diseño responsive en toda la aplicación para optimizar la experiencia en dispositivos móviles
+- **12/04/2024**: Corrección de la numeración de asientos y mejora de la consistencia visual en el mapa de asientos
+- **12/04/2024**: Mejora del diseño UI/UX del mapa de asientos tradicional y eliminación del mapa interactivo
+- **12/04/2024**: Implementación de visualización de asientos según planilla tradicional de la empresa
+- **11/04/2024**: Implementación del flujo completo de venta de boletos con selección de asientos y confirmación
 - **11/04/2024**: Implementación completa de la gestión de viajes (listado, filtros, paginación, detalle, creación, edición)
 - **11/04/2024**: Implementación del dashboard completo para secretarias con estadísticas, viajes próximos y ventas recientes
 - **11/04/2024**: Reestructuración completa del documento para seguir el formato del backend
