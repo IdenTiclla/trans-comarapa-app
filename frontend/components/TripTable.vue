@@ -61,10 +61,14 @@
                 <span class="text-sm font-medium text-gray-900">{{ trip.route.destination }}</span>
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap" colspan="2">
+            <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex flex-col">
                 <span class="text-sm font-medium text-gray-900">{{ formatDate(trip.departure_date) }}</span>
-                <span class="text-xs text-gray-500">{{ formatTime(trip.departure_time) }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-gray-900">{{ formatTime(trip.departure_time) }}</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -216,7 +220,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   trips: {
@@ -326,7 +330,32 @@ const formatDate = (dateString) => {
 
 // Formatear hora
 const formatTime = (timeString) => {
-  return timeString
+  if (!timeString) return ''
+
+  // Si ya tiene formato HH:MM, devolverlo directamente
+  if (/^\d{2}:\d{2}$/.test(timeString)) {
+    return timeString
+  }
+
+  try {
+    // Si es una hora ISO (con segundos y posiblemente milisegundos)
+    if (timeString.includes(':')) {
+      // Extraer solo las horas y minutos
+      const parts = timeString.split(':')
+      return `${parts[0]}:${parts[1]}`
+    }
+
+    // Si es otro formato, intentar convertirlo
+    const date = new Date(`2000-01-01T${timeString}`)
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  } catch (error) {
+    console.error('Error al formatear la hora:', error)
+    return timeString || ''
+  }
 }
 
 // Obtener clase CSS según el estado

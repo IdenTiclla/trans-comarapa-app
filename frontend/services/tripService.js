@@ -88,8 +88,8 @@ const getTrips = async (filters = {}, sort = {}, pagination = {}) => {
         origin: trip.route.origin_location.name,
         destination: trip.route.destination_location.name
       },
-      departure_date: trip.trip_datetime.split('T')[0],
-      departure_time: trip.trip_datetime.split('T')[1].substring(0, 5),
+      departure_date: trip.trip_datetime ? trip.trip_datetime.split('T')[0] : '',
+      departure_time: trip.trip_datetime ? trip.trip_datetime.split('T')[1].substring(0, 5) : '',
       status: 'scheduled', // Por defecto, todos los viajes están programados
       total_seats: trip.bus.capacity,
       available_seats: Math.floor(trip.bus.capacity * 0.7), // Simulamos que el 70% de los asientos están disponibles
@@ -171,8 +171,8 @@ const getTripById = async (id) => {
         origin: tripData.route.origin_location.name,
         destination: tripData.route.destination_location.name
       },
-      departure_date: tripData.trip_datetime.split('T')[0],
-      departure_time: tripData.trip_datetime.split('T')[1].substring(0, 5),
+      departure_date: tripData.trip_datetime ? tripData.trip_datetime.split('T')[0] : '',
+      departure_time: tripData.trip_datetime ? tripData.trip_datetime.split('T')[1].substring(0, 5) : '',
       status: 'scheduled', // Por defecto, todos los viajes están programados
       total_seats: tripData.bus.capacity,
       available_seats: Math.floor(tripData.bus.capacity * 0.7), // Simulamos que el 70% de los asientos están disponibles
