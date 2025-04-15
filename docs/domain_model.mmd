@@ -1,0 +1,78 @@
+%% Domain Model - Trans Comarapa (Synchronized with class_diagram.mmd)
+%% Autor: Iden Ticlla Choque
+%% Fecha: 2025-04-15
+%% Descripción: Este diagrama de clases muestra las entidades principales del dominio de Trans Comarapa.
+%% Diagrama de clases para el dominio de Trans Comarapa
+
+classDiagram
+    class Person
+    class Client
+    class Secretary
+    class Driver
+    class Assistant
+    class Administrator
+    class User
+    class Ticket
+    class Reservation
+    class Package
+    class Trip
+    class Route
+    class Bus
+    class SingleDeckBus
+    class DoubleDeckBus
+    class Seat
+    class Office
+    class Transaction
+    class PaymentMethod
+    class PackageState
+    class Location
+
+    %% Inheritance
+    Person <|-- Client
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+    Person <|-- Administrator
+    Bus <|-- SingleDeckBus
+    Bus <|-- DoubleDeckBus
+
+    %% Main relationships
+    Client "1" -- "*" Ticket : purchases
+    Client "1" -- "*" Reservation : reserves
+    Client "1" -- "*" Package : sends/receives
+    Client "1" -- "*" Transaction : makes
+
+    Trip "1" o-- "*" Ticket : (Aggregation)
+    Ticket "1" -- "1" Seat : occupies
+    Ticket "1" -- "1" Transaction : paid via
+
+    Reservation "*" -- "1" Trip : linked to
+    Reservation "1" -- "1" Seat : reserves
+
+    Trip "1" -- "1" Route : follows
+    Trip "1" -- "1" Bus : assigned to
+    Trip "1" -- "1" Driver : driven by
+    Trip "0..1" -- "1" Assistant : assisted by
+    Trip "1" -- "1" Secretary : dispatched by
+    Trip "*" -- "*" Seat : uses>seats
+
+    Route "1" -- "1" Location : starts from
+    Route "1" -- "1" Location : ends at
+
+    Bus "1" *-- "*" Seat : (Composition)
+
+    Package "*" -- "1" Trip : transported in
+    Package "1" -- "1" Transaction : paid via
+    Package "1" -- "1" PackageState : has status
+
+    Secretary "1" -- "1" User : has account
+    Driver "1" -- "1" User : has account
+    Assistant "1" -- "1" User : has account
+    Administrator "1" -- "1" User : has account
+
+    Office "1" -- "*" Secretary : employs
+    Office "1" -- "1" Location : located at
+
+    Transaction "1" -- "1" PaymentMethod : used via
+
+    %% Optional: you can add Stop, Office, etc. if needed 

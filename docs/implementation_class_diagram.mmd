@@ -1,0 +1,256 @@
+%% Implementation Class Diagram - Trans Comarapa
+
+classDiagram
+    class Person {
+        - id: Int
+        - ci: String
+        - name: String
+        - email: String
+        - phone: String
+        - birth_date: Date
+        - created_at: DateTime
+        - updated_at: DateTime
+        + get_full_name(): String
+    }
+    class Client {
+        - address: String
+        - city: String
+        - state: String
+        + purchase_ticket(): Ticket
+        + reserve_seat(): Reservation
+        + send_package(): Package
+    }
+    class Secretary {
+        - office_id: Int
+        - created_at: DateTime
+        - updated_at: DateTime
+        + dispatch_trip(): Trip
+    }
+    class Driver {
+        - license_number: String
+        - license_type: String
+        - license_expiry: Date
+        - status: String
+        - created_at: DateTime
+        - updated_at: DateTime
+        + assign_trip(): Trip
+    }
+    class Assistant {
+        - created_at: DateTime
+        - updated_at: DateTime
+        + assist_trip(): Trip
+    }
+    class Administrator {
+        - created_at: DateTime
+        - updated_at: DateTime
+        + manage_users(): void
+    }
+    class User {
+        - username: String
+        - password_hash: String
+        - role: String
+        - is_active: Boolean
+        - created_at: DateTime
+        - updated_at: DateTime
+        + check_password(password: String): Boolean
+    }
+    class Ticket {
+        - id: Int
+        - seat_id: Int
+        - client_id: Int
+        - trip_id: Int
+        - state: String
+        - created_at: DateTime
+        - updated_at: DateTime
+        + cancel(): void
+    }
+    class Reservation {
+        - id: Int
+        - client_id: Int
+        - trip_id: Int
+        - seat_id: Int
+        - status: String
+        - expiration_datetime: DateTime
+        - created_at: DateTime
+        - updated_at: DateTime
+        + confirm(): void
+    }
+    class Package {
+        - id: Int
+        - sender_id: Int
+        - recipient_id: Int
+        - trip_id: Int
+        - weight: Float
+        - dimensions: String
+        - description: String
+        - status: String
+        - transaction_id: Int
+        - created_at: DateTime
+        - updated_at: DateTime
+        + update_status(new_status: String): void
+    }
+    class Trip {
+        - id: Int
+        - trip_datetime: DateTime
+        - driver_id: Int
+        - assistant_id: Int
+        - bus_id: Int
+        - route_id: Int
+        - created_at: DateTime
+        - updated_at: DateTime
+        + add_ticket(ticket: Ticket): void
+        + add_package(pkg: Package): void
+    }
+    class Route {
+        - id: Int
+        - origin_location_id: Int
+        - destination_location_id: Int
+        - distance: Float
+        - duration: Float
+        - price: Float
+        - created_at: DateTime
+        - updated_at: DateTime
+        + get_duration(): Float
+    }
+    class Bus {
+        - id: Int
+        - plate_number: String
+        - capacity: Int
+        - brand: String
+        - model: String
+        - year: Int
+        - created_at: DateTime
+        - updated_at: DateTime
+        + assign_seat(seat: Seat): void
+    }
+    class SingleDeckBus {
+        - id: Int
+        - capacity: Int
+    }
+    class DoubleDeckBus {
+        - id: Int
+        - capacity: Int
+        - lower_deck_capacity: Int
+        - upper_deck_capacity: Int
+    }
+    class Seat {
+        - id: Int
+        - bus_id: Int
+        - seat_number: Int
+        - deck: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    class Office {
+        - id: Int
+        - name: String
+        - location_id: Int
+        - phone: String
+        - email: String
+        - manager_name: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    class Transaction {
+        - id: Int
+        - client_id: Int
+        - amount: Float
+        - payment_method_id: Int
+        - status: String
+        - reference_number: String
+        - payment_date: DateTime
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    class PaymentMethod {
+        - id: Int
+        - name: String
+        - description: String
+        - is_active: Boolean
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    class PackageState {
+        - id: Int
+        - name: String
+        - description: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+    class Location {
+        - id: Int
+        - name: String
+        - latitude: Float
+        - longitude: Float
+        - address: String
+        - city: String
+        - state: String
+        - country: String
+        - postal_code: String
+        - description: String
+        - created_at: DateTime
+        - updated_at: DateTime
+    }
+
+    %% Herencia y relaciones igual que en class_diagram.mmd
+    Person <|-- Client
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+    Person <|-- Administrator
+    Bus <|-- SingleDeckBus
+    Bus <|-- DoubleDeckBus
+
+    Client "1" -- "*" Ticket : purchases
+    Client "1" -- "*" Reservation : reserves
+    Client "1" -- "*" Package : sends/receives
+    Client "1" -- "*" Transaction : makes
+
+    Trip "1" o-- "*" Ticket : includes
+    Trip "1" -- "1" Route : follows
+    Trip "1" -- "1" Bus : assigned to
+    Trip "1" -- "1" Driver : driven by
+    Trip "0..1" -- "1" Assistant : assisted by
+    Trip "1" -- "1" Secretary : dispatched by
+
+    Ticket "1" -- "1" Seat : occupies
+    Ticket "1" -- "1" Transaction : paid via
+
+    Reservation "*" -- "1" Trip : linked to
+    Reservation "1" -- "1" Seat : reserves
+
+    Route "1" -- "1" Location : starts from
+    Route "1" -- "1" Location : ends at
+
+    Bus "1" *-- "*" Seat : has
+
+    Package "*" -- "1" Trip : transported in
+    Package "1" -- "1" Transaction : paid via
+    Package "1" -- "1" PackageState : has status
+
+    Secretary "1" -- "1" User : has account
+    Driver "1" -- "1" User : has account
+    Assistant "1" -- "1" User : has account
+    Administrator "1" -- "1" User : has account
+
+    Office "1" -- "*" Secretary : employs
+    Office "1" -- "1" Location : located at
+
+    Transaction "1" -- "1" PaymentMethod : used via
+
+    %% Inheritance
+    User <|-- Administrator
+    User <|-- Secretary
+    User <|-- Driver
+    User <|-- Assistant
+    User <|-- Client
+
+    %% Associations
+    Client "1" -- "0..*" Ticket : purchases >
+    Client "1" -- "0..*" Package : sends >
+    Trip "1" -- "0..*" Ticket : includes >
+    Trip "1" -- "0..*" Package : transports >
+    Trip "1" -- "1" Route : follows >
+    Trip "1" -- "1" Driver : driven_by >
+    Trip "1" -- "0..1" Assistant : assisted_by >
+    Route "1" -- "0..*" Trip : scheduled_on > 
