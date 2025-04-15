@@ -25,6 +25,8 @@ classDiagram
         - created_at: DateTime
         - updated_at: DateTime
         + dispatch_trip(): Trip
+        + assign_driver_to_trip(trip: Trip, driver: Driver): void
+        + assign_assistant_to_trip(trip: Trip, assistant: Assistant): void
     }
     class Driver {
         - license_number: String
