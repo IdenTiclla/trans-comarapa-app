@@ -1,0 +1,58 @@
+%% Domain Model - Trans Comarapa
+%% Autor: Iden Ticlla Choque
+%% Fecha: 2025-04-15
+%% Descripción: Este diagrama de clases muestra las entidades principales del dominio de Trans Comarapa.
+%% Diagrama de clases para el dominio de Trans Comarapa
+
+classDiagram
+    %% Main domain entities
+    class User {
+        <<abstract>>
+        +id
+        +name
+        +email
+    }
+    class Administrator
+    class Secretary
+    class Driver
+    class Assistant
+    class Client
+
+    class Ticket {
+        +id
+        +status
+        +date
+    }
+    class Package {
+        +id
+        +status
+        +description
+    }
+    class Trip {
+        +id
+        +datetime
+    }
+    class Route {
+        +id
+        +origin
+        +destination
+    }
+
+    %% Inheritance relationships
+    User <|-- Administrator
+    User <|-- Secretary
+    User <|-- Driver
+    User <|-- Assistant
+    User <|-- Client
+
+    %% Domain relationships
+    Client "1" -- "0..*" Ticket : purchases >
+    Client "1" -- "0..*" Package : sends >
+    Trip "1" -- "0..*" Ticket : contains >
+    Trip "1" -- "0..*" Package : transports >
+    Trip "1" -- "1" Route : follows >
+    Trip "1" -- "1" Driver : driven_by >
+    Trip "1" -- "0..1" Assistant : assisted_by >
+    Route "1" -- "0..*" Trip : scheduled_on >
+
+    %% Optional: you can add Stop, Office, etc. if needed 
