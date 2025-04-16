@@ -1,0 +1,13 @@
+%% Activity Diagram - Ticket Sale by Secretary
+
+flowchart TD
+    A[Start] --> B{Is the client registered?}
+    B -- Yes --> C[Select existing client]
+    B -- No --> D[Register new client]
+    D --> E[Select new client]
+    C --> F[Select trip and seat]
+    E --> F
+    F --> G[Enter ticket details]
+    G --> H[Process payment]
+    H --> I[Generate and print ticket]
+    I --> J[End] 

@@ -17,6 +17,7 @@ flowchart TD
       V3[Modificar Viaje]
       V4[Cancelar Viaje]
       V5[Despachar Viaje]
+      V6[Imprimir Planilla de Asientos Vendidos]
     end
 
     subgraph "Gestión de Boletos"
@@ -32,7 +33,8 @@ flowchart TD
       P1[Registrar Paquete]
       P2[Consultar Paquete]
       P3[Entregar Paquete]
-      P4[Imprimir Guía]
+      P4[Imprimir Guía Individual de Paquete]
+      P5[Imprimir Guía de Encomiendas del Viaje]
     end
 
     subgraph "Gestión de Clientes"
@@ -52,6 +54,7 @@ flowchart TD
       R1[Reporte de Ventas Diarias]
       R2[Reporte de Viajes]
       R3[Reporte de Paquetes]
+      R4[Imprimir Planilla de Asientos Vendidos]
     end
 
     subgraph "Autenticación"
@@ -66,6 +69,7 @@ flowchart TD
     Secretario --> V3
     Secretario --> V4
     Secretario --> V5
+    Secretario --> V6
 
     Secretario --> B1
     Secretario --> B2
@@ -78,6 +82,7 @@ flowchart TD
     Secretario --> P2
     Secretario --> P3
     Secretario --> P4
+    Secretario --> P5
 
     Secretario --> C1
     Secretario --> C2
@@ -91,6 +96,7 @@ flowchart TD
     Secretario --> R1
     Secretario --> R2
     Secretario --> R3
+    Secretario --> R4
 
     Secretario --> A1
     Secretario --> A2
@@ -102,6 +108,11 @@ flowchart TD
     B5 --> G4
     P1 --> G1
     P1 --> G2
+
+    note right of B1
+      El secretario puede vender boletos a clientes existentes
+      o registrar un nuevo cliente durante la venta.
+    end note
 ```
 
 ## Descripción de Casos de Uso del Secretario
@@ -112,6 +123,7 @@ flowchart TD
 - **Modificar Viaje**: Actualizar información de un viaje existente (cambiar horario, bus, personal, etc.).
 - **Cancelar Viaje**: Marcar un viaje como cancelado y gestionar la notificación a pasajeros.
 - **Despachar Viaje**: Registrar la salida de un viaje, confirmar pasajeros y paquetes.
+- **Imprimir Planilla de Asientos Vendidos**: Generar e imprimir una lista de todos los asientos vendidos para un viaje específico, incluyendo información relevante de los pasajeros.
 
 ### Gestión de Boletos
 - **Vender Boleto**: Procesar la venta de un boleto a un cliente, asignar asiento y cobrar.
@@ -125,7 +137,8 @@ flowchart TD
 - **Registrar Paquete**: Ingresar información de un paquete para envío (remitente, destinatario, peso, etc.).
 - **Consultar Paquete**: Verificar el estado y ubicación de un paquete en tránsito.
 - **Entregar Paquete**: Registrar la entrega de un paquete al destinatario.
-- **Imprimir Guía**: Generar e imprimir la guía de envío para un paquete.
+- **Imprimir Guía Individual de Paquete**: Generar e imprimir la guía de envío para un paquete específico, tanto al recibirlo como al entregarlo.
+- **Imprimir Guía de Encomiendas del Viaje**: Al despachar un viaje, generar e imprimir una guía/listado con todos los paquetes de encomiendas asociados a ese viaje.
 
 ### Gestión de Clientes
 - **Registrar Cliente**: Crear un nuevo registro de cliente en el sistema.
@@ -142,6 +155,7 @@ flowchart TD
 - **Reporte de Ventas Diarias**: Generar un informe de las ventas realizadas en el día.
 - **Reporte de Viajes**: Crear informes sobre los viajes programados o realizados.
 - **Reporte de Paquetes**: Generar informes sobre los paquetes enviados o recibidos.
+- **Imprimir Planilla de Asientos Vendidos**: Generar e imprimir una lista de todos los asientos vendidos para un viaje específico, incluyendo información relevante de los pasajeros.
 
 ### Autenticación
 - **Iniciar Sesión**: Autenticarse en el sistema con credenciales de secretario.

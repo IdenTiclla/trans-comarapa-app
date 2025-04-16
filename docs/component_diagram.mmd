@@ -1,0 +1,35 @@
+ %% Component Diagram - Trans Comarapa
+
+flowchart TB
+    %% Frontend
+    subgraph Frontend ["Frontend (Nuxt.js App)"]
+        FE1["Pages & Components"]
+        FE2["Pinia Store"]
+        FE3["Services (API calls)"]
+    end
+
+    %% Backend
+    subgraph Backend ["Backend (FastAPI App)"]
+        BE1["API Routers"]
+        BE2["Business Services"]
+        BE3["Auth (JWT)"]
+        BE4["SQLAlchemy Models"]
+        BE5["Pydantic Schemas"]
+        BE6["Alembic Migrations"]
+    end
+
+    %% Database
+    subgraph Database ["Database (PostgreSQL)"]
+        DB1["Tables"]
+    end
+
+    %% Relaciones
+    FE1 --> FE2
+    FE1 --> FE3
+    FE3 -- "HTTP/REST" --> BE1
+    BE1 --> BE2
+    BE1 --> BE3
+    BE2 --> BE4
+    BE2 --> BE5
+    BE4 -- "ORM" --> DB1
+    BE6 -- "Migrations" --> DB1
