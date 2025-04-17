@@ -11,7 +11,7 @@ class SeatBase(BaseModel):
     @field_validator('deck')
     @classmethod
     def validate_deck(cls, v):
-        valid_decks = ["A", "B", "C", "FIRST", "SECOND", "ECONOMY", "BUSINESS", "VIP"]
+        valid_decks = ["FIRST", "SECOND"]
         if v not in valid_decks:
             raise ValueError(f"Invalid deck value: {v}. Valid values are: {', '.join(valid_decks)}")
         return v

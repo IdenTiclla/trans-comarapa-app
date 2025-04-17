@@ -537,34 +537,36 @@ def seed_db():
 
         # Create seats for each bus
         for bus in buses:
-            # Create realistic seat layout based on bus capacity
             capacity = bus.capacity
-            # For simplicity, we'll create single deck buses with seats arranged in rows
-            # Each row has 4 seats (2 on each side of aisle)
             rows = capacity // 4
             remaining = capacity % 4
 
             seat_count = 1
-            # Add seats in rows
-            for row in range(1, rows + 1):
-                for position in ["A", "B", "C", "D"]:
+
+            # Lógica para determinar si el bus es de dos pisos
+            # Puedes ajustar esto según tu modelo real, aquí se asume que los buses con capacidad > 40 son de dos pisos
+            is_double_deck = getattr(bus, "double_deck", False) or capacity > 40
+
+            # Si es de dos pisos, la mitad de los asientos serán FIRST y la otra mitad SECOND
+            if is_double_deck:
+                half = (capacity // 2)
+                for i in range(1, capacity + 1):
+                    deck = "FIRST" if i <= half else "SECOND"
                     seat = Seat(
                         bus_id=bus.id,
-                        seat_number=seat_count,
-                        deck="main"  # For now, all buses are single deck
+                        seat_number=i,
+                        deck=deck
                     )
                     db.add(seat)
-                    seat_count += 1
-
-            # Add remaining seats
-            for i in range(remaining):
-                seat = Seat(
-                    bus_id=bus.id,
-                    seat_number=seat_count,
-                    deck="main"
-                )
-                db.add(seat)
-                seat_count += 1
+            else:
+                # Todos los asientos en FIRST
+                for i in range(1, capacity + 1):
+                    seat = Seat(
+                        bus_id=bus.id,
+                        seat_number=i,
+                        deck="FIRST"
+                    )
+                    db.add(seat)
 
         db.commit()
 
