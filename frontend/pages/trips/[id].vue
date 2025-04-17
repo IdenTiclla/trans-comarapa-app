@@ -83,10 +83,59 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
                   <dt class="text-sm font-medium text-gray-500">Asientos</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    <div class="flex items-center">
-                      <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">{{ trip.available_seats }} disponibles</span>
-                      <span class="mx-2 text-gray-400">/</span>
-                      <span>{{ trip.total_seats }} totales</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <!-- Asientos disponibles -->
+                      <div class="flex items-center">
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleAvailableSeats">
+                          {{ trip.available_seats }} disponibles
+                          <span v-if="!showAvailableSeats" class="ml-1">▼</span>
+                          <span v-else class="ml-1">▲</span>
+                        </span>
+                      </div>
+
+                      <!-- Asientos ocupados -->
+                      <div v-if="trip.occupied_seats && trip.occupied_seats.length > 0" class="flex items-center">
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleOccupiedSeats">
+                          {{ trip.occupied_seats.length }} ocupados
+                          <span v-if="!showOccupiedSeats" class="ml-1">▼</span>
+                          <span v-else class="ml-1">▲</span>
+                        </span>
+                      </div>
+
+                      <!-- Total de asientos -->
+                      <div class="flex items-center">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
+                          {{ trip.total_seats }} totales
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Lista de asientos disponibles -->
+                    <div v-if="showAvailableSeats && trip.available_seat_numbers && trip.available_seat_numbers.length > 0" class="mt-3 bg-green-50 p-3 rounded-md border border-green-100">
+                      <h4 class="text-xs font-medium text-green-800 mb-2">Asientos disponibles:</h4>
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          v-for="seatNumber in sortedAvailableSeats"
+                          :key="seatNumber"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+                        >
+                          {{ seatNumber }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Lista de asientos ocupados -->
+                    <div v-if="showOccupiedSeats && trip.occupied_seats && trip.occupied_seats.length > 0" class="mt-3 bg-red-50 p-3 rounded-md border border-red-100">
+                      <h4 class="text-xs font-medium text-red-800 mb-2">Asientos ocupados:</h4>
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          v-for="seatNumber in sortedOccupiedSeats"
+                          :key="seatNumber"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                        >
+                          {{ seatNumber }}
+                        </span>
+                      </div>
                     </div>
                   </dd>
                 </div>
@@ -124,9 +173,22 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
               <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
 
-              <div class="mt-2 sm:mt-0 flex items-center">
-                <span class="text-xs text-gray-500 mr-2">{{ trip.available_seats }} asientos disponibles</span>
-                <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+              <div class="mt-2 sm:mt-0 flex items-center space-x-4">
+                <!-- Asientos disponibles -->
+                <div class="flex items-center">
+                  <span class="text-xs text-gray-500 mr-2">{{ trip.available_seats }} disponibles</span>
+                  <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                </div>
+                <!-- Asientos ocupados -->
+                <div class="flex items-center">
+                  <span class="text-xs text-gray-500 mr-2">{{ trip.occupied_seats ? trip.occupied_seats.length : 0 }} ocupados</span>
+                  <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+                </div>
+                <!-- Total de asientos -->
+                <div class="flex items-center">
+                  <span class="text-xs text-gray-500 mr-2">{{ trip.total_seats }} totales</span>
+                  <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
+                </div>
               </div>
             </div>
 
@@ -151,7 +213,7 @@
             </AppButton>
             <AppButton
               variant="primary"
-              @click="showSeatSelection = true"
+              @click="goToSellTicket"
               class="w-full sm:w-auto order-1 sm:order-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -191,7 +253,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 import tripService from '~/services/tripService'
@@ -207,6 +269,8 @@ const trip = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const showSeatSelection = ref(false)
+const showOccupiedSeats = ref(false)
+const showAvailableSeats = ref(false)
 
 // Comprobar autenticación al montar el componente
 onMounted(() => {
@@ -229,7 +293,19 @@ const fetchTripDetails = async () => {
     // Usar el servicio para obtener los detalles del viaje
     trip.value = await tripService.getTripById(route.params.id)
 
+    // Obtener asientos disponibles
+    const seatsData = await tripService.getAvailableSeats(route.params.id)
+
+    // Actualizar la información de asientos en el objeto trip
+    if (trip.value) {
+      trip.value.total_seats = seatsData.totalSeats
+      trip.value.available_seats = seatsData.availableSeats
+      trip.value.occupied_seats = seatsData.occupiedSeats
+      trip.value.available_seat_numbers = seatsData.availableSeatNumbers
+    }
+
     console.log('Detalles del viaje cargados:', trip.value)
+    console.log('Información de asientos:', seatsData)
 
   } catch (err) {
     console.error('Error al cargar los detalles del viaje:', err)
@@ -281,6 +357,50 @@ const getStatusText = (status) => {
       return 'Desconocido'
   }
 }
+
+// Ir directamente a la página de venta de boletos
+const goToSellTicket = () => {
+  // Redirigir directamente a la página de venta de boletos
+  router.push(`/tickets/new?trip=${trip.value.id}`);
+}
+
+// Mostrar u ocultar la lista de asientos ocupados
+const toggleOccupiedSeats = () => {
+  showOccupiedSeats.value = !showOccupiedSeats.value;
+  // Si estamos mostrando los asientos ocupados, ocultamos los disponibles para evitar sobrecarga visual
+  if (showOccupiedSeats.value && showAvailableSeats.value) {
+    showAvailableSeats.value = false;
+  }
+}
+
+// Mostrar u ocultar la lista de asientos disponibles
+const toggleAvailableSeats = () => {
+  showAvailableSeats.value = !showAvailableSeats.value;
+  // Si estamos mostrando los asientos disponibles, ocultamos los ocupados para evitar sobrecarga visual
+  if (showAvailableSeats.value && showOccupiedSeats.value) {
+    showOccupiedSeats.value = false;
+  }
+}
+
+// Asientos disponibles ordenados numéricamente
+const sortedAvailableSeats = computed(() => {
+  if (!trip.value || !trip.value.available_seat_numbers) return [];
+
+  // Convertir a números y ordenar numéricamente
+  return [...trip.value.available_seat_numbers].sort((a, b) => {
+    return parseInt(a) - parseInt(b);
+  });
+});
+
+// Asientos ocupados ordenados numéricamente
+const sortedOccupiedSeats = computed(() => {
+  if (!trip.value || !trip.value.occupied_seats) return [];
+
+  // Convertir a números y ordenar numéricamente
+  return [...trip.value.occupied_seats].sort((a, b) => {
+    return parseInt(a) - parseInt(b);
+  });
+});
 
 // Manejar confirmación de selección de asientos
 const handleSeatSelectionConfirmed = (selectedSeats) => {

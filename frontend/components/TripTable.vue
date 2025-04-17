@@ -82,12 +82,13 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
-                <span class="text-sm font-medium text-gray-900">{{ trip.available_seats }}</span>
-                <span class="mx-1 text-gray-500">/</span>
-                <span class="text-sm text-gray-700">{{ trip.total_seats }}</span>
-                <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                <div class="flex flex-col mr-2">
+                  <span class="text-sm font-medium text-gray-900">{{ trip.available_seats }} <span class="text-xs text-gray-500">disponibles</span></span>
+                  <span class="text-xs text-gray-500">de {{ trip.total_seats }} totales</span>
+                </div>
+                <div class="w-20 bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div
-                    class="h-2 rounded-full transition-all duration-300"
+                    class="h-3 rounded-full transition-all duration-300"
                     :class="{
                       'bg-green-500': trip.available_seats / trip.total_seats > 0.5,
                       'bg-yellow-500': trip.available_seats / trip.total_seats <= 0.5 && trip.available_seats / trip.total_seats > 0.2,
@@ -95,6 +96,53 @@
                     }"
                     :style="{ width: `${(trip.available_seats / trip.total_seats) * 100}%` }"
                   ></div>
+                </div>
+
+                <!-- Botón para mostrar asientos ocupados -->
+                <button
+                  v-if="trip.occupied_seats && trip.occupied_seats.length > 0"
+                  @click="toggleOccupiedSeats(trip.id)"
+                  class="ml-2 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-full px-2 py-1 transition-colors duration-200 flex items-center"
+                  :title="`Ver ${trip.occupied_seats.length} asientos ocupados`"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {{ trip.occupied_seats.length }}
+                </button>
+              </div>
+
+              <!-- Popup para mostrar asientos ocupados -->
+              <div
+                v-if="expandedTripId === trip.id && trip.occupied_seats && trip.occupied_seats.length > 0"
+                class="mt-2 bg-gray-50 p-2 rounded-md border border-gray-200 shadow-sm"
+              >
+                <div class="flex justify-between items-center mb-1">
+                  <h4 class="text-xs font-medium text-gray-700">Asientos ocupados:</h4>
+                  <button
+                    @click="expandedTripId = null"
+                    class="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="seatNumber in trip.occupied_seats.slice(0, 20)"
+                    :key="seatNumber"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                  >
+                    {{ seatNumber }}
+                  </span>
+                  <span
+                    v-if="trip.occupied_seats.length > 20"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                  >
+                    +{{ trip.occupied_seats.length - 20 }} más
+                  </span>
                 </div>
               </div>
             </td>
@@ -220,7 +268,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   trips: {
@@ -254,6 +302,18 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['page-change', 'sort-change', 'view-trip', 'edit-trip'])
+
+// Variable para controlar qué viaje tiene expandida la lista de asientos ocupados
+const expandedTripId = ref(null)
+
+// Función para mostrar/ocultar los asientos ocupados de un viaje
+const toggleOccupiedSeats = (tripId) => {
+  if (expandedTripId.value === tripId) {
+    expandedTripId.value = null
+  } else {
+    expandedTripId.value = tripId
+  }
+}
 
 // Columnas de la tabla
 const columns = [

@@ -84,6 +84,7 @@
 
         <div class="mt-6 text-center">
           <h3 class="text-xl font-bold text-green-700 bg-green-50 py-2 rounded-md shadow-sm inline-block px-6">PLANILLA DE PASAJEROS</h3>
+          <p v-if="trip.total_seats" class="mt-2 text-sm text-gray-600">Bus con capacidad para {{ trip.total_seats }} pasajeros</p>
         </div>
       </div>
 
@@ -321,75 +322,101 @@ const loadSeats = async () => {
   error.value = null
 
   try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch(`/api/buses/${props.busId}/seats?trip=${props.tripId}`)
+    // No necesitamos hacer una llamada a la API porque ya tenemos los datos del viaje
+    // Solo simulamos un breve retraso para mostrar el estado de carga
+    await new Promise(resolve => setTimeout(resolve, 300))
 
-    // Simulación de datos para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    // Generar asientos según el diseño de la planilla
+    // Generar asientos según el diseño de la planilla y el número total de asientos
     const generatedSeats = []
+
+    // Obtener el número total de asientos del bus
+    const totalSeats = props.trip && props.trip.total_seats ? props.trip.total_seats : 44 // Por defecto 44 asientos
+
+    // Calcular el número de filas necesarias (cada fila tiene 4 asientos)
+    const totalRows = Math.ceil(totalSeats / 4)
 
     // Columna izquierda (asientos 1V, 2P, 5V, 6P, etc.)
     // Según la planilla, los asientos van: 1V, 2P, 5V, 6P, 9V, 10P, etc.
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < totalRows; i++) {
       // Asiento de ventana (números impares: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41)
       const windowSeatNumber = i * 4 + 1
       // Asiento de pasillo (números pares: 2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42)
       const aisleSeatNumber = i * 4 + 2
 
-      // Determinar si los asientos están ocupados (para simulación)
-      const windowSeatOccupied = props.occupiedSeats.includes(windowSeatNumber) || Math.random() < 0.3
-      const aisleSeatOccupied = props.occupiedSeats.includes(aisleSeatNumber) || Math.random() < 0.3
+      // Verificar si estos asientos están dentro del rango total de asientos
+      if (windowSeatNumber <= totalSeats) {
+        // Determinar si los asientos están ocupados usando los datos reales
+        const windowSeatOccupied = props.trip && props.trip.occupied_seats ?
+          props.trip.occupied_seats.includes(windowSeatNumber) :
+          props.occupiedSeats.includes(windowSeatNumber)
 
-      // Asiento de ventana
-      generatedSeats.push({
-        id: windowSeatNumber,
-        number: windowSeatNumber,
-        position: 'window',
-        column: 'left',
-        occupied: windowSeatOccupied
-      })
+        // Asiento de ventana
+        generatedSeats.push({
+          id: windowSeatNumber,
+          number: windowSeatNumber,
+          position: 'window',
+          column: 'left',
+          occupied: windowSeatOccupied
+        })
+      }
 
-      // Asiento de pasillo
-      generatedSeats.push({
-        id: aisleSeatNumber,
-        number: aisleSeatNumber,
-        position: 'aisle',
-        column: 'left',
-        occupied: aisleSeatOccupied
-      })
+      if (aisleSeatNumber <= totalSeats) {
+        // Determinar si los asientos están ocupados usando los datos reales
+        const aisleSeatOccupied = props.trip && props.trip.occupied_seats ?
+          props.trip.occupied_seats.includes(aisleSeatNumber) :
+          props.occupiedSeats.includes(aisleSeatNumber)
+
+        // Asiento de pasillo
+        generatedSeats.push({
+          id: aisleSeatNumber,
+          number: aisleSeatNumber,
+          position: 'aisle',
+          column: 'left',
+          occupied: aisleSeatOccupied
+        })
+      }
     }
 
     // Columna derecha (asientos 3V, 4P, 7V, 8P, etc.)
     // Según la planilla, los asientos van: 3V, 4P, 7V, 8P, 11V, 12P, etc.
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < totalRows; i++) {
       // Asiento de ventana (números impares: 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43)
       const windowSeatNumber = i * 4 + 3
       // Asiento de pasillo (números pares: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44)
       const aisleSeatNumber = i * 4 + 4
 
-      // Determinar si los asientos están ocupados (para simulación)
-      const windowSeatOccupied = props.occupiedSeats.includes(windowSeatNumber) || Math.random() < 0.3
-      const aisleSeatOccupied = props.occupiedSeats.includes(aisleSeatNumber) || Math.random() < 0.3
+      // Verificar si estos asientos están dentro del rango total de asientos
+      if (windowSeatNumber <= totalSeats) {
+        // Determinar si los asientos están ocupados usando los datos reales
+        const windowSeatOccupied = props.trip && props.trip.occupied_seats ?
+          props.trip.occupied_seats.includes(windowSeatNumber) :
+          props.occupiedSeats.includes(windowSeatNumber)
 
-      // Asiento de ventana
-      generatedSeats.push({
-        id: windowSeatNumber,
-        number: windowSeatNumber,
-        position: 'window',
-        column: 'right',
-        occupied: windowSeatOccupied
-      })
+        // Asiento de ventana
+        generatedSeats.push({
+          id: windowSeatNumber,
+          number: windowSeatNumber,
+          position: 'window',
+          column: 'right',
+          occupied: windowSeatOccupied
+        })
+      }
 
-      // Asiento de pasillo
-      generatedSeats.push({
-        id: aisleSeatNumber,
-        number: aisleSeatNumber,
-        position: 'aisle',
-        column: 'right',
-        occupied: aisleSeatOccupied
-      })
+      if (aisleSeatNumber <= totalSeats) {
+        // Determinar si los asientos están ocupados usando los datos reales
+        const aisleSeatOccupied = props.trip && props.trip.occupied_seats ?
+          props.trip.occupied_seats.includes(aisleSeatNumber) :
+          props.occupiedSeats.includes(aisleSeatNumber)
+
+        // Asiento de pasillo
+        generatedSeats.push({
+          id: aisleSeatNumber,
+          number: aisleSeatNumber,
+          position: 'aisle',
+          column: 'right',
+          occupied: aisleSeatOccupied
+        })
+      }
     }
 
     seats.value = generatedSeats
