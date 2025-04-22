@@ -656,7 +656,234 @@ def seed_db():
     finally:
         db.close()
 
+def create_test_users():
+    """
+    Crea usuarios de prueba con credenciales fijas para facilitar el testing.
+    """
+    db = SessionLocal()
+    try:
+        # Limpiar datos existentes para evitar conflictos
+        print("Limpiando datos de usuarios de prueba existentes...")
+        # Obtener IDs de usuarios de prueba
+        test_emails = [
+            "admin1@comarapa.com",
+            "secretary1@comarapa.com",
+            "driver1@comarapa.com",
+            "assistant1@comarapa.com",
+            "client1@comarapa.com"
+        ]
+
+        for email in test_emails:
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                # Eliminar entidades asociadas
+                if user.role == "admin" or user.role == "ADMIN":
+                    db.query(Administrator).filter(Administrator.user_id == user.id).delete()
+                elif user.role == "secretary" or user.role == "SECRETARY":
+                    db.query(Secretary).filter(Secretary.user_id == user.id).delete()
+                elif user.role == "driver" or user.role == "DRIVER":
+                    db.query(Driver).filter(Driver.user_id == user.id).delete()
+                elif user.role == "assistant" or user.role == "ASSISTANT":
+                    db.query(Assistant).filter(Assistant.user_id == user.id).delete()
+                elif user.role == "client" or user.role == "CLIENT":
+                    db.query(Client).filter(Client.user_id == user.id).delete()
+
+                # Eliminar usuario
+                db.delete(user)
+
+        db.commit()
+        print("Datos de usuarios de prueba limpiados correctamente")
+
+        # Verificar si hay oficinas, si no hay, crear una
+        office_count = db.query(Office).count()
+        if office_count == 0:
+            print("No hay oficinas en la base de datos. Creando una oficina predeterminada...")
+            # Crear una ubicación primero
+            location = Location(
+                name="Terminal Predeterminada",
+                latitude=-17.783333,
+                longitude=-63.182222,
+                address="Av. Principal",
+                city="Santa Cruz de la Sierra",
+                state="Santa Cruz",
+                country="Bolivia",
+                description="Terminal predeterminada para pruebas"
+            )
+            db.add(location)
+            db.flush()  # Para obtener el ID
+
+            # Crear una oficina
+            office = Office(
+                name="Oficina Predeterminada",
+                phone="33445566",
+                email="default@transcomarapa.com",
+                location_id=location.id
+            )
+            db.add(office)
+            db.commit()
+            print(f"Oficina predeterminada creada con ID: {office.id}")
+
+        # Obtener la primera oficina para asignarla a los secretarios
+        office = db.query(Office).first()
+        # Lista de usuarios de prueba con credenciales fijas
+        test_users = [
+            {
+                "username": "admin1",
+                "email": "admin1@comarapa.com",
+                "role": "admin",
+                "password": "123456",
+                "firstname": "Admin",
+                "lastname": "Principal",
+                "phone": "77123456",
+                "birth_date": date(1985, 5, 15)
+            },
+            {
+                "username": "secretary1",
+                "email": "secretary1@comarapa.com",
+                "role": "secretary",
+                "password": "123456",
+                "firstname": "Secretaria",
+                "lastname": "Principal",
+                "phone": "77234567",
+                "birth_date": date(1990, 8, 20),
+                "office_id": office.id  # Usar la oficina obtenida anteriormente
+            },
+            {
+                "username": "driver1",
+                "email": "driver1@comarapa.com",
+                "role": "driver",
+                "password": "123456",
+                "firstname": "Conductor",
+                "lastname": "Principal",
+                "phone": "77345678",
+                "birth_date": date(1982, 3, 10),
+                "license_number": "LC123456",
+                "license_type": "A",
+                "license_expiry": date(2025, 12, 31),
+                "status": "active"
+            },
+            {
+                "username": "assistant1",
+                "email": "assistant1@comarapa.com",
+                "role": "assistant",
+                "password": "123456",
+                "firstname": "Asistente",
+                "lastname": "Principal",
+                "phone": "77456789",
+                "birth_date": date(1995, 7, 5)
+            },
+            {
+                "username": "client1",
+                "email": "client1@comarapa.com",
+                "role": "client",
+                "password": "123456",
+                "firstname": "Cliente",
+                "lastname": "Principal",
+                "phone": "77567890",
+                "birth_date": date(1988, 11, 25),
+                "address": "Av. Principal 123",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz"
+            }
+        ]
+
+        # Crear los usuarios de prueba
+        for user_data in test_users:
+            # Crear nuevo usuario
+            new_user = User(
+                username=user_data["username"],
+                email=user_data["email"],
+                role=user_data["role"],
+                hashed_password=User.get_password_hash(user_data["password"]),
+                is_active=True,
+                is_admin=user_data["role"] == "admin",
+                firstname=user_data["firstname"],
+                lastname=user_data["lastname"]
+            )
+            db.add(new_user)
+            db.flush()  # Para obtener el ID del usuario
+            # Crear la entidad asociada según el rol
+            if user_data["role"] == "admin":
+                entity = Administrator(
+                    firstname=user_data["firstname"],
+                    lastname=user_data["lastname"],
+                    phone=user_data["phone"],
+                    birth_date=user_data["birth_date"],
+                    user_id=new_user.id
+                )
+                db.add(entity)
+                db.flush()
+            elif user_data["role"] == "secretary":
+                entity = Secretary(
+                    firstname=user_data["firstname"],
+                    lastname=user_data["lastname"],
+                    phone=user_data["phone"],
+                    birth_date=user_data["birth_date"],
+                    office_id=user_data["office_id"],
+                    user_id=new_user.id
+                )
+                db.add(entity)
+                db.flush()
+            elif user_data["role"] == "driver":
+                entity = Driver(
+                    firstname=user_data["firstname"],
+                    lastname=user_data["lastname"],
+                    phone=user_data["phone"],
+                    birth_date=user_data["birth_date"],
+                    license_number=user_data["license_number"],
+                    license_type=user_data["license_type"],
+                    license_expiry=user_data["license_expiry"],
+                    status=user_data["status"],
+                    user_id=new_user.id
+                )
+                db.add(entity)
+                db.flush()
+            elif user_data["role"] == "assistant":
+                entity = Assistant(
+                    firstname=user_data["firstname"],
+                    lastname=user_data["lastname"],
+                    phone=user_data["phone"],
+                    birth_date=user_data["birth_date"],
+                    user_id=new_user.id
+                )
+                db.add(entity)
+                db.flush()
+            elif user_data["role"] == "client":
+                entity = Client(
+                    firstname=user_data["firstname"],
+                    lastname=user_data["lastname"],
+                    phone=user_data["phone"],
+                    birth_date=user_data["birth_date"],
+                    address=user_data["address"],
+                    city=user_data["city"],
+                    state=user_data["state"],
+                    user_id=new_user.id
+                )
+                db.add(entity)
+                db.flush()
+
+        # Commit final
+        db.commit()
+        print("Usuarios de prueba creados/actualizados exitosamente!")
+
+        # Imprimir lista de usuarios para pruebas
+        print("\nLista de usuarios para pruebas:")
+        print("================================")
+        for user_data in test_users:
+            print(f"Rol: {user_data['role']}")
+            print(f"Email: {user_data['email']}")
+            print(f"Contraseña: {user_data['password']}")
+            print(f"Nombre: {user_data['firstname']} {user_data['lastname']}")
+            print("--------------------------------")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error creando usuarios de prueba: {e}")
+    finally:
+        db.close()
+
 if __name__ == "__main__":
     # Comentamos la limpieza de la base de datos para evitar problemas con las claves foráneas
     # clear_db()
-    seed_db()
+    # seed_db()
+    create_test_users()
