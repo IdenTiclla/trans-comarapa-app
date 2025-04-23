@@ -128,6 +128,15 @@ El sistema implementa un robusto mecanismo de autenticación basado en JWT con s
 
 Cada rol tiene acceso a funcionalidades específicas y una interfaz adaptada a sus necesidades.
 
+### Modelo de Datos de Usuarios
+
+El sistema utiliza un modelo de datos unificado para los usuarios, donde cada tipo de usuario (Administrador, Secretaria, Conductor, Asistente, Cliente) tiene:
+
+1. Un registro en la tabla `users` con la información básica de autenticación
+2. Un registro en su tabla específica (administrators, secretaries, drivers, assistants, clients) con los datos particulares de ese rol
+
+Esta arquitectura permite una gestión eficiente de la autenticación y autorización, manteniendo la especialización de cada tipo de usuario.
+
 ## 📡 API Endpoints Principales
 
 ### Autenticación

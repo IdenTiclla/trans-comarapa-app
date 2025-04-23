@@ -23,6 +23,11 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
+
+    # Campos de persona directamente en el usuario
+    firstname = Column(String(255), nullable=True)
+    lastname = Column(String(255), nullable=True)
+
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -51,3 +56,6 @@ class User(Base):
         except Exception as e:
             print(f"Error generando hash de contraseña: {e}")
             raise
+
+    def set_password(self, password):
+        self.hashed_password = self.get_password_hash(password)

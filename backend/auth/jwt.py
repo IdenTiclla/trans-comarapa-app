@@ -68,7 +68,16 @@ def verify_token(token: str, credentials_exception):
         role: str = payload.get("role")
         is_admin: bool = payload.get("is_admin", False)
         is_active: bool = payload.get("is_active", True)
-        token_data = TokenData(email=email, role=role, is_admin=is_admin, is_active=is_active)
+        firstname: str = payload.get("firstname", "")
+        lastname: str = payload.get("lastname", "")
+        token_data = TokenData(
+            email=email,
+            role=role,
+            is_admin=is_admin,
+            is_active=is_active,
+            firstname=firstname,
+            lastname=lastname
+        )
         return token_data
     except JWTError:
         raise credentials_exception

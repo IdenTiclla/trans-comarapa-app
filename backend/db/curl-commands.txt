@@ -1,0 +1,77 @@
+secretaria
+
+curl -X POST http://localhost:8000/api/v1/secretaries \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbjFAY29tYXJhcGEuY29tIiwicm9sZSI6ImFkbWluIiwiaXNfYWRtaW4iOnRydWUsImlzX2FjdGl2ZSI6dHJ1ZSwiZXhwIjoxNzQ0OTQxMzQ1fQ.arxQsyCHLfTva55N2ImiI38IdolrzSFLdHJvalRWXGM" \
+  -d '{
+    "user": {
+      "username": "secretaria1@comarapa.com",
+      "email": "secretaria1@comarapa.com",
+      "password": "123456"
+    },
+    "firstname": "Ana",
+    "lastname": "Pérez",
+    "phone": "70000001"
+  }'
+
+administrador
+
+curl -X POST http://localhost:8000/api/v1/administrators \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": {
+      "username": "admin2@comarapa.com",
+      "email": "admin2@comarapa.com",
+      "password": "123456"
+    },
+    "firstname": "Jorge",
+    "lastname": "Gómez",
+    "phone": "70001102"
+  }'
+
+para logearse:
+
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin1@comarapa.com&password=123456"
+
+conductor
+
+curl -X POST http://localhost:8000/api/v1/drivers \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <TOKEN_AQUI>" \
+-d '{
+  "user": { "email": "driver1@comarapa.com", "password": "123456" },
+  "firstname": "Luis",
+  "lastname": "Mamani",
+  "phone": "70000003",
+  "license_number": "ABC123",
+  "experience_years": 5
+}'
+
+asistente
+
+curl -X POST http://localhost:8000/api/v1/assistants \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <TOKEN_AQUI>" \
+-d '{
+  "user": { "email": "assistant1@comarapa.com", "password": "123456" },
+  "firstname": "María",
+  "lastname": "Loza",
+  "phone": "70000004"
+}'
+
+cliente
+
+curl -X POST http://localhost:8000/api/v1/clients \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <TOKEN_AQUI>" \
+-d '{
+  "user": { "email": "client1@comarapa.com", "password": "123456" },
+  "firstname": "Pedro",
+  "lastname": "Rojas",
+  "phone": "70000005",
+  "address": "Calle 1",
+  "city": "Comarapa",
+  "state": "Santa Cruz"
+}'

@@ -247,15 +247,15 @@ Parcialmente implementado:
 
 ### Endpoints de Viajes
 - [x] `POST /trips` - Crear viaje <!-- Completado -->
-- [x] `GET /trips` - Listar viajes <!-- Completado -->
+- [x] `GET /trips` - Listar viajes <!-- Completado y mejorado 13/04/2024 -->
 - [x] `GET /trips/{id}` - Obtener viaje por ID <!-- Completado -->
 - [x] `PUT /trips/{id}` - Actualizar viaje <!-- Completado -->
 - [x] `DELETE /trips/{id}` - Eliminar viaje <!-- Completado -->
-- [ ] `GET /trips/search` - Buscar viajes por origen/destino/fecha <!-- Pendiente, pero ya existe la funcionalidad similar en routes -->
+- [x] `GET /trips/search` - Buscar viajes por origen/destino/fecha <!-- Implementado en el endpoint GET /trips con filtros 13/04/2024 -->
 - [x] `GET /tickets/trip/{trip_id}` - Listar tickets para un viaje <!-- Completado -->
 - [x] `GET /seats/trip/{trip_id}` - Listar asientos para un viaje <!-- Completado -->
-- [ ] `GET /trips/{id}/availability` - Verificar disponibilidad de asientos
-- [ ] `GET /trips/upcoming` - Listar próximos viajes
+- [x] `GET /trips/{id}/available-seats` - Verificar disponibilidad de asientos <!-- Completado y mejorado 13/04/2024 -->
+- [x] `GET /stats/trips/upcoming` - Listar próximos viajes <!-- Completado 13/04/2024 -->
 - [ ] `PATCH /trips/{id}/status` - Actualizar estado de un viaje
 
 ### Endpoints de Tickets
@@ -327,10 +327,16 @@ Parcialmente implementado:
 - [ ] `PATCH /transactions/{id}/status` - Actualizar estado de una transacción
 - [ ] `POST /transactions/{id}/refund` - Procesar reembolso de una transacción
 
-### Endpoints de Reportes
+### Endpoints de Reportes y Estadísticas
+- [x] `GET /stats/tickets/stats` - Estadísticas de boletos vendidos <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/packages/stats` - Estadísticas de paquetes <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/trips/stats` - Estadísticas de viajes <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/dashboard` - Estadísticas consolidadas para el dashboard <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/trips/upcoming` - Próximos viajes programados <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/sales/recent` - Ventas recientes <!-- Completado 13/04/2024 -->
+- [x] `GET /stats/sales/summary` - Resumen de ventas por período <!-- Completado 13/04/2024 -->
 - [ ] `GET /reports/sales/daily` - Reporte de ventas diarias
 - [ ] `GET /reports/sales/monthly` - Reporte de ventas mensuales
-- [ ] `GET /reports/trips/upcoming` - Reporte de próximos viajes
 - [ ] `GET /reports/trips/popularity` - Reporte de popularidad de rutas
 - [ ] `GET /reports/clients/top` - Reporte de clientes más frecuentes
 - [ ] `GET /reports/occupancy/trip/{trip_id}` - Reporte de ocupación por viaje
@@ -523,7 +529,7 @@ Parcialmente implementado:
 - [ ] Implementar sistema de notificaciones
 - [ ] Agregar envío de correos electrónicos
 - [ ] Implementar sistema de reportes
-- [ ] Crear endpoints para estadísticas
+- [x] Crear endpoints para estadísticas <!-- Completado 13/04/2024 -->
 - [ ] Agregar búsqueda y filtrado avanzado
 - [ ] Implementar sistema de cupones y descuentos
 - [ ] Agregar manejo de múltiples monedas
@@ -612,6 +618,10 @@ Parcialmente implementado:
     - [ ] Implementar facturación electrónica
 
 11. **Desarrollar Sistema de Reportes**:
+    - [x] Crear endpoints para estadísticas del dashboard <!-- Completado 13/04/2024 -->
+    - [x] Implementar estadísticas de boletos, paquetes y viajes <!-- Completado 13/04/2024 -->
+    - [x] Desarrollar endpoint para ventas recientes <!-- Completado 13/04/2024 -->
+    - [x] Crear endpoint para resumen de ventas por período <!-- Completado 13/04/2024 -->
     - [ ] Crear endpoints para reportes de ventas diarias/mensuales
     - [ ] Implementar estadísticas de ocupación por ruta
     - [ ] Desarrollar reportes de rendimiento por oficina
@@ -626,6 +636,15 @@ Parcialmente implementado:
     - [ ] Implementar asignación de inventario por oficina
 
 ## Mejoras Recientes Completadas
+
+### Implementación de Endpoints de Estadísticas
+- [x] Crear endpoints para estadísticas de boletos, paquetes y viajes <!-- Completado 13/04/2024 -->
+- [x] Implementar endpoint consolidado para el dashboard <!-- Completado 13/04/2024 -->
+- [x] Desarrollar endpoint para ventas recientes <!-- Completado 13/04/2024 -->
+- [x] Crear endpoint para resumen de ventas por período <!-- Completado 13/04/2024 -->
+- [x] Implementar endpoint para próximos viajes <!-- Completado 13/04/2024 -->
+- [x] Mejorar endpoint de viajes con filtros y paginación <!-- Completado 13/04/2024 -->
+- [x] Mejorar endpoint de asientos disponibles con información adicional <!-- Completado 13/04/2024 -->
 
 ### Integración Frontend-Backend
 - [x] Configurar CORS para permitir conexiones desde el frontend <!-- Completado 11/04/2024 -->
@@ -677,6 +696,7 @@ Fecha: 19/04/2024
 
 ### Historial de Actualizaciones
 
+- **13/04/2024**: Implementación de endpoints de estadísticas y mejoras en endpoints existentes
 - **12/04/2024**: Actualización con la integración del frontend con la API backend y mejoras en la autenticación
 - **11/04/2024**: Actualización del sistema de autenticación para múltiples roles y corrección de errores
 - **08/04/2024**: Actualización del modelo de datos y próximos pasos basados en el diagrama de clases
@@ -695,12 +715,12 @@ Fecha: 19/04/2024
 - Tareas pendientes: 12
 
 ### Endpoints
-- Tareas completadas: 61
-- Tareas pendientes: 103
+- Tareas completadas: 75
+- Tareas pendientes: 96
 
 ### Funcionalidades de Negocio
-- Tareas completadas: 3
-- Tareas pendientes: 52
+- Tareas completadas: 10
+- Tareas pendientes: 45
 
 ### Seguridad y Autenticación
 - Tareas completadas: 17
@@ -715,5 +735,5 @@ Fecha: 19/04/2024
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 174**
-- **Tareas pendientes: 191**
+- **Tareas completadas: 195**
+- **Tareas pendientes: 177**

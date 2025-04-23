@@ -1,9 +1,18 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Date
 from sqlalchemy.orm import relationship
-from models.person import Person
+from datetime import datetime
+from db.base import Base
 
-class Assistant(Person):
+class Assistant(Base):
     __tablename__ = 'assistants'
+
+    id = Column(Integer, primary_key=True, index=True)
+    firstname = Column(String(255), nullable=False)
+    lastname = Column(String(255), nullable=False)
+    phone = Column(String(255), nullable=True)
+    birth_date = Column(Date, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     # No hay campos específicos de Assistant según el UML, solo los heredados de Person
 

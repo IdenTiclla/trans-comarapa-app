@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func, desc
 from models.trip import Trip as TripModel
 from models.driver import Driver as DriverModel
 from models.assistant import Assistant as AssistantModel
@@ -9,24 +9,118 @@ from models.bus import Bus as BusModel
 from models.route import Route as RouteModel
 from models.ticket import Ticket as TicketModel
 from models.seat import Seat as SeatModel
+from models.location import Location as LocationModel
 from schemas.trip import TripCreate, Trip as TripSchema
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from db.session import get_db  # dependency to get a new session
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional, Dict, Any
 
 router = APIRouter(
     tags=["trips"]
 )
 
-@router.get("/", response_model=List[TripSchema])
-async def get_trips(db: Session = Depends(get_db)):
+@router.get("/", response_model=Dict[str, Any])
+async def get_trips(
+    skip: int = Query(0, description="Number of records to skip"),
+    limit: int = Query(100, description="Maximum number of records to return"),
+    upcoming: bool = Query(False, description="Filter for upcoming trips only"),
+    origin: Optional[str] = Query(None, description="Filter by origin location name"),
+    destination: Optional[str] = Query(None, description="Filter by destination location name"),
+    date_from: Optional[datetime] = Query(None, description="Filter by minimum departure date"),
+    date_to: Optional[datetime] = Query(None, description="Filter by maximum departure date"),
+    status: Optional[str] = Query(None, description="Filter by trip status (comma-separated list)"),
+    db: Session = Depends(get_db)
+):
     """
-    Get all trips without applying future date validation
+    Get trips with filtering and pagination
+
+    Returns a dictionary with trips and pagination information
     """
-    trips = db.query(TripModel).all()
-    return trips
+    # Start with a base query
+    query = db.query(TripModel)
+
+    # Apply filters
+    if upcoming:
+        query = query.filter(TripModel.trip_datetime >= datetime.now())
+
+    if origin:
+        query = query.join(RouteModel, TripModel.route_id == RouteModel.id)\
+                    .join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
+                    .filter(LocationModel.name.ilike(f"%{origin}%"))
+
+    if destination:
+        query = query.join(RouteModel, TripModel.route_id == RouteModel.id)\
+                    .join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
+                    .filter(LocationModel.name.ilike(f"%{destination}%"))
+
+    if date_from:
+        query = query.filter(TripModel.trip_datetime >= date_from)
+
+    if date_to:
+        query = query.filter(TripModel.trip_datetime <= date_to)
+
+    if status:
+        # Split comma-separated status values
+        status_values = [s.strip() for s in status.split(',')]
+        query = query.filter(TripModel.status.in_(status_values))
+
+    # Get total count for pagination
+    total_count = query.count()
+
+    # Apply pagination
+    query = query.order_by(TripModel.trip_datetime).offset(skip).limit(limit)
+
+    # Execute query
+    trips = query.all()
+
+    # Process trips to include additional information
+    processed_trips = []
+    for trip in trips:
+        # Get origin and destination names
+        origin_name = trip.route.origin_location.name if trip.route and trip.route.origin_location else "Unknown"
+        destination_name = trip.route.destination_location.name if trip.route and trip.route.destination_location else "Unknown"
+
+        # Get seat information
+        total_seats = trip.bus.capacity if trip.bus else 0
+        occupied_seats_count = db.query(func.count(TicketModel.id)).filter(
+            TicketModel.trip_id == trip.id,
+            TicketModel.state != 'cancelled'
+        ).scalar()
+        available_seats = total_seats - occupied_seats_count
+
+        # Create processed trip with additional information
+        processed_trip = {
+            "id": trip.id,
+            "trip_datetime": trip.trip_datetime,
+            "status": trip.status,
+            "driver_id": trip.driver_id,
+            "assistant_id": trip.assistant_id,
+            "bus_id": trip.bus_id,
+            "route_id": trip.route_id,
+            "route": {
+                "origin": origin_name,
+                "destination": destination_name,
+                "price": trip.route.price if trip.route else 0
+            },
+            "total_seats": total_seats,
+            "available_seats": available_seats,
+            "occupied_seats": occupied_seats_count
+        }
+
+        processed_trips.append(processed_trip)
+
+    # Return trips with pagination information
+    return {
+        "trips": processed_trips,
+        "pagination": {
+            "total": total_count,
+            "skip": skip,
+            "limit": limit,
+            "pages": (total_count + limit - 1) // limit  # Ceiling division
+        }
+    }
 
 @router.post("/", response_model=TripSchema, status_code=status.HTTP_201_CREATED)
 async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
@@ -261,7 +355,8 @@ async def get_available_seats(trip_id: int, db: Session = Depends(get_db)):
 
     # Get occupied seats (seats that have tickets for this trip)
     occupied_seats = db.query(TicketModel).filter(
-        TicketModel.trip_id == trip_id
+        TicketModel.trip_id == trip_id,
+        TicketModel.state != 'cancelled'  # Exclude cancelled tickets
     ).all()
 
     # Extract seat IDs that are occupied
@@ -280,10 +375,23 @@ async def get_available_seats(trip_id: int, db: Session = Depends(get_db)):
         if seat:
             occupied_seat_numbers.append(seat.seat_number)
 
+    # Get additional information about occupied seats
+    occupied_seats_info = []
+    for ticket in occupied_seats:
+        seat = db.query(SeatModel).filter(SeatModel.id == ticket.seat_id).first()
+        if seat:
+            occupied_seats_info.append({
+                "seat_number": seat.seat_number,
+                "ticket_id": ticket.id,
+                "client_id": ticket.client_id,
+                "state": ticket.state
+            })
+
     return {
         "total_seats": len(bus_seats),
         "available_seats": len(available_seats),
         "occupied_seats": occupied_seat_numbers,
+        "occupied_seats_info": occupied_seats_info,
         "available_seat_numbers": available_seat_numbers
     }
 
