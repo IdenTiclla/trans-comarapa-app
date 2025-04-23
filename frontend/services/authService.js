@@ -42,37 +42,15 @@ const login = async (email, password) => {
         localStorage.setItem('refresh_token', data.refresh_token)
       }
 
-      // Guardar los datos del usuario si existen
-      if (data.user) {
-        localStorage.setItem('user_data', JSON.stringify(data.user))
-      } else {
-        // Construir un objeto de usuario a partir de los datos disponibles
-        const userInfo = {
-          id: data.user_id,
-          role: data.role
-        }
-
-        // Añadir información específica del rol si está disponible
-        if (data.role === 'secretary' && data.secretary_id) {
-          userInfo.secretary_id = data.secretary_id
-          userInfo.firstname = data.secretary_firstname
-          userInfo.lastname = data.secretary_lastname
-        } else if (data.role === 'driver' && data.driver_id) {
-          userInfo.driver_id = data.driver_id
-          userInfo.firstname = data.driver_firstname
-          userInfo.lastname = data.driver_lastname
-        } else if (data.role === 'assistant' && data.assistant_id) {
-          userInfo.assistant_id = data.assistant_id
-          userInfo.firstname = data.assistant_firstname
-          userInfo.lastname = data.assistant_lastname
-        } else if (data.role === 'admin' && data.admin_id) {
-          userInfo.admin_id = data.admin_id
-          userInfo.firstname = data.admin_firstname
-          userInfo.lastname = data.admin_lastname
-        }
-
-        localStorage.setItem('user_data', JSON.stringify(userInfo))
+      // Construir un objeto de usuario a partir de los datos disponibles
+      const userInfo = {
+        id: data.user_id,
+        role: data.role,
+        firstname: data.firstname || '',
+        lastname: data.lastname || ''
       }
+
+      localStorage.setItem('user_data', JSON.stringify(userInfo))
     }
 
     return data

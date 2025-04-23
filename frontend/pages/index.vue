@@ -44,7 +44,8 @@ import { useAuthStore } from '~/stores/auth'
 import { onMounted } from 'vue'
 
 definePageMeta({
-  title: 'Inicio'
+  title: 'Inicio',
+  middleware: ['auth']
 })
 
 const appStore = useAppStore()
@@ -54,6 +55,11 @@ const authStore = useAuthStore()
 onMounted(() => {
   if (typeof window !== 'undefined') {
     authStore.init()
+
+    // Si el usuario no está autenticado, redirigir a la página de login
+    if (!authStore.isAuthenticated) {
+      navigateTo('/login')
+    }
   }
 })
 

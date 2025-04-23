@@ -1,8 +1,13 @@
 <template>
-  <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
+  <div class="w-full p-8 bg-white rounded-lg shadow-lg">
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Trans Comarapa</h1>
-      <p class="text-gray-600 mt-2">Iniciar sesión como secretaria</p>
+      <div class="flex items-center justify-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M8 11V6.5m0 4.5v4.5m0-4.5h8m-8 0a4 4 0 110-8h8a4 4 0 110 8m-8 0a4 4 0 100 8h8a4 4 0 100-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+        </svg>
+        <h1 class="text-3xl font-bold text-gray-800">Trans Comarapa</h1>
+      </div>
+      <p class="text-gray-600">Iniciar sesión</p>
     </div>
 
     <form @submit.prevent="handleLogin" class="space-y-6">
@@ -15,7 +20,7 @@
           type="email"
           required
           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          placeholder="secretaria@transcomarapa.com"
+          placeholder="usuario@transcomarapa.com"
           autofocus
         />
       </div>
@@ -48,8 +53,12 @@
           <span v-else>Iniciar sesión</span>
         </button>
       </div>
-      </form>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-gray-500">
+      &copy; {{ new Date().getFullYear() }} Trans Comarapa
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -65,19 +74,42 @@ const router = useRouter()
 
 // Comprobar autenticación al montar el componente
 onMounted(() => {
-  // Si el usuario ya está autenticado, redirigir a la página de viajes
+  // Si el usuario ya está autenticado, redirigir al dashboard correspondiente
   if (authStore.isAuthenticated) {
-    router.push('/trips')
+    redirectToDashboard(authStore.userRole)
   }
 })
+
+// Función para redirigir al usuario al dashboard correspondiente según su rol
+const redirectToDashboard = (role) => {
+  switch (role) {
+    case 'admin':
+      router.push('/dashboards/dashboard-admin')
+      break
+    case 'secretary':
+      router.push('/dashboards/dashboard-secretary')
+      break
+    case 'driver':
+      router.push('/dashboards/dashboard-driver')
+      break
+    case 'assistant':
+      router.push('/dashboards/dashboard-assistant')
+      break
+    case 'client':
+      router.push('/dashboards/dashboard-client')
+      break
+    default:
+      router.push('/dashboard')
+  }
+}
 
 // Función para manejar el inicio de sesión
 const handleLogin = async () => {
   try {
-    await authStore.login(email.value, password.value)
+    const response = await authStore.login(email.value, password.value)
 
-    // Redireccionar a la página de viajes
-    router.push('/trips')
+    // Redireccionar al dashboard correspondiente según el rol del usuario
+    redirectToDashboard(response.role)
   } catch (error) {
     console.error('Error en el inicio de sesión:', error)
   }
@@ -85,8 +117,8 @@ const handleLogin = async () => {
 
 // Definir la metadata de la página
 definePageMeta({
-  // Usar el layout de autenticación para esta página
-  layout: 'auth',
+  // Usar el layout de login para esta página
+  layout: 'login',
   // No aplicamos el middleware aquí porque queremos que la página de login sea accesible
 })
 </script>

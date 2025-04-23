@@ -32,32 +32,11 @@ export const useAuthStore = defineStore('auth', {
         this.token = data.access_token
 
         // Construir el objeto de usuario a partir de los datos disponibles
-        if (data.user) {
-          this.user = data.user
-        } else {
-          this.user = {
-            id: data.user_id,
-            role: data.role
-          }
-
-          // Añadir información específica del rol si está disponible
-          if (data.role === 'secretary' && data.secretary_id) {
-            this.user.secretary_id = data.secretary_id
-            this.user.firstname = data.secretary_firstname
-            this.user.lastname = data.secretary_lastname
-          } else if (data.role === 'driver' && data.driver_id) {
-            this.user.driver_id = data.driver_id
-            this.user.firstname = data.driver_firstname
-            this.user.lastname = data.driver_lastname
-          } else if (data.role === 'assistant' && data.assistant_id) {
-            this.user.assistant_id = data.assistant_id
-            this.user.firstname = data.assistant_firstname
-            this.user.lastname = data.assistant_lastname
-          } else if (data.role === 'admin' && data.admin_id) {
-            this.user.admin_id = data.admin_id
-            this.user.firstname = data.admin_firstname
-            this.user.lastname = data.admin_lastname
-          }
+        this.user = {
+          id: data.user_id,
+          role: data.role,
+          firstname: data.firstname || '',
+          lastname: data.lastname || ''
         }
 
         return data

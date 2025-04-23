@@ -43,5 +43,11 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
       ]
     }
+  },
+
+  // Configuración de rutas
+  routeRules: {
+    // Aplicar middleware de autenticación a todas las rutas excepto login
+    '/**': { middleware: ['auth'] }
   }
 })

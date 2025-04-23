@@ -27,7 +27,7 @@
       </div>
     </div>
     <div class="px-6 py-3 bg-gray-50 text-right">
-      <button 
+      <button
         class="text-sm font-medium text-blue-600 hover:text-blue-800"
         @click="$emit('view-all')"
       >
@@ -38,12 +38,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import salesService from '~/services/salesService'
 
 const props = defineProps({
   limit: {
     type: Number,
     default: 5
+  },
+  autoRefresh: {
+    type: Boolean,
+    default: true
+  },
+  refreshInterval: {
+    type: Number,
+    default: 60000 // 1 minuto por defecto
   }
 })
 
@@ -52,6 +61,7 @@ const emit = defineEmits(['view-all'])
 const sales = ref([])
 const loading = ref(true)
 const error = ref(null)
+let refreshTimer = null
 
 // Función para formatear fechas
 const formatDate = (dateString) => {
@@ -68,46 +78,10 @@ const formatDate = (dateString) => {
 const fetchRecentSales = async () => {
   loading.value = true
   error.value = null
-  
+
   try {
-    // Simulación de datos para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // Datos de ejemplo
-    sales.value = [
-      {
-        id: 1,
-        client_name: 'Juan Pérez',
-        type: 'ticket',
-        reference: 'T-12345',
-        amount: 150.00,
-        date: new Date(Date.now() - 1800000).toISOString() // 30 minutos atrás
-      },
-      {
-        id: 2,
-        client_name: 'María López',
-        type: 'package',
-        reference: 'P-54321',
-        amount: 75.50,
-        date: new Date(Date.now() - 3600000).toISOString() // 1 hora atrás
-      },
-      {
-        id: 3,
-        client_name: 'Carlos Rodríguez',
-        type: 'ticket',
-        reference: 'T-12346',
-        amount: 200.00,
-        date: new Date(Date.now() - 5400000).toISOString() // 1.5 horas atrás
-      },
-      {
-        id: 4,
-        client_name: 'Ana Martínez',
-        type: 'ticket',
-        reference: 'T-12347',
-        amount: 150.00,
-        date: new Date(Date.now() - 7200000).toISOString() // 2 horas atrás
-      }
-    ]
+    const recentSales = await salesService.getRecentSales(props.limit)
+    sales.value = recentSales
   } catch (err) {
     console.error('Error al cargar las ventas:', err)
     error.value = 'No se pudieron cargar las ventas. Intente nuevamente.'
@@ -116,7 +90,36 @@ const fetchRecentSales = async () => {
   }
 }
 
+// Configurar actualización automática
+const setupAutoRefresh = () => {
+  // Limpiar el temporizador existente si hay uno
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
+
+  // Configurar nuevo temporizador si autoRefresh está habilitado
+  if (props.autoRefresh) {
+    refreshTimer = setInterval(() => {
+      fetchRecentSales()
+    }, props.refreshInterval)
+  }
+}
+
+// Observar cambios en las propiedades de actualización automática
+watch(() => props.autoRefresh, setupAutoRefresh)
+watch(() => props.refreshInterval, setupAutoRefresh)
+
 onMounted(() => {
   fetchRecentSales()
+  setupAutoRefresh()
+})
+
+// Limpiar el temporizador cuando el componente se desmonta
+onBeforeUnmount(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
