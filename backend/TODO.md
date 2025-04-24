@@ -498,13 +498,18 @@ Parcialmente implementado:
 - [ ] Implementar sistema de logs centralizado
 
 ## Pruebas
-- [ ] Escribir pruebas unitarias para cada clase y sus métodos.  <!-- Pendiente -->
-- [x] Asegurarse de que las relaciones básicas funcionen correctamente.  <!-- Completado parcialmente -->
-- [ ] Implementar tests de integración
-- [ ] Agregar tests de rendimiento
-- [ ] Crear tests para casos de error
-- [ ] Implementar tests de seguridad
-- [ ] Configurar CI/CD con Github Actions
+- [x] Configurar estructura de pruebas con pytest.  <!-- Completado -->
+- [x] Implementar fixtures para pruebas.  <!-- Completado -->
+- [x] Escribir pruebas unitarias para autenticación.  <!-- Completado -->
+- [x] Escribir pruebas unitarias para el modelo de usuario.  <!-- Completado -->
+- [x] Escribir pruebas unitarias para la gestión de viajes.  <!-- Completado -->
+- [x] Escribir pruebas unitarias para la gestión de boletos.  <!-- Completado -->
+- [ ] Escribir pruebas unitarias para el resto de modelos.  <!-- Pendiente -->
+- [ ] Implementar tests de integración.  <!-- Pendiente -->
+- [ ] Agregar tests de rendimiento.  <!-- Pendiente -->
+- [ ] Crear tests para casos de error.  <!-- Pendiente -->
+- [ ] Implementar tests de seguridad.  <!-- Pendiente -->
+- [ ] Configurar CI/CD con Github Actions.  <!-- Pendiente -->
 
 ## Documentación
 - [x] Documentar cada clase y método en el código.  <!-- Completado -->
@@ -603,7 +608,13 @@ Parcialmente implementado:
 ### Prioridad Baja (Mediano Plazo)
 
 9. **Implementar Pruebas Automatizadas**:
-   - [ ] Crear pruebas unitarias para modelos
+   - [x] Configurar estructura de pruebas con pytest
+   - [x] Implementar fixtures para pruebas
+   - [x] Crear pruebas unitarias para autenticación
+   - [x] Crear pruebas unitarias para el modelo de usuario
+   - [x] Crear pruebas unitarias para la gestión de viajes
+   - [x] Crear pruebas unitarias para la gestión de boletos
+   - [ ] Crear pruebas unitarias para el resto de modelos
    - [ ] Implementar pruebas de integración para endpoints
    - [ ] Desarrollar pruebas de rendimiento
    - [ ] Configurar CI/CD para ejecución automática de pruebas
@@ -735,5 +746,5 @@ Fecha: 19/04/2024
 - Tareas pendientes: 0
 
 ### Total
-- **Tareas completadas: 195**
+- **Tareas completadas: 201**
 - **Tareas pendientes: 177**

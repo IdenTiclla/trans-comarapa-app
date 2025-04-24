@@ -19,6 +19,8 @@ __pycache__/
 
 # Virtual environment folders
 venv/
+.venv/
+test_venv/
 # Additional ignores:
 .vscode/
 .idea/

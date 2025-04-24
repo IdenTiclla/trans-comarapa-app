@@ -494,7 +494,59 @@ Si deseas contribuir al proyecto, consulta el archivo `CONTRIBUTING.md` para obt
 
 ## Tests
 
-La implementación de pruebas está en progreso. Se planea agregar pruebas unitarias y de integración para garantizar la calidad del código.
+El proyecto incluye pruebas unitarias para verificar el correcto funcionamiento de los componentes principales. Las pruebas están implementadas con pytest y se encuentran en el directorio `tests/`.
+
+### Estructura de pruebas
+
+```
+tests/
+├── __init__.py
+├── conftest.py           # Configuración y fixtures para pruebas
+├── unit/                 # Pruebas unitarias
+│   ├── __init__.py
+│   ├── test_auth.py      # Pruebas de autenticación
+│   ├── test_user_model.py # Pruebas del modelo de usuario
+│   ├── test_trip.py      # Pruebas de gestión de viajes
+│   └── test_ticket.py    # Pruebas de gestión de boletos
+└── integration/          # Pruebas de integración (futuras)
+    └── __init__.py
+```
+
+### Ejecutar pruebas
+
+Para ejecutar todas las pruebas:
+
+```bash
+# Asegúrate de estar en el directorio backend y tener el entorno virtual activado
+source .venv/bin/activate
+
+# Instalar dependencias de prueba
+uv pip install -e ".[test]"
+
+# Ejecutar todas las pruebas
+pytest
+
+# Ejecutar pruebas con información detallada
+pytest -v
+
+# Ejecutar pruebas con cobertura
+pytest --cov=.
+
+# Ejecutar solo pruebas unitarias
+pytest -m unit
+
+# Ejecutar pruebas específicas
+pytest tests/unit/test_auth.py
+```
+
+### Añadir nuevas pruebas
+
+Para añadir nuevas pruebas:
+
+1. Crea un nuevo archivo en el directorio `tests/unit/` o `tests/integration/` según corresponda
+2. Nombra el archivo con el prefijo `test_` (por ejemplo, `test_nuevo_componente.py`)
+3. Implementa las pruebas usando pytest
+4. Marca las pruebas con el decorador `@pytest.mark.unit` o `@pytest.mark.integration` según corresponda
 
 ## Licencia
 
