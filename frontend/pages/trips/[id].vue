@@ -14,11 +14,11 @@
           </button>
         </div>
 
-        <div v-if="loading" class="flex justify-center py-12">
+        <div v-if="tripStore.isLoading" class="flex justify-center py-12">
           <p class="text-gray-500">Cargando información del viaje...</p>
         </div>
 
-        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <div v-else-if="tripStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -26,12 +26,12 @@
               </svg>
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+              <h3 class="text-sm font-medium text-red-800">{{ tripStore.error }}</h3>
             </div>
           </div>
         </div>
 
-        <div v-else>
+        <div v-else-if="displayedTrip">
           <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
             <div class="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <div>
@@ -39,15 +39,15 @@
                   Detalles del Viaje
                 </h3>
                 <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                  ID: {{ trip.id }}
+                  ID: {{ displayedTrip.id }}
                 </p>
               </div>
               <div>
                 <span
                   class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full"
-                  :class="getStatusClass(trip.status)"
+                  :class="getStatusClass(displayedTrip.status)"
                 >
-                  {{ getStatusText(trip.status) }}
+                  {{ getStatusText(displayedTrip.status) }}
                 </span>
               </div>
             </div>
@@ -57,11 +57,11 @@
                   <dt class="text-sm font-medium text-gray-500">Ruta</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-medium">
                     <div class="flex items-center">
-                      <span>{{ trip.route.origin }}</span>
+                      <span>{{ displayedTrip.route?.origin }}</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
-                      <span>{{ trip.route.destination }}</span>
+                      <span>{{ displayedTrip.route?.destination }}</span>
                     </div>
                   </dd>
                 </div>
@@ -69,14 +69,14 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
                   <dt class="text-sm font-medium text-gray-500">Fecha de salida</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ formatDate(trip.departure_date) }}
+                    {{ formatDate(displayedTrip.departure_date) }}
                   </dd>
                 </div>
 
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
                   <dt class="text-sm font-medium text-gray-500">Hora de salida</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-medium">
-                    {{ trip.departure_time }}
+                    {{ displayedTrip.departure_time }}
                   </dd>
                 </div>
 
@@ -84,34 +84,27 @@
                   <dt class="text-sm font-medium text-gray-500">Asientos</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <!-- Asientos disponibles -->
                       <div class="flex items-center">
                         <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleAvailableSeats">
-                          {{ trip.available_seats }} disponibles
+                          {{ displayedTrip.available_seats_count }} disponibles
                           <span v-if="!showAvailableSeats" class="ml-1">▼</span>
                           <span v-else class="ml-1">▲</span>
                         </span>
                       </div>
-
-                      <!-- Asientos ocupados -->
-                      <div v-if="trip.occupied_seats && trip.occupied_seats.length > 0" class="flex items-center">
+                      <div v-if="displayedTrip.occupied_seats && displayedTrip.occupied_seats.length > 0" class="flex items-center">
                         <span class="px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleOccupiedSeats">
-                          {{ trip.occupied_seats.length }} ocupados
+                          {{ displayedTrip.occupied_seats.length }} ocupados
                           <span v-if="!showOccupiedSeats" class="ml-1">▼</span>
                           <span v-else class="ml-1">▲</span>
                         </span>
                       </div>
-
-                      <!-- Total de asientos -->
                       <div class="flex items-center">
                         <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs font-medium">
-                          {{ trip.total_seats }} totales
+                          {{ displayedTrip.total_seats }} totales
                         </span>
                       </div>
                     </div>
-
-                    <!-- Lista de asientos disponibles -->
-                    <div v-if="showAvailableSeats && trip.available_seat_numbers && trip.available_seat_numbers.length > 0" class="mt-3 bg-green-50 p-3 rounded-md border border-green-100">
+                    <div v-if="showAvailableSeats && displayedTrip.available_seat_numbers && displayedTrip.available_seat_numbers.length > 0" class="mt-3 bg-green-50 p-3 rounded-md border border-green-100">
                       <h4 class="text-xs font-medium text-green-800 mb-2">Asientos disponibles:</h4>
                       <div class="flex flex-wrap gap-1">
                         <span
@@ -123,14 +116,12 @@
                         </span>
                       </div>
                     </div>
-
-                    <!-- Lista de asientos ocupados -->
-                    <div v-if="showOccupiedSeats && trip.occupied_seats && trip.occupied_seats.length > 0" class="mt-3 bg-red-50 p-3 rounded-md border border-red-100">
+                    <div v-if="showOccupiedSeats && displayedTrip.occupied_seats && displayedTrip.occupied_seats.length > 0" class="mt-3 bg-red-50 p-3 rounded-md border border-red-100">
                       <h4 class="text-xs font-medium text-red-800 mb-2">Asientos ocupados:</h4>
                       <div class="flex flex-wrap gap-1">
                         <span
-                          v-for="seatNumber in sortedOccupiedSeats"
-                          :key="seatNumber"
+                          v-for="seatNumber in sortedOccupiedSeats" 
+                          :key="seatNumber" 
                           class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
                         >
                           {{ seatNumber }}
@@ -143,23 +134,23 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
                   <dt class="text-sm font-medium text-gray-500">Conductor</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ trip.driver ? trip.driver.name : 'No asignado' }}
+                    {{ displayedTrip.driver?.name || 'No asignado' }}
                   </dd>
                 </div>
 
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
                   <dt class="text-sm font-medium text-gray-500">Asistente</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ trip.assistant ? trip.assistant.name : 'No asignado' }}
+                    {{ displayedTrip.assistant?.name || 'No asignado' }}
                   </dd>
                 </div>
 
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
                   <dt class="text-sm font-medium text-gray-500">Bus</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    <div v-if="trip.bus" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">{{ trip.bus.plate }}</span>
-                      <span class="text-gray-500">{{ trip.bus.model }}</span>
+                    <div v-if="displayedTrip.bus" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">{{ displayedTrip.bus.plate }}</span>
+                      <span class="text-gray-500">{{ displayedTrip.bus.model }}</span>
                     </div>
                     <span v-else>No asignado</span>
                   </dd>
@@ -169,24 +160,20 @@
           </div>
 
           <!-- Mapa de asientos -->
-          <div class="mt-6 mb-8">
+          <div v-if="displayedTrip" class="mt-6 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
               <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
-
               <div class="mt-2 sm:mt-0 flex items-center space-x-4">
-                <!-- Asientos disponibles -->
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ trip.available_seats }} disponibles</span>
+                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats_count }} disponibles</span>
                   <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
                 </div>
-                <!-- Asientos ocupados -->
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ trip.occupied_seats ? trip.occupied_seats.length : 0 }} ocupados</span>
+                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seats ? displayedTrip.occupied_seats.length : 0 }} ocupados</span>
                   <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
                 </div>
-                <!-- Total de asientos -->
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ trip.total_seats }} totales</span>
+                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.total_seats }} totales</span>
                   <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
                 </div>
               </div>
@@ -194,16 +181,16 @@
 
             <div class="bg-white rounded-lg shadow overflow-hidden">
               <BusSeatMapPrint
-                :trip="trip"
+                :trip="displayedTrip" 
                 :selection-enabled="false"
               />
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
+          <div v-if="displayedTrip" class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
             <AppButton
               variant="secondary"
-              @click="router.push(`/trips/${trip.id}/edit`)"
+              @click="router.push(`/trips/${displayedTrip.id}/edit`)"
               class="w-full sm:w-auto order-2 sm:order-1"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -224,7 +211,7 @@
           </div>
 
           <!-- Modal de selección de asientos -->
-          <div v-if="showSeatSelection" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div v-if="showSeatSelection && displayedTrip" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
               <div class="sticky top-0 z-10 bg-white px-4 py-4 sm:px-6 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-medium text-gray-900">Venta de Boletos</h3>
@@ -240,7 +227,7 @@
               </div>
               <div class="p-4 sm:p-6">
                 <SeatSelection
-                  :trip="trip"
+                  :trip="displayedTrip"
                   @selection-confirmed="handleSeatSelectionConfirmed"
                 />
               </div>
@@ -256,7 +243,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
-import tripService from '~/services/tripService'
+import { useTripStore } from '~/stores/tripStore'
 import AppButton from '~/components/AppButton.vue'
 import SeatSelection from '~/components/SeatSelection.vue'
 import BusSeatMapPrint from '~/components/BusSeatMapPrint.vue'
@@ -264,58 +251,31 @@ import BusSeatMapPrint from '~/components/BusSeatMapPrint.vue'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const tripStore = useTripStore()
 
-const trip = ref(null)
-const loading = ref(true)
-const error = ref(null)
 const showSeatSelection = ref(false)
 const showOccupiedSeats = ref(false)
 const showAvailableSeats = ref(false)
 
-// Comprobar autenticación al montar el componente
+const displayedTrip = computed(() => tripStore.currentTrip)
+
 onMounted(() => {
-  // Si el usuario no está autenticado, redirigir a login
   if (!authStore.isAuthenticated) {
     router.push('/login')
     return
   }
-
-  // Cargar detalles del viaje
   fetchTripDetails()
 })
 
-// Cargar detalles del viaje
 const fetchTripDetails = async () => {
-  loading.value = true
-  error.value = null
-
   try {
-    // Usar el servicio para obtener los detalles del viaje
-    trip.value = await tripService.getTripById(route.params.id)
-
-    // Obtener asientos disponibles
-    const seatsData = await tripService.getAvailableSeats(route.params.id)
-
-    // Actualizar la información de asientos en el objeto trip
-    if (trip.value) {
-      trip.value.total_seats = seatsData.totalSeats
-      trip.value.available_seats = seatsData.availableSeats
-      trip.value.occupied_seats = seatsData.occupiedSeats
-      trip.value.available_seat_numbers = seatsData.availableSeatNumbers
-    }
-
-    console.log('Detalles del viaje cargados:', trip.value)
-    console.log('Información de asientos:', seatsData)
-
+    await tripStore.fetchTripById(route.params.id)
   } catch (err) {
-    console.error('Error al cargar los detalles del viaje:', err)
-    error.value = 'No se pudieron cargar los detalles del viaje. Intente nuevamente.'
-  } finally {
-    loading.value = false
+    console.error('Error al invocar fetchTripById:', err)
+    tripStore.setError(err.message || 'No se pudieron cargar los detalles del viaje. Intente nuevamente.')
   }
 }
 
-// Formatear fecha
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   return new Intl.DateTimeFormat('es-ES', {
@@ -326,7 +286,6 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 
-// Obtener clase CSS según el estado
 const getStatusClass = (status) => {
   switch (status) {
     case 'scheduled':
@@ -342,7 +301,6 @@ const getStatusClass = (status) => {
   }
 }
 
-// Obtener texto según el estado
 const getStatusText = (status) => {
   switch (status) {
     case 'scheduled':
@@ -358,65 +316,46 @@ const getStatusText = (status) => {
   }
 }
 
-// Ir directamente a la página de venta de boletos
 const goToSellTicket = () => {
-  // Redirigir directamente a la página de venta de boletos
-  router.push(`/tickets/new?trip=${trip.value.id}`);
+  if (displayedTrip.value) {
+    router.push(`/tickets/new?trip=${displayedTrip.value.id}`)
+  }
 }
 
-// Mostrar u ocultar la lista de asientos ocupados
 const toggleOccupiedSeats = () => {
-  showOccupiedSeats.value = !showOccupiedSeats.value;
-  // Si estamos mostrando los asientos ocupados, ocultamos los disponibles para evitar sobrecarga visual
+  showOccupiedSeats.value = !showOccupiedSeats.value
   if (showOccupiedSeats.value && showAvailableSeats.value) {
-    showAvailableSeats.value = false;
+    showAvailableSeats.value = false
   }
 }
 
-// Mostrar u ocultar la lista de asientos disponibles
 const toggleAvailableSeats = () => {
-  showAvailableSeats.value = !showAvailableSeats.value;
-  // Si estamos mostrando los asientos disponibles, ocultamos los ocupados para evitar sobrecarga visual
+  showAvailableSeats.value = !showAvailableSeats.value
   if (showAvailableSeats.value && showOccupiedSeats.value) {
-    showOccupiedSeats.value = false;
+    showOccupiedSeats.value = false
   }
 }
 
-// Asientos disponibles ordenados numéricamente
 const sortedAvailableSeats = computed(() => {
-  if (!trip.value || !trip.value.available_seat_numbers) return [];
+  if (!displayedTrip.value || !displayedTrip.value.available_seat_numbers) return []
+  return [...displayedTrip.value.available_seat_numbers].sort((a, b) => parseInt(a) - parseInt(b))
+})
 
-  // Convertir a números y ordenar numéricamente
-  return [...trip.value.available_seat_numbers].sort((a, b) => {
-    return parseInt(a) - parseInt(b);
-  });
-});
-
-// Asientos ocupados ordenados numéricamente
 const sortedOccupiedSeats = computed(() => {
-  if (!trip.value || !trip.value.occupied_seats) return [];
+  if (!displayedTrip.value || !displayedTrip.value.occupied_seats) return []
+  return [...displayedTrip.value.occupied_seats].map(seat => typeof seat === 'object' ? seat.number : seat).sort((a, b) => parseInt(a) - parseInt(b))
+})
 
-  // Convertir a números y ordenar numéricamente
-  return [...trip.value.occupied_seats].sort((a, b) => {
-    return parseInt(a) - parseInt(b);
-  });
-});
-
-// Manejar confirmación de selección de asientos
 const handleSeatSelectionConfirmed = (selectedSeats) => {
   console.log('Asientos seleccionados:', selectedSeats)
-
-  // Aquí se implementaría la lógica para continuar con la venta del boleto
-  // Por ahora, simplemente cerramos el modal y mostramos un mensaje
+  if (displayedTrip.value) {
+    const seatNumbers = selectedSeats.map(seat => seat.number).join(',')
+    router.push(`/tickets/new?trip=${displayedTrip.value.id}&seats=${seatNumbers}`)
+  }
   showSeatSelection.value = false
-
-  // Simular redirección a la página de venta de boletos con los asientos seleccionados
-  const seatNumbers = selectedSeats.map(seat => seat.number).join(',');
-  router.push(`/tickets/new?trip=${trip.value.id}&seats=${seatNumbers}`);
 }
 
-// Definir la metadata de la página
 definePageMeta({
-  middleware: ['auth'] // Aplicar middleware de autenticación
+  // middleware: ['auth'] // Aplicar middleware de autenticación - REMOVED as auth.global.ts handles this
 })
 </script>

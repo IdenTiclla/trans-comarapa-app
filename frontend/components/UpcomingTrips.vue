@@ -125,22 +125,33 @@ const fetchUpcomingTrips = async () => {
   error.value = null
 
   try {
-    // Obtener los próximos viajes usando el servicio
-    const filters = {
-      upcoming: true,
-      status: 'scheduled,in_progress' // Solo viajes programados o en progreso
+    // Construct parameters for the service
+    const params = {
+      upcoming: true, // The service might translate this or pass it if backend supports
+      status: 'scheduled,in_progress', // Explicitly request these statuses
+      limit: props.limit,
+      page: 1, // Fetching the first page for upcoming trips display
+      // Add any default sorting if necessary, e.g.:
+      // sort_by: 'trip_datetime',
+      // sort_direction: 'asc',
+    };
+
+    const result = await tripService.getTrips(params);
+    
+    // The service now returns the direct API response.
+    // Assuming the response is { items: [], total: X } or just an array.
+    if (Array.isArray(result)) {
+      trips.value = result;
+    } else if (result && Array.isArray(result.items)) {
+      trips.value = result.items;
+    } else {
+      console.warn('Unexpected response structure from getTrips:', result);
+      trips.value = []; // Default to empty if structure is not recognized
     }
 
-    const pagination = {
-      page: 1,
-      itemsPerPage: props.limit
-    }
-
-    const result = await tripService.getTrips(filters, {}, pagination)
-    trips.value = result.trips
   } catch (err) {
-    console.error('Error al cargar los viajes:', err)
-    error.value = 'No se pudieron cargar los viajes. Intente nuevamente.'
+    console.error('Error al cargar los viajes:', err.data?.detail || err.message, err);
+    error.value = err.data?.detail || 'No se pudieron cargar los viajes. Intente nuevamente.';
   } finally {
     loading.value = false
   }

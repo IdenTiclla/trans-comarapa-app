@@ -14,19 +14,24 @@
 
         <!-- Filtros -->
         <TripFilters
-          :initial-filters="filters"
+          :initial-filters="pageFilters"
           @filter-change="handleFilterChange"
         />
 
+        <!-- Alerta de error -->
+        <div v.if="tripStore.error" class="my-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+          <p>Error al cargar los viajes: {{ tripStore.error }}</p>
+        </div>
+
         <!-- Tabla de viajes -->
         <TripTable
-          :trips="trips"
-          :loading="loading"
-          :current-page="currentPage"
-          :total-items="totalItems"
-          :items-per-page="itemsPerPage"
-          :sort-by="sortBy"
-          :sort-direction="sortDirection"
+          :trips="tripStore.trips"
+          :loading="tripStore.isLoading"
+          :current-page="tripStore.pagination.currentPage"
+          :total-items="tripStore.pagination.totalItems"
+          :items-per-page="tripStore.pagination.itemsPerPage"
+          :sort-by="pageSortBy"
+          :sort-direction="pageSortDirection"
           @page-change="handlePageChange"
           @sort-change="handleSortChange"
           @view-trip="handleViewTrip"
@@ -38,30 +43,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'
+import { ref, reactive, onMounted, watch } from 'vue';
+import { useRouter, navigateTo } from '#app'; // Using Nuxt 3 auto-imports
+import { useTripStore } from '~/stores/tripStore';
 
-// Servicios
-import tripService from '~/services/tripService'
+// Componentes (Assuming these are correctly imported or auto-imported by Nuxt)
+// import TripFilters from '~/components/TripFilters.vue'; 
+// import TripTable from '~/components/TripTable.vue';
+// import AppButton from '~/components/AppButton.vue';
 
-// Componentes
-import TripFilters from '~/components/TripFilters.vue'
-import TripTable from '~/components/TripTable.vue'
-import AppButton from '~/components/AppButton.vue'
+const router = useRouter();
+const tripStore = useTripStore();
 
-const router = useRouter()
-const authStore = useAuthStore()
-
-// Estado
-const trips = ref([])
-const loading = ref(true)
-const currentPage = ref(1)
-const totalItems = ref(0)
-const itemsPerPage = ref(10)
-const sortBy = ref('departure_date')
-const sortDirection = ref('asc')
-const filters = reactive({
+// Local state for page-specific controls that trigger store actions
+const pageFilters = reactive({
   origin: '',
   destination: '',
   date: '',
@@ -70,78 +65,80 @@ const filters = reactive({
   dateFrom: '',
   dateTo: '',
   minSeats: ''
-})
+});
 
-// Comprobar autenticación al montar el componente
+// Local refs for sort, to be passed to the store action
+// The store itself doesn't need to hold sortBy/sortDirection if they are always passed in fetchTrips params
+const pageSortBy = ref(tripStore.pagination.sortBy || 'trip_datetime'); // Default from store or a sensible default
+const pageSortDirection = ref(tripStore.pagination.sortDirection || 'desc');
+
+const loadTrips = () => {
+  tripStore.fetchTrips({
+    page: tripStore.pagination.currentPage, // Use current page from store for reloads
+    itemsPerPage: tripStore.pagination.itemsPerPage,
+    sortBy: pageSortBy.value,
+    sortDirection: pageSortDirection.value,
+    filters: { ...pageFilters } // Pass a copy of the filters
+  });
+};
+
 onMounted(() => {
-  // Si el usuario no está autenticado, redirigir a login
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-
-  // Cargar viajes
-  fetchTrips()
-})
-
-// Cargar viajes
-const fetchTrips = async () => {
-  loading.value = true
-
-  try {
-    // Usar el servicio para obtener los viajes
-    const result = await tripService.getTrips(
-      filters, // Filtros
-      { by: sortBy.value, direction: sortDirection.value }, // Ordenamiento
-      { page: currentPage.value, itemsPerPage: itemsPerPage.value } // Paginación
-    )
-
-    // Actualizar el estado con los datos obtenidos
-    trips.value = result.trips
-    totalItems.value = result.pagination.totalItems
-
-  } catch (error) {
-    console.error('Error al cargar los viajes:', error)
-    // Aquí se podría mostrar un mensaje de error
-  } finally {
-    loading.value = false
-  }
-}
-
-
+  // Initial load. If store has default page 1, it will use that.
+  loadTrips(); 
+});
 
 // Manejar cambio de página
-const handlePageChange = (page) => {
-  currentPage.value = page
-  fetchTrips()
-}
+const handlePageChange = (newPage) => {
+  // Update store's current page, then fetch.
+  // Or, more directly, pass the new page to fetchTrips
+  tripStore.fetchTrips({
+    page: newPage,
+    itemsPerPage: tripStore.pagination.itemsPerPage,
+    sortBy: pageSortBy.value,
+    sortDirection: pageSortDirection.value,
+    filters: { ...pageFilters }
+  });
+};
 
 // Manejar cambio de ordenamiento
 const handleSortChange = ({ column, direction }) => {
-  sortBy.value = column
-  sortDirection.value = direction
-  fetchTrips()
-}
+  pageSortBy.value = column;
+  pageSortDirection.value = direction;
+  // Reset to page 1 when sort changes, and then fetch.
+  tripStore.fetchTrips({
+    page: 1, 
+    itemsPerPage: tripStore.pagination.itemsPerPage,
+    sortBy: pageSortBy.value,
+    sortDirection: pageSortDirection.value,
+    filters: { ...pageFilters }
+  });
+};
 
 // Manejar cambio de filtros
 const handleFilterChange = (newFilters) => {
-  Object.assign(filters, newFilters)
-  currentPage.value = 1 // Resetear a la primera página
-  fetchTrips()
-}
+  Object.assign(pageFilters, newFilters);
+  // Reset to page 1 when filters change, and then fetch.
+  tripStore.fetchTrips({
+    page: 1,
+    itemsPerPage: tripStore.pagination.itemsPerPage,
+    sortBy: pageSortBy.value,
+    sortDirection: pageSortDirection.value,
+    filters: { ...pageFilters }
+  });
+};
 
 // Manejar ver viaje
 const handleViewTrip = (tripId) => {
-  router.push(`/trips/${tripId}`)
-}
+  router.push(`/trips/${tripId}`);
+};
 
 // Manejar editar viaje
 const handleEditTrip = (tripId) => {
-  router.push(`/trips/${tripId}/edit`)
-}
+  router.push(`/trips/${tripId}/edit`);
+};
 
-// Definir la metadata de la página
-definePageMeta({
-  middleware: ['auth'] // Aplicar middleware de autenticación
-})
+// No definePageMeta needed here if auth.global.ts is active
+// definePageMeta({
+//   middleware: ['auth'] 
+// })
 </script>

@@ -16,7 +16,7 @@
         
         <h1 class="text-2xl font-semibold text-gray-900 mb-6">Nuevo Viaje</h1>
         
-        <div v-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <div v-if="tripStore.error || locationStore.error || busStore.error || driverStore.error || assistantStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -24,7 +24,14 @@
               </svg>
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+              <h3 class="text-sm font-medium text-red-800">Error al procesar el formulario:</h3>
+              <ul class="list-disc list-inside text-sm text-red-700">
+                <li v-if="tripStore.error">{{ tripStore.error }}</li>
+                <li v-if="locationStore.error">{{ locationStore.error }}</li>
+                <li v-if="busStore.error">{{ busStore.error }}</li>
+                <li v-if="driverStore.error">{{ driverStore.error }}</li>
+                <li v-if="assistantStore.error">{{ assistantStore.error }}</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -33,39 +40,22 @@
           <div class="px-4 py-5 sm:p-6">
             <form @submit.prevent="handleSubmit">
               <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <!-- Origen -->
+                <!-- Ruta -->
                 <div class="sm:col-span-3">
-                  <label for="origin" class="block text-sm font-medium text-gray-700">Origen</label>
+                  <label for="route_id" class="block text-sm font-medium text-gray-700">Ruta (Origen - Destino)</label>
                   <div class="mt-1">
                     <select 
-                      id="origin" 
-                      v-model="formData.origin"
+                      id="route_id" 
+                      v-model="formData.route_id"
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       required
                     >
-                      <option value="">Seleccione origen</option>
-                      <option v-for="location in locations" :key="location" :value="location">
-                        {{ location }}
+                      <option value="">Seleccione ruta</option>
+                      <option v-for="route in routeStore.routes" :key="route.id" :value="route.id">
+                        {{ route.origin_location?.name }} - {{ route.destination_location?.name }} ({{ route.name }})
                       </option>
                     </select>
-                  </div>
-                </div>
-                
-                <!-- Destino -->
-                <div class="sm:col-span-3">
-                  <label for="destination" class="block text-sm font-medium text-gray-700">Destino</label>
-                  <div class="mt-1">
-                    <select 
-                      id="destination" 
-                      v-model="formData.destination"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option value="">Seleccione destino</option>
-                      <option v-for="location in locations" :key="location" :value="location">
-                        {{ location }}
-                      </option>
-                    </select>
+                    <p v-if="routeStore.isLoading" class="text-xs text-gray-500">Cargando rutas...</p>
                   </div>
                 </div>
                 
@@ -108,10 +98,11 @@
                       required
                     >
                       <option value="">Seleccione bus</option>
-                      <option v-for="bus in buses" :key="bus.id" :value="bus.id">
-                        {{ bus.plate }} - {{ bus.model }}
+                      <option v-for="bus in busStore.buses" :key="bus.id" :value="bus.id">
+                        {{ bus.license_plate }} - {{ bus.model }} (Cap: {{bus.capacity}})
                       </option>
                     </select>
+                    <p v-if="busStore.isLoading" class="text-xs text-gray-500">Cargando buses...</p>
                   </div>
                 </div>
                 
@@ -126,10 +117,11 @@
                       required
                     >
                       <option value="">Seleccione conductor</option>
-                      <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
-                        {{ driver.name }}
+                      <option v-for="driver in driverStore.drivers" :key="driver.id" :value="driver.id">
+                        {{ driver.first_name }} {{ driver.last_name }}
                       </option>
                     </select>
+                    <p v-if="driverStore.isLoading" class="text-xs text-gray-500">Cargando conductores...</p>
                   </div>
                 </div>
                 
@@ -144,28 +136,49 @@
                       required
                     >
                       <option value="">Seleccione asistente</option>
-                      <option v-for="assistant in assistants" :key="assistant.id" :value="assistant.id">
-                        {{ assistant.name }}
+                      <option v-for="assistant in assistantStore.assistants" :key="assistant.id" :value="assistant.id">
+                        {{ assistant.first_name }} {{ assistant.last_name }}
                       </option>
                     </select>
+                    <p v-if="assistantStore.isLoading" class="text-xs text-gray-500">Cargando asistentes...</p>
                   </div>
                 </div>
                 
-                <!-- Precio -->
+                <!-- Precio del Boleto (Opcional, podría definirse en la ruta o promo) -->
                 <div class="sm:col-span-3">
-                  <label for="price" class="block text-sm font-medium text-gray-700">Precio (Bs.)</label>
+                  <label for="ticket_price" class="block text-sm font-medium text-gray-700">Precio Base del Boleto (Bs.)</label>
                   <div class="mt-1">
                     <input 
                       type="number" 
-                      id="price" 
-                      v-model="formData.price"
+                      id="ticket_price" 
+                      v-model="formData.ticket_price"
                       min="0"
-                      step="0.5"
+                      step="0.50"
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
                     />
                   </div>
+                  <p class="mt-1 text-xs text-gray-500">Este precio se usará para los boletos de este viaje. Puede ser sobrescrito por promociones o precios de ruta específicos.</p>
                 </div>
+
+                <!-- Estado del Viaje -->
+                 <div class="sm:col-span-3">
+                  <label for="status" class="block text-sm font-medium text-gray-700">Estado del Viaje</label>
+                  <div class="mt-1">
+                    <select 
+                      id="status" 
+                      v-model="formData.status"
+                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    >
+                      <option value="scheduled">Programado</option>
+                      <option value="on_time">A Tiempo</option>
+                      <option value="delayed">Retrasado</option>
+                      <option value="departed">En Curso</option>
+                      <option value="arrived">Completado</option>
+                      <option value="cancelled">Cancelado</option>
+                    </select>
+                  </div>
+                </div>
+
               </div>
               
               <div class="mt-6 flex justify-end space-x-3">
@@ -173,15 +186,16 @@
                   type="button"
                   @click="router.back()"
                   class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  :disabled="tripStore.isLoading"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
                   class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  :disabled="submitting"
+                  :disabled="tripStore.isLoading"
                 >
-                  {{ submitting ? 'Creando...' : 'Crear Viaje' }}
+                  {{ tripStore.isLoading ? 'Creando...' : 'Crear Viaje' }}
                 </button>
               </div>
             </form>
@@ -193,110 +207,73 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'
+import { reactive, onMounted, computed } from 'vue';
+import { useRouter, navigateTo } from '#app';
+import { useTripStore } from '~/stores/tripStore';
+import { useLocationStore } from '~/stores/locationStore'; // To be created if not already
+import { useBusStore } from '~/stores/busStore';
+import { useDriverStore } from '~/stores/driverStore';
+import { useAssistantStore } from '~/stores/assistantStore';
+import { useRouteStore } from '~/stores/routeStore'; // For route selection
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const tripStore = useTripStore();
+const locationStore = useLocationStore();
+const busStore = useBusStore();
+const driverStore = useDriverStore();
+const assistantStore = useAssistantStore();
+const routeStore = useRouteStore();
 
-const submitting = ref(false)
-const error = ref(null)
-
-// Datos para los selectores
-const locations = [
-  'Santa Cruz',
-  'Comarapa',
-  'Cochabamba',
-  'La Paz',
-  'Sucre',
-  'Tarija',
-  'Oruro',
-  'Potosí',
-  'Trinidad',
-  'Cobija'
-]
-
-const buses = [
-  { id: 1, plate: 'ABC-123', model: 'Mercedes Benz O-500' },
-  { id: 2, plate: 'DEF-456', model: 'Volvo 9800' },
-  { id: 3, plate: 'GHI-789', model: 'Scania K410' }
-]
-
-const drivers = [
-  { id: 1, name: 'Juan Pérez' },
-  { id: 2, name: 'Carlos Rodríguez' },
-  { id: 3, name: 'Roberto Gómez' }
-]
-
-const assistants = [
-  { id: 1, name: 'María López' },
-  { id: 2, name: 'Ana Martínez' },
-  { id: 3, name: 'Laura Sánchez' }
-]
 
 // Datos del formulario
 const formData = reactive({
-  origin: '',
-  destination: '',
-  departure_date: '',
+  route_id: null, // Changed from origin/destination to route_id
+  trip_datetime: '', // Will be combined from departure_date and departure_time
+  departure_date: '', 
   departure_time: '',
-  bus_id: '',
-  driver_id: '',
-  assistant_id: '',
-  price: 150
-})
+  bus_id: null,
+  driver_id: null,
+  assistant_id: null,
+  ticket_price: 150, // Default or null
+  status: 'scheduled', // Default status
+});
 
-// Comprobar autenticación al montar el componente
-onMounted(() => {
-  // Si el usuario no está autenticado, redirigir a login
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-  
-  // Establecer fecha por defecto (mañana)
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  formData.departure_date = tomorrow.toISOString().split('T')[0]
-})
+// Fetch data for select dropdowns
+onMounted(async () => {
+  // No auth check needed here if auth.global.ts is active
+  // await locationStore.fetchLocations(); // Locations are part of routes
+  await routeStore.fetchRoutes();
+  await busStore.fetchBuses();
+  await driverStore.fetchDrivers();
+  await assistantStore.fetchAssistants();
+});
 
-// Manejar envío del formulario
 const handleSubmit = async () => {
-  // Validar que origen y destino sean diferentes
-  if (formData.origin === formData.destination) {
-    error.value = 'El origen y el destino no pueden ser iguales'
-    return
+  if (!formData.departure_date || !formData.departure_time) {
+    tripStore.error = "Por favor, seleccione fecha y hora de salida."; // Or use a more sophisticated validation
+    return;
   }
-  
-  submitting.value = true
+  formData.trip_datetime = `${formData.departure_date}T${formData.departure_time}:00`; // Assuming seconds are :00
+
+  // Remove date and time from main object if backend expects only trip_datetime
+  const submissionData = { ...formData };
+  delete submissionData.departure_date;
+  delete submissionData.departure_time;
   
   try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch('/api/trips', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify(formData)
-    // })
-    
-    // Simulación para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Redirigir a la lista de viajes
-    router.push('/trips')
-    
+    await tripStore.createNewTrip(submissionData);
+    if (!tripStore.error) {
+      router.push('/trips'); // Navigate to trips list on success
+    }
+    // Error will be displayed by the template via tripStore.error
   } catch (err) {
-    console.error('Error al crear el viaje:', err)
-    error.value = 'No se pudo crear el viaje. Intente nuevamente.'
-  } finally {
-    submitting.value = false
+    // Error is already set in the store by createNewTrip action
+    console.error("Error caught in component handleSubmit:", err);
   }
-}
+};
 
-// Definir la metadata de la página
-definePageMeta({
-  middleware: ['auth'] // Aplicar middleware de autenticación
-})
+// Define the metadata of the page if not relying solely on global middleware
+// definePageMeta({
+//   middleware: ['auth']
+// })
 </script>

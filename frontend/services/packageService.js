@@ -1,5 +1,6 @@
 // Servicio para gestionar los datos de paquetes
 import { useRuntimeConfig } from 'nuxt/app'
+import apiFetch from '~/utils/api'
 
 // Obtener el token de autenticación del localStorage
 const getAuthToken = () => {
@@ -13,6 +14,73 @@ const getAuthToken = () => {
 const getApiBaseUrl = () => {
   const config = useRuntimeConfig()
   return config.public.apiBaseUrl
+}
+
+const BASE_PATH = '/packages'
+
+/**
+ * Fetches all packages, optionally with query parameters.
+ * @param {object} params - Query parameters (e.g., for pagination, filtering).
+ * @returns {Promise<Array>} A promise that resolves to an array of packages.
+ */
+export const getAllPackages = async (params = {}) => {
+  const query = new URLSearchParams(params).toString()
+  return apiFetch(`${BASE_PATH}${query ? '?' + query : ''}`)
+}
+
+/**
+ * Fetches a single package by its ID.
+ * @param {string|number} id - The ID of the package.
+ * @returns {Promise<object>} A promise that resolves to the package object.
+ */
+export const getPackageById = async (id) => {
+  return apiFetch(`${BASE_PATH}/${id}`)
+}
+
+/**
+ * Creates a new package.
+ * @param {object} packageData - The data for the new package.
+ * @returns {Promise<object>} A promise that resolves to the created package object.
+ */
+export const createPackage = async (packageData) => {
+  return apiFetch(BASE_PATH, {
+    method: 'POST',
+    body: packageData,
+  })
+}
+
+/**
+ * Updates an existing package.
+ * @param {string|number} id - The ID of the package to update.
+ * @param {object} packageData - The updated data for the package.
+ * @returns {Promise<object>} A promise that resolves to the updated package object.
+ */
+export const updatePackage = async (id, packageData) => {
+  return apiFetch(`${BASE_PATH}/${id}`, {
+    method: 'PUT',
+    body: packageData,
+  })
+}
+
+/**
+ * Deletes a package by its ID.
+ * @param {string|number} id - The ID of the package to delete.
+ * @returns {Promise<void>} A promise that resolves when the package is deleted.
+ */
+export const deletePackage = async (id) => {
+  return apiFetch(`${BASE_PATH}/${id}`, {
+    method: 'DELETE',
+  })
+}
+
+/**
+ * Searches for packages based on a query term.
+ * @param {string} term - The search term.
+ * @returns {Promise<Array>} A promise that resolves to an array of matching packages.
+ */
+export const searchPackages = async (term) => {
+  const queryParams = new URLSearchParams({ search: term })
+  return apiFetch(`${BASE_PATH}/search?${queryParams.toString()}`)
 }
 
 // Obtener todos los paquetes
@@ -103,172 +171,6 @@ const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 1
   }
 }
 
-// Obtener un paquete por ID
-const getPackageById = async (id) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/packages/${id}`)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/packages/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al obtener el paquete: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Respuesta de la API (paquete):', data)
-
-    return data
-  } catch (error) {
-    console.error(`Error al obtener el paquete con ID ${id}:`, error)
-    
-    // Simulación de datos para desarrollo
-    console.warn('Usando datos simulados para el paquete')
-    
-    // Generar datos de ejemplo
-    return {
-      id,
-      description: `Paquete ${id}`,
-      weight: Math.random() * 10 + 0.5, // Entre 0.5 y 10.5 kg
-      sender_id: Math.floor(Math.random() * 10) + 1,
-      recipient_id: Math.floor(Math.random() * 10) + 1,
-      trip_id: Math.floor(Math.random() * 5) + 1,
-      status: ['pending', 'in_transit', 'delivered'][Math.floor(Math.random() * 3)],
-      created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() // Hasta 7 días atrás
-    }
-  }
-}
-
-// Crear un nuevo paquete
-const createPackage = async (packageData) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/packages`)
-    console.log('Datos del paquete:', packageData)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/packages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(packageData)
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al crear el paquete: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Respuesta de la API (paquete creado):', data)
-
-    return data
-  } catch (error) {
-    console.error('Error al crear el paquete:', error)
-    throw error
-  }
-}
-
-// Actualizar un paquete existente
-const updatePackage = async (id, packageData) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/packages/${id}`)
-    console.log('Datos actualizados del paquete:', packageData)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/packages/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(packageData)
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al actualizar el paquete: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Respuesta de la API (paquete actualizado):', data)
-
-    return data
-  } catch (error) {
-    console.error(`Error al actualizar el paquete con ID ${id}:`, error)
-    throw error
-  }
-}
-
-// Eliminar un paquete
-const deletePackage = async (id) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/packages/${id}`)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/packages/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al eliminar el paquete: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Respuesta de la API (paquete eliminado):', data)
-
-    return data
-  } catch (error) {
-    console.error(`Error al eliminar el paquete con ID ${id}:`, error)
-    throw error
-  }
-}
-
 // Obtener paquetes recientes
 const getRecentPackages = async (limit = 5) => {
   try {
@@ -329,10 +231,12 @@ const getRecentPackages = async (limit = 5) => {
 }
 
 export default {
-  getPackages,
+  getAllPackages,
   getPackageById,
   createPackage,
   updatePackage,
   deletePackage,
+  searchPackages,
+  getPackages,
   getRecentPackages
 }

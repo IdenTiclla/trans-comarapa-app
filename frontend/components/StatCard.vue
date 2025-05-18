@@ -2,7 +2,7 @@
   <div class="bg-white rounded-lg shadow p-6">
     <div class="flex items-center">
       <div class="p-3 rounded-full" :class="bgColor">
-        <component :is="icon" class="h-8 w-8 text-white" />
+        <div v-if="icon && icon.template" v-html="icon.template" class="h-8 w-8 text-white"></div>
       </div>
       <div class="ml-4">
         <p class="text-sm text-gray-500 font-medium">{{ title }}</p>
@@ -21,6 +21,8 @@
 </template>
 
 <script setup>
+import { defineProps } from 'vue';
+
 defineProps({
   title: {
     type: String,
@@ -32,7 +34,8 @@ defineProps({
   },
   icon: {
     type: Object,
-    required: true
+    required: true,
+    validator: (prop) => typeof prop.template === 'string'
   },
   bgColor: {
     type: String,

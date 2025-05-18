@@ -358,20 +358,23 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import { useTripStore } from '~/stores/tripStore'
+import { useClientStore } from '~/stores/clientStore'
+import { useTicketStore } from '~/stores/ticketStore'
 import BusSeatMapPrint from '~/components/BusSeatMapPrint.vue'
-import tripService from '~/services/tripService'
-import clientService from '~/services/clientService'
-import ticketService from '~/services/ticketService'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const tripStore = useTripStore()
+const clientStore = useClientStore()
+const ticketStore = useTicketStore()
 
 // Estado
 const loading = ref(true)
 const error = ref(null)
 const submitting = ref(false)
-const trip = ref(null)
+
 const selectedSeats = ref([])
 const occupiedSeats = ref([])
 const clientType = ref('existing')
@@ -384,7 +387,10 @@ const newClient = ref({
   email: ''
 })
 const paymentMethod = ref('cash')
-const ticketPrice = ref(150) // Precio por boleto (en un entorno real, vendría del backend)
+const ticketPrice = ref(0)
+
+// Reactive trip data from store
+const trip = computed(() => tripStore.currentTrip)
 
 // Obtener números de asientos seleccionados
 const selectedSeatNumbers = computed(() => {
@@ -392,43 +398,37 @@ const selectedSeatNumbers = computed(() => {
 })
 
 // Clientes filtrados según la búsqueda
-const filteredClients = ref([])
+const filteredClients = computed(() => clientStore.searchResults || [])
 
-// Función para buscar clientes usando el servicio
+// Función para buscar clientes usando el store
 const searchClientsByTerm = async () => {
   if (!clientSearch.value || clientSearch.value.length < 3) {
-    filteredClients.value = []
+    clientStore.clearSearchResults()
     return
   }
 
   try {
-    // Usar el servicio para buscar clientes
-    const clients = await clientService.searchClients(clientSearch.value)
-    filteredClients.value = clients.map(client => ({
-      id: client.id,
-      name: client.firstname && client.lastname ? `${client.firstname} ${client.lastname}` : client.name || 'Sin nombre',
-      ci: client.ci || client.document_id || 'Sin CI',
-      phone: client.phone || 'Sin teléfono',
-      email: client.email || ''
-    }))
-  } catch (error) {
-    console.error('Error al buscar clientes:', error)
-    filteredClients.value = []
+    await clientStore.searchClients(clientSearch.value)
+  } catch (e) {
+    console.error('Error al buscar clientes:', e)
+    clientStore.clearSearchResults()
   }
 }
 
 // Observar cambios en la búsqueda de clientes
-watch(clientSearch, async (newValue) => {
+watch(clientSearch, async (newValue, oldValue) => {
   if (newValue && newValue.length >= 3) {
-    await searchClientsByTerm()
-  } else {
-    filteredClients.value = []
+    if (newValue !== oldValue) {
+        await searchClientsByTerm()
+    }
+  } else if (!newValue && clientStore.searchResults && clientStore.searchResults.length > 0) {
+    clientStore.clearSearchResults()
   }
-}, { debounce: 300 }) // Debounce para evitar demasiadas llamadas a la API
+}, { deep: true })
 
 // Monto total
 const totalAmount = computed(() => {
-  return selectedSeatNumbers.value.length * ticketPrice.value
+  return selectedSeats.value.length * (trip.value?.price || ticketPrice.value || 0)
 })
 
 // Validación del formulario
@@ -442,17 +442,14 @@ const isFormValid = computed(() => {
   }
 })
 
-// Comprobar autenticación al montar el componente
-onMounted(() => {
-  // Si el usuario no está autenticado, redirigir a login
+onMounted(async () => {
   if (!authStore.isAuthenticated) {
     router.push('/login')
     return
   }
 
-  // Obtener parámetros de la URL
   const tripId = route.query.trip
-  const seats = route.query.seats
+  const seatsQueryParam = route.query.seats
 
   if (!tripId) {
     error.value = 'No se ha especificado un viaje'
@@ -460,12 +457,14 @@ onMounted(() => {
     return
   }
 
-  if (seats) {
-    selectedSeatNumbers.value = seats.split(',')
-  }
+  await fetchTripDetails(tripId)
 
-  // Cargar detalles del viaje
-  fetchTripDetails(tripId)
+  if (seatsQueryParam && trip.value && trip.value.seats) {
+    const seatNumbersFromQuery = seatsQueryParam.split(',').map(s => parseInt(s))
+    selectedSeats.value = trip.value.seats
+      .filter(seat => seatNumbersFromQuery.includes(seat.number))
+      .map(seat => ({ ...seat, status: 'selected' }));
+  }
 })
 
 // Cargar detalles del viaje
@@ -474,45 +473,21 @@ const fetchTripDetails = async (tripId) => {
   error.value = null
 
   try {
-    // Obtener detalles del viaje usando el servicio
-    trip.value = await tripService.getTripById(tripId)
+    await tripStore.fetchTripById(tripId)
 
-    // Obtener asientos disponibles y ocupados
-    const seatsData = await tripService.getAvailableSeats(tripId)
-
-    // Actualizar la información de asientos en el objeto trip
-    if (trip.value) {
-      trip.value.total_seats = seatsData.totalSeats || trip.value.total_seats
-      trip.value.available_seats = seatsData.availableSeats || trip.value.available_seats
-      trip.value.occupied_seats = seatsData.occupiedSeats || []
-      trip.value.available_seat_numbers = seatsData.availableSeatNumbers || []
-
-      // Actualizar precio del boleto (en un entorno real, esto vendría del backend)
-      ticketPrice.value = trip.value.price || 150
-
-      // Usar los asientos ocupados reales de la API
-      occupiedSeats.value = trip.value.occupied_seats
-
-      // Convertir los números de asientos seleccionados a objetos de asiento
-      if (route.query.seats) {
-        const seatNumbers = route.query.seats.split(',')
-        selectedSeats.value = seatNumbers.map(number => ({
-          id: parseInt(number),
-          number: parseInt(number),
-          status: 'available'
-        }))
-      }
+    if (tripStore.currentTrip) {
+      occupiedSeats.value = tripStore.currentTrip.occupied_seats || []
+    } else {
+      throw new Error("Viaje no encontrado o no se pudo cargar.")
     }
 
   } catch (err) {
     console.error('Error al cargar los detalles del viaje:', err)
-    error.value = 'No se pudieron cargar los detalles del viaje. Intente nuevamente.'
+    error.value = tripStore.error || 'No se pudieron cargar los detalles del viaje. Intente nuevamente.'
   } finally {
     loading.value = false
   }
 }
-
-// Ya no necesitamos generar asientos ocupados simulados porque los obtenemos de la API
 
 // Seleccionar cliente
 const selectClient = (client) => {
@@ -542,59 +517,109 @@ const handleSubmit = async () => {
   if (!isFormValid.value) return
 
   submitting.value = true
-  error.value = null
+  error.value = null 
+  ticketStore.clearError()
+  clientStore.clearError()
 
   try {
-    let clientId = null
+    let finalClientId = null
 
-    // Si es un cliente nuevo, crearlo primero
     if (clientType.value === 'new') {
       try {
         const clientData = {
           firstname: newClient.value.name.split(' ')[0],
-          lastname: newClient.value.name.split(' ').slice(1).join(' '),
+          lastname: newClient.value.name.split(' ').slice(1).join(' ') || newClient.value.name.split(' ')[0],
           document_id: newClient.value.ci,
           phone: newClient.value.phone,
           email: newClient.value.email || null
         }
-
-        const createdClient = await clientService.createClient(clientData)
-        clientId = createdClient.id
+        const createdClient = await clientStore.createClient(clientData)
+        
+        if (clientStore.error || !createdClient || !createdClient.id) {
+          throw new Error(clientStore.error || 'Respuesta inválida al crear cliente.')
+        }
+        finalClientId = createdClient.id
       } catch (clientError) {
         console.error('Error al crear el cliente:', clientError)
-        throw new Error('No se pudo crear el cliente. ' + clientError.message)
+        error.value = `No se pudo crear el cliente: ${clientStore.error || clientError.message}`
+        submitting.value = false
+        return
       }
     } else {
-      // Si es un cliente existente, usar su ID
-      clientId = selectedClient.value.id
+      if (!selectedClient.value || !selectedClient.value.id) {
+        throw new Error('Cliente existente no seleccionado correctamente.')
+      }
+      finalClientId = selectedClient.value.id
     }
 
-    // Crear los tickets para cada asiento seleccionado
-    const ticketPromises = selectedSeatNumbers.value.map(async (seatNumber) => {
+    if (!finalClientId) {
+        error.value = 'ID de cliente no disponible.'
+        submitting.value = false
+        return
+    }
+
+    const ticketPromises = selectedSeats.value.map(async (seat) => {
+      if (!seat || typeof seat.id === 'undefined') {
+        console.error('Asiento inválido en la selección:', seat)
+        throw new Error(`Asiento inválido: ${seat.number || 'desconocido'}. Falta ID.`);
+      }
       const ticketData = {
         trip_id: trip.value.id,
-        seat_id: seatNumber, // Asumiendo que el ID del asiento es el mismo que su número
-        client_id: clientId,
-        state: 'confirmed', // Estado inicial del ticket
-        // Aquí podríamos añadir más datos como el precio, método de pago, etc.
-        // si la API los requiere
+        seat_id: seat.id, 
+        client_id: finalClientId,
+        status: 'confirmed',
+        price: trip.value?.price_per_seat || trip.value?.price || ticketPrice.value || 0, 
+        payment_method: paymentMethod.value,
       }
-
-      return ticketService.createTicket(ticketData)
+      return ticketStore.createTicket(ticketData)
     })
 
-    // Esperar a que se creen todos los tickets
-    const createdTickets = await Promise.all(ticketPromises)
+    const createdTicketsResults = await Promise.allSettled(ticketPromises)
+    
+    const successfulTickets = []
+    const failedTicketCreationErrors = []
 
-    console.log('Tickets creados:', createdTickets)
+    for (const result of createdTicketsResults) {
+      if (result.status === 'fulfilled' && result.value && result.value.id) {
+         successfulTickets.push(result.value);
+      } else {
+        let errMsg = 'Error desconocido al crear un boleto.'
+        if (result.reason) {
+            errMsg = result.reason.message;
+            if (result.reason.response && result.reason.response.data && result.reason.response.data.detail) {
+                errMsg = result.reason.response.data.detail;
+            }
+        }
+        failedTicketCreationErrors.push(errMsg)
+        console.error('Error al crear un ticket:', result.reason || 'Motivo desconocido');
+      }
+    }
 
-    // Redirigir a la página de confirmación con los IDs de los tickets
-    const ticketIds = createdTickets.map(ticket => ticket.id).join(',')
-    router.push(`/tickets/confirmation?ids=${ticketIds}`)
+    if (failedTicketCreationErrors.length > 0) {
+      const combinedErrorMsg = `Falló la creación de ${failedTicketCreationErrors.length} boleto(s): ${failedTicketCreationErrors.join('; ')}`
+      error.value = combinedErrorMsg
+      if (successfulTickets.length === 0) { 
+        submitting.value = false
+        return
+      }
+      // If some tickets were successful, we might still proceed or just show the error and let user retry.
+      // For now, if there are any errors, we stop before redirecting IF NO tickets were successful.
+    }
+    
+    if (successfulTickets.length === 0) {
+        error.value = 'No se pudo crear ningún boleto. Verifique los detalles e intente nuevamente.'
+        submitting.value = false
+        return
+    }
 
-  } catch (err) {
-    console.error('Error al procesar la venta:', err)
-    error.value = 'No se pudo procesar la venta: ' + (err.message || 'Error desconocido')
+    console.log('Tickets creados exitosamente:', successfulTickets)
+
+    const ticketIds = successfulTickets.map(ticket => ticket.id).join(',')
+    router.push(`/tickets/confirmation?ids=${ticketIds}&tripId=${trip.value.id}`)
+
+  } catch (err) { 
+    console.error('Error general al procesar la venta:', err)
+    error.value = `No se pudo procesar la venta: ${err.message || ticketStore.error || clientStore.error || 'Error desconocido general'}`
   } finally {
     submitting.value = false
   }
@@ -612,7 +637,7 @@ const formatDate = (dateString) => {
 }
 
 // Definir la metadata de la página
-definePageMeta({
-  middleware: ['auth'] // Aplicar middleware de autenticación
-})
+// definePageMeta({
+//   middleware: ['auth'] // Aplicar middleware de autenticación - REMOVED as auth.global.ts handles this
+// })
 </script>

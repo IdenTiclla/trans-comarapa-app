@@ -1,5 +1,6 @@
 // Servicio para gestionar la autenticación
 import { useRuntimeConfig } from 'nuxt/app'
+import apiFetch from '~/utils/api'
 
 // Obtener la URL base de la API
 const getApiBaseUrl = () => {
@@ -10,53 +11,43 @@ const getApiBaseUrl = () => {
 // Iniciar sesión
 const login = async (email, password) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-
-    // Crear un objeto FormData para enviar los datos en el formato que espera OAuth2PasswordRequestForm
     const formData = new URLSearchParams()
     formData.append('username', email)
     formData.append('password', password)
 
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/auth/login`, {
+    // apiFetch already includes baseURL. /auth/login is the endpoint.
+    // It also handles errors globally, but we can catch for specific login logic.
+    const data = await apiFetch('/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        // apiFetch adds Authorization if a token exists, but for login, it's not needed initially.
+        // Content-Type is important for FastAPI's OAuth2PasswordRequestForm
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formData
+      body: formData,
     })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al iniciar sesión: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    // Guardar el token en localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', data.access_token)
-
-      // Guardar el refresh_token si existe
-      if (data.refresh_token) {
-        localStorage.setItem('refresh_token', data.refresh_token)
+    if (data && data.access_token) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', data.access_token)
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token)
+        }
+        const userInfo = {
+          id: data.user_id,
+          role: data.role,
+          firstname: data.firstname || '',
+          lastname: data.lastname || '',
+        }
+        localStorage.setItem('user_data', JSON.stringify(userInfo))
       }
-
-      // Construir un objeto de usuario a partir de los datos disponibles
-      const userInfo = {
-        id: data.user_id,
-        role: data.role,
-        firstname: data.firstname || '',
-        lastname: data.lastname || ''
-      }
-
-      localStorage.setItem('user_data', JSON.stringify(userInfo))
     }
-
     return data
   } catch (error) {
-    console.error('Error al iniciar sesión:', error)
-    throw error
+    console.error('Error específico en authService.login:', error.data?.detail || error.message || error)
+    // Re-throw the error so the store can catch it and set its error state
+    // error.data might contain the actual error message from the server via ofetch
+    throw new Error(error.data?.detail || error.message || 'Failed to login')
   }
 }
 
@@ -66,6 +57,7 @@ const logout = () => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('user_data')
+    // Potentially notify other tabs/windows, or make an API call to invalidate session/token if backend supports it
   }
 }
 
@@ -89,14 +81,11 @@ const getToken = () => {
 const getUserData = () => {
   if (typeof window !== 'undefined') {
     const userData = localStorage.getItem('user_data')
-
-    // Verificar que userData no sea null, undefined o la cadena "undefined"
     if (userData && userData !== 'undefined') {
       try {
         return JSON.parse(userData)
       } catch (error) {
         console.error('Error al analizar los datos del usuario:', error)
-        // Si hay un error al analizar, eliminar los datos corruptos
         localStorage.removeItem('user_data')
       }
     }
@@ -107,43 +96,46 @@ const getUserData = () => {
 // Refrescar el token
 const refreshToken = async () => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const refreshToken = localStorage.getItem('refresh_token')
-
-    if (!refreshToken) {
-      throw new Error('No hay token de refresco')
+    const currentRefreshToken = localStorage.getItem('refresh_token')
+    if (!currentRefreshToken) {
+      // No need to proceed if there's no refresh token.
+      // The apiFetch onResponseError for 401 might have already logged out.
+      throw new Error('No refresh token available.')
     }
 
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+    // apiFetch will use its configured baseURL and add Authorization header with the current access_token if present.
+    // For refresh token, some APIs might not require Authorization header, or require the refresh token itself as Bearer.
+    // Assuming /auth/refresh expects { refresh_token: '...' } in body and no specific auth header, or apiFetch handles it.
+    const data = await apiFetch('/auth/refresh', { // Endpoint for refreshing the token
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+      body: {
+        refresh_token: currentRefreshToken, // FastAPI might expect this in body
       },
-      body: JSON.stringify({
-        refresh_token: refreshToken
-      })
+      // No specific 'Content-Type' header here, apiFetch defaults to JSON for objects usually.
+      // If server expects x-www-form-urlencoded, it needs to be set explicitly.
+      // The current apiFetch in utils/api.js doesn't automatically set Content-Type for POST like this.
+      // We should ensure this matches backend expectations. Assuming JSON for now.
+      headers: {
+        'Content-Type': 'application/json', // Explicitly set for safety
+      }
     })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al refrescar el token: ${response.status}`)
+    if (data && data.access_token) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', data.access_token)
+        // Backend should also return a new refresh_token if it supports refresh token rotation
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token)
+        }
+      }
     }
-
-    const data = await response.json()
-
-    // Guardar el nuevo token en localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', data.access_token)
-      localStorage.setItem('refresh_token', data.refresh_token)
-    }
-
     return data
   } catch (error) {
-    console.error('Error al refrescar el token:', error)
-    // Si hay un error al refrescar el token, cerrar sesión
-    logout()
-    throw error
+    console.error('Error específico en authService.refreshToken:', error.data?.detail || error.message || error)
+    // apiFetch's onResponseError for 401 on /auth/refresh should ideally handle logout.
+    // Re-throwing allows the store to also react if needed.
+    logout() // Ensure logout if refresh fails critically
+    throw new Error(error.data?.detail || error.message || 'Failed to refresh token')
   }
 }
 

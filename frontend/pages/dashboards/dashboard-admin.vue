@@ -79,7 +79,8 @@ const userInfo = computed(() => authStore.user || {})
 
 // Definir la metadata de la página
 definePageMeta({
-  middleware: ['auth'],
+  // middleware: ['auth'], // Handled by auth.global.ts
+  // layout: 'admin', // Removed to use default layout
   // Definir los roles que pueden acceder a esta página
   requiredRoles: ['admin']
 })

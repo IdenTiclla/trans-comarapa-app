@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   // Configuración de runtime
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000/api/v1'
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
     }
   },
 
@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 
   // Configuración de rutas
   routeRules: {
-    // Aplicar middleware de autenticación a todas las rutas excepto login
-    '/**': { middleware: ['auth'] }
+    // The incorrect '/**': { middleware: ['auth'] } line should be removed.
+    // Example of a correct routeRule: 'admin/**': { ssr: false }
   }
 })

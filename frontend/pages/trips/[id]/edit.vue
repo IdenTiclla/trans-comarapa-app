@@ -16,11 +16,11 @@
         
         <h1 class="text-2xl font-semibold text-gray-900 mb-6">Editar Viaje</h1>
         
-        <div v-if="loading" class="flex justify-center py-12">
+        <div v-if="formLoading" class="flex justify-center py-12">
           <p class="text-gray-500">Cargando información del viaje...</p>
         </div>
         
-        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <div v-else-if="pageError" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -28,7 +28,7 @@
               </svg>
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+              <h3 class="text-sm font-medium text-red-800">{{ pageError }}</h3>
             </div>
           </div>
         </div>
@@ -37,35 +37,19 @@
           <div class="px-4 py-5 sm:p-6">
             <form @submit.prevent="handleSubmit">
               <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <!-- Origen -->
+                <!-- Ruta -->
                 <div class="sm:col-span-3">
-                  <label for="origin" class="block text-sm font-medium text-gray-700">Origen</label>
+                  <label for="route_id" class="block text-sm font-medium text-gray-700">Ruta</label>
                   <div class="mt-1">
                     <select 
-                      id="origin" 
-                      v-model="formData.origin"
+                      id="route_id" 
+                      v-model="formData.route_id"
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       required
                     >
-                      <option v-for="location in locations" :key="location" :value="location">
-                        {{ location }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                
-                <!-- Destino -->
-                <div class="sm:col-span-3">
-                  <label for="destination" class="block text-sm font-medium text-gray-700">Destino</label>
-                  <div class="mt-1">
-                    <select 
-                      id="destination" 
-                      v-model="formData.destination"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option v-for="location in locations" :key="location" :value="location">
-                        {{ location }}
+                      <option :value="null" disabled>Seleccione una ruta</option>
+                      <option v-for="route_item in availableRoutes" :key="route_item.id" :value="route_item.id">
+                        {{ route_item.origin }} - {{ route_item.destination }}
                       </option>
                     </select>
                   </div>
@@ -127,7 +111,7 @@
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       required
                     >
-                      <option v-for="bus in buses" :key="bus.id" :value="bus.id">
+                      <option v-for="bus in availableBuses" :key="bus.id" :value="bus.id">
                         {{ bus.plate }} - {{ bus.model }}
                       </option>
                     </select>
@@ -144,7 +128,7 @@
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       required
                     >
-                      <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
+                      <option v-for="driver in availableDrivers" :key="driver.id" :value="driver.id">
                         {{ driver.name }}
                       </option>
                     </select>
@@ -161,7 +145,7 @@
                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       required
                     >
-                      <option v-for="assistant in assistants" :key="assistant.id" :value="assistant.id">
+                      <option v-for="assistant in availableAssistants" :key="assistant.id" :value="assistant.id">
                         {{ assistant.name }}
                       </option>
                     </select>
@@ -194,159 +178,146 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
+import { useTripStore } from '~/stores/tripStore'
+import { useRouteStore } from '~/stores/routeStore'
+import { useBusStore } from '~/stores/busStore'
+import { useDriverStore } from '~/stores/driverStore'
+import { useAssistantStore } from '~/stores/assistantStore'
+// Location store might not be needed if routes are used directly
+// import { useLocationStore } from '~/stores/locationStore'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const tripStore = useTripStore()
+const routeStore = useRouteStore()
+const busStore = useBusStore()
+const driverStore = useDriverStore()
+const assistantStore = useAssistantStore()
 
-const loading = ref(true)
+const formLoading = ref(true) // For initial data load
 const submitting = ref(false)
-const error = ref(null)
+// Error will primarily be handled by tripStore.error, but a local one can be for specific form issues
+const pageError = ref(null) 
 
-// Datos para los selectores
-const locations = [
-  'Santa Cruz',
-  'Comarapa',
-  'Cochabamba',
-  'La Paz',
-  'Sucre',
-  'Tarija',
-  'Oruro',
-  'Potosí',
-  'Trinidad',
-  'Cobija'
-]
+// Data for select dropdowns
+const availableRoutes = computed(() => routeStore.routes)
+const availableBuses = computed(() => busStore.buses)
+const availableDrivers = computed(() => driverStore.drivers)
+const availableAssistants = computed(() => assistantStore.assistants)
 
-const buses = [
-  { id: 1, plate: 'ABC-123', model: 'Mercedes Benz O-500' },
-  { id: 2, plate: 'DEF-456', model: 'Volvo 9800' },
-  { id: 3, plate: 'GHI-789', model: 'Scania K410' }
-]
-
-const drivers = [
-  { id: 1, name: 'Juan Pérez' },
-  { id: 2, name: 'Carlos Rodríguez' },
-  { id: 3, name: 'Roberto Gómez' }
-]
-
-const assistants = [
-  { id: 1, name: 'María López' },
-  { id: 2, name: 'Ana Martínez' },
-  { id: 3, name: 'Laura Sánchez' }
-]
-
-// Datos del formulario
+// Form data
 const formData = reactive({
-  origin: '',
-  destination: '',
+  route_id: null,
   departure_date: '',
   departure_time: '',
   status: 'scheduled',
   bus_id: null,
   driver_id: null,
-  assistant_id: null
+  assistant_id: null,
+  price: 0, // Assuming price is part of trip editing
 })
 
-// Comprobar autenticación al montar el componente
-onMounted(() => {
-  // Si el usuario no está autenticado, redirigir a login
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-  
-  // Cargar datos del viaje
-  fetchTripData()
-})
+const tripId = route.params.id;
 
-// Cargar datos del viaje
-const fetchTripData = async () => {
-  loading.value = true
-  error.value = null
-  
-  try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch(`/api/trips/${route.params.id}`)
-    
-    // Simulación de datos para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Datos de ejemplo
-    const tripData = {
-      id: parseInt(route.params.id),
-      route: {
-        origin: 'Santa Cruz',
-        destination: 'Comarapa'
-      },
-      departure_date: '2023-04-15',
-      departure_time: '08:30',
-      status: 'scheduled',
-      bus: {
-        id: 1,
-        plate: 'ABC-123',
-        model: 'Mercedes Benz O-500'
-      },
-      driver: {
-        id: 1,
-        name: 'Juan Pérez'
-      },
-      assistant: {
-        id: 2,
-        name: 'María López'
-      }
+// Watch for currentTrip to populate form
+watch(() => tripStore.currentTrip, (newTrip) => {
+  if (newTrip && newTrip.id === tripId) { // Ensure it's the correct trip for this page
+    formData.route_id = newTrip.route?.id || null;
+    if (newTrip.departure_datetime || newTrip.departure_date) {
+        // Handle if departure_datetime is available, or split departure_date
+        const datetime = new Date(newTrip.departure_datetime || newTrip.departure_date);
+        formData.departure_date = datetime.toISOString().split('T')[0];
+        const hours = String(datetime.getHours()).padStart(2, '0');
+        const minutes = String(datetime.getMinutes()).padStart(2, '0');
+        formData.departure_time = `${hours}:${minutes}`;
+    } else {
+        formData.departure_date = '';
+        formData.departure_time = '';
     }
-    
-    // Actualizar formData con los datos del viaje
-    formData.origin = tripData.route.origin
-    formData.destination = tripData.route.destination
-    formData.departure_date = tripData.departure_date
-    formData.departure_time = tripData.departure_time
-    formData.status = tripData.status
-    formData.bus_id = tripData.bus.id
-    formData.driver_id = tripData.driver.id
-    formData.assistant_id = tripData.assistant.id
-    
-  } catch (err) {
-    console.error('Error al cargar los datos del viaje:', err)
-    error.value = 'No se pudieron cargar los datos del viaje. Intente nuevamente.'
-  } finally {
-    loading.value = false
+    formData.status = newTrip.status || 'scheduled';
+    formData.bus_id = newTrip.bus?.id || null;
+    formData.driver_id = newTrip.driver?.id || null;
+    formData.assistant_id = newTrip.assistant?.id || null;
+    formData.price = newTrip.price_per_seat || newTrip.price || 0;
+    pageError.value = null; // Clear page error if trip loads
+  } else if (tripStore.error && !newTrip) {
+    pageError.value = tripStore.error; // Show store error if trip failed to load
   }
-}
+}, { immediate: true, deep: true });
 
-// Manejar envío del formulario
-const handleSubmit = async () => {
-  submitting.value = true
-  
-  try {
-    // En un entorno real, aquí se haría una llamada a la API
-    // const response = await fetch(`/api/trips/${route.params.id}`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify(formData)
-    // })
-    
-    // Simulación para desarrollo
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Redirigir a la página de detalle del viaje
-    router.push(`/trips/${route.params.id}`)
-    
-  } catch (err) {
-    console.error('Error al guardar los cambios:', err)
-    error.value = 'No se pudieron guardar los cambios. Intente nuevamente.'
-  } finally {
-    submitting.value = false
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    router.push('/login');
+    return;
   }
-}
+
+  formLoading.value = true;
+  pageError.value = null;
+  tripStore.clearError(); // Clear previous errors
+
+  try {
+    // Fetch all necessary data in parallel
+    await Promise.all([
+      tripStore.fetchTripById(tripId),
+      routeStore.fetchRoutes(),
+      busStore.fetchBuses(),
+      driverStore.fetchDrivers(),
+      assistantStore.fetchAssistants(),
+    ]);
+
+    if (tripStore.error) {
+        pageError.value = tripStore.error
+    }
+    // The watch effect will populate formData once tripStore.currentTrip is set
+
+  } catch (err) {
+    console.error('Error loading data for trip edit:', err);
+    pageError.value = 'No se pudo cargar la información necesaria para editar el viaje.';
+  } finally {
+    formLoading.value = false;
+  }
+});
+
+const handleSubmit = async () => {
+  if (!tripId) {
+    pageError.value = "ID de viaje no encontrado.";
+    return;
+  }
+  submitting.value = true;
+  tripStore.clearError();
+  pageError.value = null;
+
+  try {
+    const payload = {
+      ...formData,
+      // Combine date and time if backend expects a single datetime field
+      departure_datetime: `${formData.departure_date}T${formData.departure_time}:00`, 
+    };
+    // Remove individual date/time if combined
+    delete payload.departure_date;
+    delete payload.departure_time;
+
+    await tripStore.updateExistingTrip(tripId, payload);
+
+    if (tripStore.error) {
+      pageError.value = tripStore.error;
+    } else {
+      router.push(`/trips/${tripId}`); // Navigate to trip detail page on success
+    }
+  } catch (err) {
+    console.error('Error al guardar los cambios del viaje:', err);
+    pageError.value = err.message || 'No se pudieron guardar los cambios.';
+  } finally {
+    submitting.value = false;
+  }
+};
 
 // Definir la metadata de la página
 definePageMeta({
-  middleware: ['auth'] // Aplicar middleware de autenticación
-})
+  // middleware: ['auth'] // Aplicar middleware de autenticación - REMOVED as auth.global.ts handles this
+});
 </script>

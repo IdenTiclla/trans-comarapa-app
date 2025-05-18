@@ -1,5 +1,6 @@
 // Servicio para gestionar los datos de viajes
 import { useRuntimeConfig } from 'nuxt/app'
+import apiFetch from '~/utils/api'
 
 // Obtener el token de autenticación del localStorage
 const getAuthToken = () => {
@@ -29,475 +30,129 @@ const handleApiError = async (response, defaultMessage) => {
   }
 }
 
-// Obtener todos los viajes
-const getTrips = async (filters = {}, sort = {}, pagination = {}) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
+const resourceUrl = '/trips'
 
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
+// Primary function to get trips, using apiFetch and handling various parameters
+export const getTrips = async (params = {}) => {
+  // Params can include:
+  // For filtering: search, origin, destination, status, date, date_from, date_to, min_seats, upcoming
+  // For sorting: sort_by, sort_direction
+  // For pagination: page, limit (or itemsPerPage which needs to be mapped to limit)
 
-    // Construir los parámetros de consulta
-    const queryParams = new URLSearchParams()
+  const queryParams = { ...params };
 
-    // Añadir filtros
-    if (filters.search) queryParams.append('search', filters.search)
-    if (filters.origin) queryParams.append('origin', filters.origin)
-    if (filters.destination) queryParams.append('destination', filters.destination)
-    if (filters.status) queryParams.append('status', filters.status)
-    if (filters.date) queryParams.append('date', filters.date)
-    if (filters.dateFrom) queryParams.append('date_from', filters.dateFrom)
-    if (filters.dateTo) queryParams.append('date_to', filters.dateTo)
-    if (filters.minSeats) queryParams.append('min_seats', filters.minSeats)
-
-    // Añadir ordenamiento
-    if (sort.by) {
-      // Mapear los nombres de columnas del frontend a los nombres de columnas de la API
-      const sortColumnMap = {
-        'origin': 'route.origin_location.name',
-        'destination': 'route.destination_location.name',
-        'departure_date': 'trip_datetime',
-        'departure_time': 'trip_datetime',
-        'status': 'status',
-        'seats': 'available_seats',
-        'id': 'id'
-      }
-
-      const sortColumn = sortColumnMap[sort.by] || sort.by
-      queryParams.append('sort_by', sortColumn)
-      queryParams.append('sort_direction', sort.direction || 'asc')
-    }
-
-    // Añadir paginación - usar los parámetros que espera la API
-    queryParams.append('skip', ((pagination.page - 1) * pagination.itemsPerPage).toString())
-    queryParams.append('limit', pagination.itemsPerPage.toString())
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/trips?${queryParams.toString()}`)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/trips?${queryParams.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al obtener viajes: ${response.status}`)
-    }
-
-    const responseData = await response.json()
-    console.log('Respuesta de la API:', responseData)
-
-    // Verificar la estructura de la respuesta
-    let tripsData = [];
-    let totalItems = 0;
-
-    if (Array.isArray(responseData)) {
-      // Si la respuesta es un array, asumimos que son los viajes directamente
-      tripsData = responseData;
-      totalItems = responseData.length;
-    } else if (responseData.items && Array.isArray(responseData.items)) {
-      // Si la respuesta tiene una propiedad 'items' que es un array
-      tripsData = responseData.items;
-      totalItems = responseData.total || responseData.items.length;
-    } else {
-      console.error('Formato de respuesta inesperado:', responseData);
-      throw new Error('Formato de respuesta inesperado');
-    }
-
-    // Transformar la respuesta al formato esperado por el frontend
-    const transformedTrips = await Promise.all(tripsData.map(async trip => {
-      try {
-        // Verificar que los datos necesarios existen
-        if (!trip) {
-          console.error('Trip es null o undefined');
-          return null;
-        }
-
-        // Extraer origen y destino con manejo de errores
-        let origin = 'Desconocido';
-        let destination = 'Desconocido';
-
-        if (trip.route) {
-          if (trip.route.origin_location && trip.route.origin_location.name) {
-            origin = trip.route.origin_location.name;
-          } else if (typeof trip.route.origin === 'string') {
-            origin = trip.route.origin;
-          }
-
-          if (trip.route.destination_location && trip.route.destination_location.name) {
-            destination = trip.route.destination_location.name;
-          } else if (typeof trip.route.destination === 'string') {
-            destination = trip.route.destination;
-          }
-        }
-
-        // Extraer fecha y hora con manejo de errores
-        let departureDate = '';
-        let departureTime = '';
-
-        if (trip.trip_datetime) {
-          const parts = trip.trip_datetime.split('T');
-          if (parts.length >= 2) {
-            departureDate = parts[0];
-            departureTime = parts[1].substring(0, 5);
-          }
-        }
-
-        // Extraer información del conductor con manejo de errores
-        let driver = { id: 0, name: 'No asignado' };
-        if (trip.driver) {
-          driver = {
-            id: trip.driver.id || 0,
-            name: trip.driver.firstname && trip.driver.lastname ?
-              `${trip.driver.firstname} ${trip.driver.lastname}` :
-              trip.driver.name || 'No asignado'
-          };
-        }
-
-        // Extraer información del asistente con manejo de errores
-        let assistant = { id: 0, name: 'No asignado' };
-        if (trip.assistant) {
-          assistant = {
-            id: trip.assistant.id || 0,
-            name: trip.assistant.firstname && trip.assistant.lastname ?
-              `${trip.assistant.firstname} ${trip.assistant.lastname}` :
-              trip.assistant.name || 'No asignado'
-          };
-        }
-
-        // Extraer información del bus con manejo de errores
-        let bus = { id: 0, plate: 'No asignado', model: 'Desconocido', type: 'single-deck' };
-        if (trip.bus) {
-          bus = {
-            id: trip.bus.id || 0,
-            plate: trip.bus.license_plate || trip.bus.plate || 'No asignado',
-            model: trip.bus.model || 'Desconocido',
-            type: trip.bus.type || 'single-deck'
-          };
-        }
-
-        // Obtener asientos ocupados para este viaje
-        let occupiedSeats = [];
-        let totalSeats = trip.bus && trip.bus.capacity ? trip.bus.capacity : 40;
-        let availableSeats = 0;
-
-        try {
-          // Obtener asientos ocupados de la API
-          const seatsData = await getAvailableSeats(trip.id);
-          occupiedSeats = seatsData.occupiedSeats || [];
-
-          // Usar los datos de la API para total y disponibles si están disponibles
-          if (seatsData.totalSeats) {
-            totalSeats = seatsData.totalSeats;
-          }
-
-          // Calcular asientos disponibles basados en los datos reales
-          if (seatsData.availableSeats !== undefined) {
-            availableSeats = seatsData.availableSeats;
-          } else {
-            // Si no tenemos el número exacto, calcularlo basado en los asientos ocupados
-            availableSeats = totalSeats - occupiedSeats.length;
-          }
-        } catch (error) {
-          console.warn(`No se pudieron obtener los asientos ocupados para el viaje ${trip.id}:`, error);
-          // Si hay un error, usar valores por defecto
-          occupiedSeats = [];
-          availableSeats = trip.available_seats !== undefined ? trip.available_seats :
-            (totalSeats ? Math.ceil(totalSeats * 0.8) : 32);
-        }
-
-        // Asegurar que los números sean coherentes
-        if (availableSeats > totalSeats) {
-          availableSeats = totalSeats;
-        }
-
-        if (occupiedSeats.length > totalSeats) {
-          // Limitar los asientos ocupados al total de asientos
-          occupiedSeats = occupiedSeats.slice(0, totalSeats);
-        }
-
-        // Si tenemos asientos ocupados pero no tenemos asientos disponibles calculados correctamente
-        if (occupiedSeats.length > 0 && availableSeats + occupiedSeats.length !== totalSeats) {
-          // Recalcular asientos disponibles basados en los ocupados
-          availableSeats = totalSeats - occupiedSeats.length;
-        }
-
-        // Construir el objeto transformado
-        return {
-          id: trip.id,
-          route: {
-            origin,
-            destination
-          },
-          departure_date: departureDate,
-          departure_time: departureTime,
-          status: trip.status || 'scheduled',
-          total_seats: totalSeats,
-          available_seats: availableSeats,
-          occupied_seats: occupiedSeats,
-          driver,
-          assistant,
-          bus
-        };
-      } catch (err) {
-        console.error('Error al transformar viaje:', err, trip);
-        return null;
-      }
-    })).then(trips => trips.filter(trip => trip !== null)); // Filtrar cualquier viaje que no se pudo transformar
-
-    return {
-      trips: transformedTrips,
-      pagination: {
-        totalItems: totalItems,
-        totalPages: Math.ceil(totalItems / (pagination.itemsPerPage || 10)) || 1,
-        currentPage: pagination.page || 1,
-        itemsPerPage: pagination.itemsPerPage || 10
-      }
-    }
-  } catch (error) {
-    console.error('Error al obtener viajes:', error)
-
-    // No usar datos de ejemplo, simplemente lanzar el error para que el usuario sepa que hay un problema
-    console.error('Error al obtener viajes, no se pudieron cargar los datos de la API')
-
-    throw error
+  // Map pagination parameters if they come in a different format
+  if (params.itemsPerPage && !params.limit) {
+    queryParams.limit = params.itemsPerPage;
   }
-}
+  // Always remove itemsPerPage as it's frontend-specific
+  delete queryParams.itemsPerPage; 
 
-// Obtener un viaje por ID
-const getTripById = async (id) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/trips/${id}`)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/trips/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al obtener el viaje: ${response.status}`)
-    }
-
-    const tripData = await response.json()
-    console.log('Respuesta de la API (detalle de viaje):', tripData)
-
-    try {
-      // Verificar que los datos necesarios existen
-      if (!tripData) {
-        throw new Error('Los datos del viaje son null o undefined')
-      }
-
-      // Extraer origen y destino con manejo de errores
-      let origin = 'Desconocido'
-      let destination = 'Desconocido'
-
-      if (tripData.route) {
-        if (tripData.route.origin_location && tripData.route.origin_location.name) {
-          origin = tripData.route.origin_location.name
-        } else if (typeof tripData.route.origin === 'string') {
-          origin = tripData.route.origin
-        }
-
-        if (tripData.route.destination_location && tripData.route.destination_location.name) {
-          destination = tripData.route.destination_location.name
-        } else if (typeof tripData.route.destination === 'string') {
-          destination = tripData.route.destination
-        }
-      }
-
-      // Extraer fecha y hora con manejo de errores
-      let departureDate = ''
-      let departureTime = ''
-
-      if (tripData.trip_datetime) {
-        const parts = tripData.trip_datetime.split('T')
-        if (parts.length >= 2) {
-          departureDate = parts[0]
-          departureTime = parts[1].substring(0, 5)
-        }
-      }
-
-      // Extraer información del conductor con manejo de errores
-      let driver = { id: 0, name: 'No asignado' }
-      if (tripData.driver) {
-        driver = {
-          id: tripData.driver.id || 0,
-          name: tripData.driver.firstname && tripData.driver.lastname ?
-            `${tripData.driver.firstname} ${tripData.driver.lastname}` :
-            tripData.driver.name || 'No asignado'
-        }
-      }
-
-      // Extraer información del asistente con manejo de errores
-      let assistant = { id: 0, name: 'No asignado' }
-      if (tripData.assistant) {
-        assistant = {
-          id: tripData.assistant.id || 0,
-          name: tripData.assistant.firstname && tripData.assistant.lastname ?
-            `${tripData.assistant.firstname} ${tripData.assistant.lastname}` :
-            tripData.assistant.name || 'No asignado'
-        }
-      }
-
-      // Extraer información del bus con manejo de errores
-      let bus = { id: 0, plate: 'No asignado', model: 'Desconocido', type: 'single-deck' }
-      if (tripData.bus) {
-        bus = {
-          id: tripData.bus.id || 0,
-          plate: tripData.bus.license_plate || tripData.bus.plate || 'No asignado',
-          model: tripData.bus.model || 'Desconocido',
-          type: tripData.bus.type || 'single-deck'
-        }
-      }
-
-      // Obtener asientos ocupados para este viaje
-      let occupiedSeats = [];
-      let totalSeats = tripData.bus && tripData.bus.capacity ? tripData.bus.capacity : 40;
-      let availableSeats = 0;
-
-      try {
-        // Obtener asientos ocupados de la API
-        const seatsData = await getAvailableSeats(tripData.id);
-        occupiedSeats = seatsData.occupiedSeats || [];
-
-        // Usar los datos de la API para total y disponibles si están disponibles
-        if (seatsData.totalSeats) {
-          totalSeats = seatsData.totalSeats;
-        }
-
-        // Calcular asientos disponibles basados en los datos reales
-        if (seatsData.availableSeats !== undefined) {
-          availableSeats = seatsData.availableSeats;
-        } else {
-          // Si no tenemos el número exacto, calcularlo basado en los asientos ocupados
-          availableSeats = totalSeats - occupiedSeats.length;
-        }
-      } catch (error) {
-        console.warn(`No se pudieron obtener los asientos ocupados para el viaje ${tripData.id}:`, error);
-        // Si hay un error, usar valores por defecto
-        occupiedSeats = [];
-        availableSeats = tripData.available_seats !== undefined ? tripData.available_seats :
-          (totalSeats ? Math.ceil(totalSeats * 0.8) : 32);
-      }
-
-      // Asegurar que los números sean coherentes
-      if (availableSeats > totalSeats) {
-        availableSeats = totalSeats;
-      }
-
-      if (occupiedSeats.length > totalSeats) {
-        // Limitar los asientos ocupados al total de asientos
-        occupiedSeats = occupiedSeats.slice(0, totalSeats);
-      }
-
-      // Si tenemos asientos ocupados pero no tenemos asientos disponibles calculados correctamente
-      if (occupiedSeats.length > 0 && availableSeats + occupiedSeats.length !== totalSeats) {
-        // Recalcular asientos disponibles basados en los ocupados
-        availableSeats = totalSeats - occupiedSeats.length;
-      }
-
-      // Construir el objeto transformado
-      return {
-        id: tripData.id,
-        route: {
-          origin,
-          destination
-        },
-        departure_date: departureDate,
-        departure_time: departureTime,
-        status: tripData.status || 'scheduled',
-        total_seats: totalSeats,
-        available_seats: availableSeats,
-        occupied_seats: occupiedSeats,
-        driver,
-        assistant,
-        bus
-      }
-    } catch (err) {
-      console.error('Error al transformar los datos del viaje:', err)
-      throw err
-    }
-  } catch (error) {
-    console.error(`Error al obtener el viaje con ID ${id}:`, error)
-
-    // No usar datos de ejemplo, simplemente lanzar el error para que el usuario sepa que hay un problema
-    console.error('Error al obtener el viaje, no se pudieron cargar los datos de la API')
-
-    throw error
+  if (params.page && typeof queryParams.limit === 'number') { // Ensure limit is a number for calculation
+    // Assuming page is 1-indexed
+    queryParams.skip = (params.page - 1) * queryParams.limit;
+    delete queryParams.page; // Remove page if skip is calculated
+  } else if (params.page) {
+    // If limit isn't available to calculate skip, but page is sent,
+    // it's better to remove page to avoid potential conflict if skip is also 0 or undefined.
+    // Or, ensure a default limit is used for skip calculation if that's desired.
+    // For now, just remove page if skip cannot be reliably calculated with a limit.
+    delete queryParams.page;
   }
-}
 
-// No se utilizan funciones de generación de datos de ejemplo
-// ya que todos los datos provienen de la API real
 
-// Obtener asientos disponibles para un viaje
-const getAvailableSeats = async (tripId) => {
-  try {
-    const apiBaseUrl = getApiBaseUrl()
-    const token = getAuthToken()
-
-    if (!token) {
-      throw new Error('No hay token de autenticación')
-    }
-
-    console.log(`Realizando petición a: ${apiBaseUrl}/trips/${tripId}/available-seats`)
-
-    // Realizar la petición a la API
-    const response = await fetch(`${apiBaseUrl}/trips/${tripId}/available-seats`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Error en la respuesta de la API: ${response.status}`, errorText)
-      throw new Error(`Error al obtener asientos disponibles: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('Respuesta de la API (asientos disponibles):', data)
-
-    return {
-      totalSeats: data.total_seats || 0,
-      availableSeats: data.available_seats || 0,
-      occupiedSeats: data.occupied_seats || [],
-      availableSeatNumbers: data.available_seat_numbers || []
-    }
-  } catch (error) {
-    console.error(`Error al obtener asientos disponibles para el viaje ${tripId}:`, error)
-
-    // No usar datos de ejemplo, simplemente lanzar el error para que el usuario sepa que hay un problema
-    console.error('Error al obtener asientos disponibles, no se pudieron cargar los datos de la API')
-
-    throw error
+  // The 'upcoming' filter might be a boolean frontend concept.
+  // If backend expects specific date ranges or status for "upcoming":
+  if (params.upcoming === true) {
+    // This is an example; actual backend logic for 'upcoming' might differ.
+    // It might translate to date_from: today, status: 'scheduled,in_progress' etc.
+    queryParams.status = queryParams.status || 'scheduled,in_progress';
+    // Add date filtering if 'upcoming' implies it, e.g.:
+    // if (!queryParams.date_from) {
+    //   queryParams.date_from = new Date().toISOString().split('T')[0];
+    // }
+    delete queryParams.upcoming; // Remove 'upcoming' as backend might not understand it
   }
-}
+
+
+  try {
+    const response = await apiFetch(resourceUrl, { params: queryParams });
+    // Assuming the API response for a list of trips is an object like:
+    // { items: [...trips], total: N, page: N, limit: N }
+    // or just an array [...trips]
+    // The store or component should handle the exact structure.
+    return response;
+  } catch (error) {
+    console.error('Error in tripService.getTrips:', error.data?.detail || error.message, error);
+    // Propagate the error so the store/component can handle it (e.g., show a message to the user)
+    throw error;
+  }
+};
+
+export const getTripById = async (id) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}`);
+  } catch (error) {
+    console.error(`Error in tripService.getTripById for id ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+export const createTrip = async (tripData) => {
+  try {
+    return await apiFetch(resourceUrl, {
+      method: 'POST',
+      body: tripData,
+    });
+  } catch (error) {
+    console.error('Error in tripService.createTrip:', error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+export const updateTrip = async (id, tripData) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}`, {
+      method: 'PUT',
+      body: tripData,
+    });
+  } catch (error) {
+    console.error(`Error in tripService.updateTrip for id ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+export const deleteTrip = async (id) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.error(`Error in tripService.deleteTrip for id ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+
+// Example of a more specific function if needed, e.g., for fetching seat details
+export const getTripSeats = async (tripId) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${tripId}/seats`);
+  } catch (error) {
+    console.error(`Error fetching seats for trip ${tripId}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+// If there are other specific trip-related API calls, they can be added here.
+// For example, changing trip status, assigning driver/bus, etc.
 
 export default {
   getTrips,
   getTripById,
-  getAvailableSeats
-}
+  createTrip,
+  updateTrip,
+  deleteTrip,
+  getTripSeats,
+  // ... any other exported functions
+};

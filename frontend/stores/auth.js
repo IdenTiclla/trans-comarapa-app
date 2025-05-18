@@ -11,8 +11,17 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
-    userRole: (state) => state.user?.role || null
+    isAuthenticated: (state) => !!state.token && !!state.user,
+    userRole: (state) => state.user?.role || null,
+    userFullName: (state) => {
+      if (state.user) {
+        const firstName = state.user.firstname || '';
+        const lastName = state.user.lastname || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        return fullName || (state.user.username || 'Usuario Anónimo');
+      }
+      return 'Usuario Anónimo';
+    }
   },
 
   actions: {

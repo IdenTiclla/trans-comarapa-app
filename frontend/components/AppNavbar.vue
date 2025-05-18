@@ -70,12 +70,6 @@
               </template>
 
             </span>
-            <NuxtLink
-              to="/dashboard"
-              class="bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
-            >
-              Dashboard
-            </NuxtLink>
             <button
               @click="handleLogout"
               class="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
@@ -142,13 +136,6 @@
                 Usuario
               </template>
             </div>
-            <NuxtLink
-              to="/dashboard"
-              class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors text-center font-medium"
-              @click="isMenuOpen = false"
-            >
-              Dashboard
-            </NuxtLink>
             <button
               @click="handleLogoutMobile"
               class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors font-medium"

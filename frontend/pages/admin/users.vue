@@ -376,7 +376,7 @@ onMounted(async () => {
 // Definir metadatos de la página
 definePageMeta({
   layout: 'default',
-  middleware: ['auth', 'role'],
+  middleware: ['role'],
   meta: {
     requiredRoles: ['admin']
   }
