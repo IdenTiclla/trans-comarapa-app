@@ -20,8 +20,7 @@ API REST para la gestión de boletos, paquetes y viajes desarrollada con FastAPI
   - Instalación: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - Base de datos compatible con SQLAlchemy:
   - SQLite (para desarrollo local, no requiere configuración adicional)
-  - MySQL/MariaDB (recomendado para producción)
-  - PostgreSQL (alternativa para producción)
+  - MySQL (alternativa para producción)
 - Git (para clonar el repositorio)
 - Docker y Docker Compose (opcional, para ejecución en contenedores)
 
