@@ -78,19 +78,32 @@ async def get_trips(
     # Process trips to include additional information
     processed_trips = []
     for trip in trips:
-        # Get origin and destination names
-        origin_name = trip.route.origin_location.name if trip.route and trip.route.origin_location else "Unknown"
-        destination_name = trip.route.destination_location.name if trip.route and trip.route.destination_location else "Unknown"
+        origin_name = "Unknown"
+        destination_name = "Unknown"
+        route_price = 0
+        
+        if trip.route:
+            if trip.route.origin_location:
+                origin_name = trip.route.origin_location.name
+            if trip.route.destination_location:
+                destination_name = trip.route.destination_location.name
+            route_price = trip.route.price
 
-        # Get seat information
-        total_seats = trip.bus.capacity if trip.bus else 0
-        occupied_seats_count = db.query(func.count(TicketModel.id)).filter(
-            TicketModel.trip_id == trip.id,
-            TicketModel.state != 'cancelled'
-        ).scalar()
+        total_seats = 0
+        occupied_seats_count = 0
+        if trip.bus:
+            total_seats = trip.bus.capacity
+            # Ensure trip_id is valid for the subquery
+            if trip.id:
+                occupied_seats_count = db.query(func.count(TicketModel.id)).filter(
+                    TicketModel.trip_id == trip.id,
+                    TicketModel.state != 'cancelled'
+                ).scalar() or 0 # Ensure scalar() returns 0 if None
+            else: # Should not happen if trip is from DB, but defensive
+                occupied_seats_count = 0
+        
         available_seats = total_seats - occupied_seats_count
 
-        # Create processed trip with additional information
         processed_trip = {
             "id": trip.id,
             "trip_datetime": trip.trip_datetime,
@@ -102,13 +115,16 @@ async def get_trips(
             "route": {
                 "origin": origin_name,
                 "destination": destination_name,
-                "price": trip.route.price if trip.route else 0
+                "price": route_price
             },
             "total_seats": total_seats,
             "available_seats": available_seats,
-            "occupied_seats": occupied_seats_count
+            "occupied_seats": occupied_seats_count,
+            # Optionally include full driver/assistant/bus objects if needed by frontend
+            # "driver": DriverSchema.from_orm(trip.driver).model_dump() if trip.driver else None,
+            # "assistant": AssistantSchema.from_orm(trip.assistant).model_dump() if trip.assistant else None,
+            # "bus": trip.bus.to_dict() if trip.bus else None, # Assuming BusModel has to_dict() or use a schema
         }
-
         processed_trips.append(processed_trip)
 
     # Return trips with pagination information

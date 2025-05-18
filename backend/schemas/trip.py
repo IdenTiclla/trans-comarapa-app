@@ -19,6 +19,7 @@ class TripBase(BaseModel):
     assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
     bus_id: int = Field(..., description="Bus identifier", example=3, gt=0)
     route_id: int = Field(..., description="Route identifier", example=4, gt=0)
+    status: Optional[str] = Field('scheduled', description="Trip status (e.g., scheduled, in_progress, completed, cancelled)", example="scheduled")
     secretary_id: int = Field(..., description="Secretary identifier", example=5, gt=0)
     
     @field_validator('assistant_id')

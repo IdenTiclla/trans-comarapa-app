@@ -508,12 +508,41 @@ def seed_db():
             (22, 30)   # 10:30 PM
         ]
 
+        # Posibles estados para los viajes
+        # Weighted towards 'scheduled' for future dates, others for variety
+        possible_trip_statuses = ['scheduled', 'scheduled', 'scheduled', 'scheduled', 'in_progress', 'completed', 'cancelled']
+
         # Crear 20 viajes con combinaciones aleatorias
-        for _ in range(20):
+        for i in range(20): # Changed _ to i for unique datetime adjustments if needed
             # Seleccionar fecha y hora aleatorias
-            trip_date = random.choice(future_dates)
+            original_trip_date = random.choice(future_dates) # Start with a future date
             hour, minute = random.choice(departure_times)
-            trip_datetime = datetime.combine(trip_date, datetime.min.time()).replace(hour=hour, minute=minute)
+            trip_datetime = datetime.combine(original_trip_date, datetime.min.time()).replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+            selected_status = random.choice(possible_trip_statuses)
+
+            # Adjust datetime based on status for realism
+            if selected_status == 'completed' or selected_status == 'cancelled':
+                # Make it a past date
+                days_in_past = random.randint(1, 30)
+                trip_datetime = (datetime.now() - timedelta(days=days_in_past)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            elif selected_status == 'in_progress':
+                # Make it today (but possibly earlier) or yesterday
+                if random.choice([True, False]): # 50% chance for today
+                    current_time = datetime.now()
+                    # If chosen hour is later than current hour, set to yesterday to make sense
+                    if hour > current_time.hour:
+                         trip_datetime = (current_time - timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                    else: # Set to today at the chosen time
+                         trip_datetime = current_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+                else: # Set to yesterday
+                    trip_datetime = (datetime.now() - timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            # For 'scheduled' status, ensure the date is still in the future
+            elif selected_status == 'scheduled':
+                if trip_datetime <= datetime.now(): # If original random choice made it past due to random time selection
+                    days_in_future = random.randint(1, 7)
+                    trip_datetime = (datetime.now() + timedelta(days=days_in_future)).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
             # Seleccionar conductor, asistente, bus, ruta y secretario aleatorios
             driver = random.choice(drivers)
@@ -524,6 +553,7 @@ def seed_db():
 
             trip = Trip(
                 trip_datetime=trip_datetime,
+                status=selected_status, # Added status
                 driver_id=driver.id,
                 assistant_id=assistant.id,
                 bus_id=bus.id,
