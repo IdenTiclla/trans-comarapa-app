@@ -6,7 +6,7 @@ El sistema Trans Comarapa está basado en una arquitectura en capas, compuesta p
 
 - **Frontend:** Aplicación web desarrollada con Nuxt.js (Vue.js), que consume la API REST del backend.
 - **Backend:** API RESTful construida con FastAPI (Python), que gestiona la lógica de negocio, autenticación/autorización y acceso a datos.
-- **Base de Datos:** PostgreSQL, gestionada mediante SQLAlchemy y migraciones con Alembic.
+- **Base de Datos:** MySQL, gestionada mediante SQLAlchemy y migraciones con Alembic.
 
 ## Componentes Principales
 
@@ -25,9 +25,10 @@ El sistema Trans Comarapa está basado en una arquitectura en capas, compuesta p
 - **Migraciones:** Alembic.
 - **Documentación:** OpenAPI/Swagger generada automáticamente.
 
-### Base de Datos (PostgreSQL)
-- Esquema relacional alineado con los modelos de dominio.
-- Integridad referencial y constraints.
+### Base de Datos (MySQL)
+- **Descripción:** Almacena todos los datos persistentes de la aplicación, como usuarios, boletos, rutas, etc.
+- **Tecnología:** MySQL.
+- **Interacción:** El backend interactúa con la base de datos a través de SQLAlchemy (ORM). Alembic se utiliza para gestionar las migraciones del esquema de la base de datos.
 
 ## Diagrama de Componentes
 
@@ -54,7 +55,7 @@ flowchart TB
     end
 
     %% Database
-    subgraph Database ["Database (PostgreSQL)"]
+    subgraph Database ["Database (MySQL)"]
         DB1["Tables"]
     end
 

@@ -23,7 +23,7 @@ trans-comarapa-app/
 - **SQLAlchemy**: ORM para interactuar con la base de datos
 - **Pydantic**: Validación de datos y configuración
 - **JWT**: Autenticación basada en tokens
-- **PostgreSQL**: Base de datos relacional
+- **MySQL**: Base de datos relacional
 - **Alembic**: Migraciones de base de datos
 
 ### Frontend
@@ -36,7 +36,7 @@ trans-comarapa-app/
 
 - Python 3.8+
 - Node.js 16+
-- PostgreSQL
+- MySQL
 - Entorno virtual de Python (recomendado)
 
 ## 🚀 Instalación y Configuración

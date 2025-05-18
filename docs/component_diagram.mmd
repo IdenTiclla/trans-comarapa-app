@@ -9,27 +9,38 @@ flowchart TB
     end
 
     %% Backend
-    subgraph Backend ["Backend (FastAPI App)"]
-        BE1["API Routers"]
-        BE2["Business Services"]
-        BE3["Auth (JWT)"]
-        BE4["SQLAlchemy Models"]
-        BE5["Pydantic Schemas"]
-        BE6["Alembic Migrations"]
+    subgraph API ["Backend (FastAPI)"]
+        direction LR
+        Login["Auth Module (Login, JWT)"]
+        Users["User Management"]
+        Tickets["Ticket Management"]
+        Packages["Package Management"]
+        Trips["Trip Management"]
+        Routes["Route Management"]
+        Notifications["Notification Service"]
+        DBInterface["Database Interface (SQLAlchemy)"]
     end
 
     %% Database
-    subgraph Database ["Database (PostgreSQL)"]
-        DB1["Tables"]
+    subgraph Database ["Database (MySQL)"]
+        direction TB
+        UsersTable["users"]
     end
 
     %% Relaciones
     FE1 --> FE2
     FE1 --> FE3
-    FE3 -- "HTTP/REST" --> BE1
-    BE1 --> BE2
-    BE1 --> BE3
-    BE2 --> BE4
-    BE2 --> BE5
-    BE4 -- "ORM" --> DB1
-    BE6 -- "Migrations" --> DB1
+    FE3 -- "HTTP/REST" --> Login
+    Login --> Users
+    Login --> Tickets
+    Login --> Packages
+    Login --> Trips
+    Login --> Routes
+    Login --> Notifications
+    Login --> DBInterface
+    Users --> DBInterface
+    Tickets --> DBInterface
+    Packages --> DBInterface
+    Trips --> DBInterface
+    Routes --> DBInterface
+    DBInterface --> UsersTable
