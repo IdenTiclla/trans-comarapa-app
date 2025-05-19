@@ -64,14 +64,16 @@ export const getTrips = async (params = {}) => {
   // The 'upcoming' filter might be a boolean frontend concept.
   // If backend expects specific date ranges or status for "upcoming":
   if (params.upcoming === true) {
-    // This is an example; actual backend logic for 'upcoming' might differ.
-    // It might translate to date_from: today, status: 'scheduled,in_progress' etc.
+    // Backend route has an 'upcoming' boolean flag which filters by date.
+    // We will pass it through.
+    // We also ensure that if upcoming is true, we are looking for 'scheduled' or 'in_progress' statuses,
+    // unless specific statuses were already provided in the params.
     queryParams.status = queryParams.status || 'scheduled,in_progress';
-    // Add date filtering if 'upcoming' implies it, e.g.:
-    // if (!queryParams.date_from) {
-    //   queryParams.date_from = new Date().toISOString().split('T')[0];
-    // }
-    delete queryParams.upcoming; // Remove 'upcoming' as backend might not understand it
+    // queryParams.upcoming = true; // This line is redundant as upcoming is already in queryParams if params.upcoming was true.
+                                 // And if params.upcoming was false or undefined, queryParams.upcoming would also be so.
+  } else {
+    // If params.upcoming is explicitly false or not provided, remove it to avoid sending upcoming=false to backend if not intended.
+    delete queryParams.upcoming;
   }
 
 

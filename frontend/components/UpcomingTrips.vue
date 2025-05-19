@@ -139,13 +139,14 @@ const fetchUpcomingTrips = async () => {
     const result = await tripService.getTrips(params);
     
     // The service now returns the direct API response.
-    // Assuming the response is { items: [], total: X } or just an array.
+    // The cURL output shows the trips array is under the key "trips"
     if (Array.isArray(result)) {
+      // This case might occur if the API directly returns an array under some conditions
       trips.value = result;
-    } else if (result && Array.isArray(result.items)) {
-      trips.value = result.items;
+    } else if (result && Array.isArray(result.trips)) {
+      trips.value = result.trips;
     } else {
-      console.warn('Unexpected response structure from getTrips:', result);
+      console.warn('Unexpected response structure from getTrips. Expected array or {trips: []}:', result);
       trips.value = []; // Default to empty if structure is not recognized
     }
 
