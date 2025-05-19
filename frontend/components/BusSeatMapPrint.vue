@@ -21,8 +21,8 @@
             </div>
             <div class="flex-shrink min-w-0">
               <h2 class="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-green-700 tracking-tight truncate">TRANS COMARAPA</h2>
-              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">SINDICATO MIXTO DE TRANSPORTISTAS DE LARCA</p>
-              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">"CORONEL MANUEL MARÍA CABALLERO"</p>
+              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">SINDICATO MIXTO DE TRANSPORTISTAS DE LARGA Y CORTA DISTANCIA</p>
+              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">"MANUEL MARÍA CABALLERO"</p>
             </div>
           </div>
           <!-- Origen/Destino -->
