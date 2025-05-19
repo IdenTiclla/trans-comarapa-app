@@ -67,38 +67,23 @@
                   </div>
 
                   <!-- Selección de asientos -->
-                  <div class="mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                      <h4 class="text-base font-medium text-gray-900">Selección de Asientos</h4>
+                  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                      <h3 class="text-lg leading-6 font-medium text-gray-900">Selección de Asientos</h3>
+                      <p class="mt-1 text-sm text-gray-500">
+                        Seleccione los asientos disponibles para la venta
+                      </p>
                     </div>
-
-                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                      <BusSeatMapPrint
-                        :trip="trip"
-                        :occupied-seats="occupiedSeats"
-                        :initial-selected-seats="selectedSeats"
-                        :selection-enabled="true"
-                        @seat-selected="handleSeatSelected"
-                        @seat-deselected="handleSeatDeselected"
-                      />
-                    </div>
-
-                    <div class="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <div class="flex flex-wrap gap-2 mb-2">
-                        <span
-                          v-for="seat in selectedSeats"
-                          :key="seat.id"
-                          class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                          </svg>
-                          Asiento {{ seat.number }}
-                        </span>
-                      </div>
-
-                      <div class="text-sm text-gray-600">
-                        <p>Total: <span class="font-medium">{{ selectedSeats.length }}</span> asiento(s) seleccionado(s)</p>
+                    <div class="px-4 py-5 sm:p-6">
+                      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden mb-4">
+                        <BusSeatMapPrint
+                          :trip="trip"
+                          :occupied-seats="occupiedSeats"
+                          :initial-selected-seats="selectedSeats"
+                          :selection-enabled="true"
+                          @seat-selected="handleSeatSelected"
+                          @seat-deselected="handleSeatDeselected"
+                        />
                       </div>
                     </div>
                   </div>
