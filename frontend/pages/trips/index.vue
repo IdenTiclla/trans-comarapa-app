@@ -19,7 +19,7 @@
         />
 
         <!-- Alerta de error -->
-        <div v.if="tripStore.error" class="my-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+        <div v-if="tripStore.error" class="my-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
           <p>Error al cargar los viajes: {{ tripStore.error }}</p>
         </div>
 

@@ -26,32 +26,62 @@ export const useTripStore = defineStore('trips', {
           sort_by: params.sortBy,
           sort_direction: params.sortDirection,
         };
-        const response = await tripService.getAllTrips(apiParams);
+        const response = await tripService.getTrips(apiParams);
         
-        if (response && typeof response.total === 'number' && Array.isArray(response.items)) {
-          this.trips = response.items;
-          this.pagination.totalItems = response.total;
-          this.pagination.itemsPerPage = params.itemsPerPage;
-          this.pagination.currentPage = params.page;
-          this.pagination.totalPages = Math.ceil(response.total / params.itemsPerPage) || 1;
+        if (response && response.pagination &&
+            typeof response.pagination.total === 'number' &&
+            typeof response.pagination.limit === 'number' &&
+            typeof response.pagination.skip === 'number' &&
+            typeof response.pagination.pages === 'number' &&
+            Array.isArray(response.trips)) {
+          
+          this.trips = response.trips;
+          this.pagination.totalItems = response.pagination.total;
+          this.pagination.itemsPerPage = response.pagination.limit;
+          
+          if (response.pagination.limit > 0) {
+            this.pagination.currentPage = Math.floor(response.pagination.skip / response.pagination.limit) + 1;
+          } else {
+            // Fallback if limit is 0 or undefined, though API sends it.
+            this.pagination.currentPage = params.page || 1; 
+          }
+          this.pagination.totalPages = response.pagination.pages;
+          this.error = null; // Explicitly clear any previous error
+
         } else if (Array.isArray(response)) {
           // Fallback if the API returns just an array (no pagination info from backend)
           this.trips = response;
           this.pagination.totalItems = response.length;
-          this.pagination.itemsPerPage = response.length || 10;
+          this.pagination.itemsPerPage = response.length > 0 ? response.length : params.itemsPerPage;
           this.pagination.currentPage = 1;
           this.pagination.totalPages = 1;
+          this.error = null; // Explicitly clear any previous error
         } else {
           // Handle unexpected response structure
-          console.warn('Unexpected response structure from getAllTrips', response);
+          console.warn('Unexpected response structure from getTrips. Expected format like {trips: [...], pagination: {total: N, limit: N, skip: N, pages: N}} or an array of trips.', response);
           this.trips = [];
           // Reset pagination if response is not as expected
-          this.pagination = { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: params.itemsPerPage };
+          this.pagination = { 
+            totalItems: 0, 
+            totalPages: 1, 
+            currentPage: 1, 
+            itemsPerPage: params.itemsPerPage 
+          };
+          // Only set error if we actually got a response but it's malformed
+          if (response !== null && response !== undefined) {
+            this.error = 'Formato de respuesta inesperado del servidor';
+          }
         }
       } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to fetch trips';
+        console.error('Error fetching trips:', err);
+        this.error = err.data?.detail || err.message || 'Error al cargar los viajes';
         this.trips = [];
-        this.pagination = { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: params.itemsPerPage };
+        this.pagination = { 
+          totalItems: 0, 
+          totalPages: 1, 
+          currentPage: 1, 
+          itemsPerPage: params.itemsPerPage 
+        };
       } finally {
         this.isLoading = false;
       }

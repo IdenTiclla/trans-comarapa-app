@@ -63,12 +63,12 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex flex-col">
-                <span class="text-sm font-medium text-gray-900">{{ formatDate(trip.departure_date) }}</span>
+                <span class="text-sm font-medium text-gray-900">{{ formatDate(trip.trip_datetime) }}</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex flex-col">
-                <span class="text-sm font-medium text-gray-900">{{ formatTime(trip.departure_time) }}</span>
+                <span class="text-sm font-medium text-gray-900">{{ formatTime(trip.trip_datetime) }}</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -378,45 +378,52 @@ const displayedPages = computed(() => {
   return pages
 })
 
-// Formatear fecha
+// Función para formatear la fecha
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date)
-}
-
-// Formatear hora
-const formatTime = (timeString) => {
-  if (!timeString) return ''
-
-  // Si ya tiene formato HH:MM, devolverlo directamente
-  if (/^\d{2}:\d{2}$/.test(timeString)) {
-    return timeString
+  if (!dateString) {
+    return 'N/A'; // Or some other placeholder for missing dates
   }
-
   try {
-    // Si es una hora ISO (con segundos y posiblemente milisegundos)
-    if (timeString.includes(':')) {
-      // Extraer solo las horas y minutos
-      const parts = timeString.split(':')
-      return `${parts[0]}:${parts[1]}`
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string received in formatDate:', dateString);
+      return 'Fecha inválida';
     }
+    return new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      // weekday: 'long', // Removed weekday to keep it shorter for table
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', dateString, error);
+    return 'Error de fecha';
+  }
+};
 
-    // Si es otro formato, intentar convertirlo
-    const date = new Date(`2000-01-01T${timeString}`)
-    return date.toLocaleTimeString('es-ES', {
+// Función para formatear la hora
+const formatTime = (timeString) => {
+  if (!timeString) {
+    return 'N/A';
+  }
+  try {
+    const date = new Date(timeString); // Create Date object from the full datetime string
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string received in formatTime:', timeString);
+      return 'Hora inválida';
+    }
+    return new Intl.DateTimeFormat('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
-    })
+      hour12: true, // Use true for AM/PM or false for 24-hour
+    }).format(date);
   } catch (error) {
-    console.error('Error al formatear la hora:', error)
-    return timeString || ''
+    console.error('Error formatting time:', timeString, error);
+    return 'Error de hora';
   }
-}
+};
 
 // Obtener clase CSS según el estado
 const getStatusClass = (status) => {
