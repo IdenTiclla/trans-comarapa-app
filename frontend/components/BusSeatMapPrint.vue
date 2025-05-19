@@ -58,7 +58,7 @@
         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-white p-3 rounded-md shadow-sm border border-gray-100">
             <p class="text-sm mb-1"><span class="font-medium text-gray-600">Conductor:</span> <span class="font-semibold text-gray-800">{{ trip.driver ? trip.driver.name : 'No asignado' }}</span></p>
-            <p class="text-sm"><span class="font-medium text-gray-600">Placa:</span> <span class="font-semibold text-gray-800">{{ trip.bus ? trip.bus.plate : 'No asignado' }}</span></p>
+            <p class="text-sm"><span class="font-medium text-gray-600">Placa:</span> <span class="font-semibold text-gray-800">{{ trip.bus ? trip.bus.license_plate : 'No asignado' }}</span></p>
           </div>
           <div class="grid grid-cols-3 gap-2">
             <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600">

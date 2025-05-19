@@ -30,7 +30,7 @@ const handleApiError = async (response, defaultMessage) => {
   }
 }
 
-const resourceUrl = '/trips/'
+const resourceUrl = '/trips'
 
 // Primary function to get trips, using apiFetch and handling various parameters
 export const getTrips = async (params = {}) => {

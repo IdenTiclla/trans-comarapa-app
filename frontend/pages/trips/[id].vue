@@ -69,7 +69,7 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
                   <dt class="text-sm font-medium text-gray-500">Fecha de salida</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ formatDate(displayedTrip.departure_date) }}
+                    {{ formatDate(displayedTrip.trip_datetime) }}
                   </dd>
                 </div>
 
@@ -149,10 +149,20 @@
                   <dt class="text-sm font-medium text-gray-500">Bus</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                     <div v-if="displayedTrip.bus" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">{{ displayedTrip.bus.plate }}</span>
+                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">{{ displayedTrip.bus.license_plate }}</span>
                       <span class="text-gray-500">{{ displayedTrip.bus.model }}</span>
                     </div>
                     <span v-else>No asignado</span>
+                  </dd>
+                </div>
+
+                <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
+                  <dt class="text-sm font-medium text-gray-500">Secretaria</dt>
+                  <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    <div v-if="displayedTrip.secretary" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span class="text-gray-900">{{ displayedTrip.secretary.firstname }} {{ displayedTrip.secretary.lastname }}</span>
+                    </div>
+                    <span v-else>No asignada</span>
                   </dd>
                 </div>
               </dl>
@@ -277,13 +287,15 @@ const fetchTripDetails = async () => {
 }
 
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
+  if (!dateString) return 'Fecha no disponible';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Fecha inválida';
   return new Intl.DateTimeFormat('es-ES', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }).format(date)
+  }).format(date);
 }
 
 const getStatusClass = (status) => {

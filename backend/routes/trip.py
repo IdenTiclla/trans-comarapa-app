@@ -266,18 +266,91 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
 
     return db_trip
 
-@router.get("/{trip_id}", response_model=TripSchema)
+@router.get("/{trip_id}", response_model=Dict[str, Any])
 def get_trip(trip_id: int, db: Session = Depends(get_db)):
     """
-    Get a trip by ID
+    Get a trip by ID with all related information
     """
-    trip = db.query(TripModel).filter(TripModel.id == trip_id).first()
-    if not trip:
+    try:
+        trip = db.query(TripModel).filter(TripModel.id == trip_id).first()
+        if not trip:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Trip with id {trip_id} not found"
+            )
+
+        # Process trip data similar to the list endpoint
+        origin_name = "Unknown"
+        destination_name = "Unknown"
+        route_price = 0
+        
+        if trip.route:
+            if trip.route.origin_location:
+                origin_name = trip.route.origin_location.name
+            if trip.route.destination_location:
+                destination_name = trip.route.destination_location.name
+            route_price = trip.route.price
+
+        total_seats = 0
+        occupied_seats_count = 0
+        if trip.bus:
+            total_seats = trip.bus.capacity
+            occupied_seats_count = db.query(func.count(TicketModel.id)).filter(
+                TicketModel.trip_id == trip.id,
+                TicketModel.state != 'cancelled'
+            ).scalar() or 0
+
+        available_seats = total_seats - occupied_seats_count
+
+        # Get occupied seat numbers
+        occupied_seats = db.query(TicketModel).filter(
+            TicketModel.trip_id == trip_id,
+            TicketModel.state != 'cancelled'
+        ).all()
+
+        occupied_seat_numbers = []
+        for ticket in occupied_seats:
+            if ticket.seat:
+                occupied_seat_numbers.append(ticket.seat.seat_number)
+
+        processed_trip = {
+            "id": trip.id,
+            "trip_datetime": trip.trip_datetime,
+            "status": trip.status,
+            "driver_id": trip.driver_id,
+            "assistant_id": trip.assistant_id,
+            "bus_id": trip.bus_id,
+            "route_id": trip.route_id,
+            "route": {
+                "origin": origin_name,
+                "destination": destination_name,
+                "price": route_price
+            },
+            "total_seats": total_seats,
+            "available_seats": available_seats,
+            "occupied_seats": occupied_seat_numbers,
+            "driver": DriverSchema.from_orm(trip.driver).model_dump() if trip.driver else None,
+            "assistant": AssistantSchema.from_orm(trip.assistant).model_dump() if trip.assistant else None,
+            "bus": {
+                "id": trip.bus.id,
+                "license_plate": trip.bus.license_plate,
+                "capacity": trip.bus.capacity
+            } if trip.bus else None,
+            "secretary": {
+                "id": trip.secretary.id,
+                "firstname": trip.secretary.firstname,
+                "lastname": trip.secretary.lastname
+            } if trip.secretary else None
+        }
+
+        return processed_trip
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in get_trip for id {trip_id}: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Trip with id {trip_id} not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing trip data: {str(e)}"
         )
-    return trip
 
 @router.get("/{trip_id}/driver", response_model=DriverSchema)
 def get_trip_driver(trip_id: int, db: Session = Depends(get_db)):

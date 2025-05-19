@@ -56,10 +56,10 @@ app = FastAPI(
 # Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes durante el desarrollo
-    allow_credentials=False,  # No permitir cookies en solicitudes cross-origin cuando allow_origins=["*"]
-    allow_methods=["*"],     # Permitir todos los métodos HTTP
-    allow_headers=["*"],     # Permitir todos los encabezados
+    allow_origins=["http://localhost:3000"],  # Frontend development server
+    allow_credentials=True,  # Allow credentials (cookies, authorization headers)
+    allow_methods=["*"],     # Allow all HTTP methods
+    allow_headers=["*"],     # Allow all headers
 )
 
 # Incluir el router de la versión 1 con el prefijo /api/v1
