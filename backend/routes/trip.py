@@ -313,9 +313,14 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
             if ticket.seat:
                 occupied_seat_numbers.append(ticket.seat.seat_number)
 
+        trip_time = None
+        if trip.trip_datetime:
+            trip_time = trip.trip_datetime.strftime('%H:%M')
+
         processed_trip = {
             "id": trip.id,
             "trip_datetime": trip.trip_datetime,
+            "departure_time": trip_time,
             "status": trip.status,
             "driver_id": trip.driver_id,
             "assistant_id": trip.assistant_id,

@@ -76,7 +76,7 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
                   <dt class="text-sm font-medium text-gray-500">Hora de salida</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-medium">
-                    {{ displayedTrip.departure_time }}
+                    {{ formatTime(displayedTrip.departure_time, displayedTrip.trip_datetime) }}
                   </dd>
                 </div>
 
@@ -134,14 +134,20 @@
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
                   <dt class="text-sm font-medium text-gray-500">Conductor</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ displayedTrip.driver?.name || 'No asignado' }}
+                    <div v-if="displayedTrip.driver" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span class="text-gray-900">{{ displayedTrip.driver.firstname }} {{ displayedTrip.driver.lastname }}</span>
+                    </div>
+                    <span v-else>No asignado</span>
                   </dd>
                 </div>
 
                 <div class="px-4 py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white">
                   <dt class="text-sm font-medium text-gray-500">Asistente</dt>
                   <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {{ displayedTrip.assistant?.name || 'No asignado' }}
+                    <div v-if="displayedTrip.assistant" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span class="text-gray-900">{{ displayedTrip.assistant.firstname }} {{ displayedTrip.assistant.lastname }}</span>
+                    </div>
+                    <span v-else>No asignado</span>
                   </dd>
                 </div>
 
@@ -296,6 +302,20 @@ const formatDate = (dateString) => {
     month: 'long',
     year: 'numeric'
   }).format(date);
+}
+
+const formatTime = (timeString, fallbackDateTime) => {
+  if (timeString && timeString.includes(':')) {
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}:${minutes}`;
+  }
+  if (fallbackDateTime) {
+    const date = new Date(fallbackDateTime);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+  }
+  return 'Hora no disponible';
 }
 
 const getStatusClass = (status) => {
