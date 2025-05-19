@@ -214,7 +214,8 @@ def seed_db():
 
         # Crear usuarios para clientes primero
         client_user_data = []
-        for i in range(10):
+        num_clients_to_create = 40 # Increased from 10
+        for i in range(num_clients_to_create):
             # Generar un nombre de usuario único con un timestamp
             timestamp = int(datetime.now().timestamp()) + i
             client_user = {
@@ -273,9 +274,10 @@ def seed_db():
 
         # Crear usuarios para conductores primero
         driver_user_data = []
-        for i in range(5):
+        num_drivers_to_create = 10 # Increased from 5
+        for i in range(num_drivers_to_create):
             # Generar un nombre de usuario único con un timestamp
-            timestamp = int(datetime.now().timestamp()) + i + 100
+            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2) # Adjust timestamp offset
             driver_user = {
                 "username": f"conductor{i+1}_{timestamp}",
                 "email": fake.email(),
@@ -382,9 +384,10 @@ def seed_db():
 
         # Crear usuarios para secretarios
         secretary_user_data = []
-        for i in range(5):
+        num_secretaries_to_create = 7 # Increased from 5
+        for i in range(num_secretaries_to_create):
             # Generar un nombre de usuario único con un timestamp
-            timestamp = int(datetime.now().timestamp()) + i + 300
+            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2) # Adjust timestamp offset
             secretary_user = {
                 "username": f"secretario{i+1}_{timestamp}",
                 "email": fake.email(),
@@ -438,9 +441,10 @@ def seed_db():
 
         # Crear usuarios para asistentes primero
         assistant_user_data = []
-        for i in range(5):
+        num_assistants_to_create = 10 # Increased from 5
+        for i in range(num_assistants_to_create):
             # Generar un nombre de usuario único con un timestamp
-            timestamp = int(datetime.now().timestamp()) + i + 200
+            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2 + num_secretaries_to_create * 2) # Adjust timestamp offset
             assistant_user = {
                 "username": f"asistente{i+1}_{timestamp}",
                 "email": fake.email(),
@@ -513,7 +517,9 @@ def seed_db():
         possible_trip_statuses = ['scheduled', 'scheduled', 'scheduled', 'scheduled', 'in_progress', 'completed', 'cancelled']
 
         # Crear 20 viajes con combinaciones aleatorias
-        for i in range(20): # Changed _ to i for unique datetime adjustments if needed
+        # Increased to 60 trips
+        num_trips_to_create = 60
+        for _ in range(num_trips_to_create):
             # Seleccionar fecha y hora aleatorias
             original_trip_date = random.choice(future_dates) # Start with a future date
             hour, minute = random.choice(departure_times)
@@ -913,7 +919,12 @@ def create_test_users():
         db.close()
 
 if __name__ == "__main__":
-    # Comentamos la limpieza de la base de datos para evitar problemas con las claves foráneas
-    # clear_db()
-    # seed_db()
+    print("WARNING: The database will be cleared before seeding if clear_db() is called.")
+    # Uncomment the next line to clear the database before seeding.
+    # Be careful if you have important data!
+    clear_db() 
+    print("Seeding database with a large set of diverse data...")
+    seed_db()
+    print("Creating/updating specific test users...")
     create_test_users()
+    print("Seeding complete.")
