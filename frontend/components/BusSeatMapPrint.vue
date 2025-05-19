@@ -71,10 +71,10 @@
               <span class="text-xs text-white font-bold">HORA</span>
             </div>
             <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
-              <span class="text-sm font-medium">{{ getDayName(trip.departure_date) }}</span>
+              <span class="text-sm font-medium">{{ getDayName(trip.trip_datetime) }}</span>
             </div>
             <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
-              <span class="text-sm font-medium">{{ formatShortDate(trip.departure_date) }}</span>
+              <span class="text-sm font-medium">{{ formatShortDate(trip.trip_datetime) }}</span>
             </div>
             <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
               <span class="text-sm font-medium">{{ trip.departure_time }}</span>
@@ -84,7 +84,9 @@
 
         <div class="mt-6 text-center">
           <h3 class="text-xl font-bold text-green-700 bg-green-50 py-2 rounded-md shadow-sm inline-block px-6">PLANILLA DE PASAJEROS</h3>
-          <p v-if="trip.total_seats" class="mt-2 text-sm text-gray-600">Bus con capacidad para {{ trip.total_seats }} pasajeros</p>
+          <p v-if="trip.total_seats" class="mt-2 text-sm text-gray-600">
+            Bus con capacidad para {{ trip.total_seats }} pasajeros ({{ availableSeatsCount }} disponibles)
+          </p>
         </div>
       </div>
 
@@ -279,6 +281,13 @@ const rightColumnSeats = computed(() => {
   return seats.value.filter(seat => seat.column === 'right')
 })
 
+// Add computed property for available seats
+const availableSeatsCount = computed(() => {
+  if (!props.trip || !props.trip.total_seats) return 0;
+  const occupiedCount = props.trip.occupied_seats ? props.trip.occupied_seats.length : 0;
+  return props.trip.total_seats - occupiedCount;
+})
+
 // Obtener clase CSS según el estado del asiento
 const getSeatClass = (seat) => {
   if (seat.occupied) {
@@ -431,14 +440,18 @@ const loadSeats = async () => {
 
 // Obtener nombre del día
 const getDayName = (dateString) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date)
+  if (!dateString) return 'Día no disponible';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Fecha inválida';
+  return new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
 }
 
 // Formatear fecha corta
 const formatShortDate = (dateString) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
+  if (!dateString) return 'Fecha no disponible';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Fecha inválida';
+  return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date);
 }
 
 // Observar cambios en las propiedades

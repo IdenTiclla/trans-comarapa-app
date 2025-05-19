@@ -86,7 +86,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                       <div class="flex items-center">
                         <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleAvailableSeats">
-                          {{ displayedTrip.available_seats_count }} disponibles
+                          {{ displayedTrip.total_seats - (displayedTrip.occupied_seats?.length || 0) }} disponibles
                           <span v-if="!showAvailableSeats" class="ml-1">▼</span>
                           <span v-else class="ml-1">▲</span>
                         </span>
@@ -104,7 +104,7 @@
                         </span>
                       </div>
                     </div>
-                    <div v-if="showAvailableSeats && displayedTrip.available_seat_numbers && displayedTrip.available_seat_numbers.length > 0" class="mt-3 bg-green-50 p-3 rounded-md border border-green-100">
+                    <div v-if="showAvailableSeats && sortedAvailableSeats.length > 0" class="mt-3 bg-green-50 p-3 rounded-md border border-green-100">
                       <h4 class="text-xs font-medium text-green-800 mb-2">Asientos disponibles:</h4>
                       <div class="flex flex-wrap gap-1">
                         <span
@@ -116,7 +116,7 @@
                         </span>
                       </div>
                     </div>
-                    <div v-if="showOccupiedSeats && displayedTrip.occupied_seats && displayedTrip.occupied_seats.length > 0" class="mt-3 bg-red-50 p-3 rounded-md border border-red-100">
+                    <div v-if="showOccupiedSeats && sortedOccupiedSeats.length > 0" class="mt-3 bg-red-50 p-3 rounded-md border border-red-100">
                       <h4 class="text-xs font-medium text-red-800 mb-2">Asientos ocupados:</h4>
                       <div class="flex flex-wrap gap-1">
                         <span
@@ -349,13 +349,15 @@ const toggleAvailableSeats = () => {
 }
 
 const sortedAvailableSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.available_seat_numbers) return []
-  return [...displayedTrip.value.available_seat_numbers].sort((a, b) => parseInt(a) - parseInt(b))
+  if (!displayedTrip.value || !displayedTrip.value.total_seats) return [];
+  const occupiedSeats = displayedTrip.value.occupied_seats || [];
+  const allSeats = Array.from({ length: displayedTrip.value.total_seats }, (_, i) => i + 1);
+  return allSeats.filter(seat => !occupiedSeats.includes(seat)).sort((a, b) => a - b);
 })
 
 const sortedOccupiedSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.occupied_seats) return []
-  return [...displayedTrip.value.occupied_seats].map(seat => typeof seat === 'object' ? seat.number : seat).sort((a, b) => parseInt(a) - parseInt(b))
+  if (!displayedTrip.value || !displayedTrip.value.occupied_seats) return [];
+  return [...displayedTrip.value.occupied_seats].sort((a, b) => a - b);
 })
 
 const handleSeatSelectionConfirmed = (selectedSeats) => {
