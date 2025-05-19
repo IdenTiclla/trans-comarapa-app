@@ -147,36 +147,63 @@
                             type="text"
                             id="client-search"
                             v-model="clientSearch"
-                            class="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"
+                            class="flex-1 focus:ring-blue-500 focus:border-blue-500 block w-full min-w-0 rounded-none rounded-l-md sm:text-sm border-gray-300"
                             placeholder="Nombre, CI o teléfono"
+                            :disabled="searchingClients"
                           />
                           <button
                             type="button"
                             @click="searchClientsByTerm"
-                            class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="relative -ml-px inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            :disabled="searchingClients || !clientSearch || clientSearch.length < 3"
                           >
-                            Buscar
+                            <svg v-if="searchingClients" class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                            <span>{{ searchingClients ? 'Buscando...' : 'Buscar' }}</span>
                           </button>
                         </div>
 
+                        <!-- Indicador de carga general para la sección de clientes -->
+                        <div v-if="searchingClients && (!filteredClients || filteredClients.length === 0)" class="mt-3 text-sm text-gray-500 flex items-center">
+                           <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          Buscando clientes...
+                        </div>
+                        
                         <!-- Lista de clientes (simulada) -->
-                        <div v-if="clientSearch.length > 0" class="mt-2">
-                          <div class="border border-gray-300 rounded-md divide-y divide-gray-300 max-h-60 overflow-y-auto">
+                        <div v-if="!searchingClients && clientSearch.length >= 3 && filteredClients.length > 0" class="mt-2">
+                          <p class="text-sm text-gray-600 mb-1">Resultados de la búsqueda:</p>
+                          <div class="border border-gray-300 rounded-md divide-y divide-gray-300 max-h-60 overflow-y-auto shadow-sm">
                             <div
                               v-for="client in filteredClients"
                               :key="client.id"
-                              class="p-3 hover:bg-gray-50 cursor-pointer"
+                              class="p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 ease-in-out"
                               @click="selectClient(client)"
                             >
-                              <div class="flex justify-between">
+                              <div class="flex justify-between items-center">
                                 <div>
-                                  <p class="text-sm font-medium text-gray-900">{{ client.name }}</p>
-                                  <p class="text-sm text-gray-500">CI: {{ client.ci }}</p>
+                                  <p class="text-sm font-medium text-blue-600">{{ client.name }}</p>
+                                  <p class="text-xs text-gray-500">CI: {{ client.ci }}</p>
                                 </div>
-                                <p class="text-sm text-gray-500">{{ client.phone }}</p>
+                                <p class="text-xs text-gray-500 hidden sm:block">Tel: {{ client.phone }}</p>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
                               </div>
                             </div>
                           </div>
+                        </div>
+                        
+                        <!-- Mensaje de no resultados -->
+                        <div v-if="!searchingClients && clientSearch.length >= 3 && filteredClients.length === 0" class="mt-3 text-sm text-gray-500">
+                          No se encontraron clientes que coincidan con "{{ clientSearch }}". Puede <button type="button" @click="clientType = 'new'; clientSearch = ''" class="text-blue-600 hover:underline">crear un nuevo cliente</button>.
                         </div>
 
                         <!-- Cliente seleccionado -->
@@ -374,6 +401,7 @@ const ticketStore = useTicketStore()
 const loading = ref(true)
 const error = ref(null)
 const submitting = ref(false)
+const searchingClients = ref(false)
 
 const selectedSeats = ref([])
 const occupiedSeats = ref([])
@@ -407,11 +435,18 @@ const searchClientsByTerm = async () => {
     return
   }
 
+  searchingClients.value = true
+  clientStore.clearError()
+  error.value = null
+
   try {
     await clientStore.searchClients(clientSearch.value)
   } catch (e) {
     console.error('Error al buscar clientes:', e)
+    error.value = clientStore.error || 'Error al buscar clientes.'
     clientStore.clearSearchResults()
+  } finally {
+    searchingClients.value = false
   }
 }
 
@@ -627,14 +662,41 @@ const handleSubmit = async () => {
 
 // Formatear fecha
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date)
-}
+  // Asegurar que dateString es un string no vacío antes de intentar parsear
+  if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') {
+    // console.warn('formatDate: Fecha no proporcionada, no es string, o es string vacío. Valor:', dateString);
+    return 'Fecha no disponible';
+  }
+
+  let date;
+  try {
+    // Intentar crear un objeto Date. Aquí puede ocurrir RangeError para strings inválidos.
+    date = new Date(dateString);
+  } catch (e) {
+    // console.error('formatDate: Error al crear objeto Date. Input:', dateString, 'Error:', e);
+    return 'Formato de fecha erróneo';
+  }
+
+  // Verificar si el objeto Date creado es válido
+  if (isNaN(date.getTime())) {
+    // console.warn('formatDate: El objeto Date es inválido (NaN). Input string:', dateString);
+    return 'Fecha inválida';
+  }
+
+  // Si la fecha es válida, intentar formatearla
+  try {
+    return new Intl.DateTimeFormat('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'America/La_Paz' // Asegurar zona horaria correcta para Bolivia
+    }).format(date);
+  } catch (e) {
+    // console.error('formatDate: Error al formatear con Intl.DateTimeFormat. Objeto Date:', date, 'Error:', e);
+    return 'Error de formateo';
+  }
+};
 
 // Definir la metadata de la página
 // definePageMeta({

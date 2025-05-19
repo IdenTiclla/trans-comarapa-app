@@ -1,125 +1,112 @@
 <template>
   <div class="bus-seat-map-print">
     <div v-if="loading" class="flex justify-center py-6">
-      <div class="animate-pulse flex space-x-4">
-        <div class="rounded-full bg-gray-200 h-10 w-10"></div>
-        <div class="flex-1 space-y-4 py-1">
-          <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div class="space-y-2">
-            <div class="h-4 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
+      <p>Cargando asientos...</p>
     </div>
 
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 shadow-sm">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
-        </div>
-      </div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 shadow-sm">
+      <p class="text-red-700 text-sm">{{ error }}</p>
     </div>
 
     <div v-else class="print-layout bg-white rounded-lg shadow-md overflow-hidden">
       <!-- Cabecera -->
-      <div class="header border-b-2 border-green-600 pb-4 mb-6 bg-gradient-to-r from-green-50 to-white p-4 overflow-hidden">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div class="flex items-center">
-            <div class="bus-icon mr-3 bg-green-100 p-2 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+      <div class="header border-b-2 border-green-600 pb-2 sm:pb-3 mb-2 sm:mb-4 bg-gradient-to-r from-green-50 to-white p-1.5 sm:p-2 md:p-3 overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-1.5 sm:gap-2 md:gap-3">
+          <!-- Logo y Nombre Empresa -->
+          <div class="flex items-center flex-grow min-w-0">
+            <div class="bus-icon mr-1.5 sm:mr-2 bg-green-100 p-1 sm:p-1.5 rounded-full flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 md:h-10 text-green-600" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M8 11V6.5m0 4.5v4.5m0-4.5h8m-8 0a4 4 0 110-8h8a4 4 0 110 8m-8 0a4 4 0 100 8h8a4 4 0 100-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
               </svg>
             </div>
-            <div>
-              <h2 class="text-2xl font-bold text-green-700 tracking-tight">TRANS COMARAPA</h2>
-              <p class="text-xs text-green-600">SINDICATO MIXTO DE TRANSPORTISTAS DE LARCA</p>
-              <p class="text-xs text-green-600">"CORONEL MANUEL MARÍA CABALLERO"</p>
+            <div class="flex-shrink min-w-0">
+              <h2 class="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-green-700 tracking-tight truncate">TRANS COMARAPA</h2>
+              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">SINDICATO MIXTO DE TRANSPORTISTAS DE LARCA</p>
+              <p class="text-[9px] sm:text-[10px] md:text-xs text-green-600 truncate">"CORONEL MANUEL MARÍA CABALLERO"</p>
             </div>
           </div>
-          <div class="md:w-1/3">
-            <div class="grid grid-cols-2 gap-2 bg-white rounded-md shadow-sm">
-              <div class="border-2 border-green-600 p-2 text-center rounded-tl-md rounded-bl-md">
-                <span class="text-xs font-medium text-green-700">DE:</span>
-                <p class="text-sm font-bold">{{ trip.route ? trip.route.origin : 'No definido' }}</p>
+          <!-- Origen/Destino -->
+          <div class="w-full md:w-auto md:max-w-[200px] lg:max-w-[240px] mt-1.5 md:mt-0 flex-shrink-0">
+            <div class="flex flex-col sm:grid sm:grid-cols-2 md:flex md:flex-col gap-1 sm:gap-1.5 bg-white rounded-md shadow-sm">
+              <div class="border-2 border-green-600 p-0.5 sm:p-1 md:p-1.5 text-center rounded-md sm:rounded-tl-md sm:rounded-bl-md sm:rounded-r-none">
+                <span class="text-[9px] sm:text-[10px] md:text-xs font-medium text-green-700">DE:</span>
+                <p class="text-[10px] sm:text-[11px] md:text-xs font-bold break-words">{{ trip.route ? trip.route.origin : 'N/D' }}</p>
               </div>
-              <div class="border-2 border-green-600 p-2 text-center rounded-tr-md rounded-br-md">
-                <span class="text-xs font-medium text-green-700">A:</span>
-                <p class="text-sm font-bold">{{ trip.route ? trip.route.destination : 'No definido' }}</p>
+              <div class="border-2 border-green-600 p-0.5 sm:p-1 md:p-1.5 text-center rounded-md sm:rounded-tr-md sm:rounded-br-md sm:rounded-l-none mt-1 sm:mt-0">
+                <span class="text-[9px] sm:text-[10px] md:text-xs font-medium text-green-700">A:</span>
+                <p class="text-[10px] sm:text-[11px] md:text-xs font-bold break-words">{{ trip.route ? trip.route.destination : 'N/D' }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-white p-3 rounded-md shadow-sm border border-gray-100">
-            <p class="text-sm mb-1"><span class="font-medium text-gray-600">Conductor:</span> <span class="font-semibold text-gray-800">{{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'No asignado' }}</span></p>
-            <p class="text-sm"><span class="font-medium text-gray-600">Placa:</span> <span class="font-semibold text-gray-800">{{ trip.bus ? trip.bus.license_plate : 'No asignado' }}</span></p>
-            <p class="text-sm"><span class="font-medium text-gray-600">Asistente:</span> <span class="font-semibold text-gray-800">{{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'No asignado' }}</span></p>
+        <!-- Info Conductor/Placa y Fecha/Hora -->
+        <div class="mt-2 sm:mt-3 grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
+          <div class="bg-white p-1 sm:p-1.5 md:p-2 rounded-md shadow-sm border border-gray-100 text-[9px] sm:text-[10px] md:text-xs">
+            <p class="mb-0.5"><span class="font-medium text-gray-600">Conductor:</span> <span class="font-semibold text-gray-800">{{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'N/A' }}</span></p>
+            <p class="mb-0.5"><span class="font-medium text-gray-600">Placa:</span> <span class="font-semibold text-gray-800">{{ trip.bus ? trip.bus.license_plate : 'N/A' }}</span></p>
+            <p><span class="font-medium text-gray-600">Asistente:</span> <span class="font-semibold text-gray-800">{{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'N/A' }}</span></p>
           </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600">
-              <span class="text-xs text-white font-bold">DÍA</span>
+          <div class="grid grid-cols-3 gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] md:text-xs">
+            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600 py-0.5">
+              <span class="text-white font-bold">DÍA</span>
             </div>
-            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600">
-              <span class="text-xs text-white font-bold">FECHA</span>
+            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600 py-0.5">
+              <span class="text-white font-bold">FECHA</span>
             </div>
-            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600">
-              <span class="text-xs text-white font-bold">HORA</span>
+            <div class="border-2 border-green-600 rounded-t-md text-center bg-green-600 py-0.5">
+              <span class="text-white font-bold">HORA</span>
             </div>
-            <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
-              <span class="text-sm font-medium">{{ getDayName(trip.trip_datetime) }}</span>
+            <div class="border-2 border-green-600 rounded-b-md p-0.5 text-center bg-white">
+              <span class="font-medium">{{ getDayName(trip.trip_datetime) }}</span>
             </div>
-            <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
-              <span class="text-sm font-medium">{{ formatShortDate(trip.trip_datetime) }}</span>
+            <div class="border-2 border-green-600 rounded-b-md p-0.5 text-center bg-white">
+              <span class="font-medium">{{ formatShortDate(trip.trip_datetime) }}</span>
             </div>
-            <div class="border-2 border-green-600 rounded-b-md p-1 text-center bg-white">
-              <span class="text-sm font-medium">{{ trip.departure_time }}</span>
+            <div class="border-2 border-green-600 rounded-b-md p-0.5 text-center bg-white">
+              <span class="font-medium">{{ trip.departure_time }}</span>
             </div>
           </div>
         </div>
 
-        <div class="mt-6 text-center">
-          <h3 class="text-xl font-bold text-green-700 bg-green-50 py-2 rounded-md shadow-sm inline-block px-6">PLANILLA DE PASAJEROS</h3>
-          <p v-if="trip.total_seats" class="mt-2 text-sm text-gray-600">
+        <!-- Planilla de Pasajeros -->
+        <div class="mt-2 sm:mt-3 text-center">
+          <h3 class="text-[10px] sm:text-xs md:text-sm lg:text-base font-bold text-green-700 bg-green-50 py-1 rounded-md shadow-sm inline-block px-1.5 sm:px-2">PLANILLA DE PASAJEROS</h3>
+          <p v-if="trip.total_seats" class="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] md:text-xs text-gray-600">
             Bus con capacidad para {{ trip.total_seats }} pasajeros ({{ availableSeatsCount }} disponibles)
           </p>
         </div>
       </div>
 
       <!-- Mapa de asientos -->
-      <div class="seat-map-container px-2 sm:px-4 pb-4">
+      <div class="seat-map-container px-0.5 sm:px-1 md:px-2 pb-1 sm:pb-2">
         <!-- Indicador de pasillo para móviles -->
-        <div class="md:hidden flex justify-center mb-4">
-          <div class="bg-green-600 bg-opacity-10 px-4 py-2 rounded-full text-green-700 font-bold text-sm">
+        <div class="md:hidden flex justify-center mb-1 sm:mb-1.5">
+          <div class="bg-green-600 bg-opacity-10 px-1.5 sm:px-2 py-0.5 rounded-full text-green-700 font-bold text-[9px] sm:text-[10px]">
             PASILLO CENTRAL
           </div>
         </div>
 
-        <div class="relative grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+        <div class="relative grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-1 lg:gap-2">
           <!-- Columna izquierda -->
-          <div class="left-column">
-            <h3 class="text-sm font-medium text-gray-500 mb-2 md:hidden">Lado Izquierdo</h3>
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
+          <div class="left-column md:pr-1">
+            <h3 class="text-[9px] sm:text-[10px] font-medium text-gray-500 mb-0.5 md:hidden">Lado Izquierdo</h3>
+            <div class="grid grid-cols-2 gap-1 sm:gap-1.5">
               <div v-for="seat in leftColumnSeats" :key="seat.id" class="seat-container">
-                <div class="seat-number flex items-center mb-1">
-                  <span class="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? ' V' : ' P' }}</span>
+                <div class="seat-number flex items-center mb-0.5">
+                  <span class="text-[9px] sm:text-[10px] font-semibold bg-green-100 text-green-800 px-1 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}</span>
                 </div>
                 <div
-                  class="seat-box border-2 rounded-md p-2 sm:p-3 transition-all duration-200 transform hover:scale-105"
+                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
                 >
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs font-medium">Destino:</span>
-                    <span class="text-xs font-medium">Bs.</span>
+                  <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
+                    <span class="font-medium">Destino:</span>
+                    <span class="font-medium">Bs.</span>
                   </div>
-                  <div class="text-center">
-                    <span class="text-xs font-bold px-2 py-1 rounded inline-block" :class="{
+                  <div>
+                    <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
                       'bg-red-100 text-red-800': seat.occupied,
                       'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
                       'bg-gray-50 text-gray-400': !seat.occupied && !selectedSeatIds.includes(seat.id)
@@ -133,33 +120,31 @@
           </div>
 
           <!-- Pasillo central con logo (solo visible en escritorio) -->
-          <div class="center-aisle hidden md:flex absolute left-1/2 transform -translate-x-1/2 h-full flex-col justify-center items-center">
-            <div class="h-full flex items-center">
-              <div class="rotate-90 bg-green-600 bg-opacity-10 px-4 py-2 rounded-full text-green-700 font-bold text-xl tracking-widest">
-                PASILLO
-              </div>
+          <div class="center-aisle hidden md:flex flex-col justify-start items-center pt-8">
+            <div class="rotate-90 bg-green-600 bg-opacity-10 px-1.5 py-1 rounded-full text-green-700 font-bold text-[10px] sm:text-xs md:text-sm tracking-widest whitespace-nowrap">
+              PASILLO
             </div>
           </div>
 
           <!-- Columna derecha -->
-          <div class="right-column mt-6 md:mt-0">
-            <h3 class="text-sm font-medium text-gray-500 mb-2 md:hidden">Lado Derecho</h3>
-            <div class="grid grid-cols-2 gap-2 sm:gap-3">
+          <div class="right-column mt-1 sm:mt-1.5 md:mt-0 md:pl-1">
+            <h3 class="text-[9px] sm:text-[10px] font-medium text-gray-500 mb-0.5 md:hidden">Lado Derecho</h3>
+            <div class="grid grid-cols-2 gap-1 sm:gap-1.5">
               <div v-for="seat in rightColumnSeats" :key="seat.id" class="seat-container">
-                <div class="seat-number flex items-center mb-1">
-                  <span class="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? ' V' : ' P' }}</span>
+                <div class="seat-number flex items-center mb-0.5">
+                  <span class="text-[9px] sm:text-[10px] font-semibold bg-green-100 text-green-800 px-1 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}</span>
                 </div>
                 <div
-                  class="seat-box border-2 rounded-md p-2 sm:p-3 transition-all duration-200 transform hover:scale-105"
+                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
                 >
-                  <div class="flex justify-between items-center">
-                    <span class="text-xs font-medium">Destino:</span>
-                    <span class="text-xs font-medium">Bs.</span>
+                  <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
+                    <span class="font-medium">Destino:</span>
+                    <span class="font-medium">Bs.</span>
                   </div>
-                  <div class="text-center">
-                    <span class="text-xs font-bold px-2 py-1 rounded inline-block" :class="{
+                  <div>
+                    <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
                       'bg-red-100 text-red-800': seat.occupied,
                       'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
                       'bg-gray-50 text-gray-400': !seat.occupied && !selectedSeatIds.includes(seat.id)
@@ -175,51 +160,51 @@
       </div>
 
       <!-- Leyenda -->
-      <div class="legend mt-6 mb-4 px-2 sm:px-4">
-        <div class="flex flex-wrap justify-center items-center gap-3 sm:gap-6 bg-gray-50 py-3 rounded-md shadow-sm">
+      <div class="legend mt-1.5 sm:mt-2 mb-1 px-1 sm:px-2 md:px-3">
+        <div class="flex flex-wrap justify-center items-center gap-1 sm:gap-1.5 md:gap-2 bg-gray-50 py-1 sm:py-1.5 rounded-md shadow-sm">
           <div class="flex items-center">
-            <div class="w-5 h-5 bg-gray-50 border-2 border-green-600 rounded mr-2 flex items-center justify-center">
-              <span class="text-[8px] text-gray-400 font-bold">DISP</span>
+            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gray-50 border-2 border-green-600 rounded mr-0.5 sm:mr-1 flex items-center justify-center">
+              <span class="text-[5px] sm:text-[6px] text-gray-400 font-bold">DISP</span>
             </div>
-            <span class="text-xs sm:text-sm text-gray-700">Disponible</span>
+            <span class="text-[9px] sm:text-[10px] text-gray-700">Disponible</span>
           </div>
           <div class="flex items-center">
-            <div class="w-5 h-5 bg-blue-100 border-2 border-blue-600 rounded mr-2 flex items-center justify-center">
-              <span class="text-[8px] text-blue-800 font-bold">SEL</span>
+            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-blue-100 border-2 border-blue-600 rounded mr-0.5 sm:mr-1 flex items-center justify-center">
+              <span class="text-[5px] sm:text-[6px] text-blue-800 font-bold">SEL</span>
             </div>
-            <span class="text-xs sm:text-sm text-gray-700">Seleccionado</span>
+            <span class="text-[9px] sm:text-[10px] text-gray-700">Seleccionado</span>
           </div>
           <div class="flex items-center">
-            <div class="w-5 h-5 bg-red-100 border-2 border-red-600 rounded mr-2 flex items-center justify-center">
-              <span class="text-[8px] text-red-800 font-bold">OCU</span>
+            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-100 border-2 border-red-600 rounded mr-0.5 sm:mr-1 flex items-center justify-center">
+              <span class="text-[5px] sm:text-[6px] text-red-800 font-bold">OCU</span>
             </div>
-            <span class="text-xs sm:text-sm text-gray-700">Ocupado</span>
+            <span class="text-[9px] sm:text-[10px] text-gray-700">Ocupado</span>
           </div>
         </div>
       </div>
 
       <!-- Información de asientos seleccionados -->
-      <div v-if="selectionEnabled && selectedSeats.length > 0" class="mt-6 mx-2 sm:mx-4 mb-4 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100">
-        <h4 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+      <div v-if="selectionEnabled && selectedSeats.length > 0" class="mt-1.5 sm:mt-2 mx-1 sm:mx-2 md:mx-3 mb-1 bg-blue-50 p-1 sm:p-1.5 md:p-2 rounded-lg border border-blue-100">
+        <h4 class="text-[9px] sm:text-[10px] md:text-xs font-medium text-blue-800 mb-0.5 sm:mb-1 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 md:h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
           </svg>
-          Asientos seleccionados: <span class="ml-1 bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full text-xs">{{ selectedSeats.length }}</span>
+          Asientos sel: <span class="ml-1 bg-blue-200 text-blue-800 px-1 sm:px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px]">{{ selectedSeats.length }}</span>
         </h4>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-0.5 sm:gap-1">
           <span
             v-for="seat in selectedSeats"
             :key="seat.id"
-            class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 shadow-sm"
+            class="inline-flex items-center px-1 sm:px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-medium bg-blue-100 text-blue-800 shadow-sm"
           >
             {{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}
             <button
               @click="toggleSeatSelection(seat)"
-              class="ml-1 sm:ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
+              class="ml-0.5 text-blue-600 hover:text-blue-800 focus:outline-none"
               aria-label="Quitar asiento"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-2 w-2 sm:h-2.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
             </button>
@@ -482,17 +467,14 @@ onMounted(() => {
 }
 
 .seat-container {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .seat-box {
-  min-height: 4.5rem;
-  height: 4.5rem;
+  min-height: 3rem;
+  height: auto;
   transition: all 0.3s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .seat-box:hover:not([class*="bg-red"]) {
@@ -512,52 +494,34 @@ onMounted(() => {
   }
 }
 
-.bg-blue-50 {
+.bg-blue-50.border-blue-100 {
   animation: pulse 2s infinite;
 }
 
 /* Mejoras para dispositivos móviles */
-@media (max-width: 768px) {
+@media (max-width: 639px) {
   .print-layout {
     max-width: 100%;
     padding: 0;
   }
 
-  .seat-box {
-    min-height: 3.5rem;
-    height: 3.5rem;
-    padding: 0.5rem !important;
-  }
-
   .seat-number span {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
   }
 
-  /* Reducir el tamaño de los textos en móviles */
-  .seat-box .text-xs {
-    font-size: 0.65rem;
+  .seat-box .text-\[8px\] {
+    font-size: 0.5rem;
+  }
+   .seat-box .text-\[9px\] { 
+    font-size: 0.55rem;
   }
 
-  /* Ajustar el espacio entre filas de asientos */
-  .seat-container {
-    margin-bottom: 0.5rem;
-  }
-
-  /* Mejorar la visualización de la cabecera en móviles */
   .header h2 {
-    font-size: 1.25rem;
+    font-size: 0.8rem;
   }
 
   .header p {
-    font-size: 0.65rem;
-  }
-}
-
-/* Ajustes para tablets */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .seat-box {
-    min-height: 4rem;
-    height: 4rem;
+    font-size: 0.55rem;
   }
 }
 
@@ -587,7 +551,6 @@ onMounted(() => {
     border-bottom: 2px solid #166534 !important;
   }
 
-  /* Asegurar que todo el contenido se imprima */
   html, body {
     width: 100%;
     height: 100%;
@@ -595,24 +558,20 @@ onMounted(() => {
     padding: 0;
   }
 
-  /* Ajustar el tamaño de los asientos para impresión */
   .seat-container {
     page-break-inside: avoid;
   }
 
-  /* Ocultar elementos innecesarios para impresión */
   .md\:hidden {
     display: none !important;
   }
 }
 
-/* Mejoras de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   .seat-box {
     transition: none;
   }
-
-  .bg-blue-50 {
+  .bg-blue-50.border-blue-100 {
     animation: none;
   }
 }
