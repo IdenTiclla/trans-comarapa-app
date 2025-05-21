@@ -341,30 +341,46 @@ const loadSeats = async () => {
     // o simplificarla si el backend no provee 'deck' o 'position' de forma consistente.
 
     for (const backendSeat of backendSeats) {
-      // Determinar columna y posición basado en el número de asiento (lógica existente adaptada)
-      // Esta lógica asume una configuración estándar de bus 2x2
+      // Determinar columna y posición basado en el número de asiento
       let column = 'unknown';
       let position = 'unknown'; // 'window' o 'aisle'
       const seatNumber = backendSeat.seat_number;
 
-      // Lógica simplificada para asignar columna basado en paridad y umbral (ej. bus de 44 asientos, 22 por lado)
-      // Esto es una aproximación y podría necesitar ajustes basados en la numeración real
-      const typicalSeatsPerRow = 4;
-      const row = Math.ceil(seatNumber / typicalSeatsPerRow);
-      const positionInRow = seatNumber % typicalSeatsPerRow;
+      // Define typicalSeatsPerRow. This value might eventually come from bus configuration data.
+      // For common 2x2 layouts, this is 4.
+      // For 2+1 layouts, this would be 3.
+      // The logic below should adapt if this value changes.
+      const typicalSeatsPerRow = 4; // Assuming 2 seats on left, 2 seats on right separated by aisle
 
-      if (positionInRow === 1 || (positionInRow === 2 && typicalSeatsPerRow === 2)) { // Asientos 1, 2 (si 2 por fila) o 1, 2 (si 4 por fila)
-        column = 'left';
-        position = (positionInRow === 1) ? 'window' : 'aisle';
-      } else if (positionInRow === 3 || positionInRow === 0 || (positionInRow === 1 && typicalSeatsPerRow === 2)) { // Asientos 3, 4 (si 4 por fila) o 1,2 (si 2 por fila en lado derecho)
-         // Para positionInRow === 0 (asiento 4, 8, etc.), es el último de la fila
-        column = 'right';
-        if (typicalSeatsPerRow === 4) {
-          position = (positionInRow === 3) ? 'window' : 'aisle';
-        } else { // typicalSeatsPerRow === 2 (e.g. bus más pequeño, 1 asiento ventana, 1 pasillo por lado)
-            position = (positionInRow === 1) ? 'window' : 'aisle'; // Asumiendo que en el lado derecho el 1 es ventana y el 0 (o 2) es pasillo
+      if (typicalSeatsPerRow > 0) {
+        // Calculate a 0-indexed position within a conceptual row group.
+        // For typicalSeatsPerRow = 4:
+        // Seat 1 -> idxInRowGroup = 0
+        // Seat 2 -> idxInRowGroup = 1
+        // Seat 3 -> idxInRowGroup = 2
+        // Seat 4 -> idxInRowGroup = 3
+        // Seat 5 -> idxInRowGroup = 0 (starts a new group)
+        const idxInRowGroup = (seatNumber - 1) % typicalSeatsPerRow;
+
+        // Determine column: seats in the first half of the group are 'left', second half are 'right'.
+        if (idxInRowGroup < typicalSeatsPerRow / 2) {
+          column = 'left';
+        } else {
+          column = 'right';
         }
+
+        // Determine position based on the user's rule: odd seat numbers are window, even are aisle.
+        if (seatNumber % 2 !== 0) { // Odd seat number
+          position = 'window';
+        } else { // Even seat number
+          position = 'aisle';
+        }
+      } else {
+        // Fallback if typicalSeatsPerRow is not a positive number
+        console.warn(`BusSeatMapPrint: typicalSeatsPerRow is ${typicalSeatsPerRow}. Cannot determine column/position for seat ${seatNumber}.`);
+        // column and position will remain 'unknown'
       }
+      
       // Si el backendSeat tiene 'deck', usarlo. Si no, el frontend no puede determinarlo fácilmente.
       const seatDeck = backendSeat.deck || 'main'; 
 
