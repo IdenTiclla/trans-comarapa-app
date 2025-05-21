@@ -353,32 +353,29 @@ const loadSeats = async () => {
       const typicalSeatsPerRow = 4; // Assuming 2 seats on left, 2 seats on right separated by aisle
 
       if (typicalSeatsPerRow > 0) {
-        // Calculate a 0-indexed position within a conceptual row group.
-        // For typicalSeatsPerRow = 4:
-        // Seat 1 -> idxInRowGroup = 0
-        // Seat 2 -> idxInRowGroup = 1
-        // Seat 3 -> idxInRowGroup = 2
-        // Seat 4 -> idxInRowGroup = 3
-        // Seat 5 -> idxInRowGroup = 0 (starts a new group)
         const idxInRowGroup = (seatNumber - 1) % typicalSeatsPerRow;
 
-        // Determine column: seats in the first half of the group are 'left', second half are 'right'.
-        if (idxInRowGroup < typicalSeatsPerRow / 2) {
+        // Determine column and position based on typical bus layout (2x2)
+        if (idxInRowGroup < typicalSeatsPerRow / 2) { // First half of seats in a row group (e.g., 0, 1 for typicalSeatsPerRow=4)
           column = 'left';
-        } else {
+          // For left column: odd is window, even is aisle
+          if (seatNumber % 2 !== 0) { 
+            position = 'window';
+          } else { 
+            position = 'aisle';
+          }
+        } else { // Second half of seats in a row group (e.g., 2, 3 for typicalSeatsPerRow=4)
           column = 'right';
-        }
-
-        // Determine position based on the user's rule: odd seat numbers are window, even are aisle.
-        if (seatNumber % 2 !== 0) { // Odd seat number
-          position = 'window';
-        } else { // Even seat number
-          position = 'aisle';
+          // For right column: odd is aisle, even is window
+          if (seatNumber % 2 !== 0) { 
+            position = 'aisle';
+          } else { 
+            position = 'window';
+          }
         }
       } else {
-        // Fallback if typicalSeatsPerRow is not a positive number
         console.warn(`BusSeatMapPrint: typicalSeatsPerRow is ${typicalSeatsPerRow}. Cannot determine column/position for seat ${seatNumber}.`);
-        // column and position will remain 'unknown'
+        // column and position will remain 'unknown' as initialized
       }
       
       // Si el backendSeat tiene 'deck', usarlo. Si no, el frontend no puede determinarlo fácilmente.
