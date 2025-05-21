@@ -15,7 +15,7 @@
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
               <div>
                 <h4 class="text-base font-medium text-gray-900">{{ trip.route.origin }} → {{ trip.route.destination }}</h4>
-                <p class="text-sm text-gray-500">{{ formatDate(trip.departure_date) }} - {{ trip.departure_time }}</p>
+                <p class="text-sm text-gray-500">{{ formatDate(trip.trip_datetime) }} - {{ formatTime(trip.departure_time, trip.trip_datetime) }}</p>
               </div>
               <div class="mt-2 sm:mt-0">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -181,16 +181,46 @@ const confirmSelection = () => {
   }
 }
 
-// Formatear fecha
+// Formatear fecha (Improved robustness)
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date)
+  if (!dateString) return 'Fecha no disp.';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Fecha inv.'; // Check for invalid date object
+    return new Intl.DateTimeFormat('es-ES', {
+      weekday: 'short', // Using short to save space if needed
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }).format(date);
+  } catch (e) {
+    return 'Error fecha';
+  }
 }
+
+// Helper to format time (can be adapted from [id].vue or simplified)
+const formatTime = (timeString, dateString) => {
+  if (!timeString) return 'Hora no esp.';
+  if (timeString.includes('T')) { // Handles if timeString is a full ISO datetime
+    const date = new Date(timeString);
+    if (isNaN(date.getTime())) return 'Hora inv.';
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+  // If timeString is just HH:MM:SS and we have a dateString for context
+  if (dateString && timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Hora inv.';
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+  // Fallback for HH:MM or HH:MM:SS without date context
+  const parts = timeString.split(':');
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`;
+  }
+  return timeString; // Return as is if not parsable
+};
 
 // Observar cambios en las propiedades
 watch(() => props.trip, (newTrip) => {

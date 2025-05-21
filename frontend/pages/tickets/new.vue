@@ -590,129 +590,112 @@ const handleSeatDeselected = (seat) => {
 
 // Manejar envío del formulario
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
-
   submitting.value = true
-  error.value = null 
-  ticketStore.clearError()
-  clientStore.clearError()
+  error.value = null
+  ticketStore.clearError() // Clear previous ticket errors
+  clientStore.clearError() // Clear previous client errors
+
+  let finalClientId = null
+  const successfulTickets = []
+  const failedTicketSeats = []
 
   try {
-    let finalClientId = null
-
+    // 1. Determine Client ID
     if (clientType.value === 'new') {
-      try {
-        const clientData = {
-          firstname: newClient.value.name.split(' ')[0] || '',
-          lastname: newClient.value.name.split(' ').slice(1).join(' ') || newClient.value.name.split(' ')[0] || '',
-          phone: newClient.value.phone,
-          address: newClient.value.address,
-          city: newClient.value.city,
-          state: newClient.value.state,
-        }
-        const createdClient = await clientStore.createClient(clientData)
-        
-        if (clientStore.error || !createdClient || !createdClient.id) {
-          throw new Error(clientStore.error || 'Respuesta inválida al crear cliente.')
-        }
-        finalClientId = createdClient.id
-      } catch (clientError) {
-        console.error('Error al crear el cliente:', clientError)
-        error.value = `No se pudo crear el cliente: ${clientStore.error || clientError.message}`
-        submitting.value = false
-        return
+      const clientData = {
+        firstname: newClient.value.name.split(' ')[0] || '',
+        lastname: newClient.value.name.split(' ').slice(1).join(' ') || '',
+        document_id: newClient.value.ci,
+        phone: newClient.value.phone,
+        email: newClient.value.email,
+        address: newClient.value.address,
+        city: newClient.value.city,
+        state: newClient.value.state,
+        is_minor: false, // Assuming default, adjust if form has this
       }
-    } else {
-      if (!selectedClient.value || !selectedClient.value.id) {
-        throw new Error('Cliente existente no seleccionado correctamente.')
+      console.log('[handleSubmit] Creating new client with data:', JSON.stringify(clientData, null, 2));
+      const newlyCreatedClient = await clientStore.createClient(clientData)
+      if (clientStore.error) { // Check for error after client creation attempt
+        throw new Error(clientStore.error || 'Error al crear el cliente.')
       }
+      finalClientId = newlyCreatedClient?.id
+      console.log('[handleSubmit] Newly created client ID:', finalClientId);
+    } else if (selectedClient.value) {
       finalClientId = selectedClient.value.id
+      console.log('[handleSubmit] Using existing client ID:', finalClientId);
+    } else {
+      throw new Error('Por favor, seleccione un cliente existente o ingrese los datos de un nuevo cliente.')
     }
 
     if (!finalClientId) {
-        error.value = 'ID de cliente no disponible.'
-        submitting.value = false
-        return
+      throw new Error('No se pudo obtener el ID del cliente.')
     }
 
-    // Obtener el ID del usuario operador (secretario)
-    let operatorUserId = null;
-    if (authStore.user && authStore.userRole === 'secretary') {
-      operatorUserId = authStore.user.id;
-    } else {
-      // Esta comprobación es una segunda barrera, la primera está en onMounted.
-      // Si se llega aquí, algo inesperado ocurrió o el estado del rol cambió.
-      error.value = 'Operación no permitida: El usuario debe ser un secretario para vender boletos.';
-      submitting.value = false;
-      return;
+    if (!authStore.user || !authStore.user.id) {
+      throw new Error('No se pudo obtener el ID del operador. Por favor, inicie sesión nuevamente.');
     }
+    console.log('[handleSubmit] Operator User ID:', authStore.user.id);
 
-    // No es necesario verificar !operatorUserId porque la lógica anterior ya lo cubre
-    // o detiene la ejecución si el rol no es 'secretary'.
+    if (!trip.value || !trip.value.price || trip.value.price <= 0) {
+        throw new Error('El precio del viaje no es válido o no está configurado.');
+    }
+    console.log('[handleSubmit] Trip price for tickets:', trip.value.price);
 
-    const ticketPromises = selectedSeats.value.map(async (seat) => {
-      if (!seat || typeof seat.id === 'undefined') {
-        console.error('Asiento inválido en la selección:', seat)
-        throw new Error(`Asiento inválido: ${seat.number || 'desconocido'}. Falta ID.`);
-      }
+    // 2. Create Tickets for each selected seat
+    for (const seat of selectedSeats.value) {
       const ticketData = {
         trip_id: trip.value.id,
-        seat_id: seat.id, 
+        seat_id: seat.id, // Ensure seat.id is the PK from backend
         client_id: finalClientId,
-        state: 'confirmed',
-        price: trip.value?.price_per_seat || trip.value?.price || ticketPrice.value || 0, 
+        state: 'confirmed', // Or make this selectable if needed
+        price: trip.value.price, // Price per ticket from the trip
         payment_method: paymentMethod.value,
-        operator_user_id: operatorUserId // Cambiado de secretary_id a operator_user_id
+        operator_user_id: authStore.user.id, // User ID of the secretary/admin creating the ticket
       }
-      return ticketStore.createNewTicket(ticketData)
-    })
+      console.log(`[handleSubmit] Attempting to create ticket for seat ${seat.number} (ID: ${seat.id}) with data:`, JSON.stringify(ticketData, null, 2));
+      try {
+        const newTicket = await ticketStore.createNewTicket(ticketData)
+        successfulTickets.push(newTicket)
+        console.log(`[handleSubmit] Successfully created ticket for seat ${seat.number} (ID: ${seat.id}):`, newTicket);
+      } catch (ticketErr) {
+        console.error(`[handleSubmit] Failed to create ticket for seat ${seat.number} (ID: ${seat.id}):`, ticketErr);
+        failedTicketSeats.push(seat)
+        // error.value = ticketStore.error || `Error al crear boleto para asiento ${seat.number}`;
+        // Do not throw here, try to process other tickets
+      }
+    }
 
-    const createdTicketsResults = await Promise.allSettled(ticketPromises)
-    
-    const successfulTickets = []
-    const failedTicketCreationErrors = []
-
-    for (const result of createdTicketsResults) {
-      if (result.status === 'fulfilled' && result.value && result.value.id) {
-         successfulTickets.push(result.value);
+    if (failedTicketSeats.length > 0) {
+      const failedSeatNumbers = failedTicketSeats.map(s => s.number).join(', ');
+      // Accumulate errors or show a summary
+      error.value = `No se pudieron crear boletos para los asientos: ${failedSeatNumbers}. ${ticketStore.error || clientStore.error || 'Consulte la consola para más detalles.'}`;
+      // Decide on navigation or partial success message here
+    } else if (successfulTickets.length > 0) {
+      // alert('Venta completada exitosamente!')
+      const ticketIds = successfulTickets.map(t => t.id).join(',');
+      const currentTripId = trip.value?.id;
+      if (currentTripId) {
+        router.push(`/tickets/confirmation?tripId=${currentTripId}&ids=${ticketIds}`);
       } else {
-        let errMsg = 'Error desconocido al crear un boleto.'
-        if (result.reason) {
-            errMsg = result.reason.message;
-            if (result.reason.response && result.reason.response.data && result.reason.response.data.detail) {
-                errMsg = result.reason.response.data.detail;
-            }
-        }
-        failedTicketCreationErrors.push(errMsg)
-        console.error('Error al crear un ticket:', result.reason || 'Motivo desconocido');
+        // Fallback or error if tripId is somehow not available, though it should be
+        console.error("[handleSubmit] Trip ID not available for confirmation page redirect.");
+        error.value = "No se pudo redirigir a la página de confirmación (faltan datos del viaje).";
+        // Optionally, redirect to a generic success or error page, or back to trip list
+        router.push(`/trips`); 
+      }
+    } else {
+      // This case means no seats were selected or something else went wrong before ticket creation loop
+      if (!error.value) { // If no specific error was set before
+          error.value = 'No se procesaron boletos. Verifique los datos.';
       }
     }
 
-    if (failedTicketCreationErrors.length > 0) {
-      const combinedErrorMsg = `Falló la creación de ${failedTicketCreationErrors.length} boleto(s): ${failedTicketCreationErrors.join('; ')}`
-      error.value = combinedErrorMsg
-      if (successfulTickets.length === 0) { 
-        submitting.value = false
-        return
-      }
-      // If some tickets were successful, we might still proceed or just show the error and let user retry.
-      // For now, if there are any errors, we stop before redirecting IF NO tickets were successful.
-    }
-    
-    if (successfulTickets.length === 0) {
-        error.value = 'No se pudo crear ningún boleto. Verifique los detalles e intente nuevamente.'
-        submitting.value = false
-        return
-    }
-
-    console.log('Tickets creados exitosamente:', successfulTickets)
-
-    const ticketIds = successfulTickets.map(ticket => ticket.id).join(',')
-    router.push(`/tickets/confirmation?ids=${ticketIds}&tripId=${trip.value.id}`)
-
-  } catch (err) { 
-    console.error('Error general al procesar la venta:', err)
-    error.value = `No se pudo procesar la venta: ${err.message || ticketStore.error || clientStore.error || 'Error desconocido general'}`
+  } catch (e) {
+    console.error('[handleSubmit] Global error:', e);
+    error.value = e.message || 'Ocurrió un error al procesar la venta.'
+    // Ensure specific store errors are prioritized if available
+    if (clientStore.error) error.value = clientStore.error;
+    if (ticketStore.error && !clientStore.error) error.value = ticketStore.error; // Only if no client error
   } finally {
     submitting.value = false
   }

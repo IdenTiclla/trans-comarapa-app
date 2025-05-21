@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional, Any, Literal
 from schemas.client import Client as ClientSchema
 from schemas.secretary import Secretary as SecretarySchema
+from schemas.seat import Seat as SeatSchema
 
 class TicketBase(BaseModel):
     state: str = Field(..., description="State of the ticket", example="pending")
@@ -82,6 +83,7 @@ class Ticket(TicketBase):
     updated_at: datetime
     client: ClientSchema
     secretary: SecretarySchema
+    seat: SeatSchema
 
     class Config:
         from_attributes = True

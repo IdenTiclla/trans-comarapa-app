@@ -203,6 +203,113 @@
             </div>
           </div>
 
+          <!-- Sold Tickets Section -->
+          <div class="mt-8">
+            <button
+              @click="toggleSoldTickets"
+              class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
+            >
+              <h3 class="text-lg font-medium text-gray-800">
+                Boletos Vendidos ({{ soldTickets.length }})
+              </h3>
+              <ChevronDownIcon v-if="!showSoldTickets" class="w-6 h-6 text-gray-600" />
+              <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
+            </button>
+
+            <div v-if="showSoldTickets" class="mt-4">
+              <div v-if="isLoadingSoldTickets" class="flex justify-center py-6">
+                <p class="text-gray-500 italic">Cargando boletos vendidos...</p>
+                <!-- You can add a spinner here -->
+              </div>
+              <div v-else-if="soldTicketsError" class="bg-red-50 border border-red-200 rounded-md p-4">
+                <p class="text-red-700 text-sm">{{ soldTicketsError }}</p>
+              </div>
+              <div v-else-if="soldTickets.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p class="text-blue-700 text-sm">No hay boletos vendidos para este viaje aún.</p>
+              </div>
+              <!-- Iterate over grouped tickets -->
+              <div v-else class="space-y-4">
+                <div v-for="(ticketsInState, state) in groupedSoldTickets" :key="state">
+                  <button
+                    @click="toggleTicketsByState(state)"
+                    class="w-full flex justify-between items-center px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-md shadow-sm focus:outline-none transition-colors duration-150 border border-gray-200"
+                  >
+                    <h4 class="text-md font-medium text-gray-700">
+                      {{ state.charAt(0).toUpperCase() + state.slice(1) }} ({{ ticketsInState.length }})
+                    </h4>
+                    <ChevronDownIcon v-if="!showTicketsByState[state]" class="w-5 h-5 text-gray-500" />
+                    <ChevronUpIcon v-else class="w-5 h-5 text-gray-500" />
+                  </button>
+
+                  <div v-if="showTicketsByState[state]" class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div
+                      v-for="ticket in ticketsInState"
+                      :key="ticket.id"
+                      class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-in-out"
+                    >
+                      <div class="p-5">
+                        <div class="flex justify-between items-start mb-3">
+                          <h4 class="text-md font-semibold text-green-700">
+                            Boleto #{{ ticket.id }}
+                          </h4>
+                          <span 
+                            class="px-2 py-0.5 text-xs font-medium rounded-full"
+                            :class="{
+                              'bg-green-100 text-green-800': ticket.state === 'confirmed',
+                              'bg-yellow-100 text-yellow-800': ticket.state === 'pending',
+                              'bg-red-100 text-red-800': ticket.state === 'cancelled',
+                              'bg-gray-100 text-gray-800': ticket.state === 'completed' || ticket.state === 'used' || ticket.state === 'unknown',
+                            }"
+                          >
+                            {{ ticket.state ? ticket.state.charAt(0).toUpperCase() + ticket.state.slice(1) : 'N/D' }}
+                          </span>
+                        </div>
+
+                        <div class="space-y-2.5 text-sm text-gray-600">
+                          <div class="flex items-center">
+                            <UserCircleIcon class="w-5 h-5 mr-2 text-green-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Pasajero:</span> {{ ticket.client?.firstname }} {{ ticket.client?.lastname }}</p>
+                          </div>
+                          <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                             <p><span class="font-medium text-gray-700">Asiento:</span> {{ ticket.seat?.seat_number }} ({{ ticket.seat?.deck }})</p>
+                          </div>
+                           <div class="flex items-center">
+                             <CurrencyDollarIcon class="w-5 h-5 mr-2 text-green-500 flex-shrink-0" />
+                             <p><span class="font-medium text-gray-700">Precio:</span> Bs. {{ ticket.price?.toFixed(2) }}</p>
+                          </div>
+                          <div class="flex items-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM4 8h5v2H4V8z" clip-rule="evenodd" />
+                            </svg>
+                             <p><span class="font-medium text-gray-700">Método Pago:</span> {{ ticket.payment_method || 'N/D' }}</p>
+                          </div>
+                          <div class="flex items-center">
+                            <CalendarIcon class="w-5 h-5 mr-2 text-green-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Vendido:</span> {{ formatDate(ticket.created_at) }}</p>
+                          </div>
+                           <div v-if="ticket.secretary" class="flex items-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fill-rule="evenodd" d="M18 8a6 6 0 11-12 0 6 6 0 0112 0zm-8-3a1 1 0 00-.867.5 1 1 0 01-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                             <p><span class="font-medium text-gray-700">Vendido por:</span> {{ ticket.secretary.firstname }} {{ ticket.secretary.lastname }}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-if="ticket.state === 'confirmed' || ticket.state === 'pending'" class="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end space-x-2">
+                        <AppButton size="sm" variant="danger-outline">Cancelar</AppButton>
+                        <AppButton size="sm" variant="primary">Imprimir</AppButton> <!-- Placeholder for future actions -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End Sold Tickets Section -->
+
           <div v-if="displayedTrip" class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
             <AppButton
               variant="secondary"
@@ -225,30 +332,6 @@
               Vender Boleto
             </AppButton>
           </div>
-
-          <!-- Modal de selección de asientos -->
-          <div v-if="showSeatSelection && displayedTrip" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-              <div class="sticky top-0 z-10 bg-white px-4 py-4 sm:px-6 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-gray-900">Venta de Boletos</h3>
-                <button
-                  @click="showSeatSelection = false"
-                  class="text-gray-400 hover:text-gray-500 focus:outline-none"
-                  aria-label="Cerrar"
-                >
-                  <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div class="p-4 sm:p-6">
-                <SeatSelection
-                  :trip="displayedTrip"
-                  @selection-confirmed="handleSeatSelectionConfirmed"
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -256,150 +339,215 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'
-import { useTripStore } from '~/stores/tripStore'
-import AppButton from '~/components/AppButton.vue'
-import SeatSelection from '~/components/SeatSelection.vue'
-import BusSeatMapPrint from '~/components/BusSeatMapPrint.vue'
+import { useTripStore } from '@/stores/tripStore'
+import AppButton from '@/components/AppButton.vue'
+import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
+import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline'
 
-const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
+const router = useRouter()
 const tripStore = useTripStore()
+const config = useRuntimeConfig()
 
-const showSeatSelection = ref(false)
-const showOccupiedSeats = ref(false)
-const showAvailableSeats = ref(false)
-
+const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
 
-onMounted(() => {
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
+const showAvailableSeats = ref(false)
+const showOccupiedSeats = ref(false)
+
+// New reactive properties for sold tickets
+const soldTickets = ref([])
+const isLoadingSoldTickets = ref(false)
+const soldTicketsError = ref(null)
+const showSoldTickets = ref(false) // To toggle visibility of the main sold tickets section
+
+// New reactive state for toggling visibility of tickets grouped by state
+const showTicketsByState = ref({});
+
+const groupedSoldTickets = computed(() => {
+  if (!soldTickets.value || soldTickets.value.length === 0) {
+    return {};
   }
-  fetchTripDetails()
+  return soldTickets.value.reduce((acc, ticket) => {
+    const state = ticket.state || 'unknown'; // Group tickets with no state under 'unknown'
+    if (!acc[state]) {
+      acc[state] = [];
+    }
+    acc[state].push(ticket);
+    return acc;
+  }, {});
+});
+
+const sortedAvailableSeats = computed(() => {
+  if (!displayedTrip.value || !displayedTrip.value.seats_layout) return []
+  return displayedTrip.value.seats_layout
+    .filter(seat => seat.status === 'available')
+    .map(seat => seat.seat_number)
+    .sort((a, b) => a - b)
 })
 
-const fetchTripDetails = async () => {
-  try {
-    await tripStore.fetchTripById(route.params.id)
-  } catch (err) {
-    console.error('Error al invocar fetchTripById:', err)
-    tripStore.setError(err.message || 'No se pudieron cargar los detalles del viaje. Intente nuevamente.')
-  }
-}
+const sortedOccupiedSeats = computed(() => {
+  if (!displayedTrip.value || !displayedTrip.value.occupied_seat_numbers) return []
+  return [...displayedTrip.value.occupied_seat_numbers].sort((a, b) => a - b)
+})
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'Fecha no disponible';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return 'Fecha inválida';
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date);
-}
-
-const formatTime = (timeString, fallbackDateTime) => {
-  if (timeString && timeString.includes(':')) {
-    const [hours, minutes] = timeString.split(':');
-    return `${hours}:${minutes}`;
+onMounted(async () => {
+  if (isNaN(tripId.value)) {
+    console.error("Invalid trip ID")
+    router.push('/trips')
+    return
   }
-  if (fallbackDateTime) {
-    const date = new Date(fallbackDateTime);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
+  await tripStore.fetchTripById(tripId.value)
+  // If trip details are successfully fetched, then fetch sold tickets
+  if (displayedTrip.value && displayedTrip.value.id) {
+    await fetchSoldTickets(); // Call fetchSoldTickets on mount
   }
-  return 'Hora no disponible';
-}
+})
 
 const getStatusClass = (status) => {
   switch (status) {
-    case 'scheduled':
-      return 'bg-blue-100 text-blue-800'
-    case 'in_progress':
-      return 'bg-green-100 text-green-800'
-    case 'completed':
-      return 'bg-gray-100 text-gray-800'
-    case 'cancelled':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
+    case 'scheduled': return 'bg-blue-100 text-blue-800'
+    case 'boarding': return 'bg-yellow-100 text-yellow-800'
+    case 'departed': return 'bg-indigo-100 text-indigo-800'
+    case 'arrived': return 'bg-green-100 text-green-800'
+    case 'cancelled': return 'bg-red-100 text-red-800'
+    case 'delayed': return 'bg-orange-100 text-orange-800'
+    default: return 'bg-gray-100 text-gray-800'
   }
 }
 
 const getStatusText = (status) => {
   switch (status) {
-    case 'scheduled':
-      return 'Programado'
-    case 'in_progress':
-      return 'En progreso'
-    case 'completed':
-      return 'Completado'
-    case 'cancelled':
-      return 'Cancelado'
-    default:
-      return 'Desconocido'
+    case 'scheduled': return 'Programado'
+    case 'boarding': return 'Abordando'
+    case 'departed': return 'En Ruta'
+    case 'arrived': return 'Llegó'
+    case 'cancelled': return 'Cancelado'
+    case 'delayed': return 'Retrasado'
+    default: return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Desconocido'
   }
 }
 
-const goToSellTicket = () => {
-  if (displayedTrip.value) {
-    router.push(`/tickets/new?trip=${displayedTrip.value.id}`)
+const formatDate = (dateString) => {
+  if (!dateString) return 'Fecha no disponible'
+  const options = { year: 'numeric', month: 'long', day: 'numeric' }
+  try {
+    return new Date(dateString).toLocaleDateString('es-ES', options)
+  } catch (e) {
+    return 'Fecha inválida'
   }
+}
+
+const formatTime = (timeString, dateString) => {
+  if (!timeString) return 'Hora no especificada'
+  if (timeString.includes('T')) {
+    const date = new Date(timeString)
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  }
+  if (dateString && timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    const [hours, minutes] = timeString.split(':')
+    const date = new Date(dateString)
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0)
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  }
+  const parts = timeString.split(':');
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`;
+  }
+  return timeString;
+}
+
+const goToSellTicket = () => {
+  if (displayedTrip.value && displayedTrip.value.id) {
+    router.push(`/tickets/new?trip=${displayedTrip.value.id}`); // Navigate directly
+  } else {
+    console.warn("Cannot navigate to sell ticket: Trip data not available.");
+    // Optionally, show a notification to the user
+  }
+};
+
+const toggleAvailableSeats = () => {
+  showAvailableSeats.value = !showAvailableSeats.value
 }
 
 const toggleOccupiedSeats = () => {
   showOccupiedSeats.value = !showOccupiedSeats.value
-  if (showOccupiedSeats.value && showAvailableSeats.value) {
-    showAvailableSeats.value = false
-  }
 }
 
-const toggleAvailableSeats = () => {
-  showAvailableSeats.value = !showAvailableSeats.value
-  if (showAvailableSeats.value && showOccupiedSeats.value) {
-    showOccupiedSeats.value = false
+// Method to fetch sold tickets
+const fetchSoldTickets = async () => {
+  if (!displayedTrip.value || !displayedTrip.value.id) {
+    soldTicketsError.value = 'ID del viaje no disponible para cargar boletos.';
+    return;
   }
-}
-
-const sortedAvailableSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.seats_layout) return [];
-  return displayedTrip.value.seats_layout
-    .filter(seat => seat.status === 'available')
-    .map(seat => seat.seat_number)
-    .sort((a, b) => {
-      const numA = parseInt(String(a).replace(/\D/g, ''), 10) || 0;
-      const numB = parseInt(String(b).replace(/\D/g, ''), 10) || 0;
-      return numA - numB;
+  isLoadingSoldTickets.value = true;
+  soldTicketsError.value = null;
+  try {
+    const apiUrl = `${config.public.apiBaseUrl}/tickets/trip/${displayedTrip.value.id}`;
+    // Using $fetch as recommended for client-side fetching after mount
+    const responseData = await $fetch(apiUrl, {
+      method: 'GET',
+      // headers: { ... } // Add any necessary headers, like Authorization if needed
     });
-})
 
-const sortedOccupiedSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.occupied_seat_numbers) return [];
-  // Assuming occupied_seat_numbers is already an array of numbers/strings from backend
-  return [...displayedTrip.value.occupied_seat_numbers].sort((a, b) => {
-    const numA = parseInt(String(a).replace(/\D/g, ''), 10) || 0;
-    const numB = parseInt(String(b).replace(/\D/g, ''), 10) || 0;
-    return numA - numB;
-  });
-})
-
-const handleSeatSelectionConfirmed = (selectedSeats) => {
-  console.log('Asientos seleccionados:', selectedSeats)
-  if (displayedTrip.value) {
-    const seatNumbers = selectedSeats.map(seat => seat.number).join(',')
-    router.push(`/tickets/new?trip=${displayedTrip.value.id}&seats=${seatNumbers}`)
+    if (responseData) {
+        // Ensure plain objects for Pinia SSR/hydration
+        soldTickets.value = JSON.parse(JSON.stringify(responseData));
+    } else {
+        soldTickets.value = [];
+    }
+  } catch (err) { 
+    console.error("API Error fetching sold tickets:", err);
+    // $fetch errors often have a `data` property with more details from the server
+    // Also, check err.response for more details if available
+    let errorMessage = 'No se pudieron cargar los boletos vendidos. Intente más tarde.';
+    if (err.response && err.response._data && err.response._data.detail) {
+      errorMessage = err.response._data.detail;
+    } else if (err.data && err.data.message) {
+      errorMessage = err.data.message;
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    soldTicketsError.value = errorMessage;
+    soldTickets.value = [];
   }
-  showSeatSelection.value = false
+  finally {
+    isLoadingSoldTickets.value = false;
+  }
 }
 
-definePageMeta({
-  // middleware: ['auth'] // Aplicar middleware de autenticación - REMOVED as auth.global.ts handles this
-})
+// Method to toggle sold tickets display and fetch if needed
+const toggleSoldTickets = () => {
+  showSoldTickets.value = !showSoldTickets.value;
+  if (showSoldTickets.value && (soldTickets.value.length === 0 || soldTicketsError.value) && !isLoadingSoldTickets.value) {
+    fetchSoldTickets();
+  }
+  // When closing the main dropdown, also reset individual group visibility if desired
+  // if (!showSoldTickets.value) {
+  //   showTicketsByState.value = {}; 
+  // }
+}
+
+// Method to toggle visibility of tickets for a specific state
+const toggleTicketsByState = (state) => {
+  showTicketsByState.value[state] = !showTicketsByState.value[state];
+}
+
+// Watch for changes in displayedTrip.id if the section is already open
+watch(() => displayedTrip.value?.id, (newId, oldId) => {
+  if (newId && newId !== oldId && showSoldTickets.value) {
+    fetchSoldTickets();
+  }
+});
+
+// Make sure definePageMeta is correctly placed if it's outside script setup
+// For Nuxt 3, it's typically auto-imported or used in a separate <script> block if not setup.
+// definePageMeta({ middleware: ['auth'] }); // Example, if auth middleware is needed
+
 </script>
+
+
+
+
