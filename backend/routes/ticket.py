@@ -6,6 +6,7 @@ from models.seat import Seat as SeatModel
 from models.client import Client as ClientModel
 from models.trip import Trip as TripModel
 from models.bus import Bus as BusModel
+from models.secretary import Secretary as SecretaryModel
 from schemas.ticket import TicketCreate, Ticket as TicketSchema, TicketUpdate
 from typing import List
 from datetime import datetime, timedelta
@@ -84,22 +85,36 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
             detail=f"Trip with id {ticket.trip_id} not found"
         )
 
-    # 4. Verify that the trip hasn't already departed
-    min_departure = datetime.now() + timedelta(minutes=10)  # Allow a shorter window for tickets than trip creation
+    # 4. Find the Secretary entity ID based on the operator_user_id
+    # The ticket.operator_user_id is the user_id of the secretary/admin creating the ticket
+    secretary_profile = db.query(SecretaryModel).filter(SecretaryModel.user_id == ticket.operator_user_id).first()
+    if not secretary_profile:
+        # Fallback or alternative logic for admins if they don't have a secretary profile
+        # For now, we'll raise an error if no secretary profile is found for the user.
+        # This might need adjustment based on how admins are handled (e.g., do they also have a secretary profile, or is there a default secretary_id for admin operations?)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, # Or 404 if preferred
+            detail=f"No secretary profile found for user ID {ticket.operator_user_id}. Cannot create ticket."
+        )
+    
+    actual_secretary_id = secretary_profile.id
+
+    # 5. Verify that the trip hasn't already departed
+    min_departure = datetime.now() + timedelta(minutes=10)
     if trip.trip_datetime < datetime.now():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Trip with id {ticket.trip_id} has already departed on {trip.trip_datetime}"
         )
 
-    # 5. Verify that the seat belongs to the bus assigned to the trip
+    # 6. Verify that the seat belongs to the bus assigned to the trip
     if seat.bus_id != trip.bus_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Seat with id {ticket.seat_id} does not belong to the bus assigned to trip {ticket.trip_id}"
         )
 
-    # 6. Verify that the seat is not already booked for the trip
+    # 7. Verify that the seat is not already booked for the trip
     existing_ticket = db.query(TicketModel).filter(
         TicketModel.seat_id == ticket.seat_id,
         TicketModel.trip_id == ticket.trip_id,
@@ -112,20 +127,7 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
             detail=f"Seat with id {ticket.seat_id} is already booked for trip {ticket.trip_id}"
         )
 
-    # 7. Verify that the client doesn't already have a ticket for this trip
-    client_ticket = db.query(TicketModel).filter(
-        TicketModel.client_id == ticket.client_id,
-        TicketModel.trip_id == ticket.trip_id,
-        TicketModel.state.in_(["pending", "confirmed"])  # Only consider active tickets
-    ).first()
-
-    if client_ticket:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Client with id {ticket.client_id} already has a ticket for trip {ticket.trip_id}"
-        )
-
-    # 8. Validate ticket state
+    # 9. Validate ticket state
     valid_states = ["pending", "confirmed", "cancelled", "completed"]
     if ticket.state.lower() not in valid_states:
         raise HTTPException(
@@ -139,7 +141,9 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
         seat_id=ticket.seat_id,
         client_id=ticket.client_id,
         trip_id=ticket.trip_id,
-        secretary_id=ticket.secretary_id
+        secretary_id=actual_secretary_id,
+        price=ticket.price,
+        payment_method=ticket.payment_method.lower() if ticket.payment_method else None
     )
 
     db.add(new_ticket)

@@ -120,6 +120,11 @@ export const useTicketStore = defineStore('tickets', {
 
     clearCurrentTicket() {
       this.currentTicket = null;
+    },
+
+    // Acción para limpiar el error
+    clearError() {
+      this.error = null;
     }
   },
   getters: {

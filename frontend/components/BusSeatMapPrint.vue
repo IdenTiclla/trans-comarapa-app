@@ -269,8 +269,8 @@ const rightColumnSeats = computed(() => {
 
 // Add computed property for available seats
 const availableSeatsCount = computed(() => {
-  if (!props.trip || !props.trip.total_seats) return 0;
-  const occupiedCount = props.trip.occupied_seats ? props.trip.occupied_seats.length : 0;
+  if (!props.trip || typeof props.trip.total_seats !== 'number') return 0;
+  const occupiedCount = props.trip.occupied_seat_numbers ? props.trip.occupied_seat_numbers.length : 0;
   return props.trip.total_seats - occupiedCount;
 })
 
@@ -321,104 +321,70 @@ const loadSeats = async () => {
     // Solo simulamos un breve retraso para mostrar el estado de carga
     await new Promise(resolve => setTimeout(resolve, 300))
 
-    // Generar asientos según el diseño de la planilla y el número total de asientos
-    const generatedSeats = []
-
-    // Obtener el número total de asientos del bus
-    const totalSeats = props.trip && props.trip.total_seats ? props.trip.total_seats : 44 // Por defecto 44 asientos
-
-    // Calcular el número de filas necesarias (cada fila tiene 4 asientos)
-    const totalRows = Math.ceil(totalSeats / 4)
-
-    // Columna izquierda (asientos 1V, 2P, 5V, 6P, etc.)
-    // Según la planilla, los asientos van: 1V, 2P, 5V, 6P, 9V, 10P, etc.
-    for (let i = 0; i < totalRows; i++) {
-      // Asiento de ventana (números impares: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41)
-      const windowSeatNumber = i * 4 + 1
-      // Asiento de pasillo (números pares: 2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42)
-      const aisleSeatNumber = i * 4 + 2
-
-      // Verificar si estos asientos están dentro del rango total de asientos
-      if (windowSeatNumber <= totalSeats) {
-        // Determinar si los asientos están ocupados usando los datos reales
-        const windowSeatOccupied = props.trip && props.trip.occupied_seats ?
-          props.trip.occupied_seats.includes(windowSeatNumber) :
-          props.occupiedSeats.includes(windowSeatNumber)
-
-        // Asiento de ventana
-        generatedSeats.push({
-          id: windowSeatNumber,
-          number: windowSeatNumber,
-          position: 'window',
-          column: 'left',
-          occupied: windowSeatOccupied
-        })
-      }
-
-      if (aisleSeatNumber <= totalSeats) {
-        // Determinar si los asientos están ocupados usando los datos reales
-        const aisleSeatOccupied = props.trip && props.trip.occupied_seats ?
-          props.trip.occupied_seats.includes(aisleSeatNumber) :
-          props.occupiedSeats.includes(aisleSeatNumber)
-
-        // Asiento de pasillo
-        generatedSeats.push({
-          id: aisleSeatNumber,
-          number: aisleSeatNumber,
-          position: 'aisle',
-          column: 'left',
-          occupied: aisleSeatOccupied
-        })
-      }
+    if (!props.trip || !props.trip.seats_layout) {
+      console.warn('BusSeatMapPrint: props.trip.seats_layout no está disponible.');
+      seats.value = [];
+      loading.value = false;
+      error.value = 'No se pudo cargar la información de los asientos desde el viaje.';
+      return;
     }
 
-    // Columna derecha (asientos 3V, 4P, 7V, 8P, etc.)
-    // Según la planilla, los asientos van: 3V, 4P, 7V, 8P, 11V, 12P, etc.
-    for (let i = 0; i < totalRows; i++) {
-      // Asiento de ventana (números impares: 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43)
-      const windowSeatNumber = i * 4 + 3
-      // Asiento de pasillo (números pares: 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44)
-      const aisleSeatNumber = i * 4 + 4
+    // Utilizar los asientos proporcionados por el backend a través de props.trip.seats_layout
+    const backendSeats = props.trip.seats_layout;
+    const generatedSeats = [];
 
-      // Verificar si estos asientos están dentro del rango total de asientos
-      if (windowSeatNumber <= totalSeats) {
-        // Determinar si los asientos están ocupados usando los datos reales
-        const windowSeatOccupied = props.trip && props.trip.occupied_seats ?
-          props.trip.occupied_seats.includes(windowSeatNumber) :
-          props.occupiedSeats.includes(windowSeatNumber)
+    // Asumimos que el backend ya proporciona todos los detalles necesarios, 
+    // incluyendo id (PK), seat_number, y status.
+    // La lógica para determinar columna y posición (ventana/pasillo) 
+    // puede necesitar ser adaptada o el backend podría proveerla.
+    // Por ahora, intentaremos mantener la lógica de columna/posición del frontend si es posible,
+    // o simplificarla si el backend no provee 'deck' o 'position' de forma consistente.
 
-        // Asiento de ventana
-        generatedSeats.push({
-          id: windowSeatNumber,
-          number: windowSeatNumber,
-          position: 'window',
-          column: 'right',
-          occupied: windowSeatOccupied
-        })
+    for (const backendSeat of backendSeats) {
+      // Determinar columna y posición basado en el número de asiento (lógica existente adaptada)
+      // Esta lógica asume una configuración estándar de bus 2x2
+      let column = 'unknown';
+      let position = 'unknown'; // 'window' o 'aisle'
+      const seatNumber = backendSeat.seat_number;
+
+      // Lógica simplificada para asignar columna basado en paridad y umbral (ej. bus de 44 asientos, 22 por lado)
+      // Esto es una aproximación y podría necesitar ajustes basados en la numeración real
+      const typicalSeatsPerRow = 4;
+      const row = Math.ceil(seatNumber / typicalSeatsPerRow);
+      const positionInRow = seatNumber % typicalSeatsPerRow;
+
+      if (positionInRow === 1 || (positionInRow === 2 && typicalSeatsPerRow === 2)) { // Asientos 1, 2 (si 2 por fila) o 1, 2 (si 4 por fila)
+        column = 'left';
+        position = (positionInRow === 1) ? 'window' : 'aisle';
+      } else if (positionInRow === 3 || positionInRow === 0 || (positionInRow === 1 && typicalSeatsPerRow === 2)) { // Asientos 3, 4 (si 4 por fila) o 1,2 (si 2 por fila en lado derecho)
+         // Para positionInRow === 0 (asiento 4, 8, etc.), es el último de la fila
+        column = 'right';
+        if (typicalSeatsPerRow === 4) {
+          position = (positionInRow === 3) ? 'window' : 'aisle';
+        } else { // typicalSeatsPerRow === 2 (e.g. bus más pequeño, 1 asiento ventana, 1 pasillo por lado)
+            position = (positionInRow === 1) ? 'window' : 'aisle'; // Asumiendo que en el lado derecho el 1 es ventana y el 0 (o 2) es pasillo
+        }
       }
+      // Si el backendSeat tiene 'deck', usarlo. Si no, el frontend no puede determinarlo fácilmente.
+      const seatDeck = backendSeat.deck || 'main'; 
 
-      if (aisleSeatNumber <= totalSeats) {
-        // Determinar si los asientos están ocupados usando los datos reales
-        const aisleSeatOccupied = props.trip && props.trip.occupied_seats ?
-          props.trip.occupied_seats.includes(aisleSeatNumber) :
-          props.occupiedSeats.includes(aisleSeatNumber)
-
-        // Asiento de pasillo
-        generatedSeats.push({
-          id: aisleSeatNumber,
-          number: aisleSeatNumber,
-          position: 'aisle',
-          column: 'right',
-          occupied: aisleSeatOccupied
-        })
-      }
+      generatedSeats.push({
+        id: backendSeat.id, // ID Primario del backend
+        number: backendSeat.seat_number, // Número de asiento del backend
+        status: backendSeat.status, // 'occupied' o 'available' del backend
+        occupied: backendSeat.status === 'occupied', // Mantener 'occupied' para compatibilidad con getSeatClass
+        position: position, // Inferido o del backend si disponible
+        column: column,     // Inferido o del backend si disponible
+        deck: seatDeck      // Del backend, o default
+      });
     }
 
-    seats.value = generatedSeats
+    seats.value = generatedSeats.sort((a, b) => a.number - b.number); // Asegurar orden por número de asiento
 
   } catch (err) {
-    console.error('Error al cargar los asientos:', err)
-    error.value = 'No se pudieron cargar los asientos. Intente nuevamente.'
+    console.error('Error al procesar los asientos:', err)
+    error.value = 'No se pudieron procesar los asientos. Intente nuevamente.'
+    seats.value = [];
   } finally {
     loading.value = false
   }
@@ -441,22 +407,27 @@ const formatShortDate = (dateString) => {
 }
 
 // Observar cambios en las propiedades
-watch(() => props.trip, () => {
-  loadSeats()
-})
+watch(() => props.trip, (newTrip) => {
+  if (newTrip && newTrip.seats_layout) {
+    loadSeats();
+  }
+}, { deep: true, immediate: true }); // immediate: true para cargar al inicio
 
 watch(() => props.occupiedSeats, () => {
-  loadSeats()
-})
+  // Esta prop podría volverse obsoleta si props.trip.seats_layout es la única fuente de verdad
+  // Si se mantiene, y se actualiza desde fuera, forzaría un reload de asientos 
+  // pero loadSeats ahora depende de props.trip.seats_layout
+  // loadSeats() 
+}, { deep: true });
 
 watch(() => props.initialSelectedSeats, (newVal) => {
-  selectedSeatIds.value = newVal.map(seat => seat.id)
+  selectedSeatIds.value = newVal.map(seat => seat.id) // Asegurarse que esto use el ID PK
 })
 
-// Cargar asientos al montar el componente
-onMounted(() => {
-  loadSeats()
-})
+// Cargar asientos al montar el componente (manejado por el watch con immediate:true)
+// onMounted(() => {
+//   loadSeats()
+// })
 </script>
 
 <style scoped>

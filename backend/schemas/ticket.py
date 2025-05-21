@@ -9,7 +9,8 @@ class TicketBase(BaseModel):
     seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
     client_id: int = Field(..., description="ID of the client", example=1, gt=0)
     trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
-    secretary_id: int = Field(..., description="ID of the secretary", example=1, gt=0)
+    price: float = Field(..., description="Price of the ticket", example=30.0, gt=0)
+    payment_method: str = Field(..., description="Payment method used", example="cash")
 
     @field_validator('state')
     @classmethod
@@ -26,6 +27,7 @@ class TicketCreate(TicketBase):
     """
     Schema for creating a new ticket
     """ 
+    operator_user_id: int = Field(..., description="User ID of the operator (secretary/admin) creating the ticket", example=1, gt=0)
     pass
 
 class ClientTicketCreate(BaseModel):
@@ -45,7 +47,7 @@ class ClientTicketCreate(BaseModel):
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()
 
-class TicketUpdate(TicketBase):
+class TicketUpdate(BaseModel):
     """
     Schema for updating a ticket
     """
@@ -53,12 +55,29 @@ class TicketUpdate(TicketBase):
     seat_id: Optional[int] = None
     client_id: Optional[int] = None
     trip_id: Optional[int] = None
+    price: Optional[float] = Field(default=None, description="Price of the ticket", example=30.0, gt=0)
+    payment_method: Optional[str] = Field(default=None, description="Payment method used", example="cash")
+    secretary_id: Optional[int] = Field(default=None, description="ID of the secretary associated with the ticket", example=1, gt=0)
+
+    @field_validator('state', check_fields=False)
+    @classmethod
+    def validate_state(cls, v):
+        if v is None:
+            return v
+        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        if v.lower() not in valid_states:
+            raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
+        return v.lower()
+    
+    class Config:
+        from_attributes = True
 
 class Ticket(TicketBase):
     """
     Schema for reading a ticket
     """
     id: int
+    secretary_id: int = Field(..., description="Actual Foreign Key to secretaries table")
     created_at: datetime
     updated_at: datetime
     client: ClientSchema

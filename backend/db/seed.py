@@ -216,19 +216,27 @@ def seed_db():
         client_user_data = []
         num_clients_to_create = 40 # Increased from 10
         for i in range(num_clients_to_create):
-            # Generar un nombre de usuario único con un timestamp
+            full_name = fake.name()
+            name_parts = full_name.split()
+            firstname = name_parts[0]
+            if len(name_parts) > 1:
+                lastname = " ".join(name_parts[1:])
+            elif len(name_parts) == 1:
+                lastname = name_parts[0]
+            else:
+                lastname = "ApellidoPorDefecto"
+
             timestamp = int(datetime.now().timestamp()) + i
             client_user = {
                 "username": f"cliente{i+1}_{timestamp}",
                 "email": fake.email(),
+                "firstname": firstname,
+                "lastname": lastname,
                 "role": "client",
                 "hashed_password": User.get_password_hash(f"cliente{i+1}"),
                 "is_active": True,
                 "is_admin": False
             }
-
-            # Guardar el nombre completo para usarlo después en el cliente
-            full_name = fake.name()
             client_user_data.append(client_user)
 
         client_users = []
@@ -276,11 +284,22 @@ def seed_db():
         driver_user_data = []
         num_drivers_to_create = 10 # Increased from 5
         for i in range(num_drivers_to_create):
-            # Generar un nombre de usuario único con un timestamp
+            full_name = fake.name()
+            name_parts = full_name.split()
+            firstname = name_parts[0]
+            if len(name_parts) > 1:
+                lastname = " ".join(name_parts[1:])
+            elif len(name_parts) == 1:
+                lastname = name_parts[0]
+            else:
+                lastname = "ApellidoPorDefecto"
+
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2) # Adjust timestamp offset
             driver_user = {
                 "username": f"conductor{i+1}_{timestamp}",
                 "email": fake.email(),
+                "firstname": firstname,
+                "lastname": lastname,
                 "role": "driver",
                 "hashed_password": User.get_password_hash(f"conductor{i+1}"),
                 "is_active": True,
@@ -358,11 +377,22 @@ def seed_db():
             buses.append(bus)
 
         # Crear usuario administrador
-        # Generar un nombre de usuario y email únicos con un timestamp
+        admin_full_name = fake.name() # Usar fake para consistencia, aunque luego se sobreescriba en AdministratorModel
+        admin_name_parts = admin_full_name.split()
+        admin_firstname = admin_name_parts[0]
+        if len(admin_name_parts) > 1:
+            admin_lastname = " ".join(admin_name_parts[1:])
+        elif len(admin_name_parts) == 1:
+            admin_lastname = admin_name_parts[0]
+        else:
+            admin_lastname = "AdminLastNameDefault"
+
         timestamp = int(datetime.now().timestamp())
         admin_user = User(
             username=f"admin_{timestamp}",
             email=f"admin_{timestamp}@transcomarapa.com",
+            firstname=admin_firstname,
+            lastname=admin_lastname,
             role="admin",
             hashed_password=User.get_password_hash("admin123"),
             is_active=True,
@@ -386,11 +416,22 @@ def seed_db():
         secretary_user_data = []
         num_secretaries_to_create = 7 # Increased from 5
         for i in range(num_secretaries_to_create):
-            # Generar un nombre de usuario único con un timestamp
+            full_name = fake.name()
+            name_parts = full_name.split()
+            firstname = name_parts[0]
+            if len(name_parts) > 1:
+                lastname = " ".join(name_parts[1:])
+            elif len(name_parts) == 1:
+                lastname = name_parts[0]
+            else:
+                lastname = "ApellidoPorDefecto"
+
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2) # Adjust timestamp offset
             secretary_user = {
                 "username": f"secretario{i+1}_{timestamp}",
                 "email": fake.email(),
+                "firstname": firstname,
+                "lastname": lastname,
                 "role": "secretary",
                 "hashed_password": User.get_password_hash(f"secretario{i+1}"),
                 "is_active": True,
@@ -443,11 +484,22 @@ def seed_db():
         assistant_user_data = []
         num_assistants_to_create = 10 # Increased from 5
         for i in range(num_assistants_to_create):
-            # Generar un nombre de usuario único con un timestamp
+            full_name = fake.name()
+            name_parts = full_name.split()
+            firstname = name_parts[0]
+            if len(name_parts) > 1:
+                lastname = " ".join(name_parts[1:])
+            elif len(name_parts) == 1:
+                lastname = name_parts[0]
+            else:
+                lastname = "ApellidoPorDefecto"
+
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2 + num_secretaries_to_create * 2) # Adjust timestamp offset
             assistant_user = {
                 "username": f"asistente{i+1}_{timestamp}",
                 "email": fake.email(),
+                "firstname": firstname,
+                "lastname": lastname,
                 "role": "assistant",
                 "hashed_password": User.get_password_hash(f"asistente{i+1}"),
                 "is_active": True,
@@ -615,7 +667,9 @@ def seed_db():
             seats_by_bus[seat.bus_id].append(seat)
 
         # Crear tickets para algunos viajes
-        ticket_states = ["reserved", "purchased", "cancelled", "used"]
+        # Estados válidos según el schema TicketBase
+        ticket_states = ["pending", "confirmed", "cancelled", "completed"]
+        payment_methods = ["cash", "credit_card", "qr_payment", "bank_transfer"]
 
         for trip in trips:
             # Para cada viaje, crear entre 10-20 tickets
@@ -623,22 +677,35 @@ def seed_db():
             # Obtener asientos para este bus
             bus_seats = seats_by_bus.get(trip.bus_id, [])
 
+            # Obtener el precio de la ruta asociada al viaje
+            # Es importante que 'trip.route' esté cargado o accesible.
+            # Si 'trip.route' no está cargado por defecto (lazy loading),
+            # podrías necesitar obtener la ruta explícitamente o asegurar que se cargue.
+            # Aquí asumimos que 'trip.route' es accesible y tiene un atributo 'price'.
+            trip_route = db.query(Route).filter(Route.id == trip.route_id).first()
+            ticket_price = trip_route.price if trip_route and trip_route.price is not None else 30.0 # Precio por defecto si no se encuentra
+
             if bus_seats:
                 # Seleccionar asientos aleatorios para este viaje
-                selected_seats = random.sample(bus_seats, min(num_tickets, len(bus_seats)))
+                # Asegurarse de no seleccionar más asientos de los disponibles
+                num_to_select = min(num_tickets, len(bus_seats))
+                if num_to_select > 0:
+                    selected_seats = random.sample(bus_seats, num_to_select)
 
-                for seat in selected_seats:
-                    # Seleccionar un cliente aleatorio
-                    client = random.choice(clients)
-                    # Crear ticket
-                    ticket = Ticket(
-                        seat_id=seat.id,
-                        client_id=client.id,
-                        trip_id=trip.id,
-                        state=random.choice(ticket_states),
-                        secretary_id=random.choice(secretaries).id  # Asignar un secretario aleatorio a cada ticket
-                    )
-                    db.add(ticket)
+                    for seat in selected_seats:
+                        # Seleccionar un cliente aleatorio
+                        client = random.choice(clients)
+                        # Crear ticket
+                        ticket = Ticket(
+                            seat_id=seat.id,
+                            client_id=client.id,
+                            trip_id=trip.id,
+                            state=random.choice(ticket_states),
+                            secretary_id=random.choice(secretaries).id,  # Asignar un secretario aleatorio a cada ticket
+                            price=ticket_price,
+                            payment_method=random.choice(payment_methods)
+                        )
+                        db.add(ticket)
 
         # Crear paquetes de muestra
         package_statuses = ["pending", "in_transit", "delivered", "cancelled"]

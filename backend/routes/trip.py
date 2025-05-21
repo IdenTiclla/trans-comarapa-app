@@ -13,6 +13,7 @@ from models.location import Location as LocationModel
 from schemas.trip import TripCreate, Trip as TripSchema
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
+from schemas.seat import Seat as SeatSchema
 from db.session import get_db  # dependency to get a new session
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
@@ -269,7 +270,7 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
 @router.get("/{trip_id}", response_model=Dict[str, Any])
 def get_trip(trip_id: int, db: Session = Depends(get_db)):
     """
-    Get a trip by ID with all related information
+    Get a trip by ID with all related information, including detailed seat layout.
     """
     try:
         trip = db.query(TripModel).filter(TripModel.id == trip_id).first()
@@ -291,27 +292,39 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
                 destination_name = trip.route.destination_location.name
             route_price = trip.route.price
 
-        total_seats = 0
-        occupied_seats_count = 0
+        total_seats_capacity = 0
+        seats_layout = []
+        occupied_seat_numbers_for_trip = [] # Keep this for compatibility if needed elsewhere or for quick check
+
         if trip.bus:
-            total_seats = trip.bus.capacity
-            occupied_seats_count = db.query(func.count(TicketModel.id)).filter(
+            total_seats_capacity = trip.bus.capacity
+            
+            # Get all seats for this bus
+            bus_all_seats = db.query(SeatModel).filter(SeatModel.bus_id == trip.bus_id).order_by(SeatModel.seat_number).all()
+            
+            # Get tickets for this specific trip to determine occupied seats
+            trip_tickets = db.query(TicketModel).filter(
                 TicketModel.trip_id == trip.id,
-                TicketModel.state != 'cancelled'
-            ).scalar() or 0
+                TicketModel.state.in_(["pending", "confirmed"]) # Consider pending and confirmed as occupied
+            ).all()
+            
+            occupied_seat_ids_for_trip = {ticket.seat_id for ticket in trip_tickets}
 
-        available_seats = total_seats - occupied_seats_count
+            for seat_model in bus_all_seats:
+                status = "occupied" if seat_model.id in occupied_seat_ids_for_trip else "available"
+                seats_layout.append({
+                    "id": seat_model.id, # This is the PK
+                    "seat_number": seat_model.seat_number,
+                    "status": status,
+                    "deck": seat_model.deck,
+                    # "position": seat_model.position, # Assuming SeatModel has position (window/aisle)
+                    # "type": seat_model.type # Assuming SeatModel has type (normal, vip)
+                })
+                if status == "occupied":
+                    occupied_seat_numbers_for_trip.append(seat_model.seat_number)
+        
+        available_seats_count = total_seats_capacity - len(occupied_seat_ids_for_trip)
 
-        # Get occupied seat numbers
-        occupied_seats = db.query(TicketModel).filter(
-            TicketModel.trip_id == trip_id,
-            TicketModel.state != 'cancelled'
-        ).all()
-
-        occupied_seat_numbers = []
-        for ticket in occupied_seats:
-            if ticket.seat:
-                occupied_seat_numbers.append(ticket.seat.seat_number)
 
         trip_time = None
         if trip.trip_datetime:
@@ -329,11 +342,13 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
             "route": {
                 "origin": origin_name,
                 "destination": destination_name,
-                "price": route_price
+                "price": route_price # Frontend uses trip.price or trip.route.price
             },
-            "total_seats": total_seats,
-            "available_seats": available_seats,
-            "occupied_seats": occupied_seat_numbers,
+            "price": route_price, # Explicitly add price at top level for easier access by frontend if needed
+            "total_seats": total_seats_capacity, # Total capacity of the bus
+            "available_seats": available_seats_count,
+            "occupied_seat_numbers": sorted(list(set(occupied_seat_numbers_for_trip))), # List of occupied seat numbers
+            "seats_layout": seats_layout, # Detailed layout of all seats with their status for THIS trip
             "driver": DriverSchema.from_orm(trip.driver).model_dump() if trip.driver else None,
             "assistant": AssistantSchema.from_orm(trip.assistant).model_dump() if trip.assistant else None,
             "bus": {

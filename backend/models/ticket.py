@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from db.base import Base
@@ -16,5 +16,7 @@ class Ticket(Base):
     trip = relationship('Trip', back_populates='tickets')
     secretary_id = Column(Integer, ForeignKey('secretaries.id'), nullable=False)
     secretary = relationship('Secretary', back_populates='tickets')
+    price = Column(Numeric(10, 2), nullable=False)
+    payment_method = Column(String(50), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)    

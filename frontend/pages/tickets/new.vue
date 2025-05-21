@@ -261,6 +261,45 @@
                             />
                           </div>
                         </div>
+
+                        <div class="sm:col-span-6">
+                          <label for="client-address" class="block text-sm font-medium text-gray-700">Dirección</label>
+                          <div class="mt-1">
+                            <input
+                              type="text"
+                              id="client-address"
+                              v-model="newClient.address"
+                              class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                          <label for="client-city" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                          <div class="mt-1">
+                            <input
+                              type="text"
+                              id="client-city"
+                              v-model="newClient.city"
+                              class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                          <label for="client-state" class="block text-sm font-medium text-gray-700">Departamento/Estado</label>
+                          <div class="mt-1">
+                            <input
+                              type="text"
+                              id="client-state"
+                              v-model="newClient.state"
+                              class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                              required
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -397,7 +436,10 @@ const newClient = ref({
   name: '',
   ci: '',
   phone: '',
-  email: ''
+  email: '',
+  address: '',
+  city: '',
+  state: ''
 })
 const paymentMethod = ref('cash')
 const ticketPrice = ref(0)
@@ -458,7 +500,12 @@ const isFormValid = computed(() => {
   if (clientType.value === 'existing') {
     return !!selectedClient.value
   } else {
-    return newClient.value.name && newClient.value.ci && newClient.value.phone
+    return newClient.value.name && 
+           newClient.value.ci && 
+           newClient.value.phone && 
+           newClient.value.address && 
+           newClient.value.city && 
+           newClient.value.state
   }
 })
 
@@ -466,6 +513,15 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     router.push('/login')
     return
+  }
+
+  // Restricción de rol: Solo secretarios pueden vender boletos
+  if (authStore.userRole !== 'secretary') {
+    error.value = 'Acceso denegado: Solo los secretarios pueden realizar ventas de boletos.'
+    loading.value = false // Detener la carga ya que no se puede continuar
+    // Opcionalmente, deshabilitar todo el formulario o redirigir a otra página
+    // Por ejemplo: router.push('/unauthorized') o simplemente mostrar el error.
+    return;
   }
 
   const tripId = route.query.trip
@@ -547,11 +603,12 @@ const handleSubmit = async () => {
     if (clientType.value === 'new') {
       try {
         const clientData = {
-          firstname: newClient.value.name.split(' ')[0],
-          lastname: newClient.value.name.split(' ').slice(1).join(' ') || newClient.value.name.split(' ')[0],
-          document_id: newClient.value.ci,
+          firstname: newClient.value.name.split(' ')[0] || '',
+          lastname: newClient.value.name.split(' ').slice(1).join(' ') || newClient.value.name.split(' ')[0] || '',
           phone: newClient.value.phone,
-          email: newClient.value.email || null
+          address: newClient.value.address,
+          city: newClient.value.city,
+          state: newClient.value.state,
         }
         const createdClient = await clientStore.createClient(clientData)
         
@@ -578,6 +635,21 @@ const handleSubmit = async () => {
         return
     }
 
+    // Obtener el ID del usuario operador (secretario)
+    let operatorUserId = null;
+    if (authStore.user && authStore.userRole === 'secretary') {
+      operatorUserId = authStore.user.id;
+    } else {
+      // Esta comprobación es una segunda barrera, la primera está en onMounted.
+      // Si se llega aquí, algo inesperado ocurrió o el estado del rol cambió.
+      error.value = 'Operación no permitida: El usuario debe ser un secretario para vender boletos.';
+      submitting.value = false;
+      return;
+    }
+
+    // No es necesario verificar !operatorUserId porque la lógica anterior ya lo cubre
+    // o detiene la ejecución si el rol no es 'secretary'.
+
     const ticketPromises = selectedSeats.value.map(async (seat) => {
       if (!seat || typeof seat.id === 'undefined') {
         console.error('Asiento inválido en la selección:', seat)
@@ -587,11 +659,12 @@ const handleSubmit = async () => {
         trip_id: trip.value.id,
         seat_id: seat.id, 
         client_id: finalClientId,
-        status: 'confirmed',
+        state: 'confirmed',
         price: trip.value?.price_per_seat || trip.value?.price || ticketPrice.value || 0, 
         payment_method: paymentMethod.value,
+        operator_user_id: operatorUserId // Cambiado de secretary_id a operator_user_id
       }
-      return ticketStore.createTicket(ticketData)
+      return ticketStore.createNewTicket(ticketData)
     })
 
     const createdTicketsResults = await Promise.allSettled(ticketPromises)

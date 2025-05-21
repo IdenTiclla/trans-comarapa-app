@@ -86,14 +86,14 @@
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                       <div class="flex items-center">
                         <span class="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleAvailableSeats">
-                          {{ displayedTrip.total_seats - (displayedTrip.occupied_seats?.length || 0) }} disponibles
+                          {{ displayedTrip.available_seats }} disponibles
                           <span v-if="!showAvailableSeats" class="ml-1">▼</span>
                           <span v-else class="ml-1">▲</span>
                         </span>
                       </div>
-                      <div v-if="displayedTrip.occupied_seats && displayedTrip.occupied_seats.length > 0" class="flex items-center">
+                      <div v-if="displayedTrip.occupied_seat_numbers && displayedTrip.occupied_seat_numbers.length > 0" class="flex items-center">
                         <span class="px-2 py-1 bg-red-100 text-red-800 rounded-md text-xs font-medium cursor-pointer" @click="toggleOccupiedSeats">
-                          {{ displayedTrip.occupied_seats.length }} ocupados
+                          {{ displayedTrip.occupied_seat_numbers.length }} ocupados
                           <span v-if="!showOccupiedSeats" class="ml-1">▼</span>
                           <span v-else class="ml-1">▲</span>
                         </span>
@@ -181,11 +181,11 @@
               <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
               <div class="mt-2 sm:mt-0 flex items-center space-x-4">
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats_count }} disponibles</span>
+                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats }} disponibles</span>
                   <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
                 </div>
                 <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seats ? displayedTrip.occupied_seats.length : 0 }} ocupados</span>
+                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seat_numbers ? displayedTrip.occupied_seat_numbers.length : 0 }} ocupados</span>
                   <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
                 </div>
                 <div class="flex items-center">
@@ -369,15 +369,25 @@ const toggleAvailableSeats = () => {
 }
 
 const sortedAvailableSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.total_seats) return [];
-  const occupiedSeats = displayedTrip.value.occupied_seats || [];
-  const allSeats = Array.from({ length: displayedTrip.value.total_seats }, (_, i) => i + 1);
-  return allSeats.filter(seat => !occupiedSeats.includes(seat)).sort((a, b) => a - b);
+  if (!displayedTrip.value || !displayedTrip.value.seats_layout) return [];
+  return displayedTrip.value.seats_layout
+    .filter(seat => seat.status === 'available')
+    .map(seat => seat.seat_number)
+    .sort((a, b) => {
+      const numA = parseInt(String(a).replace(/\D/g, ''), 10) || 0;
+      const numB = parseInt(String(b).replace(/\D/g, ''), 10) || 0;
+      return numA - numB;
+    });
 })
 
 const sortedOccupiedSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.occupied_seats) return [];
-  return [...displayedTrip.value.occupied_seats].sort((a, b) => a - b);
+  if (!displayedTrip.value || !displayedTrip.value.occupied_seat_numbers) return [];
+  // Assuming occupied_seat_numbers is already an array of numbers/strings from backend
+  return [...displayedTrip.value.occupied_seat_numbers].sort((a, b) => {
+    const numA = parseInt(String(a).replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(String(b).replace(/\D/g, ''), 10) || 0;
+    return numA - numB;
+  });
 })
 
 const handleSeatSelectionConfirmed = (selectedSeats) => {

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import * as clientService from '~/services/clientService';
+import clientService from '~/services/clientService';
 
 export const useClientStore = defineStore('clients', {
   state: () => ({
@@ -20,7 +20,7 @@ export const useClientStore = defineStore('clients', {
       this.isLoading = true;
       this.error = null;
       try {
-        const response = await clientService.getAllClients(); 
+        const response = await clientService.getClients(); 
         this.clients = response; 
       } catch (err) {
         this.error = err.data?.detail || err.message || 'Failed to fetch clients';
