@@ -79,6 +79,7 @@
                         <BusSeatMapPrint
                           :trip="trip"
                           :occupied-seats="occupiedSeats"
+                          :reserved_seat_numbers="reservedSeatNumbers"
                           :initial-selected-seats="selectedSeats"
                           :selection-enabled="true"
                           @seat-selected="handleSeatSelected"
@@ -429,6 +430,7 @@ const searchingClients = ref(false)
 
 const selectedSeats = ref([])
 const occupiedSeats = ref([])
+const reservedSeatNumbers = ref([])
 const clientType = ref('existing')
 const clientSearch = ref('')
 const selectedClient = ref(null)
@@ -553,6 +555,9 @@ const fetchTripDetails = async (tripId) => {
 
     if (tripStore.currentTrip) {
       occupiedSeats.value = tripStore.currentTrip.occupied_seats || []
+      
+      // Cargar los tickets vendidos para el viaje
+      await fetchTicketsForTrip(tripId)
     } else {
       throw new Error("Viaje no encontrado o no se pudo cargar.")
     }
@@ -562,6 +567,31 @@ const fetchTripDetails = async (tripId) => {
     error.value = tripStore.error || 'No se pudieron cargar los detalles del viaje. Intente nuevamente.'
   } finally {
     loading.value = false
+  }
+}
+
+// Función para cargar los tickets vendidos del viaje
+const fetchTicketsForTrip = async (tripId) => {
+  try {
+    const config = useRuntimeConfig()
+    const apiUrl = `${config.public.apiBaseUrl}/tickets/trip/${tripId}`
+    
+    const response = await $fetch(apiUrl, {
+      method: 'GET'
+    })
+    
+    if (response && Array.isArray(response)) {
+      // Filtrar tickets en estado "pending" y extraer los números de asiento
+      const pendingTickets = response.filter(ticket => ticket.state === 'pending')
+      reservedSeatNumbers.value = pendingTickets
+        .filter(ticket => ticket.seat) // Asegurarse de que el ticket tiene asiento
+        .map(ticket => ticket.seat.seat_number)
+      
+      console.log('Asientos reservados cargados:', reservedSeatNumbers.value)
+    }
+  } catch (err) {
+    console.error('Error al cargar los tickets del viaje:', err)
+    // No interrumpir el flujo por este error, simplemente loguear
   }
 }
 
