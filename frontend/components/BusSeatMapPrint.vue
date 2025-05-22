@@ -108,10 +108,16 @@
                   <div>
                     <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
                       'bg-red-100 text-red-800': seat.occupied,
+                      'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
                       'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
-                      'bg-gray-50 text-gray-400': !seat.occupied && !selectedSeatIds.includes(seat.id)
+                      'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
                     }">
-                      {{ seat.occupied ? 'OCUPADO' : selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 'DISPONIBLE' }}
+                      {{ 
+                        seat.occupied ? 'OCUPADO' : 
+                        seat.status === 'reserved' ? 'RESERVADO' : 
+                        selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
+                        'DISPONIBLE' 
+                      }}
                     </span>
                   </div>
                 </div>
@@ -146,10 +152,16 @@
                   <div>
                     <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
                       'bg-red-100 text-red-800': seat.occupied,
+                      'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
                       'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
-                      'bg-gray-50 text-gray-400': !seat.occupied && !selectedSeatIds.includes(seat.id)
+                      'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
                     }">
-                      {{ seat.occupied ? 'OCUPADO' : selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 'DISPONIBLE' }}
+                      {{ 
+                        seat.occupied ? 'OCUPADO' : 
+                        seat.status === 'reserved' ? 'RESERVADO' : 
+                        selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
+                        'DISPONIBLE' 
+                      }}
                     </span>
                   </div>
                 </div>
@@ -173,6 +185,12 @@
               <span class="text-[5px] sm:text-[6px] text-blue-800 font-bold">SEL</span>
             </div>
             <span class="text-[9px] sm:text-[10px] text-gray-700">Seleccionado</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-yellow-100 border-2 border-yellow-600 rounded mr-0.5 sm:mr-1 flex items-center justify-center">
+              <span class="text-[5px] sm:text-[6px] text-yellow-800 font-bold">RES</span>
+            </div>
+            <span class="text-[9px] sm:text-[10px] text-gray-700">Reservado</span>
           </div>
           <div class="flex items-center">
             <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-100 border-2 border-red-600 rounded mr-0.5 sm:mr-1 flex items-center justify-center">
@@ -227,6 +245,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  reserved_seat_numbers: {
+    type: Array,
+    default: () => []
+  },
   initialSelectedSeats: {
     type: Array,
     default: () => []
@@ -278,6 +300,8 @@ const availableSeatsCount = computed(() => {
 const getSeatClass = (seat) => {
   if (seat.occupied) {
     return 'bg-red-50 border-red-400 cursor-not-allowed'
+  } else if (seat.status === 'reserved') {
+    return 'bg-yellow-50 border-yellow-400 cursor-not-allowed'
   } else if (selectedSeatIds.value.includes(seat.id)) {
     return 'bg-blue-50 border-blue-400 cursor-pointer shadow-sm'
   } else {
@@ -287,7 +311,7 @@ const getSeatClass = (seat) => {
 
 // Alternar selección de asiento
 const toggleSeatSelection = (seat) => {
-  if (seat.occupied || props.disabled) return
+  if (seat.occupied || seat.status === 'reserved' || props.disabled) return
 
   const index = selectedSeatIds.value.indexOf(seat.id)
 
@@ -331,6 +355,14 @@ const loadSeats = async () => {
 
     // Utilizar los asientos proporcionados por el backend a través de props.trip.seats_layout
     const backendSeats = props.trip.seats_layout;
+    console.log('Estados de asientos:', backendSeats.map(seat => seat.status));
+    console.log('Asientos reservados:', backendSeats.filter(seat => seat.status === 'reserved').length);
+    
+    // Obtener los tickets para identificar cuáles están en "pending" (reservados)
+    // Ya que el backend no distingue entre 'pending' y 'confirmed', ambos los marca como 'occupied'
+    const reservedSeatNumbers = props.reserved_seat_numbers || [];
+    console.log('Números de asientos reservados:', reservedSeatNumbers);
+    
     const generatedSeats = [];
 
     // Asumimos que el backend ya proporciona todos los detalles necesarios, 
@@ -345,6 +377,18 @@ const loadSeats = async () => {
       let column = 'unknown';
       let position = 'unknown'; // 'window' o 'aisle'
       const seatNumber = backendSeat.seat_number;
+      
+      // Verificar si el asiento está reservado (tiene un ticket en estado "pending")
+      // En el backend actual, ambos pending y confirmed se marcan como 'occupied'
+      // Así que usamos una lista de asientos reservados que pasamos como prop
+      const isReserved = reservedSeatNumbers.includes(seatNumber);
+      let status = backendSeat.status;
+      
+      // Si el asiento está ocupado pero también está en la lista de reservados,
+      // lo marcamos como 'reserved' en lugar de 'occupied'
+      if (status === 'occupied' && isReserved) {
+        status = 'reserved';
+      }
 
       // Define typicalSeatsPerRow. This value might eventually come from bus configuration data.
       // For common 2x2 layouts, this is 4.
@@ -384,8 +428,8 @@ const loadSeats = async () => {
       generatedSeats.push({
         id: backendSeat.id, // ID Primario del backend
         number: backendSeat.seat_number, // Número de asiento del backend
-        status: backendSeat.status, // 'occupied' o 'available' del backend
-        occupied: backendSeat.status === 'occupied', // Mantener 'occupied' para compatibilidad con getSeatClass
+        status: status, // 'occupied', 'reserved', o 'available'
+        occupied: status === 'occupied', // Mantener 'occupied' para compatibilidad con getSeatClass
         position: position, // Inferido o del backend si disponible
         column: column,     // Inferido o del backend si disponible
         deck: seatDeck      // Del backend, o default

@@ -199,6 +199,7 @@
               <BusSeatMapPrint
                 :trip="displayedTrip" 
                 :selection-enabled="false"
+                :reserved_seat_numbers="reservedSeatNumbers"
               />
             </div>
           </div>
@@ -344,7 +345,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useTripStore } from '@/stores/tripStore'
 import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
-import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline/index.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -378,6 +379,18 @@ const groupedSoldTickets = computed(() => {
     acc[state].push(ticket);
     return acc;
   }, {});
+});
+
+// Obtener los números de asientos que tienen tickets en estado "pending" (reservados)
+const reservedSeatNumbers = computed(() => {
+  if (!soldTickets.value || soldTickets.value.length === 0) {
+    return [];
+  }
+  
+  // Filtrar los tickets en estado "pending" y extraer los números de asiento
+  return soldTickets.value
+    .filter(ticket => ticket.state === 'pending' && ticket.seat)
+    .map(ticket => ticket.seat.seat_number);
 });
 
 const sortedAvailableSeats = computed(() => {
@@ -495,6 +508,8 @@ const fetchSoldTickets = async () => {
     if (responseData) {
         // Ensure plain objects for Pinia SSR/hydration
         soldTickets.value = JSON.parse(JSON.stringify(responseData));
+        console.log('Tickets cargados:', soldTickets.value);
+        console.log('Asientos reservados:', reservedSeatNumbers.value);
     } else {
         soldTickets.value = [];
     }
