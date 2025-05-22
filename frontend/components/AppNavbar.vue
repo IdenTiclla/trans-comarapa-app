@@ -42,8 +42,10 @@
       <!-- Menú de navegación para escritorio -->
       <div class="hidden md:flex space-x-4 items-center">
         <NuxtLink to="/" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Inicio</NuxtLink>
-        <NuxtLink to="/about" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Acerca de</NuxtLink>
-        <NuxtLink to="/services" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Servicios</NuxtLink>
+        <template v-if="!authStore.isAuthenticated || authStore.userRole !== 'secretary'">
+            <NuxtLink to="/about" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Acerca de</NuxtLink>
+            <NuxtLink to="/services" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Servicios</NuxtLink>
+        </template>
 
         <!-- Opciones para usuario no autenticado -->
         <template v-if="!authStore.isAuthenticated">
@@ -58,6 +60,15 @@
         <!-- Opciones para usuario autenticado -->
         <template v-else>
           <div class="flex items-center space-x-3">
+            <!-- Secretary Links - Desktop -->
+            <template v-if="authStore.userRole === 'secretary'">
+              <NuxtLink to="/tickets/new" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Vender Boletos</NuxtLink>
+              <NuxtLink to="/trips/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Viajes</NuxtLink>
+              <NuxtLink to="/clients/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Clientes</NuxtLink>
+              <NuxtLink to="/reports/secretary" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Reportes</NuxtLink>
+            </template>
+            <!-- End Secretary Links - Desktop -->
+
             <span class="text-white hidden lg:inline-block">
               <template v-if="authStore.user && (authStore.user.firstname || authStore.user.lastname)">
                 {{ authStore.user.firstname }} {{ authStore.user.lastname }}
@@ -94,20 +105,22 @@
         >
           Inicio
         </NuxtLink>
-        <NuxtLink
-          to="/about"
-          class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
-          @click="isMenuOpen = false"
-        >
-          Acerca de
-        </NuxtLink>
-        <NuxtLink
-          to="/services"
-          class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
-          @click="isMenuOpen = false"
-        >
-          Servicios
-        </NuxtLink>
+        <template v-if="!authStore.isAuthenticated || authStore.userRole !== 'secretary'">
+            <NuxtLink
+              to="/about"
+              class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+              @click="isMenuOpen = false"
+            >
+              Acerca de
+            </NuxtLink>
+            <NuxtLink
+              to="/services"
+              class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+              @click="isMenuOpen = false"
+            >
+              Servicios
+            </NuxtLink>
+        </template>
 
         <div class="border-t border-blue-500 my-2"></div>
 
@@ -125,6 +138,40 @@
         <!-- Opciones para usuario autenticado (móvil) -->
         <template v-else>
           <div class="flex flex-col space-y-2">
+            <!-- Secretary Links - Mobile -->
+            <template v-if="authStore.userRole === 'secretary'">
+              <NuxtLink
+                to="/tickets/new"
+                class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+                @click="isMenuOpen = false"
+              >
+                Vender Boletos
+              </NuxtLink>
+              <NuxtLink
+                to="/trips/manage"
+                class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+                @click="isMenuOpen = false"
+              >
+                Viajes
+              </NuxtLink>
+              <NuxtLink
+                to="/clients/manage"
+                class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+                @click="isMenuOpen = false"
+              >
+                Clientes
+              </NuxtLink>
+              <NuxtLink
+                to="/reports/secretary"
+                class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
+                @click="isMenuOpen = false"
+              >
+                Reportes
+              </NuxtLink>
+              <div class="border-t border-blue-500 my-2"></div>
+            </template>
+            <!-- End Secretary Links - Mobile -->
+
             <div class="text-white text-sm bg-blue-800 px-3 py-2 rounded-md">
               <template v-if="authStore.user && (authStore.user.firstname || authStore.user.lastname)">
                 {{ authStore.user.firstname }} {{ authStore.user.lastname }}
