@@ -260,3 +260,28 @@ async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "status_code": status.HTTP_204_NO_CONTENT
     }
 
+@router.put("/{ticket_id}/cancel", response_model=TicketSchema)
+async def cancel_ticket(ticket_id: int, db: Session = Depends(get_db)):
+    """Cancel a ticket"""
+    # Check if ticket exists
+    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket with id {ticket_id} not found"
+        )
+    
+    # Get the associated trip
+    trip = db.query(TripModel).filter(TripModel.id == ticket.trip_id).first()
+    
+    # If the ticket is already cancelled, do nothing
+    if ticket.state == "cancelled":
+        return ticket
+    
+    # Update the ticket state to cancelled
+    ticket.state = "cancelled"
+    db.commit()
+    db.refresh(ticket)
+    
+    return ticket
+

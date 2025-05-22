@@ -200,6 +200,11 @@
                 :trip="displayedTrip" 
                 :selection-enabled="false"
                 :reserved_seat_numbers="reservedSeatNumbers"
+                :enable-context-menu="true"
+                @cancel-reservation="handleCancelReservation"
+                @view-details="handleViewSeatDetails"
+                @change-seat="handleChangeSeat"
+                @reschedule-trip="handleRescheduleTrip"
               />
             </div>
           </div>
@@ -333,6 +338,100 @@
               Vender Boleto
             </AppButton>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para detalles o cancelación de ticket -->
+  <div v-if="showTicketModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Overlay de fondo -->
+      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeModal">
+        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+      </div>
+
+      <!-- Centrar modal -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <!-- Modal -->
+      <div 
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        @click.stop
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div v-if="modalType === 'cancel'" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div v-else class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                {{ modalType === 'cancel' ? 'Cancelar Reserva' : 'Detalles del Boleto' }}
+              </h3>
+              
+              <!-- Contenido del modal -->
+              <div class="mt-4">
+                <!-- Detalles comunes -->
+                <div v-if="selectedTicket" class="bg-gray-50 p-3 rounded-md mb-4">
+                  <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p class="text-gray-500">Boleto #:</p>
+                      <p class="font-medium">{{ selectedTicket.id }}</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500">Estado:</p>
+                      <p class="font-medium">{{ selectedTicket.state }}</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500">Asiento:</p>
+                      <p class="font-medium">{{ selectedTicket.seat?.seat_number }}</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500">Precio:</p>
+                      <p class="font-medium">Bs. {{ selectedTicket.price }}</p>
+                    </div>
+                    <div class="col-span-2">
+                      <p class="text-gray-500">Cliente:</p>
+                      <p class="font-medium">{{ selectedTicket.client?.firstname }} {{ selectedTicket.client?.lastname }}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Mensaje de confirmación de cancelación -->
+                <div v-if="modalType === 'cancel'" class="text-sm text-gray-500">
+                  <p>¿Está seguro que desea cancelar la reserva del asiento {{ selectedTicket?.seat?.seat_number }}?</p>
+                  <p class="mt-2 text-red-600">Esta acción no se puede deshacer.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button 
+            v-if="modalType === 'cancel'"
+            @click="confirmCancelReservation"
+            type="button" 
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+            :disabled="cancellingReservation"
+          >
+            {{ cancellingReservation ? 'Cancelando...' : 'Confirmar Cancelación' }}
+          </button>
+          <button 
+            @click="closeModal" 
+            type="button" 
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            {{ modalType === 'cancel' ? 'Cancelar' : 'Cerrar' }}
+          </button>
         </div>
       </div>
     </div>
@@ -547,7 +646,10 @@ const toggleSoldTickets = () => {
 
 // Method to toggle visibility of tickets for a specific state
 const toggleTicketsByState = (state) => {
-  showTicketsByState.value[state] = !showTicketsByState.value[state];
+  showTicketsByState.value = {
+    ...showTicketsByState.value,
+    [state]: !showTicketsByState.value[state]
+  }
 }
 
 // Watch for changes in displayedTrip.id if the section is already open
@@ -560,6 +662,151 @@ watch(() => displayedTrip.value?.id, (newId, oldId) => {
 // Make sure definePageMeta is correctly placed if it's outside script setup
 // For Nuxt 3, it's typically auto-imported or used in a separate <script> block if not setup.
 // definePageMeta({ middleware: ['auth'] }); // Example, if auth middleware is needed
+
+const handleCancelReservation = async (seat) => {
+  // Buscar el ticket que corresponde a este asiento
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number && t.state === 'pending'
+  )
+  
+  if (!ticket) {
+    alert('No se encontró un ticket reservado para este asiento.')
+    return
+  }
+  
+  // Mostrar modal de confirmación
+  selectedTicket.value = ticket
+  modalType.value = 'cancel'
+  showTicketModal.value = true
+}
+
+const handleViewSeatDetails = (seat) => {
+  // Buscar el ticket que corresponde a este asiento
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number
+  )
+  
+  if (!ticket) {
+    alert('No se encontró un ticket para este asiento.')
+    return
+  }
+  
+  // Mostrar modal de detalles
+  selectedTicket.value = ticket
+  modalType.value = 'details'
+  showTicketModal.value = true
+}
+
+// Función para confirmar la cancelación de la reserva
+const confirmCancelReservation = async () => {
+  if (!selectedTicket.value) return
+  
+  cancellingReservation.value = true
+  
+  try {
+    const config = useRuntimeConfig()
+    const apiUrl = `${config.public.apiBaseUrl}/tickets/${selectedTicket.value.id}/cancel`
+    
+    await $fetch(apiUrl, {
+      method: 'PUT'
+    })
+    
+    // Actualizar el estado del ticket en el arreglo local
+    const index = soldTickets.value.findIndex(t => t.id === selectedTicket.value.id)
+    if (index !== -1) {
+      soldTickets.value[index].state = 'cancelled'
+      
+      // Eliminar el número de asiento de reservedSeatNumbers
+      const seatNumber = soldTickets.value[index].seat?.seat_number
+      if (seatNumber) {
+        const seatIndex = reservedSeatNumbers.value.indexOf(seatNumber)
+        if (seatIndex !== -1) {
+          // Crear una nueva referencia para el array para que sea reactivo
+          const newReservedSeatNumbers = [...reservedSeatNumbers.value]
+          newReservedSeatNumbers.splice(seatIndex, 1)
+          reservedSeatNumbers.value = newReservedSeatNumbers
+        }
+      }
+    }
+    
+    // Recargar los tickets para actualizar la vista
+    await fetchSoldTickets()
+    
+    // Actualizar los datos del viaje para reflejar los cambios en los asientos
+    if (tripId.value) {
+      await tripStore.fetchTripById(tripId.value)
+    }
+    
+    // Cerrar el modal
+    showTicketModal.value = false
+    selectedTicket.value = null
+    
+    // Mostrar mensaje de éxito
+    alert('La reserva ha sido cancelada exitosamente.')
+  } catch (error) {
+    console.error('Error al cancelar la reserva:', error)
+    alert('Error al cancelar la reserva. Por favor, intente nuevamente.')
+  } finally {
+    cancellingReservation.value = false
+  }
+}
+
+// Función para cerrar el modal
+const closeModal = () => {
+  showTicketModal.value = false
+  selectedTicket.value = null
+  cancellingReservation.value = false
+}
+
+// Estado para mostrar modal de detalles o confirmación
+const showTicketModal = ref(false)
+const selectedTicket = ref(null)
+const modalType = ref('details') // 'details', 'cancel', 'change-seat', 'reschedule'
+const cancellingReservation = ref(false)
+
+// Manejar el cambio de asiento
+const handleChangeSeat = (seat) => {
+  // Buscar el ticket que corresponde a este asiento ocupado
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number && 
+    (t.state === 'confirmed' || t.state === 'paid')
+  )
+  
+  if (!ticket) {
+    alert('No se encontró un ticket para este asiento.')
+    return
+  }
+  
+  // Por ahora, solo mostrar el modal de detalles
+  selectedTicket.value = ticket
+  modalType.value = 'details' // En el futuro, esto podría ser 'change-seat'
+  showTicketModal.value = true
+  
+  // Aquí se podría implementar la lógica para cambiar el asiento
+  console.log('Cambiar asiento:', seat)
+}
+
+// Manejar la reprogramación de viaje
+const handleRescheduleTrip = (seat) => {
+  // Buscar el ticket que corresponde a este asiento ocupado
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number && 
+    (t.state === 'confirmed' || t.state === 'paid')
+  )
+  
+  if (!ticket) {
+    alert('No se encontró un ticket para este asiento.')
+    return
+  }
+  
+  // Por ahora, solo mostrar el modal de detalles
+  selectedTicket.value = ticket
+  modalType.value = 'details' // En el futuro, esto podría ser 'reschedule'
+  showTicketModal.value = true
+  
+  // Aquí se podría implementar la lógica para reprogramar el viaje
+  console.log('Reprogramar viaje para el asiento:', seat)
+}
 
 </script>
 

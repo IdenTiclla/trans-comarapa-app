@@ -100,6 +100,7 @@
                   class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
+                  @contextmenu="handleContextMenu($event, seat)"
                 >
                   <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
                     <span class="font-medium">Destino:</span>
@@ -144,6 +145,7 @@
                   class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
+                  @contextmenu="handleContextMenu($event, seat)"
                 >
                   <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
                     <span class="font-medium">Destino:</span>
@@ -214,7 +216,7 @@
           <span
             v-for="seat in selectedSeats"
             :key="seat.id"
-            class="inline-flex items-center px-1 sm:px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-medium bg-blue-100 text-blue-800 shadow-sm"
+            class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-medium bg-blue-100 text-blue-800 shadow-sm"
           >
             {{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}
             <button
@@ -229,6 +231,51 @@
           </span>
         </div>
       </div>
+    </div>
+    
+    <!-- Menú contextual -->
+    <div 
+      v-if="showContextMenu && enableContextMenu" 
+      class="fixed bg-white shadow-lg rounded-md border border-gray-200 py-1 z-50"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }"
+      @click.stop
+    >
+      <div class="px-3 py-1.5 text-xs text-gray-500 border-b border-gray-100">
+        Asiento {{ selectedSeatForContext?.number || '' }}
+      </div>
+      <!-- Opción común: Ver detalles -->
+      <button 
+        @click="viewSeatDetails"
+        class="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        Ver detalles
+      </button>
+      
+      <!-- Opciones para asientos reservados -->
+      <template v-if="selectedSeatForContext?.status === 'reserved'">
+        <button 
+          @click="cancelReservation"
+          class="w-full text-left block px-4 py-1.5 text-sm text-red-600 hover:bg-gray-100"
+        >
+          Cancelar reserva
+        </button>
+      </template>
+      
+      <!-- Opciones para asientos ocupados -->
+      <template v-if="selectedSeatForContext?.occupied || selectedSeatForContext?.status === 'occupied'">
+        <button 
+          @click="changeSeat"
+          class="w-full text-left block px-4 py-1.5 text-sm text-blue-600 hover:bg-gray-100"
+        >
+          Cambiar asiento
+        </button>
+        <button 
+          @click="rescheduleTrip"
+          class="w-full text-left block px-4 py-1.5 text-sm text-green-600 hover:bg-gray-100"
+        >
+          Reprogramar viaje
+        </button>
+      </template>
     </div>
   </div>
 </template>
@@ -264,15 +311,32 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  enableContextMenu: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['seat-selected', 'seat-deselected', 'selection-change'])
+const emit = defineEmits([
+  'seat-selected', 
+  'seat-deselected', 
+  'selection-change', 
+  'cancel-reservation', 
+  'view-details',
+  'change-seat',
+  'reschedule-trip'
+])
 
 const loading = ref(true)
 const error = ref(null)
 const seats = ref([])
 const selectedSeatIds = ref(props.initialSelectedSeats.map(seat => seat.id))
+
+// Estado para el menú contextual
+const showContextMenu = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+const selectedSeatForContext = ref(null)
 
 // Asientos seleccionados
 const selectedSeats = computed(() => {
@@ -481,10 +545,73 @@ watch(() => props.initialSelectedSeats, (newVal) => {
   selectedSeatIds.value = newVal.map(seat => seat.id) // Asegurarse que esto use el ID PK
 })
 
-// Cargar asientos al montar el componente (manejado por el watch con immediate:true)
-// onMounted(() => {
-//   loadSeats()
-// })
+// Añadir watcher para reserved_seat_numbers
+watch(() => props.reserved_seat_numbers, () => {
+  // Recargar los asientos cuando cambia la lista de asientos reservados
+  if (props.trip && props.trip.seats_layout) {
+    loadSeats();
+  }
+}, { deep: true });
+
+// Abrir menú contextual con clic derecho
+const handleContextMenu = (event, seat) => {
+  if (!props.enableContextMenu) return
+  
+  // Mostrar menú contextual para asientos reservados y ocupados
+  if (seat.status !== 'reserved' && seat.status !== 'occupied' && !seat.occupied) return
+
+  event.preventDefault()
+  showContextMenu.value = true
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  selectedSeatForContext.value = seat
+}
+
+// Cerrar menú contextual
+const closeContextMenu = () => {
+  showContextMenu.value = false
+  selectedSeatForContext.value = null
+}
+
+// Cancelar reserva
+const cancelReservation = () => {
+  if (selectedSeatForContext.value) {
+    emit('cancel-reservation', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Ver detalles del asiento
+const viewSeatDetails = () => {
+  if (selectedSeatForContext.value) {
+    emit('view-details', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Cambiar asiento
+const changeSeat = () => {
+  if (selectedSeatForContext.value) {
+    emit('change-seat', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Reprogramar viaje
+const rescheduleTrip = () => {
+  if (selectedSeatForContext.value) {
+    emit('reschedule-trip', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Cerrar el menú cuando se hace clic fuera
+onMounted(() => {
+  document.addEventListener('click', (event) => {
+    if (showContextMenu.value) {
+      closeContextMenu()
+    }
+  })
+})
 </script>
 
 <style scoped>
