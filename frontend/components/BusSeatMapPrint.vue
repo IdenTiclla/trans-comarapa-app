@@ -243,8 +243,26 @@
       <div class="px-3 py-1.5 text-xs text-gray-500 border-b border-gray-100">
         Asiento {{ selectedSeatForContext?.number || '' }}
       </div>
+      
+      <!-- Opciones para asientos disponibles -->
+      <template v-if="!selectedSeatForContext?.status || selectedSeatForContext?.status === 'available'">
+        <button 
+          @click="sellTicket"
+          class="w-full text-left block px-4 py-1.5 text-sm text-blue-600 hover:bg-gray-100"
+        >
+          Vender
+        </button>
+        <button 
+          @click="reserveSeat"
+          class="w-full text-left block px-4 py-1.5 text-sm text-yellow-600 hover:bg-gray-100"
+        >
+          Reservar
+        </button>
+      </template>
+      
       <!-- Opción común: Ver detalles -->
       <button 
+        v-if="selectedSeatForContext?.status === 'reserved' || selectedSeatForContext?.occupied || selectedSeatForContext?.status === 'occupied'"
         @click="viewSeatDetails"
         class="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
       >
@@ -325,7 +343,9 @@ const emit = defineEmits([
   'cancel-reservation', 
   'view-details',
   'change-seat',
-  'reschedule-trip'
+  'reschedule-trip',
+  'sell-ticket',
+  'reserve-seat'
 ])
 
 const loading = ref(true)
@@ -557,9 +577,7 @@ watch(() => props.reserved_seat_numbers, () => {
 const handleContextMenu = (event, seat) => {
   if (!props.enableContextMenu) return
   
-  // Mostrar menú contextual para asientos reservados y ocupados
-  if (seat.status !== 'reserved' && seat.status !== 'occupied' && !seat.occupied) return
-
+  // Mostrar menú contextual para todos los asientos
   event.preventDefault()
   showContextMenu.value = true
   contextMenuPosition.value = { x: event.clientX, y: event.clientY }
@@ -600,6 +618,22 @@ const changeSeat = () => {
 const rescheduleTrip = () => {
   if (selectedSeatForContext.value) {
     emit('reschedule-trip', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Vender boleto
+const sellTicket = () => {
+  if (selectedSeatForContext.value) {
+    emit('sell-ticket', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Reservar asiento
+const reserveSeat = () => {
+  if (selectedSeatForContext.value) {
+    emit('reserve-seat', selectedSeatForContext.value)
     closeContextMenu()
   }
 }

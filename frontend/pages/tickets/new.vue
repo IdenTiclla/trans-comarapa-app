@@ -89,6 +89,8 @@
                           @view-details="handleViewSeatDetails"
                           @change-seat="handleChangeSeat"
                           @reschedule-trip="handleRescheduleTrip"
+                          @sell-ticket="handleSellTicket"
+                          @reserve-seat="handleReserveSeat"
                         />
                       </div>
                     </div>
@@ -498,6 +500,228 @@
             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
           >
             {{ modalType === 'cancel' ? 'Cancelar' : 'Cerrar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para reserva de asiento -->
+  <div v-if="showReservationModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Overlay de fondo -->
+      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeReservationModal">
+        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+      </div>
+
+      <!-- Centrar modal -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <!-- Modal -->
+      <div 
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        @click.stop
+      >
+        <!-- Encabezado del modal -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg leading-6 font-medium text-white">
+              Reservar Asiento {{ selectedSeatForReservation?.number || '' }}
+            </h3>
+            <button 
+              @click="closeReservationModal" 
+              class="text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-blue-100">
+            Por favor, completa los datos del cliente para realizar la reserva.
+          </p>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div class="bg-white px-4 py-5 sm:p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Primera columna: Datos personales -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos Personales</h4>
+              <div>
+                <label for="client-name-reservation" class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    id="client-name-reservation"
+                    v-model="reservationClientData.firstname"
+                    type="text"
+                    required
+                    class="block w-full pr-10 focus:ring-blue-500 focus:border-blue-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                    :class="{'border-red-300': reservationClientData.firstname.trim() === '' && formTouched}"
+                    @focus="formTouched = true"
+                    placeholder="Ej. Juan"
+                  />
+                  <div v-if="reservationClientData.firstname.trim() === '' && formTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="reservationClientData.firstname.trim() === '' && formTouched" class="mt-1 text-xs text-red-600">El nombre es obligatorio</p>
+              </div>
+              
+              <div>
+                <label for="client-lastname-reservation" class="block text-sm font-medium text-gray-700">Apellido</label>
+                <input
+                  id="client-lastname-reservation"
+                  v-model="reservationClientData.lastname"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. Pérez"
+                />
+              </div>
+              
+              <div>
+                <label for="client-ci-reservation" class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    id="client-ci-reservation"
+                    v-model="reservationClientData.document_id"
+                    type="text"
+                    required
+                    class="block w-full pr-10 focus:ring-blue-500 focus:border-blue-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                    :class="{'border-red-300': reservationClientData.document_id.trim() === '' && formTouched}"
+                    @focus="formTouched = true"
+                    placeholder="Ej. 1234567"
+                  />
+                  <div v-if="reservationClientData.document_id.trim() === '' && formTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="reservationClientData.document_id.trim() === '' && formTouched" class="mt-1 text-xs text-red-600">El CI es obligatorio</p>
+              </div>
+              
+              <div>
+                <label for="client-phone-reservation" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input
+                  id="client-phone-reservation"
+                  v-model="reservationClientData.phone"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. 70123456"
+                />
+              </div>
+            </div>
+            
+            <!-- Segunda columna: Dirección y datos adicionales -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos de Contacto</h4>
+              <div>
+                <label for="client-email-reservation" class="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  id="client-email-reservation"
+                  v-model="reservationClientData.email"
+                  type="email"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. correo@ejemplo.com"
+                />
+              </div>
+              
+              <div>
+                <label for="client-address-reservation" class="block text-sm font-medium text-gray-700">Dirección</label>
+                <input
+                  id="client-address-reservation"
+                  v-model="reservationClientData.address"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. Calle Principal #123"
+                />
+              </div>
+              
+              <div>
+                <label for="client-city-reservation" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <input
+                  id="client-city-reservation"
+                  v-model="reservationClientData.city"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. Comarapa"
+                />
+              </div>
+              
+              <div>
+                <label for="client-state-reservation" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <input
+                  id="client-state-reservation"
+                  v-model="reservationClientData.state"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Ej. Santa Cruz"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Checkbox para menor de edad -->
+          <div class="mt-4">
+            <label for="client-is_minor-reservation" class="flex items-center">
+              <input
+                id="client-is_minor-reservation"
+                v-model="reservationClientData.is_minor"
+                type="checkbox"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">Menor de edad</span>
+            </label>
+          </div>
+          
+          <!-- Información del viaje -->
+          <div class="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Datos de la Reserva</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="block text-gray-500">Viaje:</span>
+                <span class="font-medium">{{ trip?.route?.origin }} → {{ trip?.route?.destination }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Asiento:</span>
+                <span class="font-medium">{{ selectedSeatForReservation?.number }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Fecha:</span>
+                <span class="font-medium">{{ formatDate(trip?.departure_date) }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Hora:</span>
+                <span class="font-medium">{{ trip?.departure_time }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pie del modal -->
+        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button 
+            @click="confirmReservation"
+            type="button" 
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+            :disabled="reservationLoading || !isReservationFormValid"
+            :class="{'opacity-50 cursor-not-allowed': reservationLoading || !isReservationFormValid}"
+          >
+            <svg v-if="reservationLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ reservationLoading ? 'Reservando...' : 'Confirmar Reserva' }}
+          </button>
+          <button 
+            @click="closeReservationModal" 
+            type="button" 
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+          >
+            Cancelar
           </button>
         </div>
       </div>
@@ -1008,6 +1232,152 @@ const handleRescheduleTrip = (seat) => {
   
   // Aquí se podría implementar la lógica para reprogramar el viaje
   console.log('Reprogramar viaje para el asiento:', seat)
+}
+
+// Función para manejar la venta de boleto
+const handleSellTicket = (seat) => {
+  // En esta página ya estamos en el proceso de venta, así que seleccionamos el asiento
+  if (!selectedSeats.value.find(s => s.id === seat.id)) {
+    handleSeatSelected(seat)
+  }
+}
+
+// Estado para modal de reserva
+const showReservationModal = ref(false)
+const reservationLoading = ref(false)
+const selectedSeatForReservation = ref(null)
+const formTouched = ref(false)
+const reservationClientData = ref({
+  firstname: '',
+  lastname: '',
+  document_id: '',
+  phone: '',
+  email: '',
+  address: '',
+  city: '',
+  state: '',
+  is_minor: false
+})
+
+// Función para validar los datos del cliente para la reserva
+const isReservationFormValid = computed(() => {
+  return (
+    reservationClientData.value.firstname.trim() !== '' &&
+    reservationClientData.value.document_id.trim() !== ''
+  )
+})
+
+// Función para manejar la reserva de asiento
+const handleReserveSeat = (seat) => {
+  if (!trip.value || !trip.value.id) {
+    alert('No se puede reservar el asiento en este momento. Intente nuevamente.')
+    return
+  }
+  
+  // Inicializar el formulario
+  reservationClientData.value = {
+    firstname: '',
+    lastname: '',
+    document_id: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    is_minor: false
+  }
+  
+  // Guardar el asiento seleccionado y mostrar el modal
+  selectedSeatForReservation.value = seat
+  showReservationModal.value = true
+}
+
+// Confirmar la reserva con los datos del modal
+const confirmReservation = async () => {
+  if (!isReservationFormValid.value || !selectedSeatForReservation.value) {
+    return
+  }
+  
+  reservationLoading.value = true
+  
+  try {
+    const config = useRuntimeConfig()
+    
+    // Obtener el usuario autenticado para crear la reserva
+    if (!authStore.user || !authStore.user.id) {
+      alert('Debe iniciar sesión para reservar un asiento.')
+      showReservationModal.value = false
+      reservationLoading.value = false
+      return
+    }
+    
+    // Crear el cliente con los datos del formulario
+    const clientApiUrl = `${config.public.apiBaseUrl}/clients`
+    const clientResponse = await $fetch(clientApiUrl, {
+      method: 'POST',
+      body: reservationClientData.value
+    })
+    
+    if (!clientResponse || !clientResponse.id) {
+      throw new Error('No se pudo crear el cliente para la reserva.')
+    }
+    
+    // Datos del ticket (reserva)
+    const ticketData = {
+      trip_id: trip.value.id,
+      seat_id: selectedSeatForReservation.value.id,
+      client_id: clientResponse.id,
+      state: 'pending', // Estado "pending" para indicar reserva
+      price: trip.value.price,
+      payment_method: 'pending', // Método de pago provisional para reservas
+      operator_user_id: authStore.user.id
+    }
+    
+    // Crear un ticket en estado "pending" (reserva)
+    const apiUrl = `${config.public.apiBaseUrl}/tickets`
+    const response = await $fetch(apiUrl, {
+      method: 'POST',
+      body: ticketData
+    })
+    
+    if (response) {
+      // Recargar los tickets para actualizar la vista
+      if (route.query.trip) {
+        await fetchTicketsForTrip(route.query.trip)
+      }
+      
+      // Actualizar los datos del viaje para reflejar los cambios en los asientos
+      if (trip.value && trip.value.id) {
+        await tripStore.fetchTripById(trip.value.id)
+      }
+      
+      // Cerrar modal y mostrar mensaje de éxito
+      showReservationModal.value = false
+      alert(`El asiento ${selectedSeatForReservation.value.number} ha sido reservado exitosamente a nombre de ${reservationClientData.value.firstname} ${reservationClientData.value.lastname}.`)
+    }
+  } catch (error) {
+    console.error('Error al reservar el asiento:', error)
+    
+    // Mostrar mensaje de error específico si está disponible
+    let errorMessage = 'Error al reservar el asiento. Por favor, intente nuevamente.'
+    
+    if (error.response && error.response._data && error.response._data.detail) {
+      errorMessage = error.response._data.detail
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    alert(errorMessage)
+  } finally {
+    reservationLoading.value = false
+  }
+}
+
+// Cerrar el modal de reserva
+const closeReservationModal = () => {
+  showReservationModal.value = false
+  selectedSeatForReservation.value = null
+  reservationLoading.value = false
 }
 
 // Definir la metadata de la página

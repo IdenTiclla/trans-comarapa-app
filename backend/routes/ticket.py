@@ -61,34 +61,44 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
 async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     """Create a new ticket"""
+    print(f"[DEBUG] Creating ticket with data: {ticket}")
+    
     # 1. Verify that the seat exists
     seat = db.query(SeatModel).filter(SeatModel.id == ticket.seat_id).first()
     if not seat:
+        print(f"[DEBUG] Seat with id {ticket.seat_id} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Seat with id {ticket.seat_id} not found"
         )
+    print(f"[DEBUG] Seat found: {seat.id}")
 
     # 2. Verify that the client exists
     client = db.query(ClientModel).filter(ClientModel.id == ticket.client_id).first()
     if not client:
+        print(f"[DEBUG] Client with id {ticket.client_id} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Client with id {ticket.client_id} not found"
         )
+    print(f"[DEBUG] Client found: {client.id}")
 
     # 3. Verify that the trip exists
     trip = db.query(TripModel).filter(TripModel.id == ticket.trip_id).first()
     if not trip:
+        print(f"[DEBUG] Trip with id {ticket.trip_id} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Trip with id {ticket.trip_id} not found"
         )
+    print(f"[DEBUG] Trip found: {trip.id}")
 
     # 4. Find the Secretary entity ID based on the operator_user_id
     # The ticket.operator_user_id is the user_id of the secretary/admin creating the ticket
+    print(f"[DEBUG] Looking for secretary profile with user_id: {ticket.operator_user_id}")
     secretary_profile = db.query(SecretaryModel).filter(SecretaryModel.user_id == ticket.operator_user_id).first()
     if not secretary_profile:
+        print(f"[DEBUG] No secretary profile found for user ID {ticket.operator_user_id}")
         # Fallback or alternative logic for admins if they don't have a secretary profile
         # For now, we'll raise an error if no secretary profile is found for the user.
         # This might need adjustment based on how admins are handled (e.g., do they also have a secretary profile, or is there a default secretary_id for admin operations?)
@@ -98,17 +108,22 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
         )
     
     actual_secretary_id = secretary_profile.id
+    print(f"[DEBUG] Secretary profile found: {actual_secretary_id}")
 
     # 5. Verify that the trip hasn't already departed
     min_departure = datetime.now() + timedelta(minutes=10)
+    print(f"[DEBUG] Trip datetime: {trip.trip_datetime}, Current time: {datetime.now()}")
     if trip.trip_datetime < datetime.now():
+        print(f"[DEBUG] Trip has already departed")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Trip with id {ticket.trip_id} has already departed on {trip.trip_datetime}"
         )
 
     # 6. Verify that the seat belongs to the bus assigned to the trip
+    print(f"[DEBUG] Seat bus_id: {seat.bus_id}, Trip bus_id: {trip.bus_id}")
     if seat.bus_id != trip.bus_id:
+        print(f"[DEBUG] Seat does not belong to the bus assigned to the trip")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Seat with id {ticket.seat_id} does not belong to the bus assigned to trip {ticket.trip_id}"
@@ -122,6 +137,7 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     ).first()
 
     if existing_ticket:
+        print(f"[DEBUG] Seat is already booked for this trip: {existing_ticket.id}")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Seat with id {ticket.seat_id} is already booked for trip {ticket.trip_id}"
@@ -130,11 +146,13 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     # 9. Validate ticket state
     valid_states = ["pending", "confirmed", "cancelled", "completed"]
     if ticket.state.lower() not in valid_states:
+        print(f"[DEBUG] Invalid ticket state: {ticket.state}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid ticket state: {ticket.state}. Valid states are: {', '.join(valid_states)}"
         )
 
+    print(f"[DEBUG] All validations passed, creating ticket")
     # Create the ticket with normalized state (lowercase)
     new_ticket = TicketModel(
         state=ticket.state.lower(),
@@ -149,6 +167,7 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     db.add(new_ticket)
     db.commit()
     db.refresh(new_ticket)
+    print(f"[DEBUG] Ticket created successfully: {new_ticket.id}")
 
     return new_ticket
 
