@@ -318,6 +318,123 @@
           </div>
           <!-- End Sold Tickets Section -->
 
+          <!-- Packages Section -->
+          <div class="mt-8">
+            <button
+              @click="togglePackages"
+              class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
+            >
+              <h3 class="text-lg font-medium text-gray-800">
+                Paquetes ({{ packages.length }})
+              </h3>
+              <ChevronDownIcon v-if="!showPackages" class="w-6 h-6 text-gray-600" />
+              <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
+            </button>
+
+            <div v-if="showPackages" class="mt-4">
+              <div v-if="isLoadingPackages" class="flex justify-center py-6">
+                <p class="text-gray-500 italic">Cargando paquetes...</p>
+              </div>
+              <div v-else-if="packagesError" class="bg-red-50 border border-red-200 rounded-md p-4">
+                <p class="text-red-700 text-sm">{{ packagesError }}</p>
+              </div>
+              <div v-else-if="packages.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <p class="text-blue-700 text-sm">No hay paquetes para este viaje aún.</p>
+              </div>
+              <!-- Iterate over grouped packages -->
+              <div v-else class="space-y-4">
+                <div v-for="(packagesInStatus, status) in groupedPackages" :key="status">
+                  <button
+                    @click="togglePackagesByStatus(status)"
+                    class="w-full flex justify-between items-center px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-md shadow-sm focus:outline-none transition-colors duration-150 border border-gray-200"
+                  >
+                    <h4 class="text-md font-medium text-gray-700">
+                      {{ status.charAt(0).toUpperCase() + status.slice(1) }} ({{ packagesInStatus.length }})
+                    </h4>
+                    <ChevronDownIcon v-if="!showPackagesByStatus[status]" class="w-5 h-5 text-gray-500" />
+                    <ChevronUpIcon v-else class="w-5 h-5 text-gray-500" />
+                  </button>
+
+                  <div v-if="showPackagesByStatus[status]" class="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div
+                      v-for="pkg in packagesInStatus"
+                      :key="pkg.id"
+                      class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-in-out"
+                    >
+                      <div class="p-5">
+                        <div class="flex justify-between items-start mb-3">
+                          <h4 class="text-md font-semibold text-purple-700">
+                            Paquete #{{ pkg.id }}
+                          </h4>
+                          <span 
+                            class="px-2 py-0.5 text-xs font-medium rounded-full"
+                            :class="{
+                              'bg-green-100 text-green-800': pkg.status === 'delivered' || pkg.status === 'entregado',
+                              'bg-yellow-100 text-yellow-800': pkg.status === 'in transit' || pkg.status === 'en transito',
+                              'bg-blue-100 text-blue-800': pkg.status === 'pending' || pkg.status === 'pendiente',
+                              'bg-red-100 text-red-800': pkg.status === 'cancelled' || pkg.status === 'cancelado',
+                              'bg-gray-100 text-gray-800': pkg.status === 'unknown' || !pkg.status,
+                            }"
+                          >
+                            {{ pkg.status ? pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1) : 'N/D' }}
+                          </span>
+                        </div>
+
+                        <div class="space-y-2.5 text-sm text-gray-600">
+                          <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v10h10V5H5z" clip-rule="evenodd" />
+                            </svg>
+                            <p><span class="font-medium text-gray-700">Nombre:</span> {{ pkg.name }}</p>
+                          </div>
+                          <div v-if="pkg.description" class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H6a1 1 0 110-2V4z" clip-rule="evenodd" />
+                            </svg>
+                            <p><span class="font-medium text-gray-700">Descripción:</span> {{ pkg.description }}</p>
+                          </div>
+                          <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <p><span class="font-medium text-gray-700">Peso:</span> {{ pkg.weight }} kg</p>
+                          </div>
+                          <div class="flex items-center">
+                            <CurrencyDollarIcon class="w-5 h-5 mr-2 text-purple-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Precio:</span> Bs. {{ pkg.price?.toFixed(2) }}</p>
+                          </div>
+                          <div v-if="pkg.sender" class="flex items-center">
+                            <UserCircleIcon class="w-5 h-5 mr-2 text-purple-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Remitente:</span> {{ pkg.sender.firstname }} {{ pkg.sender.lastname }}</p>
+                          </div>
+                          <div v-if="pkg.recipient" class="flex items-center">
+                            <UserCircleIcon class="w-5 h-5 mr-2 text-purple-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Destinatario:</span> {{ pkg.recipient.firstname }} {{ pkg.recipient.lastname }}</p>
+                          </div>
+                          <div class="flex items-center">
+                            <CalendarIcon class="w-5 h-5 mr-2 text-purple-500 flex-shrink-0" />
+                            <p><span class="font-medium text-gray-700">Registrado:</span> {{ formatDate(pkg.created_at) }}</p>
+                          </div>
+                          <div v-if="pkg.secretary" class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fill-rule="evenodd" d="M18 8a6 6 0 11-12 0 6 6 0 0112 0zm-8-3a1 1 0 00-.867.5 1 1 0 01-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                            <p><span class="font-medium text-gray-700">Registrado por:</span> {{ pkg.secretary.firstname }} {{ pkg.secretary.lastname }}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end space-x-2">
+                        <AppButton size="sm" variant="secondary">Ver Detalles</AppButton>
+                        <AppButton v-if="pkg.status !== 'delivered' && pkg.status !== 'entregado'" size="sm" variant="primary">Actualizar Estado</AppButton>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End Packages Section -->
+
           <div v-if="displayedTrip" class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
             <AppButton
               variant="secondary"
@@ -663,7 +780,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTripStore } from '@/stores/tripStore'
 import { useAuthStore } from '@/stores/auth'
@@ -692,6 +809,15 @@ const showSoldTickets = ref(false) // To toggle visibility of the main sold tick
 // New reactive state for toggling visibility of tickets grouped by state
 const showTicketsByState = ref({});
 
+// New reactive properties for packages
+const packages = ref([])
+const isLoadingPackages = ref(false)
+const packagesError = ref(null)
+const showPackages = ref(false) // To toggle visibility of the main packages section
+
+// New reactive state for toggling visibility of packages grouped by status
+const showPackagesByStatus = ref({});
+
 const groupedSoldTickets = computed(() => {
   if (!soldTickets.value || soldTickets.value.length === 0) {
     return {};
@@ -702,6 +828,20 @@ const groupedSoldTickets = computed(() => {
       acc[state] = [];
     }
     acc[state].push(ticket);
+    return acc;
+  }, {});
+});
+
+const groupedPackages = computed(() => {
+  if (!packages.value || packages.value.length === 0) {
+    return {};
+  }
+  return packages.value.reduce((acc, pkg) => {
+    const status = pkg.status || 'unknown'; // Group packages with no status under 'unknown'
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    acc[status].push(pkg);
     return acc;
   }, {});
 });
@@ -737,10 +877,25 @@ onMounted(async () => {
     router.push('/trips')
     return
   }
-  await tripStore.fetchTripById(tripId.value)
-  // If trip details are successfully fetched, then fetch sold tickets
-  if (displayedTrip.value && displayedTrip.value.id) {
-    await fetchSoldTickets(); // Call fetchSoldTickets on mount
+  
+  try {
+    await tripStore.fetchTripById(tripId.value)
+    
+    // Use nextTick to ensure the trip is fully loaded and reactive
+    await nextTick()
+    
+    // If trip details are successfully fetched, then fetch sold tickets and packages
+    if (displayedTrip.value && displayedTrip.value.id) {
+      console.log('Cargando datos para el viaje:', displayedTrip.value.id)
+      await Promise.all([
+        fetchSoldTickets(), // Call fetchSoldTickets on mount
+        fetchPackages() // Call fetchPackages on mount to show correct count
+      ])
+    } else {
+      console.error('Trip not loaded properly after fetchTripById')
+    }
+  } catch (error) {
+    console.error('Error loading trip:', error)
   }
 })
 
@@ -858,6 +1013,45 @@ const fetchSoldTickets = async () => {
   }
 }
 
+// Method to fetch packages
+const fetchPackages = async () => {
+  if (!displayedTrip.value || !displayedTrip.value.id) {
+    packagesError.value = 'ID del viaje no disponible para cargar paquetes.';
+    return;
+  }
+  isLoadingPackages.value = true;
+  packagesError.value = null;
+  try {
+    const apiUrl = `${config.public.apiBaseUrl}/packages/by-trip/${displayedTrip.value.id}`;
+    const responseData = await $fetch(apiUrl, {
+      method: 'GET',
+    });
+
+    if (responseData) {
+        // Ensure plain objects for Pinia SSR/hydration
+        packages.value = JSON.parse(JSON.stringify(responseData));
+        console.log('Paquetes cargados:', packages.value);
+    } else {
+        packages.value = [];
+    }
+  } catch (err) { 
+    console.error("API Error fetching packages:", err);
+    let errorMessage = 'No se pudieron cargar los paquetes. Intente más tarde.';
+    if (err.response && err.response._data && err.response._data.detail) {
+      errorMessage = err.response._data.detail;
+    } else if (err.data && err.data.message) {
+      errorMessage = err.data.message;
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    packagesError.value = errorMessage;
+    packages.value = [];
+  }
+  finally {
+    isLoadingPackages.value = false;
+  }
+}
+
 // Method to toggle sold tickets display and fetch if needed
 const toggleSoldTickets = () => {
   showSoldTickets.value = !showSoldTickets.value;
@@ -878,12 +1072,39 @@ const toggleTicketsByState = (state) => {
   }
 }
 
+// Method to toggle packages display and fetch if needed
+const togglePackages = () => {
+  showPackages.value = !showPackages.value;
+  if (showPackages.value && (packages.value.length === 0 || packagesError.value) && !isLoadingPackages.value) {
+    fetchPackages();
+  }
+}
+
+// Method to toggle visibility of packages for a specific status
+const togglePackagesByStatus = (status) => {
+  showPackagesByStatus.value = {
+    ...showPackagesByStatus.value,
+    [status]: !showPackagesByStatus.value[status]
+  }
+}
+
 // Watch for changes in displayedTrip.id if the section is already open
 watch(() => displayedTrip.value?.id, (newId, oldId) => {
   if (newId && newId !== oldId && showSoldTickets.value) {
     fetchSoldTickets();
   }
+  if (newId && newId !== oldId && showPackages.value) {
+    fetchPackages();
+  }
 });
+
+// Watch for trip changes to ensure packages are loaded
+watch(() => displayedTrip.value?.id, async (newId) => {
+  if (newId) {
+    console.log('Trip ID changed to:', newId, 'loading packages...')
+    await fetchPackages()
+  }
+}, { immediate: false });
 
 // Make sure definePageMeta is correctly placed if it's outside script setup
 // For Nuxt 3, it's typically auto-imported or used in a separate <script> block if not setup.
