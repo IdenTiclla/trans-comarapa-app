@@ -397,7 +397,7 @@
                           </div>
                           <div class="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 11-2 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
                             </svg>
                             <p><span class="font-medium text-gray-700">Peso:</span> {{ pkg.weight }} kg</p>
                           </div>
@@ -898,32 +898,78 @@
                           v-model="clientSearchQuery"
                           @input="searchClients"
                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          :class="{'bg-gray-100': selectedExistingClient}"
+                          :disabled="selectedExistingClient"
                           placeholder="Ingrese CI o nombre del cliente..."
                         />
-                        <div v-if="searchingClients" class="absolute right-2 top-2">
-                          <svg class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <!-- Icono de búsqueda o spinner -->
+                        <div class="absolute right-2 top-2">
+                          <svg v-if="searchingClients" class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <svg v-else-if="!selectedExistingClient" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <!-- Botón para limpiar selección si hay un cliente seleccionado -->
+                      <div v-if="selectedExistingClient" class="mt-2 flex items-center justify-between bg-green-50 p-3 rounded-md border border-green-200">
+                        <div class="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <div>
+                            <p class="text-sm font-medium text-green-800">Cliente seleccionado:</p>
+                            <p class="text-xs text-green-700">{{ selectedExistingClient.firstname }} {{ selectedExistingClient.lastname }} ({{ selectedExistingClient.document_id }})</p>
+                          </div>
+                        </div>
+                        <button
+                          @click="clearExistingClientSelection"
+                          type="button"
+                          class="text-green-600 hover:text-green-800 focus:outline-none"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Resultados de búsqueda -->
+                    <div v-if="foundClients.length > 0 && !selectedExistingClient" class="max-h-40 overflow-y-auto border border-gray-200 rounded-md bg-white shadow-sm">
+                      <div class="p-2 border-b border-gray-100 bg-gray-50">
+                        <p class="text-xs font-medium text-gray-600">{{ foundClients.length }} cliente(s) encontrado(s)</p>
+                      </div>
+                      <div 
+                        v-for="client in foundClients" 
+                        :key="client.id"
+                        @click="selectExistingClient(client)"
+                        class="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
+                      >
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <p class="text-sm font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</p>
+                            <p class="text-xs text-gray-500">CI: {{ client.document_id }} • Tel: {{ client.phone || 'N/A' }}</p>
+                            <p v-if="client.email" class="text-xs text-gray-500">Email: {{ client.email }}</p>
+                          </div>
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
                       </div>
                     </div>
                     
-                    <!-- Resultados de búsqueda -->
-                    <div v-if="foundClients.length > 0" class="max-h-32 overflow-y-auto border border-gray-200 rounded-md">
-                      <div 
-                        v-for="client in foundClients" 
-                        :key="client.id"
-                        @click="selectExistingClient(client)"
-                        class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      >
-                        <p class="text-sm font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</p>
-                        <p class="text-xs text-gray-500">CI: {{ client.document_id }} • Tel: {{ client.phone || 'N/A' }}</p>
-                      </div>
-                    </div>
-                    
-                    <div v-else-if="clientSearchQuery && !searchingClients && hasSearched" class="text-sm text-gray-500 italic">
-                      No se encontraron clientes con ese criterio.
+                    <div v-else-if="clientSearchQuery && !searchingClients && hasSearched && foundClients.length === 0 && !selectedExistingClient" class="p-3 text-center bg-yellow-50 border border-yellow-200 rounded-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-yellow-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0118 12a8 8 0 10-8 8 7.962 7.962 0 014.291-1z" />
+                      </svg>
+                      <p class="text-sm text-yellow-700 font-medium">No se encontraron clientes</p>
+                      <p class="text-xs text-yellow-600">Intente con otro término de búsqueda o cree un cliente nuevo</p>
                     </div>
                   </div>
                 </div>
@@ -947,6 +993,17 @@
 
                 <!-- Formulario de datos del cliente -->
                 <div v-if="clientType === 'new' || selectedExistingClient" class="space-y-4">
+                  <!-- Información adicional si el cliente es existente -->
+                  <div v-if="selectedExistingClient" class="p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <p class="text-xs text-blue-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="font-medium">Cliente existente seleccionado.</span> Los campos de nombre y CI están deshabilitados. 
+                      Puede actualizar el teléfono y email si es necesario.
+                    </p>
+                  </div>
+                  
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
@@ -1498,6 +1555,13 @@ const fetchSoldTickets = async () => {
         // Ensure plain objects for Pinia SSR/hydration
         soldTickets.value = JSON.parse(JSON.stringify(responseData));
         console.log('Tickets cargados:', soldTickets.value);
+        
+        // [DEBUG] Log client information for each ticket
+        console.log('[DEBUG TICKETS] Información de clientes por ticket:');
+        soldTickets.value.forEach(ticket => {
+          console.log(`Ticket ID: ${ticket.id}, Asiento: ${ticket.seat?.seat_number}, Cliente ID: ${ticket.client_id}, Cliente: ${ticket.client?.firstname} ${ticket.client?.lastname} (${ticket.client?.document_id})`);
+        });
+        
         console.log('Asientos reservados:', reservedSeatNumbers.value);
     } else {
         soldTickets.value = [];
@@ -1856,11 +1920,17 @@ const handleSellTicket = (seat) => {
 
 // Función para validar los datos del cliente para la venta
 const isSaleFormValid = computed(() => {
-  return (
-    saleClientData.value.firstname.trim() !== '' &&
-    saleClientData.value.document_id.trim() !== '' &&
-    saleClientData.value.payment_method.trim() !== ''
-  )
+  if (clientType.value === 'existing') {
+    // Para cliente existente, debe haberse seleccionado un cliente
+    return selectedExistingClient.value && 
+           selectedExistingClient.value.id &&
+           saleClientData.value.payment_method.trim() !== ''
+  } else {
+    // Para cliente nuevo, validar campos requeridos
+    return saleClientData.value.firstname.trim() !== '' &&
+           saleClientData.value.document_id.trim() !== '' &&
+           saleClientData.value.payment_method.trim() !== ''
+  }
 })
 
 // Confirmar la venta con los datos del modal
@@ -1931,6 +2001,13 @@ const confirmSale = async () => {
         operator_user_id: authStore.user.id
       }
       
+      console.log(`[DEBUG VENTA] Creando ticket para asiento ${seat.number}:`, {
+        seat_id: seat.id,
+        client_id: clientResponse.id,
+        client_name: `${clientResponse.firstname} ${clientResponse.lastname}`,
+        trip_id: displayedTrip.value.id
+      })
+      
       return $fetch(`${config.public.apiBaseUrl}/tickets`, {
         method: 'POST',
         body: ticketData
@@ -1943,6 +2020,16 @@ const confirmSale = async () => {
     
     // Esperar a que se creen todos los tickets
     const responses = await Promise.all(ticketPromises)
+    
+    console.log('[DEBUG VENTA] Respuestas de creación de tickets:');
+    responses.forEach((response, index) => {
+      console.log(`Ticket ${index + 1} creado:`, {
+        ticket_id: response.id,
+        seat_number: selectedSeatsForSaleModal.value[index]?.number,
+        client_id: response.client_id,
+        expected_client_id: clientResponse.id
+      });
+    });
     
     if (responses.length > 0) {
       // Recargar los tickets para actualizar la vista
@@ -2287,36 +2374,71 @@ const foundClients = ref([])
 const searchingClients = ref(false)
 const hasSearched = ref(false)
 const selectedExistingClient = ref(null)
+let searchTimeout = null // Para debounce
 
+// Función de búsqueda con debounce mejorada
 const searchClients = async () => {
+  // Limpiar timeout anterior
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  
+  // Si no hay query, limpiar resultados
   if (!clientSearchQuery.value.trim()) {
     foundClients.value = []
     hasSearched.value = false
+    selectedExistingClient.value = null
     return
   }
   
-  searchingClients.value = true
-  hasSearched.value = false
-  
-  try {
-    const config = useRuntimeConfig()
-    const apiUrl = `${config.public.apiBaseUrl}/clients?search=${encodeURIComponent(clientSearchQuery.value.trim())}`
-    const response = await $fetch(apiUrl, {
-      method: 'GET'
-    })
+  // Aplicar debounce de 500ms
+  searchTimeout = setTimeout(async () => {
+    searchingClients.value = true
+    hasSearched.value = false
     
-    foundClients.value = response || []
-    hasSearched.value = true
-  } catch (error) {
-    console.error('Error searching clients:', error)
-    foundClients.value = []
-    hasSearched.value = true
-  } finally {
-    searchingClients.value = false
-  }
+    try {
+      const config = useRuntimeConfig()
+      const searchTerm = clientSearchQuery.value.trim()
+      const apiUrl = `${config.public.apiBaseUrl}/clients/search?q=${encodeURIComponent(searchTerm)}`
+      
+      const response = await $fetch(apiUrl, {
+        method: 'GET'
+      })
+      
+      foundClients.value = response || []
+      hasSearched.value = true
+      
+      // Si solo hay un resultado y coincide exactamente, seleccionarlo automáticamente
+      if (foundClients.value.length === 1) {
+        const client = foundClients.value[0]
+        const searchLower = searchTerm.toLowerCase()
+        const clientName = `${client.firstname} ${client.lastname}`.toLowerCase()
+        const clientCI = client.document_id
+        
+        if (clientName.includes(searchLower) || clientCI === searchTerm) {
+          // No seleccionar automáticamente, dejar que el usuario elija
+          console.log('Cliente encontrado:', client)
+        }
+      }
+    } catch (error) {
+      console.error('Error searching clients:', error)
+      foundClients.value = []
+      hasSearched.value = true
+      
+      // Mostrar error específico al usuario si es necesario
+      if (error.response?.status === 400) {
+        console.warn('Término de búsqueda muy corto o inválido')
+      } else if (error.response?.status >= 500) {
+        console.error('Error del servidor al buscar clientes')
+      }
+    } finally {
+      searchingClients.value = false
+    }
+  }, 500)
 }
 
 const selectExistingClient = (client) => {
+  // Copiar datos del cliente al formulario pero deshabilitar campos clave
   saleClientData.value = {
     firstname: client.firstname || '',
     lastname: client.lastname || '',
@@ -2331,9 +2453,52 @@ const selectExistingClient = (client) => {
   }
   
   selectedExistingClient.value = client
+  foundClients.value = [] // Limpiar resultados de búsqueda
+  clientSearchQuery.value = `${client.firstname} ${client.lastname} (${client.document_id})` // Mostrar cliente seleccionado
+}
+
+// Función para limpiar la selección de cliente existente
+const clearExistingClientSelection = () => {
+  selectedExistingClient.value = null
   clientSearchQuery.value = ''
   foundClients.value = []
+  hasSearched.value = false
+  
+  // Limpiar también el formulario
+  saleClientData.value = {
+    firstname: '',
+    lastname: '',
+    document_id: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    is_minor: false,
+    payment_method: 'cash'
+  }
 }
+
+// Watch para limpiar la selección cuando se cambia el tipo de cliente
+watch(clientType, (newType) => {
+  if (newType === 'new') {
+    clearExistingClientSelection()
+  } else if (newType === 'existing') {
+    // Limpiar formulario cuando se cambia a cliente existente
+    saleClientData.value = {
+      firstname: '',
+      lastname: '',
+      document_id: '',
+      phone: '',
+      email: '',
+      address: '',
+      city: '',
+      state: '',
+      is_minor: false,
+      payment_method: 'cash'
+    }
+  }
+})
 
 // Computed para la vista previa del ticket
 const previewTicketData = computed(() => {
@@ -2366,13 +2531,19 @@ const previewTicketData = computed(() => {
   }
 })
 
-// Función para limpiar y resetear el formulario de venta
+// Función para limpiar y resetear el formulario de venta (actualizada)
 const resetSaleForm = () => {
   clientType.value = 'new'
   clientSearchQuery.value = ''
   foundClients.value = []
   hasSearched.value = false
   selectedExistingClient.value = null
+  
+  // Limpiar timeout si existe
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
   
   saleClientData.value = {
     firstname: '',

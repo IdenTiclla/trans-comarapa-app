@@ -262,14 +262,21 @@ def seed_db():
             firstname = name_parts[0]
             lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
+            # Generar CI boliviano realista (7-10 dígitos)
+            ci_length = random.choice([7, 8, 9, 10])
+            document_id = str(random.randint(10**(ci_length-1), 10**ci_length - 1))
+
             client_info = {
                 "firstname": firstname,
                 "lastname": lastname,
+                "document_id": document_id,  # Nuevo campo CI
                 "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
+                "email": fake.email(),  # Agregar email aleatorio
                 "address": fake.street_address(),
                 "city": random.choice(bolivian_cities),
                 "state": random.choice(bolivian_states),
                 "birth_date": fake.date_of_birth(minimum_age=18, maximum_age=70),
+                "is_minor": False,  # Agregar campo is_minor
                 "user_id": user.id
             }
             client_data.append(client_info)
@@ -773,7 +780,9 @@ def create_test_users():
             "secretary1@comarapa.com",
             "driver1@comarapa.com",
             "assistant1@comarapa.com",
-            "client1@comarapa.com"
+            "client1@comarapa.com",
+            "client2@comarapa.com",
+            "client3@comarapa.com"
         ]
 
         for email in test_emails:
@@ -884,9 +893,41 @@ def create_test_users():
                 "lastname": "Principal",
                 "phone": "77567890",
                 "birth_date": date(1988, 11, 25),
+                "document_id": "12693562",  # CI de prueba
                 "address": "Av. Principal 123",
                 "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz"
+                "state": "Santa Cruz",
+                "is_minor": False
+            },
+            {
+                "username": "client2",
+                "email": "client2@comarapa.com",
+                "role": "client",
+                "password": "123456",
+                "firstname": "María",
+                "lastname": "González",
+                "phone": "77678901",
+                "birth_date": date(1992, 3, 15),
+                "document_id": "9876543",  # CI de prueba para búsqueda
+                "address": "Calle Falsa 456",
+                "city": "Cochabamba",
+                "state": "Cochabamba",
+                "is_minor": False
+            },
+            {
+                "username": "client3",
+                "email": "client3@comarapa.com",
+                "role": "client",
+                "password": "123456",
+                "firstname": "Pedro",
+                "lastname": "Rojas",
+                "phone": "77789012",
+                "birth_date": date(1985, 8, 20),
+                "document_id": "5432109",  # CI de prueba para búsqueda
+                "address": "Av. Libertad 789",
+                "city": "La Paz",
+                "state": "La Paz",
+                "is_minor": False
             }
         ]
 
@@ -955,8 +996,11 @@ def create_test_users():
                 entity = Client(
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
+                    document_id=user_data.get("document_id"),  # Nuevo campo CI
                     phone=user_data["phone"],
+                    email=user_data["email"],  # Nuevo campo email
                     birth_date=user_data["birth_date"],
+                    is_minor=user_data.get("is_minor", False),  # Nuevo campo is_minor
                     address=user_data["address"],
                     city=user_data["city"],
                     state=user_data["state"],
@@ -977,7 +1021,16 @@ def create_test_users():
             print(f"Email: {user_data['email']}")
             print(f"Contraseña: {user_data['password']}")
             print(f"Nombre: {user_data['firstname']} {user_data['lastname']}")
+            if user_data['role'] == 'client' and 'document_id' in user_data:
+                print(f"CI: {user_data['document_id']}")
             print("--------------------------------")
+
+        print("\nClientes de prueba para búsqueda:")
+        print("=================================")
+        print("• Cliente Principal (CI: 12693562)")
+        print("• María González (CI: 9876543)")
+        print("• Pedro Rojas (CI: 5432109)")
+        print("\nPuedes buscar por nombre, apellido o CI en el frontend")
 
     except Exception as e:
         db.rollback()

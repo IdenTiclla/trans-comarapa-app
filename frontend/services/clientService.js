@@ -21,10 +21,9 @@ const getClients = async (filters = {}, pagination = { page: 1, itemsPerPage: 10
 // Buscar clientes por término de búsqueda
 const searchClients = async (searchTerm) => {
   try {
-    return await apiFetch(resourceUrl, {
+    return await apiFetch(`${resourceUrl}/search`, {
       params: {
-        search: searchTerm,
-        limit: '10' // Limitar a 10 resultados para búsqueda rápida
+        q: searchTerm
       }
     });
   } catch (error) {

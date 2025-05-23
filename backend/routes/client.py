@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from pydantic import BaseModel, Field
 from models.client import Client as ClientModel
 from schemas.client import ClientCreate, ClientUpdate, Client as ClientSchema
@@ -12,6 +13,27 @@ from schemas.seat import Seat as SeatSchema
 router = APIRouter(
     tags=["Clients"]
 )
+
+@router.get("/search", response_model=list[ClientSchema])
+def search_clients(q: str = Query(..., description="Search term for client name or document ID"), db: Session = Depends(get_db)):
+    """Search clients by name or document ID"""
+    if not q or len(q.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Search term must be at least 2 characters long")
+    
+    search_term = q.strip().lower()
+    
+    # Search by firstname, lastname, or document_id
+    clients = db.query(ClientModel).filter(
+        or_(
+            ClientModel.firstname.ilike(f"%{search_term}%"),
+            ClientModel.lastname.ilike(f"%{search_term}%"),
+            ClientModel.document_id.ilike(f"%{search_term}%"),
+            # Combine firstname and lastname for full name search
+            (ClientModel.firstname + ' ' + ClientModel.lastname).ilike(f"%{search_term}%")
+        )
+    ).limit(10).all()  # Limit to 10 results for performance
+    
+    return clients
 
 @router.get("", response_model=list[ClientSchema])
 def get_all_clients(db: Session = Depends(get_db)):
