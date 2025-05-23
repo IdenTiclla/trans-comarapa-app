@@ -822,20 +822,20 @@
       <!-- Centrar modal -->
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-      <!-- Modal -->
+      <!-- Modal MÁS ANCHO -->
       <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full"
         @click.stop
       >
         <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
+        <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg leading-6 font-medium text-white">
+            <h3 class="text-xl leading-6 font-medium text-white">
               <span v-if="selectedSeatsForSaleModal.length === 1">
-                Vender Boleto - Asiento {{ selectedSeatsForSaleModal[0]?.number || '' }}
+                Venta de Boleto - Asiento {{ selectedSeatsForSaleModal[0]?.number || '' }}
               </span>
               <span v-else>
-                Vender {{ selectedSeatsForSaleModal.length }} Boletos
+                Venta de {{ selectedSeatsForSaleModal.length }} Boletos
               </span>
             </h3>
             <button 
@@ -848,232 +848,280 @@
             </button>
           </div>
           <p class="mt-1 text-sm text-green-100">
-            <span v-if="selectedSeatsForSaleModal.length === 1">
-              Por favor, completa los datos del cliente para realizar la venta.
-            </span>
-            <span v-else>
-              Por favor, completa los datos del cliente para vender {{ selectedSeatsForSaleModal.length }} asientos a su nombre.
-            </span>
+            Complete los datos del cliente y vea la vista previa del boleto antes de confirmar la venta.
           </p>
         </div>
         
-        <!-- Contenido del modal -->
-        <div class="bg-white px-4 py-5 sm:p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Primera columna: Datos personales -->
-            <div class="space-y-4">
-              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos Personales</h4>
-              <div>
-                <label for="firstname" class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
-                <div class="mt-1 relative rounded-md shadow-sm">
-                  <input
-                    id="firstname"
-                    v-model="saleClientData.firstname"
-                    type="text"
-                    required
-                    class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
-                    :class="{'border-red-300': saleClientData.firstname.trim() === '' && saleFormTouched}"
-                    @focus="saleFormTouched = true"
-                    placeholder="Ej. Juan"
-                  />
-                  <div v-if="saleClientData.firstname.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
+        <!-- Contenido del modal - LAYOUT EN DOS COLUMNAS -->
+        <div class="bg-white px-6 py-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- COLUMNA IZQUIERDA: Formulario de Cliente -->
+            <div class="space-y-6">
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                  Información del Cliente
+                </h4>
+                
+                <!-- Buscar Cliente Existente -->
+                <div class="mb-4">
+                  <div class="flex items-center space-x-2 mb-3">
+                    <input
+                      id="existing_client"
+                      type="radio"
+                      name="client_type"
+                      value="existing"
+                      v-model="clientType"
+                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                    />
+                    <label for="existing_client" class="text-sm font-medium text-gray-700">
+                      Cliente Existente
+                    </label>
+                  </div>
+                  
+                  <div v-if="clientType === 'existing'" class="space-y-3">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por CI o Nombre</label>
+                      <div class="relative">
+                        <input
+                          type="text"
+                          v-model="clientSearchQuery"
+                          @input="searchClients"
+                          class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                          placeholder="Ingrese CI o nombre del cliente..."
+                        />
+                        <div v-if="searchingClients" class="absolute right-2 top-2">
+                          <svg class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Resultados de búsqueda -->
+                    <div v-if="foundClients.length > 0" class="max-h-32 overflow-y-auto border border-gray-200 rounded-md">
+                      <div 
+                        v-for="client in foundClients" 
+                        :key="client.id"
+                        @click="selectExistingClient(client)"
+                        class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      >
+                        <p class="text-sm font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</p>
+                        <p class="text-xs text-gray-500">CI: {{ client.document_id }} • Tel: {{ client.phone || 'N/A' }}</p>
+                      </div>
+                    </div>
+                    
+                    <div v-else-if="clientSearchQuery && !searchingClients && hasSearched" class="text-sm text-gray-500 italic">
+                      No se encontraron clientes con ese criterio.
+                    </div>
                   </div>
                 </div>
-                <p v-if="saleClientData.firstname.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El nombre es obligatorio</p>
-              </div>
-              
-              <div>
-                <label for="lastname" class="block text-sm font-medium text-gray-700">Apellido</label>
-                <input
-                  id="lastname"
-                  v-model="saleClientData.lastname"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. Pérez"
-                />
-              </div>
-              
-              <div>
-                <label for="document_id" class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
-                <div class="mt-1 relative rounded-md shadow-sm">
-                  <input
-                    id="document_id"
-                    v-model="saleClientData.document_id"
-                    type="text"
-                    required
-                    class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
-                    :class="{'border-red-300': saleClientData.document_id.trim() === '' && saleFormTouched}"
-                    @focus="saleFormTouched = true"
-                    placeholder="Ej. 1234567"
-                  />
-                  <div v-if="saleClientData.document_id.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
+
+                <!-- Cliente Nuevo -->
+                <div class="mb-4">
+                  <div class="flex items-center space-x-2 mb-3">
+                    <input
+                      id="new_client"
+                      type="radio"
+                      name="client_type"
+                      value="new"
+                      v-model="clientType"
+                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                    />
+                    <label for="new_client" class="text-sm font-medium text-gray-700">
+                      Cliente Nuevo
+                    </label>
                   </div>
                 </div>
-                <p v-if="saleClientData.document_id.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El CI es obligatorio</p>
-              </div>
-              
-              <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input
-                  id="phone"
-                  v-model="saleClientData.phone"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. 70123456"
-                />
-              </div>
-            </div>
-            
-            <!-- Segunda columna: Dirección y datos adicionales -->
-            <div class="space-y-4">
-              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos de Contacto</h4>
-              <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  id="email"
-                  v-model="saleClientData.email"
-                  type="email"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. correo@ejemplo.com"
-                />
-              </div>
-              
-              <div>
-                <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-                <input
-                  id="address"
-                  v-model="saleClientData.address"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. Calle Principal #123"
-                />
-              </div>
-              
-              <div>
-                <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
-                <input
-                  id="city"
-                  v-model="saleClientData.city"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. Comarapa"
-                />
-              </div>
-              
-              <div>
-                <label for="state" class="block text-sm font-medium text-gray-700">Departamento</label>
-                <input
-                  id="state"
-                  v-model="saleClientData.state"
-                  type="text"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Ej. Santa Cruz"
-                />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Checkbox para menor de edad -->
-          <div class="mt-4">
-            <label for="is_minor" class="flex items-center">
-              <input
-                id="is_minor"
-                v-model="saleClientData.is_minor"
-                type="checkbox"
-                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-              />
-              <span class="ml-2 text-sm text-gray-700">Menor de edad</span>
-            </label>
-          </div>
-          
-          <!-- Método de Pago -->
-          <div class="mt-4">
-            <label for="payment_method" class="block text-sm font-medium text-gray-700">Método de Pago <span class="text-red-500">*</span></label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-              <select
-                id="payment_method"
-                v-model="saleClientData.payment_method"
-                required
-                class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-                :class="{'border-red-300': saleClientData.payment_method.trim() === '' && saleFormTouched}"
-              >
-                <option value="cash">Efectivo</option>
-                <option value="card">Tarjeta</option>
-                <option value="transfer">Transferencia</option>
-                <option value="qr">QR</option>
-              </select>
-              <div v-if="saleClientData.payment_method.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <p v-if="saleClientData.payment_method.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El método de pago es obligatorio</p>
-          </div>
-          
-          <!-- Información del viaje -->
-          <div class="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Datos de la Venta</h4>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span class="block text-gray-500">Viaje:</span>
-                <span class="font-medium">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</span>
-              </div>
-              <div>
-                <span class="block text-gray-500">Asiento(s):</span>
-                <span v-if="selectedSeatsForSaleModal.length === 1" class="font-medium">
-                  {{ selectedSeatsForSaleModal[0]?.number }}
-                </span>
-                <div v-else class="flex flex-wrap gap-1">
-                  <span 
-                    v-for="seat in selectedSeatsForSaleModal" 
-                    :key="seat.id"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+
+                <!-- Formulario de datos del cliente -->
+                <div v-if="clientType === 'new' || selectedExistingClient" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                      <input
+                        v-model="saleClientData.firstname"
+                        type="text"
+                        :disabled="clientType === 'existing' && selectedExistingClient"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
+                        placeholder="Ej. Juan"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">Apellido</label>
+                      <input
+                        v-model="saleClientData.lastname"
+                        type="text"
+                        :disabled="clientType === 'existing' && selectedExistingClient"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
+                        placeholder="Ej. Pérez"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
+                      <input
+                        v-model="saleClientData.document_id"
+                        type="text"
+                        :disabled="clientType === 'existing' && selectedExistingClient"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
+                        placeholder="Ej. 1234567"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                      <input
+                        v-model="saleClientData.phone"
+                        type="text"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        placeholder="Ej. 70123456"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      v-model="saleClientData.email"
+                      type="email"
+                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      placeholder="Ej. correo@ejemplo.com"
+                    />
+                  </div>
+                </div>
+
+                <!-- Método de Pago -->
+                <div class="mt-6">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago <span class="text-red-500">*</span></label>
+                  <select
+                    v-model="saleClientData.payment_method"
+                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   >
-                    {{ seat.number }}
-                  </span>
+                    <option value="cash">Efectivo</option>
+                    <option value="card">Tarjeta</option>
+                    <option value="transfer">Transferencia</option>
+                    <option value="qr">QR</option>
+                  </select>
+                </div>
+
+                <!-- Resumen de la venta -->
+                <div class="mt-6 bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h5 class="text-sm font-medium text-green-800 mb-2">Resumen de la Venta</h5>
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div><span class="text-green-700">Ruta:</span></div>
+                    <div class="font-medium">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</div>
+                    
+                    <div><span class="text-green-700">Fecha:</span></div>
+                    <div class="font-medium">{{ formatDate(displayedTrip?.trip_datetime) }}</div>
+                    
+                    <div><span class="text-green-700">Hora:</span></div>
+                    <div class="font-medium">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</div>
+                    
+                    <div><span class="text-green-700">Asiento(s):</span></div>
+                    <div class="font-medium">
+                      <span v-if="selectedSeatsForSaleModal.length === 1">
+                        {{ selectedSeatsForSaleModal[0]?.number }}
+                      </span>
+                      <div v-else class="flex flex-wrap gap-1">
+                        <span 
+                          v-for="seat in selectedSeatsForSaleModal" 
+                          :key="seat.id"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-800"
+                        >
+                          {{ seat.number }}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div><span class="text-green-700">Precio Total:</span></div>
+                    <div class="font-bold text-green-600 text-lg">
+                      Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <span class="block text-gray-500">Fecha:</span>
-                <span class="font-medium">{{ formatDate(displayedTrip?.trip_datetime) }}</span>
-              </div>
-              <div>
-                <span class="block text-gray-500">Hora:</span>
-                <span class="font-medium">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</span>
-              </div>
-              <div>
-                <span class="block text-gray-500">
-                  <span v-if="selectedSeatsForSaleModal.length === 1">Precio:</span>
-                  <span v-else>Precio Total:</span>
-                </span>
-                <span class="font-medium text-green-600">
-                  Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
-                  <span v-if="selectedSeatsForSaleModal.length > 1" class="text-xs text-gray-500">
-                    ({{ selectedSeatsForSaleModal.length }} x Bs. {{ (displayedTrip?.price || 0).toFixed(2) }})
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span class="block text-gray-500">Método de Pago:</span>
-                <span class="font-medium">{{ getPaymentMethodText(saleClientData.payment_method) }}</span>
+            </div>
+
+            <!-- COLUMNA DERECHA: Vista Previa del Ticket -->
+            <div class="space-y-6">
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H6a1 1 0 110-2V4z" clip-rule="evenodd" />
+                  </svg>
+                  Vista Previa del Boleto
+                </h4>
+                
+                <!-- Vista previa del ticket solo para el primer asiento -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                  <div v-if="previewTicketData && selectedSeatsForSaleModal.length > 0" class="relative">
+                    <!-- Etiqueta de Vista Previa -->
+                    <div class="absolute top-2 right-2 z-10">
+                      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                        </svg>
+                        Vista Previa
+                      </span>
+                    </div>
+                    
+                    <!-- Contenedor del ticket con escala -->
+                    <div class="ticket-preview-container">
+                      <div class="ticket-scale-wrapper">
+                        <TicketDisplay 
+                          :ticket="previewTicketData" 
+                          :trip="displayedTrip"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="text-center py-12 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <p>Vista previa del boleto aparecerá aquí</p>
+                    <p class="text-xs">Complete los datos del cliente para ver el boleto</p>
+                  </div>
+                </div>
+                
+                <div v-if="selectedSeatsForSaleModal.length > 1" class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p class="text-sm text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Se generarán {{ selectedSeatsForSaleModal.length }} boletos iguales, uno para cada asiento seleccionado.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
         <!-- Pie del modal -->
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+          <button 
+            @click="closeSaleModal" 
+            type="button" 
+            class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
+          >
+            Cancelar
+          </button>
           <button 
             @click="confirmSale"
             type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+            class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-6 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
             :disabled="saleLoading || !isSaleFormValid"
             :class="{'opacity-50 cursor-not-allowed': saleLoading || !isSaleFormValid}"
           >
@@ -1081,14 +1129,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {{ saleLoading ? 'Vendiendo...' : 'Confirmar Venta' }}
-          </button>
-          <button 
-            @click="closeSaleModal" 
-            type="button" 
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            Cancelar
+            {{ saleLoading ? 'Procesando...' : 'Confirmar Venta' }}
           </button>
         </div>
       </div>
@@ -1832,7 +1873,8 @@ const handleSellTicket = (seat) => {
     payment_method: 'cash'
   }
   
-  // Guardar los asientos seleccionados y mostrar el modal
+  // Resetear formulario y mostrar modal
+  resetSaleForm()
   selectedSeatsForSaleModal.value = seatsToSell
   showSaleModal.value = true
   saleFormTouched.value = false
@@ -1874,25 +1916,33 @@ const confirmSale = async () => {
       return
     }
     
-    // Crear el cliente con los datos del formulario
-    const clientApiUrl = `${config.public.apiBaseUrl}/clients`
-    const clientResponse = await $fetch(clientApiUrl, {
-      method: 'POST',
-      body: {
-        firstname: saleClientData.value.firstname,
-        lastname: saleClientData.value.lastname,
-        document_id: saleClientData.value.document_id,
-        phone: saleClientData.value.phone,
-        email: saleClientData.value.email,
-        address: saleClientData.value.address,
-        city: saleClientData.value.city,
-        state: saleClientData.value.state,
-        is_minor: saleClientData.value.is_minor
-      }
-    })
+    // Crear o usar cliente existente
+    let clientResponse
+    
+    if (clientType.value === 'existing' && selectedExistingClient.value) {
+      // Usar cliente existente
+      clientResponse = selectedExistingClient.value
+    } else {
+      // Crear nuevo cliente
+      const clientApiUrl = `${config.public.apiBaseUrl}/clients`
+      clientResponse = await $fetch(clientApiUrl, {
+        method: 'POST',
+        body: {
+          firstname: saleClientData.value.firstname,
+          lastname: saleClientData.value.lastname,
+          document_id: saleClientData.value.document_id,
+          phone: saleClientData.value.phone,
+          email: saleClientData.value.email,
+          address: saleClientData.value.address,
+          city: saleClientData.value.city,
+          state: saleClientData.value.state,
+          is_minor: saleClientData.value.is_minor
+        }
+      })
+    }
     
     if (!clientResponse || !clientResponse.id) {
-      throw new Error('No se pudo crear el cliente para la venta.')
+      throw new Error('No se pudo obtener o crear el cliente para la venta.')
     }
     
     // Crear tickets para todos los asientos seleccionados
@@ -2182,74 +2232,165 @@ const printTicket = () => {
 // Función auxiliar para obtener los estilos CSS del ticket
 const getTicketStyles = () => {
   return `
-    .flex { display: flex; }
-    .items-center { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .justify-center { justify-content: center; }
-    .flex-1 { flex: 1; }
-    .space-x-2 > * + * { margin-left: 0.5rem; }
-    .space-x-1 > * + * { margin-left: 0.25rem; }
-    .space-y-2 > * + * { margin-top: 0.5rem; }
-    .mb-1 { margin-bottom: 0.25rem; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-3 { margin-bottom: 0.75rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .mt-1 { margin-top: 0.25rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .mt-3 { margin-top: 0.75rem; }
-    .ml-4 { margin-left: 1rem; }
-    .text-xs { font-size: 0.75rem; line-height: 1rem; }
-    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-    .text-base { font-size: 1rem; line-height: 1.5rem; }
-    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-    .font-bold { font-weight: 700; }
-    .font-medium { font-weight: 500; }
-    .font-semibold { font-weight: 600; }
-    .leading-tight { line-height: 1.25; }
-    .text-center { text-align: center; }
-    .text-blue-100 { color: #dbeafe; }
-    .text-blue-600 { color: #2563eb; }
-    .text-red-600 { color: #dc2626; }
-    .text-gray-600 { color: #4b5563; }
-    .text-white { color: white; }
-    .bg-blue-100 { background-color: #dbeafe; }
-    .bg-blue-500 { background-color: #3b82f6; }
-    .bg-blue-600 { background-color: #2563eb; }
-    .bg-red-100 { background-color: #fee2e2; }
-    .bg-gray-100 { background-color: #f3f4f6; }
-    .bg-blue-50 { background-color: #eff6ff; }
-    .bg-white { background-color: white; }
-    .border { border-width: 1px; }
-    .border-2 { border-width: 2px; }
-    .border-blue-300 { border-color: #93c5fd; }
-    .border-gray-200 { border-color: #e5e7eb; }
-    .border-b-2 { border-bottom-width: 2px; }
-    .rounded { border-radius: 0.25rem; }
-    .rounded-lg { border-radius: 0.5rem; }
-    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
-    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .px-4 { padding-left: 1rem; padding-right: 1rem; }
-    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-    .p-1 { padding: 0.25rem; }
-    .p-2 { padding: 0.5rem; }
-    .p-3 { padding: 0.75rem; }
-    .grid { display: grid; }
-    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .gap-1 { gap: 0.25rem; }
-    .gap-2 { gap: 0.5rem; }
-    .gap-4 { gap: 1rem; }
-    .w-8 { width: 2rem; }
-    .w-12 { width: 3rem; }
-    .h-8 { height: 2rem; }
-    .h-12 { height: 3rem; }
-    .inline-block { display: inline-block; }
-    .italic { font-style: italic; }
-    .opacity-90 { opacity: 0.9; }
+    .ticket-preview-container {
+      padding: 12px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 180px;
+      max-height: 250px;
+      overflow: hidden;
+    }
+    
+    .ticket-scale-wrapper {
+      transform: scale(0.7);
+      transform-origin: center center;
+      width: 142.86%;
+      max-width: none;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .ticket-scale-wrapper > div {
+      max-width: 950px !important;
+      width: 950px !important;
+      min-height: auto !important;
+    }
+    
+    @media (max-width: 1200px) {
+      .ticket-scale-wrapper {
+        transform: scale(0.6);
+        width: 166.67%;
+      }
+    }
+    
+    @media (max-width: 1024px) {
+      .ticket-scale-wrapper {
+        transform: scale(0.5);
+        width: 200%;
+      }
+      
+      .ticket-preview-container {
+        min-height: 150px;
+        max-height: 200px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .ticket-scale-wrapper {
+        transform: scale(0.4);
+        width: 250%;
+      }
+      
+      .ticket-preview-container {
+        min-height: 120px;
+        max-height: 160px;
+      }
+    }
   `
+}
+
+// Nuevas variables para manejo de clientes existentes y vista previa
+const clientType = ref('new') // 'new' o 'existing'
+const clientSearchQuery = ref('')
+const foundClients = ref([])
+const searchingClients = ref(false)
+const hasSearched = ref(false)
+const selectedExistingClient = ref(null)
+
+const searchClients = async () => {
+  if (!clientSearchQuery.value.trim()) {
+    foundClients.value = []
+    hasSearched.value = false
+    return
+  }
+  
+  searchingClients.value = true
+  hasSearched.value = false
+  
+  try {
+    const config = useRuntimeConfig()
+    const apiUrl = `${config.public.apiBaseUrl}/clients?search=${encodeURIComponent(clientSearchQuery.value.trim())}`
+    const response = await $fetch(apiUrl, {
+      method: 'GET'
+    })
+    
+    foundClients.value = response || []
+    hasSearched.value = true
+  } catch (error) {
+    console.error('Error searching clients:', error)
+    foundClients.value = []
+    hasSearched.value = true
+  } finally {
+    searchingClients.value = false
+  }
+}
+
+const selectExistingClient = (client) => {
+  saleClientData.value = {
+    firstname: client.firstname || '',
+    lastname: client.lastname || '',
+    document_id: client.document_id || '',
+    phone: client.phone || '',
+    email: client.email || '',
+    address: client.address || '',
+    city: client.city || '',
+    state: client.state || '',
+    is_minor: client.is_minor || false,
+    payment_method: 'cash'
+  }
+  
+  selectedExistingClient.value = client
+  clientSearchQuery.value = ''
+  foundClients.value = []
+}
+
+// Computed para la vista previa del ticket
+const previewTicketData = computed(() => {
+  if (!saleClientData.value.firstname || !selectedSeatsForSaleModal.value.length) {
+    return null
+  }
+  
+  return {
+    id: 'PREVIEW',
+    client: {
+      firstname: saleClientData.value.firstname,
+      lastname: saleClientData.value.lastname,
+      document_id: saleClientData.value.document_id,
+      phone: saleClientData.value.phone,
+      email: saleClientData.value.email
+    },
+    seat: {
+      seat_number: selectedSeatsForSaleModal.value[0]?.number || 'XX'
+    },
+    price: displayedTrip.value?.price || 0,
+    trip: displayedTrip.value,
+    state: 'confirmed',
+    payment_method: saleClientData.value.payment_method
+  }
+})
+
+// Función para limpiar y resetear el formulario de venta
+const resetSaleForm = () => {
+  clientType.value = 'new'
+  clientSearchQuery.value = ''
+  foundClients.value = []
+  hasSearched.value = false
+  selectedExistingClient.value = null
+  
+  saleClientData.value = {
+    firstname: '',
+    lastname: '',
+    document_id: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    is_minor: false,
+    payment_method: 'cash'
+  }
 }
 </script>
 
