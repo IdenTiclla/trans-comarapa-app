@@ -62,7 +62,6 @@
           <div class="flex items-center space-x-3">
             <!-- Secretary Links - Desktop -->
             <template v-if="authStore.userRole === 'secretary'">
-              <NuxtLink to="/tickets/new" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Vender Boletos</NuxtLink>
               <NuxtLink to="/trips/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Viajes</NuxtLink>
               <NuxtLink to="/clients/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Clientes</NuxtLink>
               <NuxtLink to="/reports/secretary" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Reportes</NuxtLink>
@@ -140,13 +139,6 @@
           <div class="flex flex-col space-y-2">
             <!-- Secretary Links - Mobile -->
             <template v-if="authStore.userRole === 'secretary'">
-              <NuxtLink
-                to="/tickets/new"
-                class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
-                @click="isMenuOpen = false"
-              >
-                Vender Boletos
-              </NuxtLink>
               <NuxtLink
                 to="/trips/manage"
                 class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"

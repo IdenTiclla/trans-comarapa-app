@@ -85,9 +85,9 @@
       <!-- Tarjeta de Venta de Boletos -->
       <div class="bg-green-50 rounded-lg p-6 shadow-md">
         <h2 class="text-xl font-semibold text-green-700 mb-4">Venta de Boletos</h2>
-        <p class="text-gray-600 mb-4">Gestiona la venta de boletos para los diferentes viajes.</p>
-        <NuxtLink to="/tickets" class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors">
-          Vender Boletos
+        <p class="text-gray-600 mb-4">Gestiona la venta de boletos desde el mapa de asientos de cada viaje.</p>
+        <NuxtLink to="/trips" class="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors">
+          Ver Viajes
         </NuxtLink>
       </div>
 
@@ -206,7 +206,7 @@ const icons = reactive({
 
 // Acciones rápidas para secretarias
 const quickActions = [
-  { id: 'new-ticket', label: 'Nuevo Boleto', icon: icons.ticketIcon },
+  { id: 'new-ticket', label: 'Vender Boletos', icon: icons.ticketIcon },
   { id: 'new-package', label: 'Nuevo Paquete', icon: icons.packageIcon },
   { id: 'search-client', label: 'Buscar Cliente', icon: icons.searchIcon },
   { id: 'daily-report', label: 'Reporte Diario', icon: icons.reportIcon }
@@ -216,7 +216,7 @@ const quickActions = [
 const handleQuickAction = (actionId) => {
   switch (actionId) {
     case 'new-ticket':
-      router.push('/tickets/new')
+      router.push('/trips')
       break
     case 'new-package':
       router.push('/packages/new')
