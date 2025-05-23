@@ -198,15 +198,17 @@
             <div class="bg-white rounded-lg shadow overflow-hidden">
               <BusSeatMapPrint
                 :trip="displayedTrip" 
-                :selection-enabled="false"
+                :selection-enabled="true"
                 :reserved_seat_numbers="reservedSeatNumbers"
                 :enable-context-menu="true"
+                :initial-selected-seats="selectedSeatsForSale"
                 @cancel-reservation="handleCancelReservation"
                 @view-details="handleViewSeatDetails"
                 @change-seat="handleChangeSeat"
                 @reschedule-trip="handleRescheduleTrip"
                 @sell-ticket="handleSellTicket"
                 @reserve-seat="handleReserveSeat"
+                @selection-change="handleSelectionChange"
               />
             </div>
           </div>
@@ -798,7 +800,12 @@
         <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
           <div class="flex items-center justify-between">
             <h3 class="text-lg leading-6 font-medium text-white">
-              Vender Boleto {{ selectedSeatForSale?.number || '' }}
+              <span v-if="selectedSeatsForSaleModal.length === 1">
+                Vender Boleto - Asiento {{ selectedSeatsForSaleModal[0]?.number || '' }}
+              </span>
+              <span v-else>
+                Vender {{ selectedSeatsForSaleModal.length }} Boletos
+              </span>
             </h3>
             <button 
               @click="closeSaleModal" 
@@ -810,7 +817,12 @@
             </button>
           </div>
           <p class="mt-1 text-sm text-green-100">
-            Por favor, completa los datos del cliente para realizar la venta.
+            <span v-if="selectedSeatsForSaleModal.length === 1">
+              Por favor, completa los datos del cliente para realizar la venta.
+            </span>
+            <span v-else>
+              Por favor, completa los datos del cliente para vender {{ selectedSeatsForSaleModal.length }} asientos a su nombre.
+            </span>
           </p>
         </div>
         
@@ -983,8 +995,19 @@
                 <span class="font-medium">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</span>
               </div>
               <div>
-                <span class="block text-gray-500">Asiento:</span>
-                <span class="font-medium">{{ selectedSeatForSale?.number }}</span>
+                <span class="block text-gray-500">Asiento(s):</span>
+                <span v-if="selectedSeatsForSaleModal.length === 1" class="font-medium">
+                  {{ selectedSeatsForSaleModal[0]?.number }}
+                </span>
+                <div v-else class="flex flex-wrap gap-1">
+                  <span 
+                    v-for="seat in selectedSeatsForSaleModal" 
+                    :key="seat.id"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {{ seat.number }}
+                  </span>
+                </div>
               </div>
               <div>
                 <span class="block text-gray-500">Fecha:</span>
@@ -995,8 +1018,16 @@
                 <span class="font-medium">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</span>
               </div>
               <div>
-                <span class="block text-gray-500">Precio:</span>
-                <span class="font-medium text-green-600">Bs. {{ displayedTrip?.price || 0 }}</span>
+                <span class="block text-gray-500">
+                  <span v-if="selectedSeatsForSaleModal.length === 1">Precio:</span>
+                  <span v-else>Precio Total:</span>
+                </span>
+                <span class="font-medium text-green-600">
+                  Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
+                  <span v-if="selectedSeatsForSaleModal.length > 1" class="text-xs text-gray-500">
+                    ({{ selectedSeatsForSaleModal.length }} x Bs. {{ (displayedTrip?.price || 0).toFixed(2) }})
+                  </span>
+                </span>
               </div>
               <div>
                 <span class="block text-gray-500">Método de Pago:</span>
@@ -1510,10 +1541,61 @@ const handleRescheduleTrip = (seat) => {
   console.log('Reprogramar viaje para el asiento:', seat)
 }
 
+// Estado para modal de venta
+const showSaleModal = ref(false)
+const saleLoading = ref(false)
+const selectedSeatForSale = ref(null)
+const selectedSeatsForSaleModal = ref([])
+const saleFormTouched = ref(false)
+const saleClientData = ref({
+  firstname: '',
+  lastname: '',
+  document_id: '',
+  phone: '',
+  email: '',
+  address: '',
+  city: '',
+  state: '',
+  is_minor: false,
+  payment_method: 'cash'
+})
+
+// Estado para selección múltiple de asientos
+const selectedSeatsForSale = ref([])
+
+// Función para manejar cambios en la selección de asientos
+const handleSelectionChange = (selectedSeats) => {
+  selectedSeatsForSale.value = selectedSeats
+}
+
 // Manejar la venta de boleto
 const handleSellTicket = (seat) => {
   if (!displayedTrip.value || !displayedTrip.value.id) {
     alert('No se puede vender el boleto en este momento. Intente nuevamente.')
+    return
+  }
+  
+  // Determinar qué asientos vender
+  // Si hay asientos seleccionados y el asiento del click derecho está entre ellos, usar todos los seleccionados
+  // Si no, usar solo el asiento del click derecho
+  let seatsToSell = []
+  
+  if (selectedSeatsForSale.value.length > 0 && 
+      selectedSeatsForSale.value.some(s => s.id === seat.id)) {
+    // Hay asientos seleccionados y el asiento clickeado está entre ellos
+    seatsToSell = [...selectedSeatsForSale.value]
+  } else {
+    // No hay selección múltiple o el asiento clickeado no está seleccionado
+    seatsToSell = [seat]
+  }
+  
+  // Filtrar solo asientos disponibles
+  seatsToSell = seatsToSell.filter(s => 
+    !s.occupied && s.status !== 'reserved' && s.status !== 'occupied'
+  )
+  
+  if (seatsToSell.length === 0) {
+    alert('No hay asientos disponibles para vender.')
     return
   }
   
@@ -1531,29 +1613,11 @@ const handleSellTicket = (seat) => {
     payment_method: 'cash'
   }
   
-  // Guardar el asiento seleccionado y mostrar el modal
-  selectedSeatForSale.value = seat
+  // Guardar los asientos seleccionados y mostrar el modal
+  selectedSeatsForSaleModal.value = seatsToSell
   showSaleModal.value = true
   saleFormTouched.value = false
 }
-
-// Estado para modal de venta
-const showSaleModal = ref(false)
-const saleLoading = ref(false)
-const selectedSeatForSale = ref(null)
-const saleFormTouched = ref(false)
-const saleClientData = ref({
-  firstname: '',
-  lastname: '',
-  document_id: '',
-  phone: '',
-  email: '',
-  address: '',
-  city: '',
-  state: '',
-  is_minor: false,
-  payment_method: 'cash'
-})
 
 // Función para validar los datos del cliente para la venta
 const isSaleFormValid = computed(() => {
@@ -1566,7 +1630,7 @@ const isSaleFormValid = computed(() => {
 
 // Confirmar la venta con los datos del modal
 const confirmSale = async () => {
-  if (!isSaleFormValid.value || !selectedSeatForSale.value) {
+  if (!isSaleFormValid.value || !selectedSeatsForSaleModal.value || selectedSeatsForSaleModal.value.length === 0) {
     return
   }
   
@@ -1604,30 +1668,32 @@ const confirmSale = async () => {
       throw new Error('No se pudo crear el cliente para la venta.')
     }
     
-    // Datos del ticket (venta confirmada)
-    const ticketData = {
-      trip_id: displayedTrip.value.id,
-      seat_id: selectedSeatForSale.value.id,
-      client_id: clientResponse.id,
-      state: 'confirmed', // Estado "confirmed" para venta directa
-      price: displayedTrip.value.price || 0,
-      payment_method: saleClientData.value.payment_method,
-      operator_user_id: authStore.user.id
-    }
-    
-    console.log('Datos del ticket a vender:', ticketData)
-    console.log('Usuario autenticado:', authStore.user)
-    console.log('Asiento seleccionado:', selectedSeatForSale.value)
-    console.log('Viaje:', displayedTrip.value)
-    
-    // Crear un ticket en estado "confirmed" (venta directa)
-    const apiUrl = `${config.public.apiBaseUrl}/tickets`
-    const response = await $fetch(apiUrl, {
-      method: 'POST',
-      body: ticketData
+    // Crear tickets para todos los asientos seleccionados
+    const ticketPromises = selectedSeatsForSaleModal.value.map(seat => {
+      const ticketData = {
+        trip_id: displayedTrip.value.id,
+        seat_id: seat.id,
+        client_id: clientResponse.id,
+        state: 'confirmed', // Estado "confirmed" para venta directa
+        price: displayedTrip.value.price || 0,
+        payment_method: saleClientData.value.payment_method,
+        operator_user_id: authStore.user.id
+      }
+      
+      return $fetch(`${config.public.apiBaseUrl}/tickets`, {
+        method: 'POST',
+        body: ticketData
+      })
     })
     
-    if (response) {
+    console.log('Creando tickets para asientos:', selectedSeatsForSaleModal.value.map(s => s.number))
+    console.log('Usuario autenticado:', authStore.user)
+    console.log('Viaje:', displayedTrip.value)
+    
+    // Esperar a que se creen todos los tickets
+    const responses = await Promise.all(ticketPromises)
+    
+    if (responses.length > 0) {
       // Recargar los tickets para actualizar la vista
       await fetchSoldTickets()
       
@@ -1636,9 +1702,20 @@ const confirmSale = async () => {
         await tripStore.fetchTripById(tripId.value)
       }
       
+      // Limpiar la selección
+      selectedSeatsForSale.value = []
+      
       // Cerrar modal y mostrar mensaje de éxito
       showSaleModal.value = false
-      alert(`Boleto vendido exitosamente! Asiento ${selectedSeatForSale.value.number} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio: Bs. ${displayedTrip.value.price || 0}`)
+      
+      const seatNumbers = selectedSeatsForSaleModal.value.map(s => s.number).join(', ')
+      const totalPrice = (displayedTrip.value.price || 0) * selectedSeatsForSaleModal.value.length
+      
+      if (selectedSeatsForSaleModal.value.length === 1) {
+        alert(`Boleto vendido exitosamente! Asiento ${seatNumbers} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio: Bs. ${totalPrice.toFixed(2)}`)
+      } else {
+        alert(`${selectedSeatsForSaleModal.value.length} boletos vendidos exitosamente! Asientos ${seatNumbers} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio total: Bs. ${totalPrice.toFixed(2)}`)
+      }
     }
   } catch (error) {
     console.error('Error al vender el boleto:', error)
@@ -1662,6 +1739,7 @@ const confirmSale = async () => {
 const closeSaleModal = () => {
   showSaleModal.value = false
   selectedSeatForSale.value = null
+  selectedSeatsForSaleModal.value = []
   saleLoading.value = false
   saleFormTouched.value = false
 }
