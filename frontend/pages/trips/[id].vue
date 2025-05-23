@@ -1063,6 +1063,191 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para confirmación de venta -->
+  <div v-if="showSaleConfirmationModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Overlay de fondo -->
+      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeSaleConfirmationModal">
+        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+      </div>
+
+      <!-- Centrar modal -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <!-- Modal -->
+      <div 
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+        @click.stop
+      >
+        <!-- Encabezado del modal -->
+        <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10 mr-3">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 class="text-lg leading-6 font-medium text-white">
+                <span v-if="saleConfirmationData.success">¡Venta Exitosa!</span>
+                <span v-else>Error en la Venta</span>
+              </h3>
+            </div>
+            <button 
+              @click="closeSaleConfirmationModal" 
+              class="text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-green-100">
+            <span v-if="saleConfirmationData.success">
+              <span v-if="saleConfirmationData.seats.length === 1">El boleto ha sido vendido exitosamente.</span>
+              <span v-else>Los {{ saleConfirmationData.seats.length }} boletos han sido vendidos exitosamente.</span>
+            </span>
+            <span v-else>Ha ocurrido un error durante la venta.</span>
+          </p>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div v-if="saleConfirmationData.success" class="bg-white px-4 py-5 sm:p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Primera columna: Datos del cliente -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2 flex items-center">
+                <UserCircleIcon class="w-5 h-5 mr-2 text-green-500" />
+                Datos del Cliente
+              </h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre Completo</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.firstname }} {{ saleConfirmationData.client?.lastname }}</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Cédula de Identidad</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.document_id }}</p>
+                </div>
+                <div v-if="saleConfirmationData.client?.phone">
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Teléfono</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.phone }}</p>
+                </div>
+                <div v-if="saleConfirmationData.client?.email">
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Correo Electrónico</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.email }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Segunda columna: Detalles de la venta -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                </svg>
+                Detalles de la Venta
+              </h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Ruta</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Fecha y Hora</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ formatDate(displayedTrip?.trip_datetime) }} - {{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <span v-if="saleConfirmationData.seats.length === 1">Asiento</span>
+                    <span v-else>Asientos ({{ saleConfirmationData.seats.length }})</span>
+                  </label>
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    <span 
+                      v-for="seat in saleConfirmationData.seats" 
+                      :key="seat.id"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200"
+                    >
+                      {{ seat.number }}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Método de Pago</label>
+                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ getPaymentMethodText(saleConfirmationData.payment_method) }}</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Precio Total</label>
+                  <p class="mt-1 text-lg font-bold text-green-600">Bs. {{ saleConfirmationData.totalPrice.toFixed(2) }}</p>
+                  <p v-if="saleConfirmationData.seats.length > 1" class="text-xs text-gray-500">
+                    ({{ saleConfirmationData.seats.length }} x Bs. {{ (saleConfirmationData.totalPrice / saleConfirmationData.seats.length).toFixed(2) }})
+                  </p>
+                </div>
+                <div v-if="saleConfirmationData.ticketIds.length > 0">
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <span v-if="saleConfirmationData.ticketIds.length === 1">ID del Boleto</span>
+                    <span v-else>IDs de Boletos</span>
+                  </label>
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    <span 
+                      v-for="id in saleConfirmationData.ticketIds" 
+                      :key="id"
+                      class="inline-flex items-center px-2 py-1 rounded text-xs font-mono font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                    >
+                      #{{ id }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contenido de error -->
+        <div v-else class="bg-white px-4 py-5 sm:p-6">
+          <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Error en la Venta</h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <p>{{ saleConfirmationData.errorMessage }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pie del modal -->
+        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button 
+            v-if="saleConfirmationData.success"
+            @click="printTickets"
+            type="button" 
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Imprimir
+          </button>
+          <button 
+            @click="closeSaleConfirmationModal" 
+            type="button" 
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -1560,6 +1745,17 @@ const saleClientData = ref({
   payment_method: 'cash'
 })
 
+// Estado para modal de confirmación de venta
+const showSaleConfirmationModal = ref(false)
+const saleConfirmationData = ref({
+  success: false,
+  client: null,
+  seats: [],
+  totalPrice: 0,
+  ticketIds: [],
+  errorMessage: ''
+})
+
 // Estado para selección múltiple de asientos
 const selectedSeatsForSale = ref([])
 
@@ -1641,8 +1837,16 @@ const confirmSale = async () => {
     
     // Obtener el usuario autenticado para crear la venta
     if (!authStore.user || !authStore.user.id) {
-      alert('Debe iniciar sesión para vender un boleto.')
+      saleConfirmationData.value = {
+        success: false,
+        client: null,
+        seats: [],
+        totalPrice: 0,
+        ticketIds: [],
+        errorMessage: 'Debe iniciar sesión para vender un boleto.'
+      }
       showSaleModal.value = false
+      showSaleConfirmationModal.value = true
       saleLoading.value = false
       return
     }
@@ -1705,17 +1909,23 @@ const confirmSale = async () => {
       // Limpiar la selección
       selectedSeatsForSale.value = []
       
-      // Cerrar modal y mostrar mensaje de éxito
-      showSaleModal.value = false
-      
-      const seatNumbers = selectedSeatsForSaleModal.value.map(s => s.number).join(', ')
+      // Preparar datos para el modal de confirmación
       const totalPrice = (displayedTrip.value.price || 0) * selectedSeatsForSaleModal.value.length
+      const ticketIds = responses.map(response => response.id).filter(id => id)
       
-      if (selectedSeatsForSaleModal.value.length === 1) {
-        alert(`Boleto vendido exitosamente! Asiento ${seatNumbers} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio: Bs. ${totalPrice.toFixed(2)}`)
-      } else {
-        alert(`${selectedSeatsForSaleModal.value.length} boletos vendidos exitosamente! Asientos ${seatNumbers} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio total: Bs. ${totalPrice.toFixed(2)}`)
+      saleConfirmationData.value = {
+        success: true,
+        client: clientResponse,
+        seats: [...selectedSeatsForSaleModal.value],
+        totalPrice: totalPrice,
+        ticketIds: ticketIds,
+        payment_method: saleClientData.value.payment_method,
+        errorMessage: ''
       }
+      
+      // Cerrar modal de venta y mostrar modal de confirmación
+      showSaleModal.value = false
+      showSaleConfirmationModal.value = true
     }
   } catch (error) {
     console.error('Error al vender el boleto:', error)
@@ -1729,7 +1939,18 @@ const confirmSale = async () => {
       errorMessage = error.message
     }
     
-    alert(errorMessage)
+    saleConfirmationData.value = {
+      success: false,
+      client: null,
+      seats: [],
+      totalPrice: 0,
+      ticketIds: [],
+      errorMessage: errorMessage
+    }
+    
+    // Cerrar modal de venta y mostrar modal de error
+    showSaleModal.value = false
+    showSaleConfirmationModal.value = true
   } finally {
     saleLoading.value = false
   }
@@ -1742,6 +1963,34 @@ const closeSaleModal = () => {
   selectedSeatsForSaleModal.value = []
   saleLoading.value = false
   saleFormTouched.value = false
+}
+
+// Cerrar el modal de confirmación de venta
+const closeSaleConfirmationModal = () => {
+  showSaleConfirmationModal.value = false
+  saleConfirmationData.value = {
+    success: false,
+    client: null,
+    seats: [],
+    totalPrice: 0,
+    ticketIds: [],
+    errorMessage: ''
+  }
+}
+
+// Función para imprimir los tickets (placeholder para futura implementación)
+const printTickets = () => {
+  // Aquí se implementaría la lógica de impresión
+  console.log('Imprimiendo tickets:', saleConfirmationData.value.ticketIds)
+  
+  // Por ahora, simplemente cerrar el modal
+  closeSaleConfirmationModal()
+  
+  // En el futuro, esto podría:
+  // 1. Generar un PDF con los boletos
+  // 2. Enviar a una impresora térmica
+  // 3. Mostrar una vista previa de impresión
+  // 4. Etc.
 }
 
 // Estado para modal de reserva
