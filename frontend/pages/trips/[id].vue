@@ -777,6 +777,261 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para venta de boleto -->
+  <div v-if="showSaleModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Overlay de fondo -->
+      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeSaleModal">
+        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+      </div>
+
+      <!-- Centrar modal -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <!-- Modal -->
+      <div 
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        @click.stop
+      >
+        <!-- Encabezado del modal -->
+        <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg leading-6 font-medium text-white">
+              Vender Boleto {{ selectedSeatForSale?.number || '' }}
+            </h3>
+            <button 
+              @click="closeSaleModal" 
+              class="text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-green-100">
+            Por favor, completa los datos del cliente para realizar la venta.
+          </p>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div class="bg-white px-4 py-5 sm:p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Primera columna: Datos personales -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos Personales</h4>
+              <div>
+                <label for="firstname" class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    id="firstname"
+                    v-model="saleClientData.firstname"
+                    type="text"
+                    required
+                    class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                    :class="{'border-red-300': saleClientData.firstname.trim() === '' && saleFormTouched}"
+                    @focus="saleFormTouched = true"
+                    placeholder="Ej. Juan"
+                  />
+                  <div v-if="saleClientData.firstname.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="saleClientData.firstname.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El nombre es obligatorio</p>
+              </div>
+              
+              <div>
+                <label for="lastname" class="block text-sm font-medium text-gray-700">Apellido</label>
+                <input
+                  id="lastname"
+                  v-model="saleClientData.lastname"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. Pérez"
+                />
+              </div>
+              
+              <div>
+                <label for="document_id" class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    id="document_id"
+                    v-model="saleClientData.document_id"
+                    type="text"
+                    required
+                    class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                    :class="{'border-red-300': saleClientData.document_id.trim() === '' && saleFormTouched}"
+                    @focus="saleFormTouched = true"
+                    placeholder="Ej. 1234567"
+                  />
+                  <div v-if="saleClientData.document_id.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="saleClientData.document_id.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El CI es obligatorio</p>
+              </div>
+              
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <input
+                  id="phone"
+                  v-model="saleClientData.phone"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. 70123456"
+                />
+              </div>
+            </div>
+            
+            <!-- Segunda columna: Dirección y datos adicionales -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos de Contacto</h4>
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  id="email"
+                  v-model="saleClientData.email"
+                  type="email"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. correo@ejemplo.com"
+                />
+              </div>
+              
+              <div>
+                <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
+                <input
+                  id="address"
+                  v-model="saleClientData.address"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. Calle Principal #123"
+                />
+              </div>
+              
+              <div>
+                <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                <input
+                  id="city"
+                  v-model="saleClientData.city"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. Comarapa"
+                />
+              </div>
+              
+              <div>
+                <label for="state" class="block text-sm font-medium text-gray-700">Departamento</label>
+                <input
+                  id="state"
+                  v-model="saleClientData.state"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Ej. Santa Cruz"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Checkbox para menor de edad -->
+          <div class="mt-4">
+            <label for="is_minor" class="flex items-center">
+              <input
+                id="is_minor"
+                v-model="saleClientData.is_minor"
+                type="checkbox"
+                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700">Menor de edad</span>
+            </label>
+          </div>
+          
+          <!-- Método de Pago -->
+          <div class="mt-4">
+            <label for="payment_method" class="block text-sm font-medium text-gray-700">Método de Pago <span class="text-red-500">*</span></label>
+            <div class="mt-1 relative rounded-md shadow-sm">
+              <select
+                id="payment_method"
+                v-model="saleClientData.payment_method"
+                required
+                class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                :class="{'border-red-300': saleClientData.payment_method.trim() === '' && saleFormTouched}"
+              >
+                <option value="cash">Efectivo</option>
+                <option value="card">Tarjeta</option>
+                <option value="transfer">Transferencia</option>
+                <option value="qr">QR</option>
+              </select>
+              <div v-if="saleClientData.payment_method.trim() === '' && saleFormTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <p v-if="saleClientData.payment_method.trim() === '' && saleFormTouched" class="mt-1 text-xs text-red-600">El método de pago es obligatorio</p>
+          </div>
+          
+          <!-- Información del viaje -->
+          <div class="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Datos de la Venta</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="block text-gray-500">Viaje:</span>
+                <span class="font-medium">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Asiento:</span>
+                <span class="font-medium">{{ selectedSeatForSale?.number }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Fecha:</span>
+                <span class="font-medium">{{ formatDate(displayedTrip?.trip_datetime) }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Hora:</span>
+                <span class="font-medium">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Precio:</span>
+                <span class="font-medium text-green-600">Bs. {{ displayedTrip?.price || 0 }}</span>
+              </div>
+              <div>
+                <span class="block text-gray-500">Método de Pago:</span>
+                <span class="font-medium">{{ getPaymentMethodText(saleClientData.payment_method) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pie del modal -->
+        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button 
+            @click="confirmSale"
+            type="button" 
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+            :disabled="saleLoading || !isSaleFormValid"
+            :class="{'opacity-50 cursor-not-allowed': saleLoading || !isSaleFormValid}"
+          >
+            <svg v-if="saleLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ saleLoading ? 'Vendiendo...' : 'Confirmar Venta' }}
+          </button>
+          <button 
+            @click="closeSaleModal" 
+            type="button" 
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -1257,12 +1512,158 @@ const handleRescheduleTrip = (seat) => {
 
 // Manejar la venta de boleto
 const handleSellTicket = (seat) => {
-  // Redirigir a la página de venta de boletos con el asiento preseleccionado
-  if (displayedTrip.value && displayedTrip.value.id) {
-    router.push(`/tickets/new?trip=${displayedTrip.value.id}&seats=${seat.number}`)
-  } else {
+  if (!displayedTrip.value || !displayedTrip.value.id) {
     alert('No se puede vender el boleto en este momento. Intente nuevamente.')
+    return
   }
+  
+  // Inicializar el formulario de venta
+  saleClientData.value = {
+    firstname: '',
+    lastname: '',
+    document_id: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    is_minor: false,
+    payment_method: 'cash'
+  }
+  
+  // Guardar el asiento seleccionado y mostrar el modal
+  selectedSeatForSale.value = seat
+  showSaleModal.value = true
+  saleFormTouched.value = false
+}
+
+// Estado para modal de venta
+const showSaleModal = ref(false)
+const saleLoading = ref(false)
+const selectedSeatForSale = ref(null)
+const saleFormTouched = ref(false)
+const saleClientData = ref({
+  firstname: '',
+  lastname: '',
+  document_id: '',
+  phone: '',
+  email: '',
+  address: '',
+  city: '',
+  state: '',
+  is_minor: false,
+  payment_method: 'cash'
+})
+
+// Función para validar los datos del cliente para la venta
+const isSaleFormValid = computed(() => {
+  return (
+    saleClientData.value.firstname.trim() !== '' &&
+    saleClientData.value.document_id.trim() !== '' &&
+    saleClientData.value.payment_method.trim() !== ''
+  )
+})
+
+// Confirmar la venta con los datos del modal
+const confirmSale = async () => {
+  if (!isSaleFormValid.value || !selectedSeatForSale.value) {
+    return
+  }
+  
+  saleLoading.value = true
+  
+  try {
+    const config = useRuntimeConfig()
+    
+    // Obtener el usuario autenticado para crear la venta
+    if (!authStore.user || !authStore.user.id) {
+      alert('Debe iniciar sesión para vender un boleto.')
+      showSaleModal.value = false
+      saleLoading.value = false
+      return
+    }
+    
+    // Crear el cliente con los datos del formulario
+    const clientApiUrl = `${config.public.apiBaseUrl}/clients`
+    const clientResponse = await $fetch(clientApiUrl, {
+      method: 'POST',
+      body: {
+        firstname: saleClientData.value.firstname,
+        lastname: saleClientData.value.lastname,
+        document_id: saleClientData.value.document_id,
+        phone: saleClientData.value.phone,
+        email: saleClientData.value.email,
+        address: saleClientData.value.address,
+        city: saleClientData.value.city,
+        state: saleClientData.value.state,
+        is_minor: saleClientData.value.is_minor
+      }
+    })
+    
+    if (!clientResponse || !clientResponse.id) {
+      throw new Error('No se pudo crear el cliente para la venta.')
+    }
+    
+    // Datos del ticket (venta confirmada)
+    const ticketData = {
+      trip_id: displayedTrip.value.id,
+      seat_id: selectedSeatForSale.value.id,
+      client_id: clientResponse.id,
+      state: 'confirmed', // Estado "confirmed" para venta directa
+      price: displayedTrip.value.price || 0,
+      payment_method: saleClientData.value.payment_method,
+      operator_user_id: authStore.user.id
+    }
+    
+    console.log('Datos del ticket a vender:', ticketData)
+    console.log('Usuario autenticado:', authStore.user)
+    console.log('Asiento seleccionado:', selectedSeatForSale.value)
+    console.log('Viaje:', displayedTrip.value)
+    
+    // Crear un ticket en estado "confirmed" (venta directa)
+    const apiUrl = `${config.public.apiBaseUrl}/tickets`
+    const response = await $fetch(apiUrl, {
+      method: 'POST',
+      body: ticketData
+    })
+    
+    if (response) {
+      // Recargar los tickets para actualizar la vista
+      await fetchSoldTickets()
+      
+      // Actualizar los datos del viaje para reflejar los cambios en los asientos
+      if (tripId.value) {
+        await tripStore.fetchTripById(tripId.value)
+      }
+      
+      // Cerrar modal y mostrar mensaje de éxito
+      showSaleModal.value = false
+      alert(`Boleto vendido exitosamente! Asiento ${selectedSeatForSale.value.number} a nombre de ${saleClientData.value.firstname} ${saleClientData.value.lastname}. Precio: Bs. ${displayedTrip.value.price || 0}`)
+    }
+  } catch (error) {
+    console.error('Error al vender el boleto:', error)
+    
+    // Mostrar mensaje de error específico si está disponible
+    let errorMessage = 'Error al vender el boleto. Por favor, intente nuevamente.'
+    
+    if (error.response && error.response._data && error.response._data.detail) {
+      errorMessage = error.response._data.detail
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    alert(errorMessage)
+  } finally {
+    saleLoading.value = false
+  }
+}
+
+// Cerrar el modal de venta
+const closeSaleModal = () => {
+  showSaleModal.value = false
+  selectedSeatForSale.value = null
+  saleLoading.value = false
+  saleFormTouched.value = false
 }
 
 // Estado para modal de reserva
@@ -1404,6 +1805,16 @@ const closeReservationModal = () => {
   showReservationModal.value = false
   selectedSeatForReservation.value = null
   reservationLoading.value = false
+}
+
+const getPaymentMethodText = (paymentMethod) => {
+  switch (paymentMethod) {
+    case 'cash': return 'Efectivo'
+    case 'card': return 'Tarjeta'
+    case 'transfer': return 'Transferencia'
+    case 'qr': return 'QR'
+    default: return 'Desconocido'
+  }
 }
 
 </script>
