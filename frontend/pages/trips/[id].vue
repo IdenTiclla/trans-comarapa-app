@@ -467,29 +467,54 @@
 
       <!-- Modal -->
       <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
         @click.stop
       >
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div class="sm:flex sm:items-start">
-            <div v-if="modalType === 'cancel'" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <!-- Encabezado del modal -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg leading-6 font-medium text-white">
+              {{ modalType === 'cancel' ? 'Cancelar Reserva' : 'Detalles del Boleto' }}
+            </h3>
+            <button 
+              @click="closeModal" 
+              class="text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
-            <div v-else class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-blue-100">
+            {{ modalType === 'cancel' ? 'Confirma la cancelación de la reserva' : 'Vista previa del boleto oficial' }}
+          </p>
+        </div>
+
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div v-if="modalType === 'details'" class="w-full">
+            <!-- Mostrar el ticket con el diseño oficial -->
+            <TicketDisplay 
+              :ticket="selectedTicket" 
+              :trip="displayedTrip"
+              v-if="selectedTicket"
+            />
+          </div>
+          
+          <!-- Modal de cancelación -->
+          <div v-else-if="modalType === 'cancel'" class="sm:flex sm:items-start">
+            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
               <h3 class="text-lg leading-6 font-medium text-gray-900">
-                {{ modalType === 'cancel' ? 'Cancelar Reserva' : 'Detalles del Boleto' }}
+                Cancelar Reserva
               </h3>
               
               <!-- Contenido del modal -->
               <div class="mt-4">
-                <!-- Detalles comunes -->
+                <!-- Detalles del ticket a cancelar -->
                 <div v-if="selectedTicket" class="bg-gray-50 p-3 rounded-md mb-4">
                   <div class="grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -516,7 +541,7 @@
                 </div>
                 
                 <!-- Mensaje de confirmación de cancelación -->
-                <div v-if="modalType === 'cancel'" class="text-sm text-gray-500">
+                <div class="text-sm text-gray-500">
                   <p>¿Está seguro que desea cancelar la reserva del asiento {{ selectedTicket?.seat?.seat_number }}?</p>
                   <p class="mt-2 text-red-600">Esta acción no se puede deshacer.</p>
                 </div>
@@ -527,6 +552,20 @@
         
         <!-- Botones de acción -->
         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <!-- Botón de imprimir para detalles -->
+          <button 
+            v-if="modalType === 'details'"
+            @click="printTicket"
+            type="button" 
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Imprimir Boleto
+          </button>
+          
+          <!-- Botón de confirmación para cancelación -->
           <button 
             v-if="modalType === 'cancel'"
             @click="confirmCancelReservation"
@@ -536,6 +575,8 @@
           >
             {{ cancellingReservation ? 'Cancelando...' : 'Confirmar Cancelación' }}
           </button>
+          
+          <!-- Botón de cerrar -->
           <button 
             @click="closeModal" 
             type="button" 
@@ -1248,6 +1289,7 @@ import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
 import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline/index.js'
+import TicketDisplay from '@/components/TicketDisplay.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -2125,6 +2167,90 @@ const getPaymentMethodText = (paymentMethod) => {
   }
 }
 
+// Función para imprimir un boleto individual
+const printTicket = () => {
+  if (!selectedTicket.value) {
+    console.error('No hay ticket seleccionado para imprimir')
+    return
+  }
+  
+  // Usar window.print() para imprimir la página completa
+  // En el futuro se puede implementar una versión más específica
+  window.print()
+}
+
+// Función auxiliar para obtener los estilos CSS del ticket
+const getTicketStyles = () => {
+  return `
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .flex-1 { flex: 1; }
+    .space-x-2 > * + * { margin-left: 0.5rem; }
+    .space-x-1 > * + * { margin-left: 0.25rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .ml-4 { margin-left: 1rem; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .font-bold { font-weight: 700; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .leading-tight { line-height: 1.25; }
+    .text-center { text-align: center; }
+    .text-blue-100 { color: #dbeafe; }
+    .text-blue-600 { color: #2563eb; }
+    .text-red-600 { color: #dc2626; }
+    .text-gray-600 { color: #4b5563; }
+    .text-white { color: white; }
+    .bg-blue-100 { background-color: #dbeafe; }
+    .bg-blue-500 { background-color: #3b82f6; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-red-100 { background-color: #fee2e2; }
+    .bg-gray-100 { background-color: #f3f4f6; }
+    .bg-blue-50 { background-color: #eff6ff; }
+    .bg-white { background-color: white; }
+    .border { border-width: 1px; }
+    .border-2 { border-width: 2px; }
+    .border-blue-300 { border-color: #93c5fd; }
+    .border-gray-200 { border-color: #e5e7eb; }
+    .border-b-2 { border-bottom-width: 2px; }
+    .rounded { border-radius: 0.25rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    .p-1 { padding: 0.25rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-3 { padding: 0.75rem; }
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    .w-8 { width: 2rem; }
+    .w-12 { width: 3rem; }
+    .h-8 { height: 2rem; }
+    .h-12 { height: 3rem; }
+    .inline-block { display: inline-block; }
+    .italic { font-style: italic; }
+    .opacity-90 { opacity: 0.9; }
+  `
+}
 </script>
 
 
