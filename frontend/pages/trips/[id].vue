@@ -848,7 +848,15 @@
             </button>
           </div>
           <p class="mt-1 text-sm text-green-100">
-            Complete los datos del cliente y vea la vista previa del boleto antes de confirmar la venta.
+            <span v-if="selectedSeatsForSaleModal.length === 1">
+              Complete los datos del cliente y vea la vista previa del boleto antes de confirmar la venta.
+            </span>
+            <span v-else>
+              Complete los datos del cliente para vender {{ selectedSeatsForSaleModal.length }} boletos para los asientos: 
+              <span class="font-medium">
+                {{ selectedSeatsForSaleModal.map(seat => seat.number).join(', ') }}
+              </span>
+            </span>
           </p>
         </div>
         
@@ -1032,20 +1040,30 @@
                       <span v-if="selectedSeatsForSaleModal.length === 1">
                         {{ selectedSeatsForSaleModal[0]?.number }}
                       </span>
-                      <div v-else class="flex flex-wrap gap-1">
-                        <span 
-                          v-for="seat in selectedSeatsForSaleModal" 
-                          :key="seat.id"
-                          class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-800"
-                        >
-                          {{ seat.number }}
-                        </span>
+                      <div v-else class="space-y-2">
+                        <div class="flex flex-wrap gap-1">
+                          <span 
+                            v-for="seat in selectedSeatsForSaleModal" 
+                            :key="seat.id"
+                            class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-200 text-green-800 border border-green-300"
+                          >
+                            {{ seat.number }}
+                          </span>
+                        </div>
+                        <p class="text-xs text-green-600 font-medium">
+                          {{ selectedSeatsForSaleModal.length }} asientos seleccionados
+                        </p>
                       </div>
                     </div>
                     
                     <div><span class="text-green-700">Precio Total:</span></div>
-                    <div class="font-bold text-green-600 text-lg">
-                      Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
+                    <div class="space-y-1">
+                      <div class="font-bold text-green-600 text-lg">
+                        Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
+                      </div>
+                      <div v-if="selectedSeatsForSaleModal.length > 1" class="text-xs text-green-600">
+                        {{ selectedSeatsForSaleModal.length }} × Bs. {{ (displayedTrip?.price || 0).toFixed(2) }} c/u
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1101,7 +1119,8 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                     </svg>
-                    Se generarán {{ selectedSeatsForSaleModal.length }} boletos iguales, uno para cada asiento seleccionado.
+                    <span class="font-medium">Boleto de múltiples asientos:</span> Se muestra el boleto con todos los asientos seleccionados 
+                    ({{ selectedSeatsForSaleModal.map(seat => seat.number).join(', ') }}) y el precio total de la venta.
                   </p>
                 </div>
               </div>
@@ -1149,7 +1168,7 @@
 
       <!-- Modal -->
       <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
         @click.stop
       >
         <!-- Encabezado del modal -->
@@ -1177,102 +1196,57 @@
           </div>
           <p class="mt-1 text-sm text-green-100">
             <span v-if="saleConfirmationData.success">
-              <span v-if="saleConfirmationData.seats.length === 1">El boleto ha sido vendido exitosamente.</span>
-              <span v-else>Los {{ saleConfirmationData.seats.length }} boletos han sido vendidos exitosamente.</span>
+              <span v-if="saleConfirmationData.seats.length === 1">El boleto ha sido vendido exitosamente y está listo para imprimir.</span>
+              <span v-else>Los {{ saleConfirmationData.seats.length }} boletos han sido vendidos exitosamente y están listos para imprimir.</span>
             </span>
             <span v-else>Ha ocurrido un error durante la venta.</span>
           </p>
         </div>
         
         <!-- Contenido del modal -->
-        <div v-if="saleConfirmationData.success" class="bg-white px-4 py-5 sm:p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Primera columna: Datos del cliente -->
-            <div class="space-y-4">
-              <h4 class="text-sm font-medium text-gray-700 border-b pb-2 flex items-center">
-                <UserCircleIcon class="w-5 h-5 mr-2 text-green-500" />
-                Datos del Cliente
-              </h4>
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre Completo</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.firstname }} {{ saleConfirmationData.client?.lastname }}</p>
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Cédula de Identidad</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.document_id }}</p>
-                </div>
-                <div v-if="saleConfirmationData.client?.phone">
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Teléfono</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.phone }}</p>
-                </div>
-                <div v-if="saleConfirmationData.client?.email">
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Correo Electrónico</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ saleConfirmationData.client?.email }}</p>
-                </div>
-              </div>
-            </div>
+        <div v-if="saleConfirmationData.success" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="w-full">
+            <!-- Mostrar el ticket con el diseño oficial -->
+            <TicketDisplay 
+              :ticket="saleConfirmationTicketData" 
+              :trip="displayedTrip"
+              v-if="saleConfirmationTicketData"
+            />
             
-            <!-- Segunda columna: Detalles de la venta -->
-            <div class="space-y-4">
-              <h4 class="text-sm font-medium text-gray-700 border-b pb-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+            <!-- Información adicional si hay múltiples asientos -->
+            <div v-if="saleConfirmationData.seats.length > 1" class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                 </svg>
-                Detalles de la Venta
+                Información de Venta Múltiple
               </h4>
-              <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Ruta</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</p>
+                  <span class="block text-blue-700 font-medium">Total de Boletos:</span>
+                  <span class="text-blue-900">{{ saleConfirmationData.seats.length }}</span>
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Fecha y Hora</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ formatDate(displayedTrip?.trip_datetime) }} - {{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</p>
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <span v-if="saleConfirmationData.seats.length === 1">Asiento</span>
-                    <span v-else>Asientos ({{ saleConfirmationData.seats.length }})</span>
-                  </label>
-                  <div class="mt-1 flex flex-wrap gap-1">
+                  <span class="block text-blue-700 font-medium">Asientos:</span>
+                  <div class="flex flex-wrap gap-1 mt-1">
                     <span 
                       v-for="seat in saleConfirmationData.seats" 
                       :key="seat.id"
-                      class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200"
+                      class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300"
                     >
                       {{ seat.number }}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Método de Pago</label>
-                  <p class="mt-1 text-sm font-semibold text-gray-900">{{ getPaymentMethodText(saleConfirmationData.payment_method) }}</p>
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Precio Total</label>
-                  <p class="mt-1 text-lg font-bold text-green-600">Bs. {{ saleConfirmationData.totalPrice.toFixed(2) }}</p>
-                  <p v-if="saleConfirmationData.seats.length > 1" class="text-xs text-gray-500">
-                    ({{ saleConfirmationData.seats.length }} x Bs. {{ (saleConfirmationData.totalPrice / saleConfirmationData.seats.length).toFixed(2) }})
-                  </p>
-                </div>
-                <div v-if="saleConfirmationData.ticketIds.length > 0">
-                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <span v-if="saleConfirmationData.ticketIds.length === 1">ID del Boleto</span>
-                    <span v-else>IDs de Boletos</span>
-                  </label>
-                  <div class="mt-1 flex flex-wrap gap-1">
-                    <span 
-                      v-for="id in saleConfirmationData.ticketIds" 
-                      :key="id"
-                      class="inline-flex items-center px-2 py-1 rounded text-xs font-mono font-medium bg-blue-100 text-blue-800 border border-blue-200"
-                    >
-                      #{{ id }}
-                    </span>
-                  </div>
+                  <span class="block text-blue-700 font-medium">Precio Total:</span>
+                  <span class="text-blue-900 font-bold">Bs. {{ saleConfirmationData.totalPrice.toFixed(2) }}</span>
                 </div>
               </div>
+              <p class="text-xs text-blue-600 mt-2">
+                <span class="font-medium">Boleto consolidado:</span> El boleto mostrado incluye todos los asientos vendidos 
+                ({{ saleConfirmationData.seats.map(seat => seat.number).join(', ') }}) con el precio total de la venta.
+              </p>
             </div>
           </div>
         </div>
@@ -1307,7 +1281,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Imprimir
+            Imprimir Boleto
           </button>
           <button 
             @click="closeSaleConfirmationModal" 
@@ -2056,14 +2030,29 @@ const printTickets = () => {
   // Aquí se implementaría la lógica de impresión
   console.log('Imprimiendo tickets:', saleConfirmationData.value.ticketIds)
   
-  // Por ahora, simplemente cerrar el modal
-  closeSaleConfirmationModal()
+  // Imprimir el contenido del modal que contiene el ticket
+  try {
+    // Usar window.print() para imprimir
+    window.print()
+    
+    // Mostrar mensaje de éxito
+    console.log('Ticket enviado a impresora')
+    
+    // Cerrar el modal después de un breve delay para permitir la impresión
+    setTimeout(() => {
+      closeSaleConfirmationModal()
+    }, 1000)
+  } catch (error) {
+    console.error('Error al imprimir:', error)
+    // Cerrar el modal incluso si hay error
+    closeSaleConfirmationModal()
+  }
   
   // En el futuro, esto podría:
   // 1. Generar un PDF con los boletos
   // 2. Enviar a una impresora térmica
-  // 3. Mostrar una vista previa de impresión
-  // 4. Etc.
+  // 3. Mostrar una vista previa de impresión específica
+  // 4. Imprimir múltiples copias para múltiples asientos
 }
 
 // Estado para modal de reserva
@@ -2352,6 +2341,9 @@ const previewTicketData = computed(() => {
     return null
   }
   
+  // Si hay múltiples asientos, crear una lista de números de asiento
+  let seatNumbers = selectedSeatsForSaleModal.value.map(seat => seat.number)
+  
   return {
     id: 'PREVIEW',
     client: {
@@ -2362,9 +2354,12 @@ const previewTicketData = computed(() => {
       email: saleClientData.value.email
     },
     seat: {
-      seat_number: selectedSeatsForSaleModal.value[0]?.number || 'XX'
+      seat_number: selectedSeatsForSaleModal.value.length === 1 
+        ? selectedSeatsForSaleModal.value[0]?.number 
+        : seatNumbers.join(', '), // Mostrar todos los asientos separados por comas
+      multiple_seats: selectedSeatsForSaleModal.value.length > 1 ? seatNumbers : null
     },
-    price: displayedTrip.value?.price || 0,
+    price: (displayedTrip.value?.price || 0) * selectedSeatsForSaleModal.value.length, // Precio total
     trip: displayedTrip.value,
     state: 'confirmed',
     payment_method: saleClientData.value.payment_method
@@ -2392,6 +2387,39 @@ const resetSaleForm = () => {
     payment_method: 'cash'
   }
 }
+
+// Computed para los datos del ticket de confirmación de venta
+const saleConfirmationTicketData = computed(() => {
+  if (!saleConfirmationData.value.success || !saleConfirmationData.value.client || !saleConfirmationData.value.seats.length) {
+    return null
+  }
+  
+  // Si hay múltiples asientos, crear una lista de números de asiento
+  let seatNumbers = saleConfirmationData.value.seats.map(seat => seat.number)
+  
+  return {
+    id: saleConfirmationData.value.ticketIds[0] || 'SOLD',
+    client: {
+      firstname: saleConfirmationData.value.client.firstname,
+      lastname: saleConfirmationData.value.client.lastname,
+      document_id: saleConfirmationData.value.client.document_id,
+      phone: saleConfirmationData.value.client.phone,
+      email: saleConfirmationData.value.client.email
+    },
+    seat: {
+      seat_number: saleConfirmationData.value.seats.length === 1 
+        ? saleConfirmationData.value.seats[0]?.number 
+        : seatNumbers.join(', '), // Mostrar todos los asientos separados por comas
+      multiple_seats: saleConfirmationData.value.seats.length > 1 ? seatNumbers : null
+    },
+    price: saleConfirmationData.value.totalPrice || 0, // Usar el precio total ya calculado
+    trip: displayedTrip.value,
+    state: 'confirmed',
+    payment_method: saleConfirmationData.value.payment_method || 'cash'
+  }
+})
+
+// Función para buscar clientes existentes
 </script>
 
 

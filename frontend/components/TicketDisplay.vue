@@ -110,7 +110,7 @@
           <!-- N° -->
           <div class="col-span-3 border-4 border-blue-500">
             <div class="bg-blue-500 text-white text-center py-2 font-bold">N°</div>
-            <div class="bg-white text-center py-4 text-2xl font-bold">
+            <div class="bg-white text-center py-4 font-bold" :class="getSeatNumberClass()">
               {{ ticket.seat?.seat_number || '36' }}
             </div>
           </div>
@@ -276,6 +276,20 @@ const getDepartureTime = () => {
     })
   }
   return '00:00'
+}
+
+const getSeatNumberClass = () => {
+  const seatNumber = props.ticket.seat?.seat_number || '36'
+  const seatString = seatNumber.toString()
+  
+  // Si hay múltiples asientos (contiene comas) o el texto es muy largo
+  if (seatString.includes(',') || seatString.length > 4) {
+    return 'text-lg leading-tight' // Texto más pequeño para múltiples asientos
+  } else if (seatString.length > 2) {
+    return 'text-xl' // Texto mediano para números de 3-4 dígitos
+  } else {
+    return 'text-2xl' // Texto grande para números cortos (1-2 dígitos)
+  }
 }
 </script>
 
