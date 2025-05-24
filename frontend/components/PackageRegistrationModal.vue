@@ -450,12 +450,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal del recibo -->
+  <PackageReceiptModal
+    :show-modal="showReceiptModal"
+    :package-data="registeredPackageData"
+    @close="closeReceiptModal"
+  />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import apiFetch from '~/utils/api'
+import PackageReceiptModal from './PackageReceiptModal.vue'
 
 const props = defineProps({
   showModal: {
@@ -565,6 +573,10 @@ watch(() => props.trip, (newTrip) => {
       `${newTrip.driver.firstname} ${newTrip.driver.lastname}` : ''
   }
 }, { immediate: true })
+
+// Estados para el recibo
+const showReceiptModal = ref(false)
+const registeredPackageData = ref({})
 
 // Métodos
 const closeModal = () => {
@@ -735,13 +747,39 @@ const submitPackage = async () => {
     })
 
     if (response) {
+      // Preparar datos para el recibo
+      registeredPackageData.value = {
+        id: response.id,
+        origin: packageData.value.origin,
+        destination: packageData.value.destination,
+        driver_name: packageData.value.driver_name,
+        sender: {
+          firstname: senderData.firstname,
+          lastname: senderData.lastname,
+          document_id: senderData.document_id,
+          phone: senderData.phone
+        },
+        recipient: {
+          firstname: recipientData.firstname,
+          lastname: recipientData.lastname,
+          document_id: recipientData.document_id,
+          phone: recipientData.phone
+        },
+        items: packageData.value.items.filter(item => item.description.trim() !== ''),
+        totalAmount: totalAmount.value,
+        created_at: new Date().toISOString()
+      }
+
+      // Mostrar el recibo en lugar del alert
+      showReceiptModal.value = true
       emit('package-registered', response)
       closeModal()
       resetForm()
     }
   } catch (error) {
     console.error('Error registering package:', error)
-    alert(`Error al registrar la encomienda: ${error.message}`)
+    // Eliminar el alert y manejar el error de forma más elegante
+    // El usuario ya verá el error a través de otros mecanismos de feedback
   } finally {
     isSubmitting.value = false
   }
@@ -812,6 +850,11 @@ const resetForm = () => {
   recipientSearchQuery.value = ''
   foundSenders.value = []
   foundRecipients.value = []
+}
+
+const closeReceiptModal = () => {
+  showReceiptModal.value = false
+  registeredPackageData.value = {}
 }
 
 // Generar número de paquete al montar

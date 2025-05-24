@@ -2645,9 +2645,8 @@ const handlePackageRegistered = async (newPackage) => {
   // Recargar la lista de paquetes para mostrar el nuevo paquete
   await fetchPackages()
   
-  // Mostrar mensaje de éxito (opcional)
-  // Se puede usar una librería de notificaciones o alert simple
-  alert('Paquete registrado exitosamente')
+  // El modal del recibo ya muestra la confirmación de éxito
+  // No necesitamos alert adicional
   
   // Si la sección de paquetes no está abierta, abrirla automáticamente
   if (!showPackages.value) {
