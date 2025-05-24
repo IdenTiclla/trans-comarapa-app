@@ -14,10 +14,9 @@ class PackageBase(BaseModel):
     sender_id: Optional[int] = Field(None, description="ID of the sender", example=1)
     recipient_id: Optional[int] = Field(None, description="ID of the recipient", example=2)
     trip_id: Optional[int] = Field(None, description="ID of the trip associated with the package", example=3)
-    secretary_id: Optional[int] = Field(None, description="ID of the secretary", example=4)
 
 class PackageCreate(PackageBase):
-    pass
+    operator_user_id: int = Field(..., description="User ID of the operator (secretary/admin) creating the package", example=1, gt=0)
 
 class PackageUpdate(PackageBase):
     name: Optional[str] = None
@@ -31,6 +30,7 @@ class PackageUpdate(PackageBase):
 
 class Package(PackageBase):
     id: int = Field(..., description="Package ID", example=1)
+    secretary_id: int = Field(..., description="ID of the secretary", example=4)
     created_at: datetime = Field(..., description="Creation date of the package", example=datetime.now())
     updated_at: datetime = Field(..., description="Last update date of the package", example=datetime.now())
 

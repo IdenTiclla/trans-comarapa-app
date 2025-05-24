@@ -322,16 +322,32 @@
 
           <!-- Packages Section -->
           <div class="mt-8">
-            <button
-              @click="togglePackages"
-              class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
-            >
-              <h3 class="text-lg font-medium text-gray-800">
-                Paquetes ({{ packages.length }})
-              </h3>
-              <ChevronDownIcon v-if="!showPackages" class="w-6 h-6 text-gray-600" />
-              <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
-            </button>
+            <div class="flex justify-between items-center mb-4">
+              <button
+                @click="togglePackages"
+                class="flex-1 flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
+              >
+                <h3 class="text-lg font-medium text-gray-800">
+                  Paquetes ({{ packages.length }})
+                </h3>
+                <ChevronDownIcon v-if="!showPackages" class="w-6 h-6 text-gray-600" />
+                <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
+              </button>
+              
+              <!-- Botón para registrar paquete -->
+              <AppButton
+                variant="primary"
+                size="sm"
+                @click="openPackageModal"
+                class="ml-3"
+                v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Registrar Paquete
+              </AppButton>
+            </div>
 
             <div v-if="showPackages" class="mt-4">
               <div v-if="isLoadingPackages" class="flex justify-center py-6">
@@ -340,8 +356,23 @@
               <div v-else-if="packagesError" class="bg-red-50 border border-red-200 rounded-md p-4">
                 <p class="text-red-700 text-sm">{{ packagesError }}</p>
               </div>
-              <div v-else-if="packages.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                <p class="text-blue-700 text-sm">No hay paquetes para este viaje aún.</p>
+              <div v-else-if="packages.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-blue-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p class="text-blue-700 text-sm font-medium mb-2">No hay paquetes registrados para este viaje</p>
+                <p class="text-blue-600 text-xs mb-4">¿Desea registrar el primer paquete?</p>
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  @click="openPackageModal"
+                  v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Registrar Primer Paquete
+                </AppButton>
               </div>
               <!-- Iterate over grouped packages -->
               <div v-else class="space-y-4">
@@ -1351,6 +1382,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para registro de paquete -->
+  <PackageRegistrationModal
+    :showModal="showPackageModal"
+    :trip="displayedTrip"
+    @close="closePackageModal"
+    @package-registered="handlePackageRegistered"
+  />
 </template>
 
 <script setup>
@@ -1362,6 +1401,7 @@ import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
 import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline/index.js'
 import TicketDisplay from '@/components/TicketDisplay.vue'
+import PackageRegistrationModal from '@/components/PackageRegistrationModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -2591,6 +2631,31 @@ const saleConfirmationTicketData = computed(() => {
 })
 
 // Función para buscar clientes existentes
+const openPackageModal = () => {
+  showPackageModal.value = true
+}
+
+const closePackageModal = () => {
+  showPackageModal.value = false
+}
+
+const handlePackageRegistered = async (newPackage) => {
+  console.log('Paquete registrado exitosamente:', newPackage)
+  
+  // Recargar la lista de paquetes para mostrar el nuevo paquete
+  await fetchPackages()
+  
+  // Mostrar mensaje de éxito (opcional)
+  // Se puede usar una librería de notificaciones o alert simple
+  alert('Paquete registrado exitosamente')
+  
+  // Si la sección de paquetes no está abierta, abrirla automáticamente
+  if (!showPackages.value) {
+    showPackages.value = true
+  }
+}
+
+const showPackageModal = ref(false)
 </script>
 
 

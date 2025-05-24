@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict
 from schemas.package import Package as PackageSchema, PackageCreate, PackageUpdate
 from models.package import Package as PackageModel
+from models.secretary import Secretary as SecretaryModel
 from schemas.client import Client
 from schemas.trip import Trip
 
@@ -20,10 +21,34 @@ async def get_packages(db: Session = Depends(get_db)):
 
 @router.post("", response_model=PackageSchema)
 async def create_package(package: PackageCreate, db: Session = Depends(get_db)):
-    db_package = PackageModel(**package.model_dump())
+    print(f"[DEBUG] Creating package with data: {package}")
+    
+    # Find the Secretary entity ID based on the operator_user_id
+    # The package.operator_user_id is the user_id of the secretary/admin creating the package
+    print(f"[DEBUG] Looking for secretary profile with user_id: {package.operator_user_id}")
+    secretary_profile = db.query(SecretaryModel).filter(SecretaryModel.user_id == package.operator_user_id).first()
+    if not secretary_profile:
+        print(f"[DEBUG] No secretary profile found for user ID {package.operator_user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No secretary profile found for user ID {package.operator_user_id}. Cannot create package."
+        )
+    
+    actual_secretary_id = secretary_profile.id
+    print(f"[DEBUG] Secretary profile found: {actual_secretary_id}")
+    
+    # Create package data dict and replace operator_user_id with secretary_id
+    package_data = package.model_dump()
+    package_data.pop('operator_user_id', None)  # Remove operator_user_id field
+    package_data['secretary_id'] = actual_secretary_id  # Add actual secretary_id
+    
+    print(f"[DEBUG] Package data with corrected secretary_id: {package_data}")
+    
+    db_package = PackageModel(**package_data)
     db.add(db_package)
     db.commit()
     db.refresh(db_package)
+    print(f"[DEBUG] Package created successfully: {db_package.id}")
     return db_package
 
 @router.get("/{package_id}", response_model=PackageSchema)

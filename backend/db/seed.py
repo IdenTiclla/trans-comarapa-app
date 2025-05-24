@@ -778,11 +778,15 @@ def create_test_users():
         test_emails = [
             "admin1@comarapa.com",
             "secretary1@comarapa.com",
+            "secretary2@comarapa.com",
+            "secretary3@comarapa.com",
             "driver1@comarapa.com",
             "assistant1@comarapa.com",
             "client1@comarapa.com",
             "client2@comarapa.com",
-            "client3@comarapa.com"
+            "client3@comarapa.com",
+            "client4@comarapa.com",
+            "client5@comarapa.com"
         ]
 
         for email in test_emails:
@@ -861,6 +865,28 @@ def create_test_users():
                 "office_id": office.id  # Usar la oficina obtenida anteriormente
             },
             {
+                "username": "secretary2",
+                "email": "secretary2@comarapa.com",
+                "role": "secretary",
+                "password": "123456",
+                "firstname": "Ana",
+                "lastname": "García",
+                "phone": "77234568",
+                "birth_date": date(1988, 6, 12),
+                "office_id": office.id
+            },
+            {
+                "username": "secretary3",
+                "email": "secretary3@comarapa.com",
+                "role": "secretary",
+                "password": "123456",
+                "firstname": "Carlos",
+                "lastname": "López",
+                "phone": "77234569",
+                "birth_date": date(1992, 9, 8),
+                "office_id": office.id
+            },
+            {
                 "username": "driver1",
                 "email": "driver1@comarapa.com",
                 "role": "driver",
@@ -927,6 +953,36 @@ def create_test_users():
                 "address": "Av. Libertad 789",
                 "city": "La Paz",
                 "state": "La Paz",
+                "is_minor": False
+            },
+            {
+                "username": "client4",
+                "email": "client4@comarapa.com",
+                "role": "client",
+                "password": "123456",
+                "firstname": "Luisa",
+                "lastname": "Morales",
+                "phone": "77890123",
+                "birth_date": date(1990, 12, 3),
+                "document_id": "151985270",  # CI que apareció en los logs de error
+                "address": "Calle Nueva 321",
+                "city": "Santa Cruz de la Sierra",
+                "state": "Santa Cruz",
+                "is_minor": False
+            },
+            {
+                "username": "client5",
+                "email": "client5@comarapa.com",
+                "role": "client",
+                "password": "123456",
+                "firstname": "Roberto",
+                "lastname": "Silva",
+                "phone": "77901234",
+                "birth_date": date(1987, 4, 17),
+                "document_id": "9753228",  # CI que apareció en los logs de error
+                "address": "Av. Central 654",
+                "city": "Cochabamba",
+                "state": "Cochabamba",
                 "is_minor": False
             }
         ]
@@ -1030,7 +1086,16 @@ def create_test_users():
         print("• Cliente Principal (CI: 12693562)")
         print("• María González (CI: 9876543)")
         print("• Pedro Rojas (CI: 5432109)")
+        print("• Luisa Morales (CI: 151985270) - Usado en pruebas de paquetes")
+        print("• Roberto Silva (CI: 9753228) - Usado en pruebas de paquetes")
+        print("\nSecretarios de prueba:")
+        print("======================")
+        print("• secretary1@comarapa.com (Secretaria Principal)")
+        print("• secretary2@comarapa.com (Ana García)")
+        print("• secretary3@comarapa.com (Carlos López)")
+        print("Contraseña para todos: 123456")
         print("\nPuedes buscar por nombre, apellido o CI en el frontend")
+        print("\nPara registrar paquetes, usa cualquiera de los secretarios de arriba.")
 
     except Exception as e:
         db.rollback()
