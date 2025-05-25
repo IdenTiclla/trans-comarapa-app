@@ -190,7 +190,7 @@
                 <div v-for="(item, index) in packageData.items" :key="index" class="grid grid-cols-12 border-b border-gray-300 hover:bg-gray-100 transition-colors">
                   <div class="col-span-2 p-4 text-center font-semibold text-lg">{{ item.quantity }}</div>
                   <div class="col-span-7 p-4 font-medium">{{ item.description }}</div>
-                  <div class="col-span-3 p-4 text-center font-semibold text-lg">Bs. {{ (item.quantity * item.price).toFixed(2) }}</div>
+                  <div class="col-span-3 p-4 text-center font-semibold text-lg">Bs. {{ (item.quantity * item.unit_price).toFixed(2) }}</div>
                 </div>
                 
                 <!-- Líneas vacías para completar el espacio -->
@@ -311,7 +311,7 @@ const currentYear = ref(now.getFullYear().toString())
 const totalAmount = computed(() => {
   if (!props.packageData.items) return 0
   return props.packageData.items.reduce((total, item) => {
-    return total + (item.quantity * item.price)
+    return total + (item.quantity * item.unit_price)
   }, 0)
 })
 

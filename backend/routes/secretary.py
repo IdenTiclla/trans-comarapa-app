@@ -249,3 +249,14 @@ async def get_secretary_user(
         )
 
     return db_user
+
+@router.get("/by-user/{user_id}", response_model=SecretarySchema)
+async def get_secretary_by_user_id(user_id: int, db: Session = Depends(get_db)):
+    """Obtener secretario por user_id"""
+    db_secretary = db.query(SecretaryModel).filter(SecretaryModel.user_id == user_id).first()
+    if not db_secretary:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Secretary with user_id {user_id} not found"
+        )
+    return db_secretary

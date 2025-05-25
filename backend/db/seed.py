@@ -11,6 +11,7 @@ from models.seat import Seat
 from models.ticket import Ticket
 from models.secretary import Secretary
 from models.package import Package
+from models.package_item import PackageItem
 from models.user import User, UserRole
 from models.administrator import Administrator
 from models.office import Office
@@ -38,6 +39,7 @@ def clear_db():
     try:
         # Delete all data in reverse order of dependencies
         db.query(Ticket).delete()
+        db.query(PackageItem).delete()  # Delete package items first
         db.query(Package).delete()
         db.query(Seat).delete()
         db.query(Trip).delete()
@@ -714,19 +716,26 @@ def seed_db():
                         )
                         db.add(ticket)
 
-        # Crear paquetes de muestra
-        package_statuses = ["pending", "in_transit", "delivered", "cancelled"]
-        package_names = ["Documentos", "Ropa", "Electrónicos", "Alimentos", "Medicamentos", "Libros", "Herramientas"]
-        package_descriptions = [
+        # Crear paquetes de muestra con nueva estructura PackageItem
+        package_statuses = ["registered", "in_transit", "delivered", "cancelled"]
+        
+        # Datos de items comunes para paquetes
+        item_descriptions = [
             "Documentos importantes",
-            "Ropa de temporada",
-            "Equipos electrónicos delicados",
-            "Productos alimenticios no perecederos",
-            "Medicamentos urgentes",
-            "Material educativo",
-            "Herramientas de trabajo"
+            "Ropa de temporada", 
+            "Equipos electrónicos",
+            "Productos alimenticios",
+            "Medicamentos",
+            "Libros y material educativo",
+            "Herramientas de trabajo",
+            "Artículos de hogar",
+            "Productos de belleza",
+            "Juguetes",
+            "Artículos deportivos",
+            "Electrodomésticos pequeños"
         ]
 
+        package_counter = 1
         for trip in trips:
             # Para cada viaje, crear entre 3-8 paquetes
             num_packages = random.randint(3, 8)
@@ -735,26 +744,49 @@ def seed_db():
                 # Seleccionar remitente y destinatario aleatorios (clientes diferentes)
                 sender = random.choice(clients)
                 recipient = random.choice([c for c in clients if c.id != sender.id])
+                
+                # Generar tracking number único
+                tracking_number = f"PKG{package_counter:06d}"
+                package_counter += 1
 
-                # Seleccionar nombre y descripción aleatorios
-                name_index = random.randint(0, len(package_names) - 1)
-                name = package_names[name_index]
-                # Acortar la descripción para evitar errores de longitud
-                description = package_descriptions[name_index][:50]
-
-                # Crear paquete
+                # Crear paquete con nueva estructura
                 package = Package(
-                    name=name,
-                    description=description,
-                    weight=round(random.uniform(0.5, 20.0), 2),  # Peso entre 0.5 y 20 kg
-                    price=round(random.uniform(10.0, 100.0), 2),  # Precio entre 10 y 100 Bs
+                    tracking_number=tracking_number,
+                    total_weight=round(random.uniform(0.5, 20.0), 2),  # Peso total entre 0.5 y 20 kg
+                    total_declared_value=round(random.uniform(50.0, 500.0), 2),  # Valor declarado
+                    notes=f"Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
                     status=random.choice(package_statuses),
                     sender_id=sender.id,
                     recipient_id=recipient.id,
                     trip_id=trip.id,
-                    secretary_id=random.choice(secretaries).id  # Asignar un secretario aleatorio a cada paquete
+                    secretary_id=random.choice(secretaries).id
                 )
                 db.add(package)
+                db.flush()  # Para obtener el ID del paquete
+
+                # Crear entre 1-4 items por paquete
+                num_items = random.randint(1, 4)
+                total_package_amount = 0
+                
+                for item_index in range(num_items):
+                    quantity = random.randint(1, 5)
+                    description = random.choice(item_descriptions)
+                    unit_price = round(random.uniform(10.0, 100.0), 2)
+                    total_price = quantity * unit_price
+                    total_package_amount += total_price
+                    
+                    # Crear item del paquete
+                    package_item = PackageItem(
+                        quantity=quantity,
+                        description=description,
+                        unit_price=unit_price,
+                        total_price=total_price,
+                        package_id=package.id
+                    )
+                    db.add(package_item)
+
+                # Actualizar el total_amount del paquete (se calculará automáticamente por la propiedad)
+                # No necesitamos hacer nada aquí ya que total_amount es una propiedad calculada
 
         # Final commit
         db.commit()

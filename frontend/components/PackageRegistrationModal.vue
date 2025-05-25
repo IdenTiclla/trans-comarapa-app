@@ -351,7 +351,7 @@
                               <span class="text-gray-500 mr-1">Bs.</span>
                               <input
                                 type="number"
-                                v-model.number="item.price"
+                                v-model.number="item.unit_price"
                                 min="0"
                                 step="0.01"
                                 class="block w-24 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -462,6 +462,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { usePackageStore } from '@/stores/packageStore'
 import apiFetch from '~/utils/api'
 import PackageReceiptModal from './PackageReceiptModal.vue'
 
@@ -478,6 +479,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'package-registered'])
 
+// Stores
+const authStore = useAuthStore()
+const packageStore = usePackageStore()
+
 // Estados reactivos
 const isSubmitting = ref(false)
 const senderSearchQuery = ref('')
@@ -487,7 +492,7 @@ const foundRecipients = ref([])
 const searchingSenders = ref(false)
 const searchingRecipients = ref(false)
 
-// Número de paquete
+// Número de paquete (tracking number)
 const packageNumber = ref('000000')
 
 // Fecha actual
@@ -496,11 +501,15 @@ const currentDay = ref(now.getDate().toString().padStart(2, '0'))
 const currentMonth = ref((now.getMonth() + 1).toString().padStart(2, '0'))
 const currentYear = ref(now.getFullYear().toString())
 
-// Datos del paquete
+// Datos del paquete con nueva estructura
 const packageData = ref({
+  tracking_number: '',
   origin: '',
   destination: '',
   driver_name: '',
+  total_weight: 0,
+  total_declared_value: 0,
+  notes: '',
   sender: {
     firstname: '',
     lastname: '',
@@ -517,7 +526,7 @@ const packageData = ref({
     {
       quantity: 1,
       description: '',
-      price: 0
+      unit_price: 0
     }
   ],
   received_confirmation: false
@@ -533,20 +542,30 @@ const driverPlaceholder = computed(() => {
 
 const totalAmount = computed(() => {
   return packageData.value.items.reduce((total, item) => {
-    return total + (item.quantity * item.price)
+    return total + (item.quantity * item.unit_price)
   }, 0)
+})
+
+const totalItemsCount = computed(() => {
+  return packageData.value.items.reduce((total, item) => total + item.quantity, 0)
 })
 
 const isFormValid = computed(() => {
   // Validaciones básicas
-  const basicValidation = packageData.value.sender.firstname.trim() !== '' &&
+  const basicValidation = packageData.value.tracking_number.trim() !== '' &&
+         packageData.value.sender.firstname.trim() !== '' &&
          packageData.value.sender.lastname.trim() !== '' &&
          packageData.value.sender.document_id.trim() !== '' &&
          packageData.value.recipient.firstname.trim() !== '' &&
          packageData.value.recipient.lastname.trim() !== '' &&
          packageData.value.recipient.document_id.trim() !== '' &&
          packageData.value.destination.trim() !== '' &&
-         packageData.value.items.some(item => item.description.trim() !== '') &&
+         packageData.value.items.length > 0 &&
+         packageData.value.items.every(item => 
+           item.description.trim() !== '' && 
+           item.quantity > 0 && 
+           item.unit_price >= 0
+         ) &&
          packageData.value.received_confirmation
 
   // Validación de que remitente y destinatario no sean la misma persona
@@ -587,7 +606,7 @@ const addItem = () => {
   packageData.value.items.push({
     quantity: 1,
     description: '',
-    price: 0
+    unit_price: 0
   })
 }
 
@@ -701,55 +720,55 @@ const submitPackage = async () => {
       throw new Error('El remitente y el destinatario no pueden ser la misma persona.')
     }
 
-    // Obtener el usuario autenticado del store (mismo patrón que la venta de boletos)
-    const authStore = useAuthStore()
+    // Obtener el usuario autenticado del store
     if (!authStore.user || !authStore.user.id) {
       throw new Error('Debe iniciar sesión para registrar paquetes.')
     }
 
     console.log('Usuario autenticado:', authStore.user)
-
-    // Usar directamente el user.id como operator_user_id (mismo patrón que operator_user_id en tickets)
-    const secretaryId = authStore.user.id
-
+    
+    // Obtener el secretary_id basado en el user_id
+    let secretaryId = null
+    try {
+      const secretaryResponse = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, {
+        method: 'GET'
+      })
+      secretaryId = secretaryResponse.id
+    } catch (error) {
+      console.error('Error obteniendo secretary_id:', error)
+      throw new Error('No se pudo obtener la información del secretario. Verifique que tenga permisos.')
+    }
+    
     console.log('Secretary ID a usar:', secretaryId)
 
-    // Crear descripción del paquete basada en los items
-    const itemDescriptions = packageData.value.items
-      .filter(item => item.description.trim() !== '')
-      .map(item => `${item.quantity}x ${item.description}`)
-      .join(', ')
-
-    // Calcular peso total estimado basado en la cantidad de items
-    const totalWeight = packageData.value.items.reduce((total, item) => {
-      // Estimamos 1kg por item como peso base
-      return total + (item.quantity * 1.0)
-    }, 0)
-
-    // Preparar datos del paquete en el formato que espera el backend
+    // Preparar datos del paquete en el nuevo formato con items
     const packagePayload = {
-      name: itemDescriptions || 'Encomienda general',
-      description: `Origen: ${packageData.value.origin} → Destino: ${packageData.value.destination}. Conductor: ${packageData.value.driver_name}`,
-      weight: totalWeight,
-      price: totalAmount.value,
-      status: 'pending',
+      tracking_number: packageData.value.tracking_number,
+      total_weight: packageData.value.total_weight || null,
+      total_declared_value: packageData.value.total_declared_value || null,
+      notes: packageData.value.notes || null,
+      status: 'registered',
       sender_id: senderData.id,
       recipient_id: recipientData.id,
       trip_id: props.trip.id,
-      operator_user_id: secretaryId
+      secretary_id: secretaryId,
+      items: packageData.value.items.map(item => ({
+        quantity: item.quantity,
+        description: item.description,
+        unit_price: item.unit_price
+      }))
     }
 
     console.log('Payload del paquete:', packagePayload)
 
-    const response = await apiFetch('/packages', {
-      method: 'POST',
-      body: packagePayload
-    })
+    // Usar el store para crear el paquete
+    const response = await packageStore.createNewPackage(packagePayload)
 
     if (response) {
-      // Preparar datos para el recibo
+      // Preparar datos para el recibo con nueva estructura
       registeredPackageData.value = {
         id: response.id,
+        tracking_number: response.tracking_number,
         origin: packageData.value.origin,
         destination: packageData.value.destination,
         driver_name: packageData.value.driver_name,
@@ -765,12 +784,13 @@ const submitPackage = async () => {
           document_id: recipientData.document_id,
           phone: recipientData.phone
         },
-        items: packageData.value.items.filter(item => item.description.trim() !== ''),
-        totalAmount: totalAmount.value,
-        created_at: new Date().toISOString()
+        items: response.items || packageData.value.items,
+        total_amount: response.total_amount || totalAmount.value,
+        total_items_count: response.total_items_count || totalItemsCount.value,
+        created_at: response.created_at || new Date().toISOString()
       }
 
-      // Mostrar el recibo en lugar del alert
+      // Mostrar el recibo
       showReceiptModal.value = true
       emit('package-registered', response)
       closeModal()
@@ -778,8 +798,7 @@ const submitPackage = async () => {
     }
   } catch (error) {
     console.error('Error registering package:', error)
-    // Eliminar el alert y manejar el error de forma más elegante
-    // El usuario ya verá el error a través de otros mecanismos de feedback
+    // El store maneja los errores, así que podemos usar packageStore.error para mostrar mensajes
   } finally {
     isSubmitting.value = false
   }
@@ -820,11 +839,16 @@ const createOrGetClient = async (clientData) => {
 }
 
 const resetForm = () => {
+  const trackingNumber = generateTrackingNumber()
   packageData.value = {
+    tracking_number: trackingNumber,
     origin: props.trip?.route?.origin || '',
     destination: props.trip?.route?.destination || '',
     driver_name: props.trip?.driver ? 
       `${props.trip.driver.firstname} ${props.trip.driver.lastname}` : '',
+    total_weight: 0,
+    total_declared_value: 0,
+    notes: '',
     sender: {
       firstname: '',
       lastname: '',
@@ -841,15 +865,23 @@ const resetForm = () => {
       {
         quantity: 1,
         description: '',
-        price: 0
+        unit_price: 0
       }
     ],
     received_confirmation: false
   }
+  packageNumber.value = trackingNumber
   senderSearchQuery.value = ''
   recipientSearchQuery.value = ''
   foundSenders.value = []
   foundRecipients.value = []
+}
+
+const generateTrackingNumber = () => {
+  // Generar número de tracking único
+  const timestamp = Date.now().toString().slice(-6)
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+  return `${timestamp}${random}`
 }
 
 const closeReceiptModal = () => {
@@ -859,6 +891,8 @@ const closeReceiptModal = () => {
 
 // Generar número de paquete al montar
 onMounted(() => {
-  packageNumber.value = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+  const trackingNumber = generateTrackingNumber()
+  packageNumber.value = trackingNumber
+  packageData.value.tracking_number = trackingNumber
 })
 </script> 

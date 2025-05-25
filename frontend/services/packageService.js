@@ -1,4 +1,4 @@
-// Servicio para gestionar los datos de paquetes
+// Servicio para gestionar los datos de paquetes con soporte para múltiples items
 import { useRuntimeConfig } from 'nuxt/app'
 import apiFetch from '~/utils/api'
 
@@ -19,9 +19,9 @@ const getApiBaseUrl = () => {
 const BASE_PATH = '/packages'
 
 /**
- * Fetches all packages, optionally with query parameters.
- * @param {object} params - Query parameters (e.g., for pagination, filtering).
- * @returns {Promise<Array>} A promise that resolves to an array of packages.
+ * Fetches all packages with summary information, optionally with query parameters.
+ * @param {object} params - Query parameters (e.g., skip, limit, status).
+ * @returns {Promise<Array>} A promise that resolves to an array of package summaries.
  */
 export const getAllPackages = async (params = {}) => {
   const query = new URLSearchParams(params).toString()
@@ -29,17 +29,26 @@ export const getAllPackages = async (params = {}) => {
 }
 
 /**
- * Fetches a single package by its ID.
+ * Fetches a single package by its ID with all items included.
  * @param {string|number} id - The ID of the package.
- * @returns {Promise<object>} A promise that resolves to the package object.
+ * @returns {Promise<object>} A promise that resolves to the package object with items.
  */
 export const getPackageById = async (id) => {
   return apiFetch(`${BASE_PATH}/${id}`)
 }
 
 /**
- * Creates a new package.
- * @param {object} packageData - The data for the new package.
+ * Fetches a package by its tracking number.
+ * @param {string} trackingNumber - The tracking number of the package.
+ * @returns {Promise<object>} A promise that resolves to the package object.
+ */
+export const getPackageByTrackingNumber = async (trackingNumber) => {
+  return apiFetch(`${BASE_PATH}/tracking/${trackingNumber}`)
+}
+
+/**
+ * Creates a new package with multiple items.
+ * @param {object} packageData - The data for the new package including items array.
  * @returns {Promise<object>} A promise that resolves to the created package object.
  */
 export const createPackage = async (packageData) => {
@@ -50,7 +59,7 @@ export const createPackage = async (packageData) => {
 }
 
 /**
- * Updates an existing package.
+ * Updates an existing package (general information, not items).
  * @param {string|number} id - The ID of the package to update.
  * @param {object} packageData - The updated data for the package.
  * @returns {Promise<object>} A promise that resolves to the updated package object.
@@ -63,7 +72,7 @@ export const updatePackage = async (id, packageData) => {
 }
 
 /**
- * Deletes a package by its ID.
+ * Deletes a package by its ID (including all items).
  * @param {string|number} id - The ID of the package to delete.
  * @returns {Promise<void>} A promise that resolves when the package is deleted.
  */
@@ -73,17 +82,103 @@ export const deletePackage = async (id) => {
   })
 }
 
+// === PACKAGE ITEMS MANAGEMENT ===
+
 /**
- * Searches for packages based on a query term.
+ * Gets all items of a specific package.
+ * @param {string|number} packageId - The ID of the package.
+ * @returns {Promise<Array>} A promise that resolves to an array of package items.
+ */
+export const getPackageItems = async (packageId) => {
+  return apiFetch(`${BASE_PATH}/${packageId}/items`)
+}
+
+/**
+ * Adds a new item to an existing package.
+ * @param {string|number} packageId - The ID of the package.
+ * @param {object} itemData - The item data (quantity, description, unit_price).
+ * @returns {Promise<object>} A promise that resolves to the created item.
+ */
+export const addPackageItem = async (packageId, itemData) => {
+  return apiFetch(`${BASE_PATH}/${packageId}/items`, {
+    method: 'POST',
+    body: itemData,
+  })
+}
+
+/**
+ * Updates a specific package item.
+ * @param {string|number} itemId - The ID of the item to update.
+ * @param {object} itemData - The updated item data.
+ * @returns {Promise<object>} A promise that resolves to the updated item.
+ */
+export const updatePackageItem = async (itemId, itemData) => {
+  return apiFetch(`${BASE_PATH}/items/${itemId}`, {
+    method: 'PUT',
+    body: itemData,
+  })
+}
+
+/**
+ * Deletes a specific package item.
+ * @param {string|number} itemId - The ID of the item to delete.
+ * @returns {Promise<void>} A promise that resolves when the item is deleted.
+ */
+export const deletePackageItem = async (itemId) => {
+  return apiFetch(`${BASE_PATH}/items/${itemId}`, {
+    method: 'DELETE',
+  })
+}
+
+// === PACKAGE FILTERING AND SEARCH ===
+
+/**
+ * Gets packages by sender (client ID).
+ * @param {string|number} clientId - The ID of the sender client.
+ * @returns {Promise<Array>} A promise that resolves to an array of package summaries.
+ */
+export const getPackagesBySender = async (clientId) => {
+  return apiFetch(`${BASE_PATH}/by-sender/${clientId}`)
+}
+
+/**
+ * Gets packages by recipient (client ID).
+ * @param {string|number} clientId - The ID of the recipient client.
+ * @returns {Promise<Array>} A promise that resolves to an array of package summaries.
+ */
+export const getPackagesByRecipient = async (clientId) => {
+  return apiFetch(`${BASE_PATH}/by-recipient/${clientId}`)
+}
+
+/**
+ * Gets packages by trip ID.
+ * @param {string|number} tripId - The ID of the trip.
+ * @returns {Promise<Array>} A promise that resolves to an array of package summaries.
+ */
+export const getPackagesByTrip = async (tripId) => {
+  return apiFetch(`${BASE_PATH}/by-trip/${tripId}`)
+}
+
+/**
+ * Searches for packages based on a query term (deprecated, use getPackageByTrackingNumber instead).
  * @param {string} term - The search term.
  * @returns {Promise<Array>} A promise that resolves to an array of matching packages.
  */
 export const searchPackages = async (term) => {
-  const queryParams = new URLSearchParams({ search: term })
-  return apiFetch(`${BASE_PATH}/search?${queryParams.toString()}`)
+  // Try to search by tracking number first
+  try {
+    const pkg = await getPackageByTrackingNumber(term)
+    return [pkg]
+  } catch (error) {
+    // If not found by tracking number, return empty array or implement other search logic
+    console.warn('Package not found by tracking number:', term)
+    return []
+  }
 }
 
-// Obtener todos los paquetes
+// === ENHANCED METHODS WITH IMPROVED ERROR HANDLING ===
+
+// Obtener todos los paquetes con filtros y paginación mejorados
 const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 10 }) => {
   try {
     const apiBaseUrl = getApiBaseUrl()
@@ -93,16 +188,14 @@ const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 1
       throw new Error('No hay token de autenticación')
     }
 
-    // Construir los parámetros de consulta
+    // Construir los parámetros de consulta para la nueva API
     const queryParams = new URLSearchParams()
 
     // Añadir filtros
+    if (filters.status) queryParams.append('status', filters.status)
     if (filters.sender_id) queryParams.append('sender_id', filters.sender_id)
     if (filters.recipient_id) queryParams.append('recipient_id', filters.recipient_id)
     if (filters.trip_id) queryParams.append('trip_id', filters.trip_id)
-    if (filters.status) queryParams.append('status', filters.status)
-    if (filters.date_from) queryParams.append('date_from', filters.date_from)
-    if (filters.date_to) queryParams.append('date_to', filters.date_to)
 
     // Añadir paginación
     queryParams.append('skip', ((pagination.page - 1) * pagination.itemsPerPage).toString())
@@ -128,9 +221,12 @@ const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 1
     const data = await response.json()
     console.log('Respuesta de la API (paquetes):', data)
 
-    // Transformar los datos si es necesario
-    const packages = Array.isArray(data) ? data : data.items || []
-    const totalItems = data.total || packages.length
+    // La nueva API devuelve un array de PackageSummary directamente
+    const packages = Array.isArray(data) ? data : []
+    
+    // Estimar el total si no viene en la respuesta
+    const totalItems = packages.length >= pagination.itemsPerPage ? 
+      packages.length + 1 : packages.length
 
     return {
       packages,
@@ -144,19 +240,19 @@ const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 1
   } catch (error) {
     console.error('Error al obtener paquetes:', error)
     
-    // Simulación de datos para desarrollo
+    // Simulación de datos para desarrollo con nueva estructura
     console.warn('Usando datos simulados para paquetes')
     
-    // Generar datos de ejemplo
+    // Generar datos de ejemplo con estructura actualizada
     const packages = Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
-      description: `Paquete ${i + 1}`,
-      weight: Math.random() * 10 + 0.5, // Entre 0.5 y 10.5 kg
-      sender_id: Math.floor(Math.random() * 10) + 1,
-      recipient_id: Math.floor(Math.random() * 10) + 1,
-      trip_id: Math.floor(Math.random() * 5) + 1,
-      status: ['pending', 'in_transit', 'delivered'][Math.floor(Math.random() * 3)],
-      created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() // Hasta 7 días atrás
+      tracking_number: `PKG${(i + 1).toString().padStart(6, '0')}`,
+      status: ['registered', 'in_transit', 'delivered'][Math.floor(Math.random() * 3)],
+      total_amount: Math.random() * 200 + 50, // Entre 50 y 250 Bs
+      total_items_count: Math.floor(Math.random() * 5) + 1, // Entre 1 y 5 items
+      sender_name: `Remitente ${i + 1}`,
+      recipient_name: `Destinatario ${i + 1}`,
+      created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
     }))
     
     return {
@@ -171,7 +267,7 @@ const getPackages = async (filters = {}, pagination = { page: 1, itemsPerPage: 1
   }
 }
 
-// Obtener paquetes recientes
+// Obtener paquetes recientes con nueva estructura
 const getRecentPackages = async (limit = 5) => {
   try {
     const apiBaseUrl = getApiBaseUrl()
@@ -184,11 +280,10 @@ const getRecentPackages = async (limit = 5) => {
     // Construir los parámetros de consulta
     const queryParams = new URLSearchParams()
     queryParams.append('limit', limit.toString())
-    queryParams.append('sort', 'created_at:desc')
+    // Nota: El backend podría necesitar implementar ordenamiento por fecha
 
     console.log(`Realizando petición a: ${apiBaseUrl}/packages?${queryParams.toString()}`)
 
-    // Realizar la petición a la API
     const response = await fetch(`${apiBaseUrl}/packages?${queryParams.toString()}`, {
       method: 'GET',
       headers: {
@@ -206,8 +301,8 @@ const getRecentPackages = async (limit = 5) => {
     const data = await response.json()
     console.log('Respuesta de la API (paquetes recientes):', data)
 
-    // Transformar los datos si es necesario
-    const packages = Array.isArray(data) ? data : data.items || []
+    // Tomar solo los primeros elementos hasta el límite
+    const packages = Array.isArray(data) ? data.slice(0, limit) : []
 
     return packages
   } catch (error) {
@@ -216,21 +311,91 @@ const getRecentPackages = async (limit = 5) => {
     // Simulación de datos para desarrollo
     console.warn('Usando datos simulados para paquetes recientes')
     
-    // Generar datos de ejemplo
     return Array.from({ length: limit }, (_, i) => ({
       id: i + 1,
-      description: `Paquete ${i + 1}`,
-      weight: Math.random() * 10 + 0.5, // Entre 0.5 y 10.5 kg
-      sender_id: Math.floor(Math.random() * 10) + 1,
-      recipient_id: Math.floor(Math.random() * 10) + 1,
-      trip_id: Math.floor(Math.random() * 5) + 1,
-      status: ['pending', 'in_transit', 'delivered'][Math.floor(Math.random() * 3)],
-      created_at: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString() // Hasta 1 día atrás
+      tracking_number: `PKG${(i + 1).toString().padStart(6, '0')}`,
+      status: ['registered', 'in_transit', 'delivered'][Math.floor(Math.random() * 3)],
+      total_amount: Math.random() * 200 + 50,
+      total_items_count: Math.floor(Math.random() * 5) + 1,
+      sender_name: `Remitente ${i + 1}`,
+      recipient_name: `Destinatario ${i + 1}`,
+      created_at: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString()
     }))
   }
 }
 
+// === UTILITY FUNCTIONS ===
+
+/**
+ * Calculates the total amount for a package based on its items.
+ * @param {Array} items - Array of package items.
+ * @returns {number} Total amount.
+ */
+export const calculatePackageTotal = (items) => {
+  return items.reduce((total, item) => {
+    return total + (item.quantity * item.unit_price)
+  }, 0)
+}
+
+/**
+ * Calculates the total items count for a package.
+ * @param {Array} items - Array of package items.
+ * @returns {number} Total items count.
+ */
+export const calculateItemsCount = (items) => {
+  return items.reduce((total, item) => total + item.quantity, 0)
+}
+
+/**
+ * Validates package data before submission.
+ * @param {object} packageData - Package data to validate.
+ * @returns {object} Validation result with isValid and errors.
+ */
+export const validatePackageData = (packageData) => {
+  const errors = []
+
+  if (!packageData.tracking_number || packageData.tracking_number.length < 3) {
+    errors.push('Número de tracking debe tener al menos 3 caracteres')
+  }
+
+  if (!packageData.items || packageData.items.length === 0) {
+    errors.push('El paquete debe tener al menos un item')
+  }
+
+  if (packageData.items) {
+    packageData.items.forEach((item, index) => {
+      if (!item.description || item.description.trim() === '') {
+        errors.push(`Item ${index + 1}: La descripción es requerida`)
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        errors.push(`Item ${index + 1}: La cantidad debe ser mayor a 0`)
+      }
+      if (!item.unit_price || item.unit_price <= 0) {
+        errors.push(`Item ${index + 1}: El precio unitario debe ser mayor a 0`)
+      }
+    })
+  }
+
+  if (!packageData.sender_id) {
+    errors.push('El remitente es requerido')
+  }
+
+  if (!packageData.recipient_id) {
+    errors.push('El destinatario es requerido')
+  }
+
+  if (!packageData.trip_id) {
+    errors.push('El viaje es requerido')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
 export default {
+  // Métodos existentes actualizados
   getAllPackages,
   getPackageById,
   createPackage,
@@ -238,5 +403,22 @@ export default {
   deletePackage,
   searchPackages,
   getPackages,
-  getRecentPackages
+  getRecentPackages,
+  
+  // Nuevos métodos para items
+  getPackageItems,
+  addPackageItem,
+  updatePackageItem,
+  deletePackageItem,
+  
+  // Métodos de filtrado
+  getPackagesBySender,
+  getPackagesByRecipient,
+  getPackagesByTrip,
+  getPackageByTrackingNumber,
+  
+  // Utilidades
+  calculatePackageTotal,
+  calculateItemsCount,
+  validatePackageData
 }
