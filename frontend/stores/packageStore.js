@@ -130,6 +130,16 @@ export const usePackageStore = defineStore('packages', {
 
         const newPackage = await packageService.createPackage(packageData);
         await this.fetchPackages(); // Refetch to get the latest list with new package
+        
+        // Actualizar estadísticas del dashboard después de crear el paquete
+        try {
+          const { useStatsStore } = await import('~/stores/statsStore');
+          const statsStore = useStatsStore();
+          await statsStore.refreshStats('today');
+        } catch (statsError) {
+          console.warn('No se pudieron actualizar las estadísticas después de crear el paquete:', statsError);
+        }
+        
         return newPackage;
       } catch (err) {
         this.error = err.data?.detail || err.message || 'Failed to create package';

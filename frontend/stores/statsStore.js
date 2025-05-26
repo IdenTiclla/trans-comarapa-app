@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import statsService from '~/services/statsService';
+import salesService from '~/services/salesService';
 
 export const useStatsStore = defineStore('stats', {
   state: () => ({
@@ -8,6 +9,7 @@ export const useStatsStore = defineStore('stats', {
       packages: null,
       trips: null,
     },
+    salesSummary: null,
     isLoading: false,
     error: null,
   }),
@@ -16,6 +18,7 @@ export const useStatsStore = defineStore('stats', {
     getTicketStatsData: (state) => state.dashboardStats?.tickets || { count: 0, amount: 0, trend: 0 },
     getPackageStatsData: (state) => state.dashboardStats?.packages || { count: 0, trend: 0 },
     getTripStatsData: (state) => state.dashboardStats?.trips || { count: 0, trend: 0 },
+    getSalesSummaryData: (state) => state.salesSummary || { totalAmount: 0, ticketCount: 0, packageCount: 0, trend: 0 },
   },
 
   actions: {
@@ -23,15 +26,19 @@ export const useStatsStore = defineStore('stats', {
       this.isLoading = true;
       this.error = null;
       try {
-        const data = await statsService.getDashboardStats(period);
-        // The service already has a fallback to individual stats if /stats/dashboard fails,
-        // and then mock data if those fail.
-        // So, 'data' should always be populated or an error thrown by the service.
+        // Obtener estadísticas del dashboard y resumen de ventas en paralelo
+        const [dashboardData, salesSummaryData] = await Promise.all([
+          statsService.getDashboardStats(period),
+          salesService.getSalesSummary(period)
+        ]);
+
         this.dashboardStats = {
-          tickets: data.tickets || null,
-          packages: data.packages || null,
-          trips: data.trips || null,
+          tickets: dashboardData.tickets || null,
+          packages: dashboardData.packages || null,
+          trips: dashboardData.trips || null,
         };
+
+        this.salesSummary = salesSummaryData;
       } catch (err) {
         console.error('Error in statsStore fetching dashboard stats:', err);
         this.error = err.data?.detail || err.message || 'Failed to fetch dashboard statistics';
@@ -41,8 +48,30 @@ export const useStatsStore = defineStore('stats', {
           packages: { count: 0, trend: 0 },
           trips: { count: 0, trend: 0 },
         };
+        this.salesSummary = { totalAmount: 0, ticketCount: 0, packageCount: 0, trend: 0 };
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async refreshStats(period = 'today') {
+      // Método para refrescar las estadísticas sin mostrar loading
+      try {
+        const [dashboardData, salesSummaryData] = await Promise.all([
+          statsService.getDashboardStats(period),
+          salesService.getSalesSummary(period)
+        ]);
+
+        this.dashboardStats = {
+          tickets: dashboardData.tickets || null,
+          packages: dashboardData.packages || null,
+          trips: dashboardData.trips || null,
+        };
+
+        this.salesSummary = salesSummaryData;
+      } catch (err) {
+        console.error('Error refreshing stats:', err);
+        // No actualizar el error en refresh silencioso
       }
     },
 

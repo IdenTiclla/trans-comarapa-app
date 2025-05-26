@@ -11,6 +11,7 @@ from models.client import Client as ClientModel
 from models.route import Route as RouteModel
 from models.bus import Bus as BusModel
 from pydantic import BaseModel
+from models.package_item import PackageItem as PackageItemModel
 
 router = APIRouter(
     tags=["Statistics"]
@@ -174,7 +175,14 @@ async def get_package_stats(
     
     # Consultar paquetes del período actual
     current_packages = db.query(
-        func.count(PackageModel.id).label("count")
+        func.count(PackageModel.id).label("count"),
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label("amount")
     ).filter(
         cast(PackageModel.created_at, Date) >= start_date,
         cast(PackageModel.created_at, Date) <= end_date
@@ -182,7 +190,14 @@ async def get_package_stats(
     
     # Consultar paquetes del período anterior
     previous_packages = db.query(
-        func.count(PackageModel.id).label("count")
+        func.count(PackageModel.id).label("count"),
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label("amount")
     ).filter(
         cast(PackageModel.created_at, Date) >= previous_start_date,
         cast(PackageModel.created_at, Date) <= previous_end_date
@@ -356,7 +371,6 @@ async def get_recent_sales(
         PackageModel.status,
         ClientModel.firstname,
         ClientModel.lastname,
-        PackageModel.price,
         PackageModel.trip_id
     ).join(
         ClientModel, PackageModel.sender_id == ClientModel.id
@@ -381,12 +395,14 @@ async def get_recent_sales(
     # Transformar los resultados de paquetes
     package_sales = []
     for package in recent_packages:
+        # Obtener el paquete completo para acceder a total_amount
+        full_package = db.query(PackageModel).filter(PackageModel.id == package.id).first()
         package_sales.append({
             "id": package.id,
             "type": "package",
             "reference": f"P-{package.id}",
             "client_name": f"{package.firstname} {package.lastname}",
-            "amount": float(package.price) if package.price else 0.0,
+            "amount": float(full_package.total_amount) if full_package else 0.0,
             "date": package.created_at,
             "status": package.status,
             "trip_id": package.trip_id
@@ -431,7 +447,13 @@ async def get_sales_summary(
     # Consultar paquetes del período actual
     current_packages = db.query(
         func.count(PackageModel.id).label("count"),
-        func.coalesce(func.sum(PackageModel.price), 0).label("amount")
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label("amount")
     ).filter(
         cast(PackageModel.created_at, Date) >= start_date,
         cast(PackageModel.created_at, Date) <= end_date
@@ -454,7 +476,13 @@ async def get_sales_summary(
     # Consultar paquetes del período anterior
     previous_packages = db.query(
         func.count(PackageModel.id).label("count"),
-        func.coalesce(func.sum(PackageModel.price), 0).label("amount")
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label("amount")
     ).filter(
         cast(PackageModel.created_at, Date) >= previous_start_date,
         cast(PackageModel.created_at, Date) <= previous_end_date

@@ -47,10 +47,10 @@
       />
       <StatCard
         title="Ingresos del Día"
-        :value="ticketStatsDisplay.amount !== null ? `Bs. ${ticketStatsDisplay.amount.toLocaleString()}` : '...'"
+        :value="salesSummaryDisplay.totalAmount !== null ? `Bs. ${salesSummaryDisplay.totalAmount.toLocaleString()}` : '...'"
         :icon="icons.moneyIcon"
         bgColor="bg-green-500"
-        :trend="ticketStatsDisplay.trend !== null ? ticketStatsDisplay.trend : 0"
+        :trend="salesSummaryDisplay.trend !== null ? salesSummaryDisplay.trend : 0"
         trendText="vs. ayer"
       />
       <StatCard
@@ -157,6 +157,7 @@ const userInfo = computed(() => authStore.user || {})
 const ticketStatsDisplay = computed(() => statsStore.getTicketStatsData)
 const packageStatsDisplay = computed(() => statsStore.getPackageStatsData)
 const tripStatsDisplay = computed(() => statsStore.getTripStatsData)
+const salesSummaryDisplay = computed(() => statsStore.getSalesSummaryData)
 
 // Iconos para las tarjetas de estadísticas
 const icons = reactive({
