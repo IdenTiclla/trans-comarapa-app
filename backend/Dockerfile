@@ -38,8 +38,8 @@ FROM base as development
 # Copiar archivos de dependencias
 COPY pyproject.toml uv.lock* ./
 
-# Instalar dependencias usando los requisitos especificados en pyproject.toml
-RUN uv pip install --system "fastapi[standard]>=0.115.11" "pymysql>=1.1.1" "sqlalchemy>=2.0.39" cryptography
+# Instalar dependencias usando pyproject.toml
+RUN uv pip install --system -e .
 
 # Copiar script de espera
 COPY scripts/wait-for-db.sh /wait-for-db.sh
@@ -66,7 +66,7 @@ FROM base as production
 COPY pyproject.toml uv.lock* ./
 
 # Instalar dependencias de producción
-RUN uv pip install --system "fastapi[standard]>=0.115.11" "pymysql>=1.1.1" "sqlalchemy>=2.0.39" cryptography
+RUN uv pip install --system .
 
 # Copiar script de espera
 COPY scripts/wait-for-db.sh /wait-for-db.sh

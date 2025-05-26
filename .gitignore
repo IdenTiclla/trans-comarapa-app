@@ -1,0 +1,11 @@
+.env
+.env.local
+.env.*.local
+
+node_modules
+
+.nuxt
+.output
+dist
+
+.DS_Store

@@ -10,6 +10,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.9",  # Necesario para OAuth2PasswordRequestForm
+    "faker>=19.3.1",  # Necesario para el seeding de datos
 ]
 
 [project.optional-dependencies]
@@ -18,5 +19,4 @@ test = [
     "pytest-asyncio>=0.21.1",
     "httpx>=0.24.1",
     "pytest-cov>=4.1.0",
-    "faker>=19.3.1",
 ]

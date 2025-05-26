@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-Passw0rd!}
+      - MYSQL_DATABASE=trans_comarapa
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/scripts/db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Passw0rd!}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trans-comarapa-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      target: ${BACKEND_TARGET:-development}
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/.venv/
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-Passw0rd!}@db:3306/trans_comarapa
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - DEBUG=${DEBUG:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - trans-comarapa-network
+
+  # Frontend (Nuxt.js)
+  frontend:
+    build:
+      context: ./frontend
+      target: ${FRONTEND_TARGET:-development}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+      - NODE_ENV=${NODE_ENV:-development}
+    depends_on:
+      - backend
+    networks:
+      - trans-comarapa-network
+
+networks:
+  trans-comarapa-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local 

@@ -1,0 +1,45 @@
+# Dependencias
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de construcción
+.nuxt
+.output
+dist
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Archivos de Git
+.git
+.gitignore
+
+# Archivos de testing
+coverage
+.nyc_output
+
+# Archivos temporales
+.tmp
+.temp
+
+# Archivos de cache
+.cache
+.parcel-cache 
