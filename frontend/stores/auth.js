@@ -2,6 +2,12 @@
 import { defineStore } from 'pinia'
 import authService from '~/services/authService'
 
+// Función auxiliar para crear objetos planos
+const createPlainObject = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj
+  return JSON.parse(JSON.stringify(obj))
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -28,7 +34,8 @@ export const useAuthStore = defineStore('auth', {
     // Inicializar el store con los datos del localStorage
     init() {
       this.token = authService.getToken()
-      this.user = authService.getUserData()
+      const userData = authService.getUserData()
+      this.user = userData ? createPlainObject(userData) : null
     },
 
     // Iniciar sesión
@@ -41,12 +48,13 @@ export const useAuthStore = defineStore('auth', {
         this.token = data.access_token
 
         // Construir el objeto de usuario a partir de los datos disponibles
-        this.user = {
+        // Asegurar que sea un objeto plano
+        this.user = createPlainObject({
           id: data.user_id,
           role: data.role,
           firstname: data.firstname || '',
           lastname: data.lastname || ''
-        }
+        })
 
         return data
       } catch (error) {
