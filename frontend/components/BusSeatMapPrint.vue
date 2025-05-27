@@ -654,10 +654,40 @@ const sellTicket = () => {
 // Reservar asiento
 const reserveSeat = () => {
   if (selectedSeatForContext.value) {
-    emit('reserve-seat', selectedSeatForContext.value)
-    closeContextMenu()
+    // Verificar si el asiento del menú contextual está entre los seleccionados globalmente (selectedSeats)
+    // selectedSeats es un computed property que obtiene los asientos de selectedSeatIds
+    const isContextSeatInGlobalSelection = selectedSeatIds.value.includes(selectedSeatForContext.value.id);
+
+    if (isContextSeatInGlobalSelection && selectedSeats.value.length > 0) {
+      // Si el asiento del menú contextual está en la selección global y hay asientos seleccionados,
+      // emitir todos los asientos seleccionados globalmente.
+      // Asegurarse de que todos los asientos emitidos estén disponibles para reserva.
+      const availableSelectedSeats = selectedSeats.value.filter(seat => 
+        !seat.occupied && seat.status !== 'reserved' && seat.status !== 'occupied'
+      );
+      if (availableSelectedSeats.length > 0) {
+        emit('reserve-seat', [...availableSelectedSeats]);
+      } else {
+        // Si ninguno de los seleccionados está disponible, solo emitir el del contexto (si está disponible)
+        if (!selectedSeatForContext.value.occupied && selectedSeatForContext.value.status !== 'reserved' && selectedSeatForContext.value.status !== 'occupied') {
+          emit('reserve-seat', [selectedSeatForContext.value]);
+        } else {
+          // Aquí podrías emitir un error o no hacer nada si ni el asiento del contexto está disponible
+          console.warn('El asiento del contexto tampoco está disponible para reservar');
+        }
+      }
+    } else {
+      // Si no hay selección global o el asiento del menú contextual no está en ella,
+      // emitir solo el asiento del menú contextual (si está disponible).
+      if (!selectedSeatForContext.value.occupied && selectedSeatForContext.value.status !== 'reserved' && selectedSeatForContext.value.status !== 'occupied') {
+        emit('reserve-seat', [selectedSeatForContext.value]);
+      } else {
+         console.warn('El asiento del contexto no está disponible para reservar');
+      }
+    }
+    closeContextMenu();
   }
-}
+};
 
 // Cerrar el menú cuando se hace clic fuera
 onMounted(() => {

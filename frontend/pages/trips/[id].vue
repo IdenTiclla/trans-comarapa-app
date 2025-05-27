@@ -640,7 +640,12 @@
         <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 border-b border-gray-200">
           <div class="flex items-center justify-between">
             <h3 class="text-xl leading-6 font-medium text-white">
-              Reserva de Boleto - Asiento {{ selectedSeatForReservation?.number || '' }}
+              <span v-if="selectedSeatsForReservation.length === 1">
+                Reserva de Boleto - Asiento {{ selectedSeatsForReservation[0]?.number || '' }}
+              </span>
+              <span v-else>
+                Reserva de {{ selectedSeatsForReservation.length }} Boletos
+              </span>
             </h3>
             <button 
               @click="closeReservationModal" 
@@ -918,23 +923,23 @@
                 <div class="space-y-2 text-sm">
                   <div class="flex justify-between">
                     <span class="text-blue-700 font-medium">Ruta:</span>
-                    <span class="text-blue-900">{{ displayedTrip?.origin?.name }} → {{ displayedTrip?.destination?.name }}</span>
+                    <span class="text-blue-900">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</span>
                   </div>
                   <div class="flex justify-between">
                     <span class="text-blue-700 font-medium">Fecha:</span>
-                    <span class="text-blue-900">{{ formatDate(displayedTrip?.departure_date) }}</span>
+                    <span class="text-blue-900">{{ formatDate(displayedTrip?.trip_datetime) }}</span>
                   </div>
                   <div class="flex justify-between">
                     <span class="text-blue-700 font-medium">Hora:</span>
-                    <span class="text-blue-900">{{ displayedTrip?.departure_time }}</span>
+                    <span class="text-blue-900">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Asiento:</span>
-                    <span class="text-blue-900 font-bold">{{ selectedSeatForReservation?.number }}</span>
+                    <span class="text-blue-700 font-medium">Asientos:</span>
+                    <span class="text-blue-900 font-bold">{{ selectedSeatsForReservation.map(seat => seat.number).join(', ') }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Precio:</span>
-                    <span class="text-blue-900 font-bold">Bs. {{ displayedTrip?.price }}</span>
+                    <span class="text-blue-700 font-medium">Precio Total:</span>
+                    <span class="text-blue-900 font-bold">Bs. {{ (displayedTrip?.price || 0) * selectedSeatsForReservation.length }}</span>
                   </div>
                 </div>
               </div>
@@ -1593,7 +1598,12 @@
           </div>
           <p class="mt-1 text-sm text-green-100">
             <span v-if="reservationConfirmationData.success">
-              <span v-if="reservationConfirmationData.seat">La reserva ha sido confirmada exitosamente para el asiento {{ reservationConfirmationData.seat.number }}.</span>
+              <span v-if="reservationConfirmationData.seats && reservationConfirmationData.seats.length === 1">
+                La reserva ha sido confirmada exitosamente para el asiento {{ reservationConfirmationData.seats[0]?.number }}.
+              </span>
+              <span v-else-if="reservationConfirmationData.seats && reservationConfirmationData.seats.length > 1">
+                Las reservas han sido confirmadas exitosamente para los asientos: {{ reservationConfirmationData.seats.map(s => s.number).join(', ') }}.
+              </span>
               <span v-else>La reserva ha sido confirmada exitosamente.</span>
             </span>
             <span v-else>Ha ocurrido un error durante la reserva.</span>
@@ -2522,7 +2532,7 @@ const printTickets = () => {
 // Estado para modal de reserva
 const showReservationModal = ref(false)
 const reservationLoading = ref(false)
-const selectedSeatForReservation = ref(null)
+const selectedSeatsForReservation = ref([]) // For multiple seats
 const formTouched = ref(false)
 const reservationClientData = ref({
   firstname: '',
@@ -2541,9 +2551,9 @@ const showReservationConfirmationModal = ref(false)
 const reservationConfirmationData = ref({
   success: false,
   client: null,
-  seat: null,
+  seats: [], // For multiple seats
   trip: null,
-  ticketId: null,
+  ticketIds: [], // For multiple tickets
   errorMessage: ''
 })
 
@@ -2559,9 +2569,9 @@ const showReservationErrorModal = (message) => {
   reservationConfirmationData.value = {
     success: false,
     client: null,
-    seat: null,
+    seats: [],
     trip: null,
-    ticketId: null,
+    ticketIds: [],
     errorMessage: message
   }
   showReservationConfirmationModal.value = true
@@ -2573,9 +2583,9 @@ const closeReservationConfirmationModal = () => {
   reservationConfirmationData.value = {
     success: false,
     client: null,
-    seat: null,
+    seats: [],
     trip: null,
-    ticketId: null,
+    ticketIds: [],
     errorMessage: ''
   }
 }
@@ -2830,9 +2840,11 @@ const previewTicketData = computed(() => {
 
 // Computed para la vista previa del ticket de reserva
 const previewReservationTicketData = computed(() => {
-  if (!reservationClientData.value.firstname || !selectedSeatForReservation.value) {
+  if (!reservationClientData.value.firstname || selectedSeatsForReservation.value.length === 0) {
     return null
   }
+  
+  const seatNumbers = selectedSeatsForReservation.value.map(seat => seat.number)
   
   return {
     id: 'PREVIEW-RESERVA',
@@ -2844,9 +2856,10 @@ const previewReservationTicketData = computed(() => {
       email: reservationClientData.value.email
     },
     seat: {
-      seat_number: selectedSeatForReservation.value.number
+      seat_number: seatNumbers.join(', '),
+      multiple_seats: seatNumbers.length > 1 ? seatNumbers : null
     },
-    price: displayedTrip.value?.price || 0,
+    price: (displayedTrip.value?.price || 0) * selectedSeatsForReservation.value.length,
     trip: displayedTrip.value,
     state: 'reserved', // Estado de reserva
     payment_method: 'pending' // Pago pendiente para reservas
@@ -3057,19 +3070,19 @@ watch(reservationClientType, (newType) => {
   }
 })
 
-const handleReserveSeat = (seat) => {
+const handleReserveSeat = (seatOrSeats) => {
   if (!displayedTrip.value || !displayedTrip.value.id) {
     showReservationErrorModal('No se puede reservar el asiento en este momento. Intente nuevamente.')
     return
   }
-  
+
   // Inicializar el formulario
   reservationClientType.value = 'new'
   reservationClientSearchQuery.value = ''
   reservationFoundClients.value = []
   reservationHasSearched.value = false
   selectedReservationExistingClient.value = null
-  
+
   reservationClientData.value = {
     firstname: '',
     lastname: '',
@@ -3081,118 +3094,152 @@ const handleReserveSeat = (seat) => {
     state: '',
     is_minor: false
   }
+
+  // Guardar el/los asiento(s) seleccionado(s) y mostrar el modal
+  if (Array.isArray(seatOrSeats)) {
+    selectedSeatsForReservation.value = [...seatOrSeats]
+  } else {
+    selectedSeatsForReservation.value = [seatOrSeats]
+  }
   
-  // Guardar el asiento seleccionado y mostrar el modal
-  selectedSeatForReservation.value = seat
+  // Filtrar solo asientos disponibles (seguridad extra)
+  selectedSeatsForReservation.value = selectedSeatsForReservation.value.filter(s => 
+    !s.occupied && s.status !== 'reserved' && s.status !== 'occupied'
+  );
+
+  if (selectedSeatsForReservation.value.length === 0) {
+    showReservationErrorModal('Los asientos seleccionados ya no están disponibles.');
+    return;
+  }
+
   showReservationModal.value = true
 }
 
 // Confirmar la reserva con los datos del modal
 const confirmReservation = async () => {
-  if (!isReservationFormValid.value || !selectedSeatForReservation.value) {
+  if (!isReservationFormValid.value || selectedSeatsForReservation.value.length === 0) {
     return
   }
-  
+
   reservationLoading.value = true
-  
+  let overallSuccess = true
+  const createdTicketsInfo = []
+  let clientResponse
+
   try {
     const config = useRuntimeConfig()
-    
+
     // Obtener el usuario autenticado para crear la reserva
     if (!authStore.user || !authStore.user.id) {
       showReservationErrorModal('Debe iniciar sesión para reservar un asiento.')
-      showReservationModal.value = false
+      showReservationModal.value = false // Close modal before showing error
       reservationLoading.value = false
       return
     }
-    
-    // Crear o usar cliente existente
-    let clientResponse
-    
+
+    // Crear o usar cliente existente (se hace una vez para todos los asientos)
     if (reservationClientType.value === 'existing' && selectedReservationExistingClient.value) {
-      // Usar cliente existente
       clientResponse = selectedReservationExistingClient.value
     } else {
-      // Crear nuevo cliente
       const clientApiUrl = `${config.public.apiBaseUrl}/clients`
       clientResponse = await $fetch(clientApiUrl, {
         method: 'POST',
         body: reservationClientData.value
       })
     }
-    
+
     if (!clientResponse || !clientResponse.id) {
       throw new Error('No se pudo obtener o crear el cliente para la reserva.')
     }
-    
-    // Datos del ticket (reserva)
-    const ticketData = {
-      trip_id: displayedTrip.value.id,
-      seat_id: selectedSeatForReservation.value.id,
-      client_id: clientResponse.id,
-      state: 'pending', // Estado "pending" para indicar reserva
-      price: displayedTrip.value.price,
-      payment_method: 'pending', // Método de pago provisional para reservas
-      operator_user_id: authStore.user.id
+
+    // Iterar sobre cada asiento seleccionado para crear un ticket de reserva
+    for (const seat of selectedSeatsForReservation.value) {
+      try {
+        const ticketData = {
+          trip_id: displayedTrip.value.id,
+          seat_id: seat.id,
+          client_id: clientResponse.id,
+          state: 'pending',
+          price: displayedTrip.value.price,
+          payment_method: 'pending',
+          operator_user_id: authStore.user.id
+        }
+
+        const apiUrl = `${config.public.apiBaseUrl}/tickets`
+        const response = await $fetch(apiUrl, {
+          method: 'POST',
+          body: ticketData
+        })
+        
+        if (response && response.id) {
+          createdTicketsInfo.push({ seat, ticketId: response.id });
+        } else {
+          // Si una reserva falla, lo marcamos pero continuamos con las demás
+          overallSuccess = false; 
+          console.error(`Error al reservar el asiento ${seat.number}. Respuesta inesperada:`, response);
+          // Podrías añadir información específica del error por asiento si es necesario
+        }
+      } catch (seatError) {
+        overallSuccess = false;
+        console.error(`Error al reservar el asiento ${seat.number}:`, seatError);
+         // Podrías manejar errores por asiento aquí, e.g. guardarlos para mostrar al usuario
+      }
     }
-    
-    console.log('Datos del ticket a enviar:', ticketData)
-    console.log('Usuario autenticado:', authStore.user)
-    console.log('Asiento seleccionado:', selectedSeatForReservation.value)
-    console.log('Viaje:', displayedTrip.value)
-    
-    // Crear un ticket en estado "pending" (reserva)
-    const apiUrl = `${config.public.apiBaseUrl}/tickets`
-    const response = await $fetch(apiUrl, {
-      method: 'POST',
-      body: ticketData
-    })
-    
-    if (response) {
-      // Recargar los tickets para actualizar la vista
+
+    if (createdTicketsInfo.length > 0) {
       await fetchSoldTickets()
-      
-      // Actualizar los datos del viaje para reflejar los cambios en los asientos
       if (tripId.value) {
         await tripStore.fetchTripById(tripId.value)
       }
-      
-      // Preparar datos para el modal de confirmación
+    }
+    
+    if (overallSuccess && createdTicketsInfo.length === selectedSeatsForReservation.value.length) {
       reservationConfirmationData.value = {
         success: true,
         client: clientResponse,
-        seat: selectedSeatForReservation.value,
+        seats: selectedSeatsForReservation.value, // Guardar todos los asientos
         trip: displayedTrip.value,
-        ticketId: response.id,
+        ticketIds: createdTicketsInfo.map(info => info.ticketId),
         errorMessage: ''
       }
-      
-      // Cerrar modal de reserva y mostrar modal de confirmación
-      showReservationModal.value = false
-      showReservationConfirmationModal.value = true
+    } else {
+       let partialSuccessMessage = `Algunas reservas fallaron. Asientos reservados con éxito: ${createdTicketsInfo.map(info => info.seat.number).join(', ')}. `;
+       if (createdTicketsInfo.length === 0) {
+        partialSuccessMessage = 'Todas las reservas fallaron. Por favor, intente nuevamente.'
+       }
+      // Si algunas fallaron o todas fallaron
+      reservationConfirmationData.value = {
+        success: false, // O true si al menos una fue exitosa, dependiendo de la UX deseada
+        client: clientResponse, // Puede que quieras mostrar datos del cliente aún si falla
+        seats: createdTicketsInfo.map(info => info.seat), // Solo los asientos reservados con éxito
+        trip: displayedTrip.value,
+        ticketIds: createdTicketsInfo.map(info => info.ticketId),
+        errorMessage: partialSuccessMessage + ' Consulte la consola para más detalles.'
+      }
+       // Aquí podrías tener un mensaje más detallado de qué falló si lo capturaste antes
     }
-  } catch (error) {
-    console.error('Error al reservar el asiento:', error)
-    
-    // Mostrar mensaje de error específico si está disponible
-    let errorMessage = 'Error al reservar el asiento. Por favor, intente nuevamente.'
-    
+
+    showReservationModal.value = false
+    showReservationConfirmationModal.value = true
+
+  } catch (error) { // Error general (ej. error de cliente, error de autenticación)
+    console.error('Error general al procesar la reserva de múltiples asientos:', error)
+    let generalErrorMessage = 'Error general al procesar las reservas. Por favor, intente nuevamente.'
+    if (error.message) {
+      generalErrorMessage = error.message;
+    }
     if (error.response && error.response._data && error.response._data.detail) {
-      errorMessage = error.response._data.detail
-    } else if (error.message) {
-      errorMessage = error.message
+      generalErrorMessage = error.response._data.detail
     }
     
     reservationConfirmationData.value = {
       success: false,
       client: null,
-      seat: null,
+      seats: [],
       trip: null,
-      ticketId: null,
-      errorMessage: errorMessage
+      ticketIds: [],
+      errorMessage: generalErrorMessage
     }
-    
-    // Cerrar modal de reserva y mostrar modal de error
     showReservationModal.value = false
     showReservationConfirmationModal.value = true
   } finally {
@@ -3203,8 +3250,26 @@ const confirmReservation = async () => {
 // Cerrar el modal de reserva
 const closeReservationModal = () => {
   showReservationModal.value = false
-  selectedSeatForReservation.value = null
+  selectedSeatsForReservation.value = []
   reservationLoading.value = false
+  // Resetear también el formulario de cliente y la selección
+  reservationClientType.value = 'new'
+  reservationClientSearchQuery.value = ''
+  reservationFoundClients.value = []
+  reservationHasSearched.value = false
+  selectedReservationExistingClient.value = null
+  reservationClientData.value = {
+    firstname: '',
+    lastname: '',
+    document_id: '',
+    phone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    is_minor: false
+  }
+  formTouched.value = false
 }
 
 const isReservationFormValid = computed(() => {
@@ -3221,12 +3286,14 @@ const isReservationFormValid = computed(() => {
 
 // Computed para los datos del ticket de confirmación de reserva
 const reservationConfirmationTicketData = computed(() => {
-  if (!reservationConfirmationData.value.success || !reservationConfirmationData.value.client || !reservationConfirmationData.value.seat) {
+  if (!reservationConfirmationData.value.success || !reservationConfirmationData.value.client || !reservationConfirmationData.value.seats.length) {
     return null
   }
   
+  const seatNumbers = reservationConfirmationData.value.seats.map(seat => seat.number)
+
   return {
-    id: reservationConfirmationData.value.ticketId || 'RESERVED',
+    id: reservationConfirmationData.value.ticketIds[0] || 'RESERVED', // Assuming you want the first ticketId for a general ID or handle multiple IDs appropriately
     client: {
       firstname: reservationConfirmationData.value.client.firstname,
       lastname: reservationConfirmationData.value.client.lastname,
@@ -3235,12 +3302,13 @@ const reservationConfirmationTicketData = computed(() => {
       email: reservationConfirmationData.value.client.email
     },
     seat: {
-      seat_number: reservationConfirmationData.value.seat.number
+      seat_number: seatNumbers.join(', '),
+      multiple_seats: seatNumbers.length > 1 ? seatNumbers : null
     },
-    price: displayedTrip.value?.price || 0,
-    trip: displayedTrip.value,
-    state: 'pending', // Estado de reserva
-    payment_method: 'pending' // Método de pago pendiente para reservas
+    price: (reservationConfirmationData.value.trip?.price || 0) * reservationConfirmationData.value.seats.length, // Corrected price calculation
+    trip: reservationConfirmationData.value.trip, // Use trip data from confirmation
+    state: 'pending', 
+    payment_method: 'pending'
   }
 })
 
