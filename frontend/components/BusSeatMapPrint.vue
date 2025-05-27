@@ -299,7 +299,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
   trip: {
@@ -387,10 +387,26 @@ const getSeatClass = (seat) => {
   } else if (seat.status === 'reserved') {
     return 'bg-yellow-50 border-yellow-400 cursor-not-allowed'
   } else if (selectedSeatIds.value.includes(seat.id)) {
-    return 'bg-blue-50 border-blue-400 cursor-pointer shadow-sm'
+    return 'bg-blue-50 border-blue-400 cursor-pointer shadow-sm selected-seat-blink'
   } else {
     return 'bg-white border-green-400 hover:bg-green-50 cursor-pointer'
   }
+}
+
+// Función para sincronizar animaciones de asientos seleccionados
+const synchronizeSelectedSeatsAnimation = () => {
+  // Obtener todos los elementos con la clase de animación
+  const selectedSeatElements = document.querySelectorAll('.selected-seat-blink')
+  
+  // Reiniciar la animación para todos los elementos
+  selectedSeatElements.forEach(element => {
+    // Remover temporalmente la clase de animación
+    element.classList.remove('selected-seat-blink')
+    // Forzar un reflow para asegurar que la animación se detenga
+    element.offsetHeight
+    // Volver a agregar la clase para reiniciar la animación
+    element.classList.add('selected-seat-blink')
+  })
 }
 
 // Alternar selección de asiento
@@ -417,6 +433,11 @@ const toggleSeatSelection = (seat) => {
 
   // Emitir evento de cambio de selección
   emit('selection-change', selectedSeats.value)
+  
+  // Sincronizar animaciones después de un pequeño delay para permitir que el DOM se actualice
+  nextTick(() => {
+    setTimeout(synchronizeSelectedSeatsAnimation, 10)
+  })
 }
 
 // Cargar asientos
@@ -670,7 +691,54 @@ onMounted(() => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Animación para asientos seleccionados */
+/* Animación para asientos seleccionados - Sincronizada */
+@keyframes selected-seat-blink {
+  0% {
+    background-color: rgb(239 246 255); /* bg-blue-50 */
+    border-color: rgb(96 165 250); /* border-blue-400 */
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    transform: scale(1);
+  }
+  25% {
+    background-color: rgb(219 234 254); /* bg-blue-100 */
+    border-color: rgb(59 130 246); /* border-blue-500 */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.6);
+    transform: scale(1.01);
+  }
+  50% {
+    background-color: rgb(147 197 253); /* bg-blue-300 */
+    border-color: rgb(37 99 235); /* border-blue-600 */
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.8);
+    transform: scale(1.03);
+  }
+  75% {
+    background-color: rgb(219 234 254); /* bg-blue-100 */
+    border-color: rgb(59 130 246); /* border-blue-500 */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.6);
+    transform: scale(1.01);
+  }
+  100% {
+    background-color: rgb(239 246 255); /* bg-blue-50 */
+    border-color: rgb(96 165 250); /* border-blue-400 */
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    transform: scale(1);
+  }
+}
+
+/* Animación global sincronizada para todos los asientos seleccionados */
+.selected-seat-blink {
+  animation: selected-seat-blink 1.8s ease-in-out infinite;
+  /* Usar animation-fill-mode para mantener consistencia */
+  animation-fill-mode: both;
+  /* Sincronizar todas las animaciones al mismo tiempo */
+  animation-delay: 0s;
+  /* Asegurar que todas las animaciones usen el mismo timeline */
+  animation-timing-function: ease-in-out;
+  /* Hacer la transición más suave */
+  transition: all 0.1s ease;
+}
+
+/* Animación legacy mantenida para compatibilidad */
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
@@ -733,6 +801,7 @@ onMounted(() => {
     page-break-inside: avoid;
     box-shadow: none !important;
     animation: none !important;
+    transform: none !important;
   }
 
   .header {
@@ -763,5 +832,14 @@ onMounted(() => {
   .bg-blue-50.border-blue-100 {
     animation: none;
   }
+  .selected-seat-blink {
+    animation: none;
+  }
+}
+
+/* Contenedor para sincronizar todas las animaciones de asientos */
+.seat-map-container {
+  /* Forzar repaint para sincronizar animaciones */
+  animation-play-state: running;
 }
 </style>
