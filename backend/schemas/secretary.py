@@ -20,13 +20,9 @@ class Secretary(PersonSchema, SecretaryBase):
     """
     Esquema para representar un secretario.
     """
-    user: Optional["User"] = None
-
     class Config:
         from_attributes = True
         arbitrary_types_allowed = True
-        # Excluir el campo user para evitar la recursión
-        exclude = {"user"}
 
 # Importación al final para evitar ciclos de importación
 from schemas.auth import User

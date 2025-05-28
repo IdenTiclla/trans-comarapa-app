@@ -56,7 +56,12 @@ app = FastAPI(
 # Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend development server
+    allow_origins=[
+        "http://localhost:3000",  # Frontend development server
+        "http://127.0.0.1:3000",  # Alternative localhost
+        "http://frontend:3000",   # Docker container name
+        "http://0.0.0.0:3000",    # Docker internal network
+    ],
     allow_credentials=True,  # Allow credentials (cookies, authorization headers)
     allow_methods=["*"],     # Allow all HTTP methods
     allow_headers=["*"],     # Allow all headers
