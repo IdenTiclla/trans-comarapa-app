@@ -5,6 +5,7 @@ from sqlalchemy import or_
 
 from db.session import get_db
 from models.user import User, UserRole
+from models.secretary import Secretary
 from schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
 from schemas.role import RoleList
 from auth.jwt import get_current_admin_user as get_current_active_admin
@@ -126,6 +127,17 @@ def create_user(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # If the new user is a secretary, create an associated secretary record
+    if new_user.role == UserRole.SECRETARY:
+        secretary_data = Secretary(
+            firstname=new_user.firstname,
+            lastname=new_user.lastname,
+            user_id=new_user.id,
+        )
+        db.add(secretary_data)
+        db.commit()
+        db.refresh(secretary_data)
 
     return new_user
 
