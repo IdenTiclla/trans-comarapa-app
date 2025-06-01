@@ -2,59 +2,95 @@
   <div class="space-y-8">
     <h1 class="text-3xl font-bold text-gray-900">Panel de Administración</h1>
 
-    <!-- Tarjetas de Resumen -->
+    <!-- Gráficos de Ingresos -->
     <section>
-      <h2 class="text-xl font-semibold text-gray-900">Métricas de Ingresos</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard 
-          title="Ingresos Boletos" 
-          :value="soldTicketsData.isLoading ? 'Cargando...' : soldTicketsData.amount" 
-          :change="soldTicketsData.isLoading ? '' : soldTicketsData.trend" 
-          :changeColor="soldTicketsData.trend && parseFloat(soldTicketsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
-        />
-        <DashboardStatCard 
-          title="Ingresos Paquetes" 
-          :value="packageRevenueData.isLoading ? 'Cargando...' : packageRevenueData.amount" 
-          :change="packageRevenueData.isLoading ? '' : packageRevenueData.trend" 
-          :changeColor="packageRevenueData.trend && parseFloat(packageRevenueData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Métricas de Ingresos a lo Largo del Tiempo</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <!-- Monthly Ticket Revenue -->
+        <MonthlyMetricsChart
+          title="Ingresos por Boletos"
+          :chartData="monthlyTicketRevenueData.data"
+          :isLoading="monthlyTicketRevenueData.isLoading"
+          :error="monthlyTicketRevenueData.error"
+          :trend="monthlyTicketRevenueData.trend"
+          :valueFormatter="(value) => `Bs. ${value?.toLocaleString() || '0'}`"
+          barColor="#3b82f6"
+          @periodChanged="handleTicketRevenuePeriodChange"
         />
         
-        
-        <DashboardStatCard 
-          title="Ingresos Totales" 
-          :value="totalRevenueData.isLoading ? 'Cargando...' : totalRevenueData.amount" 
-          :change="totalRevenueData.isLoading ? '' : totalRevenueData.trend" 
-          :changeColor="totalRevenueData.trend && parseFloat(totalRevenueData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+        <!-- Monthly Package Revenue -->
+        <MonthlyMetricsChart
+          title="Ingresos por Paquetes"
+          :chartData="monthlyPackageRevenueData.data"
+          :isLoading="monthlyPackageRevenueData.isLoading"
+          :error="monthlyPackageRevenueData.error"
+          :trend="monthlyPackageRevenueData.trend"
+          :valueFormatter="(value) => `Bs. ${value?.toLocaleString() || '0'}`"
+          barColor="#10b981"
+          @periodChanged="handlePackageRevenuePeriodChange"
         />
-                
+        
+        <!-- Monthly Total Revenue -->
+        <MonthlyMetricsChart
+          title="Ingresos Totales"
+          :chartData="monthlyRevenueChartData.data"
+          :isLoading="monthlyRevenueChartData.isLoading"
+          :error="monthlyRevenueChartData.error"
+          :trend="monthlyRevenueChartData.trend"
+          :valueFormatter="(value) => `Bs. ${value?.toLocaleString() || '0'}`"
+          barColor="#8b5cf6"
+          @periodChanged="handleRevenuePeriodChange"
+        />
       </div>
     </section>
 
     <!-- Metricas para viajes-->
     <section>
-      <h2 class="text-xl font-semibold text-gray-900">Métricas de Viajes</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Total de viajes -->
-        <DashboardStatCard 
-          title="Total de viajes" 
-          :value="totalTripsData.isLoading ? 'Cargando...' : totalTripsData.count" 
-          :change="totalTripsData.isLoading ? '' : totalTripsData.trend" 
-          :changeColor="totalTripsData.trend && parseFloat(totalTripsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Métricas de Viajes a lo Largo del Tiempo</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <!-- Monthly Total Trips -->
+        <MonthlyMetricsChart
+          title="Viajes Realizados por Mes"
+          :chartData="monthlyTripData.data"
+          :isLoading="monthlyTripData.isLoading"
+          :error="monthlyTripData.error"
+          :trend="monthlyTripData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#f59e0b"
+          @periodChanged="handleTripPeriodChange"
         />
-        <!-- Viajes completados -->
-        <DashboardStatCard 
-          title="Viajes completados" 
-          :value="completedTripsData.isLoading ? 'Cargando...' : completedTripsData.count" 
-          :change="completedTripsData.isLoading ? '' : completedTripsData.trend" 
-          :changeColor="completedTripsData.trend && parseFloat(completedTripsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+        
+        <!-- Monthly Completed Trips -->
+        <MonthlyMetricsChart
+          title="Viajes Completados por Mes"
+          :chartData="monthlyCompletedTripData.data"
+          :isLoading="monthlyCompletedTripData.isLoading"
+          :error="monthlyCompletedTripData.error"
+          :trend="monthlyCompletedTripData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#10b981"
+          @periodChanged="handleCompletedTripPeriodChange"
         />
-        <!-- Viajes cancelados -->
-        <DashboardStatCard 
-          title="Viajes cancelados" 
-          :value="cancelledTripsData.isLoading ? 'Cargando...' : cancelledTripsData.count" 
-          :change="cancelledTripsData.isLoading ? '' : cancelledTripsData.trend" 
-          :changeColor="cancelledTripsData.trend && parseFloat(cancelledTripsData.trend) < 0 ? 'text-green-600' : 'text-red-600'"
+        
+        <!-- Monthly Cancelled Trips -->
+        <MonthlyMetricsChart
+          title="Viajes Cancelados por Mes"
+          :chartData="monthlyCancelledTripData.data"
+          :isLoading="monthlyCancelledTripData.isLoading"
+          :error="monthlyCancelledTripData.error"
+          :trend="monthlyCancelledTripData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#ef4444"
+          @periodChanged="handleCancelledTripPeriodChange"
         />
+      </div>
+      
+      <!-- Tarjetas adicionales para métricas complementarias -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 mt-6">
         <!-- Viajes en curso -->
         <DashboardStatCard 
           title="Viajes en curso" 
@@ -74,28 +110,45 @@
 
     <!-- Tarjetas de Resumen para metricas de boletos -->
     <section>
-      <h2 class="text-xl font-semibold text-gray-900">Métricas de Boletos</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard 
-          title="Boletos Vendidos" 
-          :value="soldTicketsData.isLoading ? 'Cargando...' : soldTicketsData.count" 
-          :change="soldTicketsData.isLoading ? '' : soldTicketsData.trend" 
-          :changeColor="soldTicketsData.trend && parseFloat(soldTicketsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
-        />
-        <DashboardStatCard 
-          title="Boletos Reservados" 
-          :value="reservedTicketsData.isLoading ? 'Cargando...' : reservedTicketsData.count" 
-          :change="reservedTicketsData.isLoading ? '' : reservedTicketsData.trend" 
-          :changeColor="reservedTicketsData.trend && parseFloat(reservedTicketsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
-        />
-        <DashboardStatCard 
-          title="Boletos Cancelados" 
-          :value="cancelledTicketsData.isLoading ? 'Cargando...' : cancelledTicketsData.count" 
-          :change="cancelledTicketsData.isLoading ? '' : cancelledTicketsData.trend" 
-          :changeColor="cancelledTicketsData.trend && parseFloat(cancelledTicketsData.trend) < 0 ? 'text-green-600' : 'text-red-600'"
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Métricas de Boletos a lo Largo del Tiempo</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <!-- Monthly Tickets Sold -->
+        <MonthlyMetricsChart
+          title="Boletos Vendidos por Mes"
+          :chartData="monthlyTicketData.data"
+          :isLoading="monthlyTicketData.isLoading"
+          :error="monthlyTicketData.error"
+          :trend="monthlyTicketData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#3b82f6"
+          @periodChanged="handleTicketPeriodChange"
         />
         
-
+        <!-- Monthly Reservations -->
+        <MonthlyMetricsChart
+          title="Reservas por Mes"
+          :chartData="monthlyReservationData.data"
+          :isLoading="monthlyReservationData.isLoading"
+          :error="monthlyReservationData.error"
+          :trend="monthlyReservationData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#f59e0b"
+          @periodChanged="handleReservationPeriodChange"
+        />
+        
+        <!-- Monthly Cancelled Tickets -->
+        <MonthlyMetricsChart
+          title="Boletos Cancelados por Mes"
+          :chartData="monthlyCancelledTicketData.data"
+          :isLoading="monthlyCancelledTicketData.isLoading"
+          :error="monthlyCancelledTicketData.error"
+          :trend="monthlyCancelledTicketData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#ef4444"
+          @periodChanged="handleCancelledTicketPeriodChange"
+        />
       </div>
     </section>
     
@@ -171,19 +224,32 @@
 
     <!-- metricas de clientes-->
     <section>
-      <h2 class="text-xl font-semibold text-gray-900">Métricas de Clientes</h2>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStatCard 
-          title="Feedback de Clientes" 
-          :value="clientFeedbackData.isLoading ? 'Cargando...' : clientFeedbackData.rating" 
-          :change="clientFeedbackData.isLoading ? '' : clientFeedbackData.trend" 
-          :changeColor="clientFeedbackData.trend && parseFloat(clientFeedbackData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Métricas de Clientes a lo Largo del Tiempo</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2">
+        <!-- Monthly Client Feedback -->
+        <MonthlyMetricsChart
+          title="Feedback de Clientes por Mes"
+          :chartData="monthlyClientFeedbackData.data"
+          :isLoading="monthlyClientFeedbackData.isLoading"
+          :error="monthlyClientFeedbackData.error"
+          :trend="monthlyClientFeedbackData.trend"
+          :valueFormatter="(value) => `${value?.toFixed(1) || '0.0'}/5`"
+          barColor="#8b5cf6"
+          @periodChanged="handleClientFeedbackPeriodChange"
         />
-        <DashboardStatCard 
-          title="Clientes Registrados" 
-          :value="registeredClientsData.isLoading ? 'Cargando...' : registeredClientsData.count" 
-          :change="registeredClientsData.isLoading ? '' : registeredClientsData.trend" 
-          :changeColor="registeredClientsData.trend && parseFloat(registeredClientsData.trend) < 0 ? 'text-red-600' : 'text-green-600'"
+        
+        <!-- Monthly Registered Clients -->
+        <MonthlyMetricsChart
+          title="Clientes Registrados por Mes"
+          :chartData="monthlyRegisteredClientsData.data"
+          :isLoading="monthlyRegisteredClientsData.isLoading"
+          :error="monthlyRegisteredClientsData.error"
+          :trend="monthlyRegisteredClientsData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#06b6d4"
+          @periodChanged="handleRegisteredClientsPeriodChange"
         />
       </div>
     </section>
@@ -296,6 +362,56 @@
         </table>
       </div>
     </section>
+
+    <!-- Métricas de Paquetes a lo Largo del Tiempo -->
+    <section>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Métricas de Paquetes a lo Largo del Tiempo</h2>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <!-- Monthly Packages Sent -->
+        <MonthlyMetricsChart
+          title="Paquetes Enviados por Mes"
+          :chartData="monthlyPackageData.data"
+          :isLoading="monthlyPackageData.isLoading"
+          :error="monthlyPackageData.error"
+          :trend="monthlyPackageData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#10b981"
+          @periodChanged="handlePackagePeriodChange"
+        />
+        
+        <!-- Monthly Delivered Packages -->
+        <MonthlyMetricsChart
+          title="Paquetes Entregados por Mes"
+          :chartData="monthlyDeliveredPackagesData.data"
+          :isLoading="monthlyDeliveredPackagesData.isLoading"
+          :error="monthlyDeliveredPackagesData.error"
+          :trend="monthlyDeliveredPackagesData.trend"
+          :valueFormatter="(value) => value?.toLocaleString() || '0'"
+          barColor="#22c55e"
+          @periodChanged="handleDeliveredPackagesPeriodChange"
+        />
+      </div>
+      
+      <!-- Tarjetas adicionales para métricas complementarias -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 mt-6">
+        <!-- Paquetes pendientes -->
+        <DashboardStatCard 
+          title="Paquetes Pendientes de Entrega" 
+          :value="pendingPackagesData.isLoading ? 'Cargando...' : pendingPackagesData.count" 
+          :change="pendingPackagesData.isLoading ? '' : pendingPackagesData.trend" 
+          :changeColor="pendingPackagesData.trend && parseFloat(pendingPackagesData.trend) < 0 ? 'text-green-600' : 'text-red-600'"
+        />
+        <!-- Tiempo promedio de entrega -->
+        <DashboardStatCard 
+          title="Tiempo promedio de entrega" 
+          :value="averageDeliveryTimeData.isLoading ? 'Cargando...' : averageDeliveryTimeData.hours" 
+          :change="averageDeliveryTimeData.isLoading ? '' : averageDeliveryTimeData.trend" 
+          :changeColor="averageDeliveryTimeData.trend && parseFloat(averageDeliveryTimeData.trend) < 0 ? 'text-green-600' : 'text-red-600'"
+        />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -314,23 +430,6 @@ const recentActivities = ref([])
 const isLoadingActivities = ref(false)
 const errorLoadingActivities = ref(null)
 
-// Reactive data for Boletos Vendidos
-const soldTicketsData = ref({
-  count: '0',
-  amount: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
-// Reactive data for Boletos Reservados
-const reservedTicketsData = ref({
-  count: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
 // Reactive data for Ingresos Paquetes
 const packageRevenueData = ref({
   amount: '0',
@@ -348,20 +447,6 @@ const totalRevenueData = ref({
 })
 
 // Reactive data for Trip Metrics
-const completedTripsData = ref({
-  count: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
-const cancelledTripsData = ref({
-  count: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
 const inProgressTripsData = ref({
   count: '0',
   trend: '0%',
@@ -377,14 +462,6 @@ const averageOccupancyData = ref({
 })
 
 const totalTripsData = ref({
-  count: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
-// Reactive data for Boletos Cancelados
-const cancelledTicketsData = ref({
   count: '0',
   trend: '0%',
   isLoading: true,
@@ -456,23 +533,6 @@ const activeAssistantsData = ref({
   error: null
 })
 
-// Reactive data for Client Metrics
-const clientFeedbackData = ref({
-  rating: '0/5',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
-const registeredClientsData = ref({
-  count: '0',
-  trend: '0%',
-  isLoading: true,
-  error: null
-})
-
-
-
 // Función para formatear la fecha (puedes ajustarla según tus necesidades)
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -502,44 +562,6 @@ const formatDate = (dateString) => {
     return 'Error de fecha';
   }
 };
-
-async function loadSoldTicketsStats() {
-  soldTicketsData.value.isLoading = true
-  soldTicketsData.value.error = null
-  try {
-    console.log('🔄 Cargando estadísticas de boletos vendidos...')
-    const stats = await statsService.getTicketStats('month') // Fetch for the last month
-    console.log('✅ Estadísticas recibidas:', stats)
-    soldTicketsData.value.count = stats.count.toLocaleString()
-    soldTicketsData.value.amount = `Bs. ${stats.amount.toLocaleString()}`
-    soldTicketsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('❌ Error loading sold tickets stats:', error)
-    soldTicketsData.value.error = 'Error al cargar estadísticas de boletos'
-    soldTicketsData.value.count = 'N/A'
-    soldTicketsData.value.amount = 'N/A'
-    soldTicketsData.value.trend = ''
-  } finally {
-    soldTicketsData.value.isLoading = false
-  }
-}
-
-async function loadReservedTicketsStats() {
-  reservedTicketsData.value.isLoading = true
-  reservedTicketsData.value.error = null
-  try {
-    const stats = await statsService.getReservedTicketStats('month') // Fetch for the last month
-    reservedTicketsData.value.count = stats.count.toLocaleString()
-    reservedTicketsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading reserved tickets stats:', error)
-    reservedTicketsData.value.error = 'Error al cargar boletos reservados'
-    reservedTicketsData.value.count = 'N/A'
-    reservedTicketsData.value.trend = ''
-  } finally {
-    reservedTicketsData.value.isLoading = false
-  }
-}
 
 async function loadPackageRevenueStats() {
   packageRevenueData.value.isLoading = true
@@ -575,41 +597,7 @@ async function loadTotalRevenueStats() {
   }
 }
 
-// Funciones para cargar estadísticas de viajes
-async function loadCompletedTripsStats() {
-  completedTripsData.value.isLoading = true
-  completedTripsData.value.error = null
-  try {
-    const stats = await statsService.getCompletedTripsStats('month')
-    completedTripsData.value.count = stats.count.toLocaleString()
-    completedTripsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading completed trips stats:', error)
-    completedTripsData.value.error = 'Error al cargar viajes completados'
-    completedTripsData.value.count = 'N/A'
-    completedTripsData.value.trend = ''
-  } finally {
-    completedTripsData.value.isLoading = false
-  }
-}
-
-async function loadCancelledTripsStats() {
-  cancelledTripsData.value.isLoading = true
-  cancelledTripsData.value.error = null
-  try {
-    const stats = await statsService.getCancelledTripsStats('month')
-    cancelledTripsData.value.count = stats.count.toLocaleString()
-    cancelledTripsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading cancelled trips stats:', error)
-    cancelledTripsData.value.error = 'Error al cargar viajes cancelados'
-    cancelledTripsData.value.count = 'N/A'
-    cancelledTripsData.value.trend = ''
-  } finally {
-    cancelledTripsData.value.isLoading = false
-  }
-}
-
+// Funciones para cargar estadísticas de viajes restantes
 async function loadInProgressTripsStats() {
   inProgressTripsData.value.isLoading = true
   inProgressTripsData.value.error = null
@@ -658,24 +646,6 @@ async function loadTotalTripsStats() {
     totalTripsData.value.trend = ''
   } finally {
     totalTripsData.value.isLoading = false
-  }
-}
-
-// Funciones para cargar estadísticas de boletos cancelados
-async function loadCancelledTicketsStats() {
-  cancelledTicketsData.value.isLoading = true
-  cancelledTicketsData.value.error = null
-  try {
-    const stats = await statsService.getCancelledTicketsStats('month')
-    cancelledTicketsData.value.count = stats.count.toLocaleString()
-    cancelledTicketsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading cancelled tickets stats:', error)
-    cancelledTicketsData.value.error = 'Error al cargar boletos cancelados'
-    cancelledTicketsData.value.count = 'N/A'
-    cancelledTicketsData.value.trend = ''
-  } finally {
-    cancelledTicketsData.value.isLoading = false
   }
 }
 
@@ -834,41 +804,6 @@ async function loadActiveAssistantsStats() {
   }
 }
 
-// Funciones para cargar estadísticas de clientes
-async function loadClientFeedbackStats() {
-  clientFeedbackData.value.isLoading = true
-  clientFeedbackData.value.error = null
-  try {
-    const stats = await statsService.getClientFeedbackStats('month')
-    clientFeedbackData.value.rating = stats.display || `${stats.rating || stats.count}/5`
-    clientFeedbackData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading client feedback stats:', error)
-    clientFeedbackData.value.error = 'Error al cargar feedback de clientes'
-    clientFeedbackData.value.rating = 'N/A'
-    clientFeedbackData.value.trend = ''
-  } finally {
-    clientFeedbackData.value.isLoading = false
-  }
-}
-
-async function loadRegisteredClientsStats() {
-  registeredClientsData.value.isLoading = true
-  registeredClientsData.value.error = null
-  try {
-    const stats = await statsService.getRegisteredClientsStats('month')
-    registeredClientsData.value.count = stats.count.toLocaleString()
-    registeredClientsData.value.trend = `${stats.trend >= 0 ? '+' : ''}${stats.trend.toFixed(0)}%`
-  } catch (error) {
-    console.error('Error loading registered clients stats:', error)
-    registeredClientsData.value.error = 'Error al cargar clientes registrados'
-    registeredClientsData.value.count = 'N/A'
-    registeredClientsData.value.trend = ''
-  } finally {
-    registeredClientsData.value.isLoading = false
-  }
-}
-
 // Datos reactivos para métricas mensuales
 const monthlyTicketData = ref({
   data: [],
@@ -899,6 +834,67 @@ const monthlyRevenueChartData = ref({
 })
 
 const monthlyReservationData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+// Datos reactivos para gráficos de ingresos específicos
+const monthlyTicketRevenueData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+const monthlyPackageRevenueData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+// Datos reactivos para gráfico de boletos cancelados mensuales
+const monthlyCancelledTicketData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+// Datos reactivos para gráficos de viajes mensuales
+const monthlyCompletedTripData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+const monthlyCancelledTripData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+// Datos reactivos para gráficos de clientes mensuales
+const monthlyClientFeedbackData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+const monthlyRegisteredClientsData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
+// Datos reactivos para gráficos de paquetes mensuales
+const monthlyDeliveredPackagesData = ref({
   data: [],
   isLoading: true,
   error: null,
@@ -1022,6 +1018,51 @@ const handleReservationPeriodChange = (months) => {
   loadMonthlyReservationStats(months)
 }
 
+// Funciones de manejo de cambios de período para gráficos de ingresos específicos
+const handleTicketRevenuePeriodChange = (months) => {
+  console.log('📅 Cambiando período de ingresos por boletos a:', months, 'meses')
+  loadMonthlyTicketRevenueStats(months)
+}
+
+const handlePackageRevenuePeriodChange = (months) => {
+  console.log('📅 Cambiando período de ingresos por paquetes a:', months, 'meses')
+  loadMonthlyPackageRevenueStats(months)
+}
+
+// Función de manejo de cambio de período para boletos cancelados
+const handleCancelledTicketPeriodChange = (months) => {
+  console.log('📅 Cambiando período de boletos cancelados a:', months, 'meses')
+  loadMonthlyCancelledTicketStats(months)
+}
+
+// Funciones de manejo de cambio de período para viajes
+const handleCompletedTripPeriodChange = (months) => {
+  console.log('📅 Cambiando período de viajes completados a:', months, 'meses')
+  loadMonthlyCompletedTripStats(months)
+}
+
+const handleCancelledTripPeriodChange = (months) => {
+  console.log('📅 Cambiando período de viajes cancelados a:', months, 'meses')
+  loadMonthlyCancelledTripStats(months)
+}
+
+// Funciones de manejo de cambio de período para clientes
+const handleClientFeedbackPeriodChange = (months) => {
+  console.log('📅 Cambiando período de feedback de clientes a:', months, 'meses')
+  loadMonthlyClientFeedbackStats(months)
+}
+
+const handleRegisteredClientsPeriodChange = (months) => {
+  console.log('📅 Cambiando período de clientes registrados a:', months, 'meses')
+  loadMonthlyRegisteredClientsStats(months)
+}
+
+// Función de manejo de cambio de período para paquetes entregados
+const handleDeliveredPackagesPeriodChange = (months) => {
+  console.log('📅 Cambiando período de paquetes entregados a:', months, 'meses')
+  loadMonthlyDeliveredPackagesStats(months)
+}
+
 async function loadRecentActivities() {
   isLoadingActivities.value = true
   errorLoadingActivities.value = null
@@ -1038,16 +1079,11 @@ async function loadRecentActivities() {
 
 onMounted(() => {
   loadRecentActivities()
-  loadSoldTicketsStats()
-  loadReservedTicketsStats()
   loadPackageRevenueStats()
   loadTotalRevenueStats()
-  loadCompletedTripsStats()
-  loadCancelledTripsStats()
   loadInProgressTripsStats()
   loadAverageOccupancyStats()
   loadTotalTripsStats()
-  loadCancelledTicketsStats()
   loadDeliveredPackagesStats()
   loadPendingPackagesStats()
   loadCancelledPackagesStats()
@@ -1057,8 +1093,6 @@ onMounted(() => {
   loadActiveBusesStats()
   loadActiveSecretariesStats()
   loadActiveAssistantsStats()
-  loadClientFeedbackStats()
-  loadRegisteredClientsStats()
   
   // Cargar estadísticas mensuales
   loadMonthlyTicketStats()
@@ -1066,6 +1100,22 @@ onMounted(() => {
   loadMonthlyPackageStats()
   loadMonthlyTripStats()
   loadMonthlyRevenueStats()
+  
+  // Cargar estadísticas de ingresos específicos
+  loadMonthlyTicketRevenueStats()
+  loadMonthlyPackageRevenueStats()
+  
+  // Cargar estadísticas de boletos cancelados mensuales
+  loadMonthlyCancelledTicketStats()
+  
+  // Cargar estadísticas de viajes mensuales
+  loadMonthlyCompletedTripStats()
+  loadMonthlyCancelledTripStats()
+  
+  // Cargar estadísticas de clientes mensuales
+  loadMonthlyClientFeedbackStats()
+  loadMonthlyRegisteredClientsStats()
+  loadMonthlyDeliveredPackagesStats()
 })
 
 definePageMeta({
@@ -1074,6 +1124,151 @@ definePageMeta({
 
 // Aquí iría la lógica para cargar los datos del dashboard
 // Por ejemplo, llamadas a la API para obtener bookings, revenue, etc.
+
+// Funciones para cargar estadísticas mensuales de ingresos específicos
+async function loadMonthlyTicketRevenueStats(months = 6) {
+  monthlyTicketRevenueData.value.isLoading = true
+  monthlyTicketRevenueData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de ingresos por boletos...')
+    const stats = await statsService.getMonthlyTicketRevenueStats(months)
+    monthlyTicketRevenueData.value.data = stats.data || []
+    monthlyTicketRevenueData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de ingresos por boletos cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly ticket revenue stats:', error)
+    monthlyTicketRevenueData.value.error = 'Error al cargar estadísticas mensuales de ingresos por boletos'
+    monthlyTicketRevenueData.value.data = []
+  } finally {
+    monthlyTicketRevenueData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyPackageRevenueStats(months = 6) {
+  monthlyPackageRevenueData.value.isLoading = true
+  monthlyPackageRevenueData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de ingresos por paquetes...')
+    const stats = await statsService.getMonthlyPackageRevenueStats(months)
+    monthlyPackageRevenueData.value.data = stats.data || []
+    monthlyPackageRevenueData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de ingresos por paquetes cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly package revenue stats:', error)
+    monthlyPackageRevenueData.value.error = 'Error al cargar estadísticas mensuales de ingresos por paquetes'
+    monthlyPackageRevenueData.value.data = []
+  } finally {
+    monthlyPackageRevenueData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyCancelledTicketStats(months = 6) {
+  monthlyCancelledTicketData.value.isLoading = true
+  monthlyCancelledTicketData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de boletos cancelados...')
+    const stats = await statsService.getMonthlyCancelledTicketStats(months)
+    monthlyCancelledTicketData.value.data = stats.data || []
+    monthlyCancelledTicketData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de boletos cancelados cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly cancelled ticket stats:', error)
+    monthlyCancelledTicketData.value.error = 'Error al cargar estadísticas mensuales de boletos cancelados'
+    monthlyCancelledTicketData.value.data = []
+  } finally {
+    monthlyCancelledTicketData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyCompletedTripStats(months = 6) {
+  monthlyCompletedTripData.value.isLoading = true
+  monthlyCompletedTripData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de viajes completados...')
+    const stats = await statsService.getMonthlyCompletedTripStats(months)
+    monthlyCompletedTripData.value.data = stats.data || []
+    monthlyCompletedTripData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de viajes completados cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly completed trip stats:', error)
+    monthlyCompletedTripData.value.error = 'Error al cargar estadísticas mensuales de viajes completados'
+    monthlyCompletedTripData.value.data = []
+  } finally {
+    monthlyCompletedTripData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyCancelledTripStats(months = 6) {
+  monthlyCancelledTripData.value.isLoading = true
+  monthlyCancelledTripData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de viajes cancelados...')
+    const stats = await statsService.getMonthlyCancelledTripStats(months)
+    monthlyCancelledTripData.value.data = stats.data || []
+    monthlyCancelledTripData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de viajes cancelados cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly cancelled trip stats:', error)
+    monthlyCancelledTripData.value.error = 'Error al cargar estadísticas mensuales de viajes cancelados'
+    monthlyCancelledTripData.value.data = []
+  } finally {
+    monthlyCancelledTripData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyClientFeedbackStats(months = 6) {
+  monthlyClientFeedbackData.value.isLoading = true
+  monthlyClientFeedbackData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de feedback de clientes...')
+    const stats = await statsService.getMonthlyClientFeedbackStats(months)
+    monthlyClientFeedbackData.value.data = stats.data || []
+    monthlyClientFeedbackData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de feedback de clientes cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly client feedback stats:', error)
+    monthlyClientFeedbackData.value.error = 'Error al cargar estadísticas mensuales de feedback de clientes'
+    monthlyClientFeedbackData.value.data = []
+  } finally {
+    monthlyClientFeedbackData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyRegisteredClientsStats(months = 6) {
+  monthlyRegisteredClientsData.value.isLoading = true
+  monthlyRegisteredClientsData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de clientes registrados...')
+    const stats = await statsService.getMonthlyRegisteredClientsStats(months)
+    monthlyRegisteredClientsData.value.data = stats.data || []
+    monthlyRegisteredClientsData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de clientes registrados cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly registered clients stats:', error)
+    monthlyRegisteredClientsData.value.error = 'Error al cargar estadísticas mensuales de clientes registrados'
+    monthlyRegisteredClientsData.value.data = []
+  } finally {
+    monthlyRegisteredClientsData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyDeliveredPackagesStats(months = 6) {
+  monthlyDeliveredPackagesData.value.isLoading = true
+  monthlyDeliveredPackagesData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de paquetes entregados...')
+    const stats = await statsService.getMonthlyDeliveredPackagesStats(months)
+    monthlyDeliveredPackagesData.value.data = stats.data || []
+    monthlyDeliveredPackagesData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de paquetes entregados cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly delivered packages stats:', error)
+    monthlyDeliveredPackagesData.value.error = 'Error al cargar estadísticas mensuales de paquetes entregados'
+    monthlyDeliveredPackagesData.value.data = []
+  } finally {
+    monthlyDeliveredPackagesData.value.isLoading = false
+  }
+}
 </script>
 
 <style scoped>
