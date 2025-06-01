@@ -15,6 +15,8 @@ from models.package_item import PackageItem
 from models.user import User, UserRole
 from models.administrator import Administrator
 from models.office import Office
+from models.activity import Activity as ActivityModel
+from models.ticket_state_history import TicketStateHistory
 from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
@@ -38,8 +40,9 @@ def clear_db():
     db = SessionLocal()
     try:
         # Delete all data in reverse order of dependencies
+        db.query(TicketStateHistory).delete()
         db.query(Ticket).delete()
-        db.query(PackageItem).delete()  # Delete package items first
+        db.query(PackageItem).delete()
         db.query(Package).delete()
         db.query(Seat).delete()
         db.query(Trip).delete()
@@ -52,6 +55,7 @@ def clear_db():
         db.query(Location).delete()
         db.query(Secretary).delete()
         db.query(Administrator).delete()
+        db.query(ActivityModel).delete()
         db.query(User).delete()
 
         db.commit()
@@ -558,10 +562,6 @@ def seed_db():
         # Crear viajes con fechas y horas variadas
         trips = []
 
-        # Generar fechas para los próximos 30 días
-        today = date.today()
-        future_dates = [today + timedelta(days=i) for i in range(30)]
-
         # Horarios comunes de salida
         departure_times = [
             (6, 0),    # 6:00 AM
@@ -580,36 +580,34 @@ def seed_db():
         # Crear 20 viajes con combinaciones aleatorias
         # Increased to 60 trips
         num_trips_to_create = 60
+        
+        # Define the 6-month date range for trips, tickets, and packages
+        now = datetime.now()
+        six_months_ago = now - timedelta(days=6*30) # Approximate
+        date_range_for_creation = [six_months_ago + timedelta(days=x) for x in range((now - six_months_ago).days + 1)]
+
         for _ in range(num_trips_to_create):
-            # Seleccionar fecha y hora aleatorias
-            original_trip_date = random.choice(future_dates) # Start with a future date
+            # Seleccionar fecha y hora aleatorias within the last 6 months for trip_datetime
+            base_trip_date = random.choice(date_range_for_creation).date()
             hour, minute = random.choice(departure_times)
-            trip_datetime = datetime.combine(original_trip_date, datetime.min.time()).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            trip_datetime_val = datetime.combine(base_trip_date, datetime.min.time()).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
             selected_status = random.choice(possible_trip_statuses)
 
-            # Adjust datetime based on status for realism
+            # Adjust datetime based on status for realism (simplified for seeding)
             if selected_status == 'completed' or selected_status == 'cancelled':
-                # Make it a past date
-                days_in_past = random.randint(1, 30)
-                trip_datetime = (datetime.now() - timedelta(days=days_in_past)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                # Ensure completed/cancelled trips are in the past portion of the 6 months
+                if trip_datetime_val > now - timedelta(days=7): # if in last week, shift further back
+                    trip_datetime_val = now - timedelta(days=random.randint(8,180))
             elif selected_status == 'in_progress':
-                # Make it today (but possibly earlier) or yesterday
-                if random.choice([True, False]): # 50% chance for today
-                    current_time = datetime.now()
-                    # If chosen hour is later than current hour, set to yesterday to make sense
-                    if hour > current_time.hour:
-                         trip_datetime = (current_time - timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-                    else: # Set to today at the chosen time
-                         trip_datetime = current_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
-
-                else: # Set to yesterday
-                    trip_datetime = (datetime.now() - timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-            # For 'scheduled' status, ensure the date is still in the future
+                # Ensure in_progress trips are very recent or today
+                trip_datetime_val = now - timedelta(hours=random.randint(0, 24))
             elif selected_status == 'scheduled':
-                if trip_datetime <= datetime.now(): # If original random choice made it past due to random time selection
-                    days_in_future = random.randint(1, 7)
-                    trip_datetime = (datetime.now() + timedelta(days=days_in_future)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                 # Ensure scheduled trips are in the future, but within a reasonable seeding window (e.g. next 30 days from now)
+                if trip_datetime_val <= now:
+                    trip_datetime_val = now + timedelta(days=random.randint(1, 30))
+                elif trip_datetime_val > now + timedelta(days=60): # if too far in future due to date_range_for_creation
+                    trip_datetime_val = now + timedelta(days=random.randint(1,60))
 
             # Seleccionar conductor, asistente, bus, ruta y secretario aleatorios
             driver = random.choice(drivers)
@@ -619,7 +617,7 @@ def seed_db():
             secretary = random.choice(secretaries)
 
             trip = Trip(
-                trip_datetime=trip_datetime,
+                trip_datetime=trip_datetime_val,
                 status=selected_status, # Added status
                 driver_id=driver.id,
                 assistant_id=assistant.id,
@@ -704,17 +702,48 @@ def seed_db():
                     for seat in selected_seats:
                         # Seleccionar un cliente aleatorio
                         client = random.choice(clients)
+                        secretary_for_ticket = random.choice(secretaries)
+                        ticket_created_at = trip.trip_datetime - timedelta(days=random.randint(1, 30)) # Ticket created before trip
+                        # Ensure ticket_created_at is within the 6-month window
+                        if ticket_created_at < six_months_ago:
+                            ticket_created_at = six_months_ago + timedelta(days=random.randint(0,5))
+                        if ticket_created_at > now:
+                            ticket_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
+
+                        # Determine ticket state based on trip status and creation date
+                        current_ticket_state = random.choice(ticket_states)
+                        if trip.status == 'completed' and ticket_created_at < trip.trip_datetime:
+                            current_ticket_state = 'completed'
+                        elif trip.status == 'cancelled':
+                            current_ticket_state = 'cancelled'
+                        elif trip.status == 'in_progress' and ticket_created_at < trip.trip_datetime:
+                            current_ticket_state = 'confirmed' # or completed if it's a short trip
+                        elif trip.status == 'scheduled' and ticket_created_at > now:
+                            current_ticket_state = 'pending' # Future scheduled trip, ticket likely pending
+
                         # Crear ticket
                         ticket = Ticket(
                             seat_id=seat.id,
                             client_id=client.id,
                             trip_id=trip.id,
-                            state=random.choice(ticket_states),
-                            secretary_id=random.choice(secretaries).id,  # Asignar un secretario aleatorio a cada ticket
+                            state=current_ticket_state,
+                            secretary_id=secretary_for_ticket.id,
                             price=ticket_price,
-                            payment_method=random.choice(payment_methods)
+                            payment_method=random.choice(payment_methods),
+                            created_at=ticket_created_at
                         )
                         db.add(ticket)
+                        db.flush() # Get ticket ID
+
+                        # Log initial state to TicketStateHistory
+                        history_entry = TicketStateHistory(
+                            ticket_id=ticket.id,
+                            old_state=None,
+                            new_state=ticket.state,
+                            changed_at=ticket.created_at, # Use ticket creation time for initial state
+                            changed_by_user_id=secretary_for_ticket.user_id # Associate with secretary who created ticket
+                        )
+                        db.add(history_entry)
 
         # Crear paquetes de muestra con nueva estructura PackageItem
         package_statuses = ["registered", "in_transit", "delivered", "cancelled"]
@@ -750,16 +779,32 @@ def seed_db():
                 package_counter += 1
 
                 # Crear paquete con nueva estructura
+                package_created_at = trip.trip_datetime - timedelta(days=random.randint(1, 15)) # Package created before trip
+                 # Ensure package_created_at is within the 6-month window
+                if package_created_at < six_months_ago:
+                    package_created_at = six_months_ago + timedelta(days=random.randint(0,5))
+                if package_created_at > now:
+                     package_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
+
+                current_package_status = random.choice(package_statuses)
+                if trip.status == 'completed' and package_created_at < trip.trip_datetime:
+                    current_package_status = 'delivered'
+                elif trip.status == 'cancelled':
+                    current_package_status = 'cancelled'
+                elif trip.status == 'in_progress' and package_created_at < trip.trip_datetime:
+                    current_package_status = 'in_transit'
+
                 package = Package(
                     tracking_number=tracking_number,
                     total_weight=round(random.uniform(0.5, 20.0), 2),  # Peso total entre 0.5 y 20 kg
                     total_declared_value=round(random.uniform(50.0, 500.0), 2),  # Valor declarado
                     notes=f"Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
-                    status=random.choice(package_statuses),
+                    status=current_package_status,
                     sender_id=sender.id,
                     recipient_id=recipient.id,
                     trip_id=trip.id,
-                    secretary_id=random.choice(secretaries).id
+                    secretary_id=random.choice(secretaries).id,
+                    created_at=package_created_at
                 )
                 db.add(package)
                 db.flush()  # Para obtener el ID del paquete
@@ -787,6 +832,71 @@ def seed_db():
 
                 # Actualizar el total_amount del paquete (se calculará automáticamente por la propiedad)
                 # No necesitamos hacer nada aquí ya que total_amount es una propiedad calculada
+
+        # Commit todos los datos principales antes de crear actividades
+        db.commit()
+
+        # --- Seed Activities ---
+        print("Seeding activities...")
+        activities_to_seed = []
+
+        # Obtener algunos usuarios para asociar actividades
+        admin_user_for_activity = db.query(User).filter(User.role == UserRole.ADMIN).first()
+        secretary_user_for_activity = db.query(User).filter(User.role == UserRole.SECRETARY).first()
+        client_user_for_activity = db.query(User).filter(User.role == UserRole.CLIENT).first()
+
+        # Actividades del sistema
+        activities_to_seed.append(ActivityModel(activity_type="Sistema Reiniciado", details="El sistema de seeding completó la carga inicial de datos."))
+        activities_to_seed.append(ActivityModel(activity_type="Mantenimiento Programado", details="Próximo mantenimiento el 2024-08-15 03:00 AM"))
+
+        # Actividades asociadas a usuarios (si existen)
+        if admin_user_for_activity:
+            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Login Exitoso", details=f"Admin {admin_user_for_activity.username} inició sesión desde IP 192.168.1.100"))
+            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Configuración Actualizada", details="Se actualizó el parámetro MAX_LOGIN_ATTEMPTS a 5."))
+        
+        if secretary_user_for_activity:
+            # Buscar un ticket y paquete para los detalles
+            first_ticket = db.query(Ticket).first()
+            first_package = db.query(Package).first()
+
+            if first_ticket:
+                activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Nueva Reserva Creada", details=f"Ticket ID: {first_ticket.id} para el viaje ID: {first_ticket.trip_id}"))
+            activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Venta Confirmada", details="Venta de mostrador procesada correctamente."))
+            if first_package:
+                 activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Paquete Registrado", details=f"Paquete con tracking: {first_package.tracking_number}"))
+
+        if client_user_for_activity:
+            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Perfil Actualizado", details="El cliente actualizó su número de teléfono."))
+            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Consulta de Viaje", details="Cliente consultó viajes disponibles para la ruta Santa Cruz - Cochabamba."))
+
+        # Crear algunas actividades más genéricas con fechas variadas
+        activity_types_general = ["Actualización de Ruta", "Nuevo Conductor Contratado", "Mantenimiento de Bus", "Promoción Lanzada", "Reporte Generado"]
+        sample_details = [
+            "Ruta SCZ-CBBA actualizada con nuevo precio.", 
+            "Juan Pérez se unió al equipo de conductores.", 
+            "Bus con placa 1234ABC completó mantenimiento preventivo.",
+            "Descuento del 10% en pasajes para el mes de Agosto.",
+            "Reporte de ventas mensual generado exitosamente."
+        ]
+
+        all_user_ids = [u.id for u in db.query(User.id).all()] # Obtener todos los user_ids para variedad
+
+        for i in range(10): # Crear 10 actividades genéricas adicionales
+            user_id_for_activity = random.choice(all_user_ids) if all_user_ids and random.choice([True, False]) else None
+            activity_type_selected = random.choice(activity_types_general)
+            detail_selected = random.choice(sample_details) # Podrías hacer esto más específico al tipo
+            # Simular fechas pasadas para las actividades
+            past_date = datetime.now() - timedelta(days=random.randint(0, 30), hours=random.randint(0,23), minutes=random.randint(0,59))
+            
+            activities_to_seed.append(ActivityModel(
+                user_id=user_id_for_activity,
+                activity_type=activity_type_selected,
+                details=f"{detail_selected} (ejemplo {i+1})",
+                created_at=past_date
+            ))
+
+        db.add_all(activities_to_seed)
+        print(f"{len(activities_to_seed)} activities seeded.")
 
         # Final commit
         db.commit()

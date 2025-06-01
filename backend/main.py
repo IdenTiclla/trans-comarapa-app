@@ -35,6 +35,8 @@ from models.secretary import Secretary
 from models.administrator import Administrator
 from models.office import Office
 from models.user import User
+from models.activity import Activity
+from models.ticket_state_history import TicketStateHistory
 # pylint: enable=unused-import
 
 load_dotenv()

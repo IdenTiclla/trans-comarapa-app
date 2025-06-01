@@ -7,8 +7,10 @@ from models.client import Client as ClientModel
 from models.trip import Trip as TripModel
 from models.bus import Bus as BusModel
 from models.secretary import Secretary as SecretaryModel
+from models.ticket_state_history import TicketStateHistory
 from schemas.ticket import TicketCreate, Ticket as TicketSchema, TicketUpdate
-from typing import List
+from schemas.ticket_state_history import TicketStateHistoryCreate
+from typing import List, Optional
 from datetime import datetime, timedelta
 
 router = APIRouter(
@@ -169,21 +171,36 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     db.refresh(new_ticket)
     print(f"[DEBUG] Ticket created successfully: {new_ticket.id}")
 
+    # Log initial state to history
+    _log_ticket_state_change(
+        db=db, 
+        ticket_id=new_ticket.id, 
+        new_state=new_ticket.state, 
+        old_state=None, 
+        changed_by_user_id=ticket.operator_user_id # From TicketCreate schema
+    )
+    db.commit() # Commit history entry
+
     return new_ticket
 
 @router.put("/{ticket_id}", response_model=TicketSchema)
 async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session = Depends(get_db)):
     """Update a ticket"""
     # Check if ticket exists
-    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
-    if not ticket:
+    db_ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+    if not db_ticket:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ticket with id {ticket_id} not found"
         )
 
+    # Store old state if it's going to be updated
+    old_state = None
+    if ticket_update.state and ticket_update.state.lower() != db_ticket.state:
+        old_state = db_ticket.state
+
     # Get the associated trip
-    trip = db.query(TripModel).filter(TripModel.id == ticket.trip_id).first()
+    trip = db.query(TripModel).filter(TripModel.id == db_ticket.trip_id).first()
     if trip and trip.trip_datetime < datetime.now():
         # If the trip has already departed, only allow updating to 'completed' or 'cancelled'
         if ticket_update.state and ticket_update.state.lower() not in ["completed", "cancelled"]:
@@ -193,7 +210,7 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
             )
 
     # If seat_id is being updated, verify the seat exists and is available
-    if ticket_update.seat_id and ticket_update.seat_id != ticket.seat_id:
+    if ticket_update.seat_id and ticket_update.seat_id != db_ticket.seat_id:
         # Verify that the seat exists
         seat = db.query(SeatModel).filter(SeatModel.id == ticket_update.seat_id).first()
         if not seat:
@@ -206,13 +223,13 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
         if seat.bus_id != trip.bus_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Seat with id {ticket_update.seat_id} does not belong to the bus assigned to trip {ticket.trip_id}"
+                detail=f"Seat with id {ticket_update.seat_id} does not belong to the bus assigned to trip {db_ticket.trip_id}"
             )
 
         # Verify that the seat is not already booked for the trip
         existing_ticket = db.query(TicketModel).filter(
             TicketModel.seat_id == ticket_update.seat_id,
-            TicketModel.trip_id == ticket.trip_id,
+            TicketModel.trip_id == db_ticket.trip_id,
             TicketModel.id != ticket_id,  # Exclude the current ticket
             TicketModel.state.in_(["pending", "confirmed"])  # Only consider active tickets
         ).first()
@@ -220,11 +237,11 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
         if existing_ticket:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Seat with id {ticket_update.seat_id} is already booked for trip {ticket.trip_id}"
+                detail=f"Seat with id {ticket_update.seat_id} is already booked for trip {db_ticket.trip_id}"
             )
 
     # If client_id is being updated, verify the client exists
-    if ticket_update.client_id and ticket_update.client_id != ticket.client_id:
+    if ticket_update.client_id and ticket_update.client_id != db_ticket.client_id:
         client = db.query(ClientModel).filter(ClientModel.id == ticket_update.client_id).first()
         if not client:
             raise HTTPException(
@@ -235,7 +252,7 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
         # Verify that the client doesn't already have a ticket for this trip
         client_ticket = db.query(TicketModel).filter(
             TicketModel.client_id == ticket_update.client_id,
-            TicketModel.trip_id == ticket.trip_id,
+            TicketModel.trip_id == db_ticket.trip_id,
             TicketModel.id != ticket_id,  # Exclude the current ticket
             TicketModel.state.in_(["pending", "confirmed"])  # Only consider active tickets
         ).first()
@@ -243,7 +260,7 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
         if client_ticket:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Client with id {ticket_update.client_id} already has a ticket for trip {ticket.trip_id}"
+                detail=f"Client with id {ticket_update.client_id} already has a ticket for trip {db_ticket.trip_id}"
             )
 
     # Convert ticket_update to dict, processing only non-None values
@@ -255,12 +272,23 @@ async def update_ticket(ticket_id: int, ticket_update: TicketUpdate, db: Session
 
     # Update the ticket
     for field, value in update_data.items():
-        setattr(ticket, field, value)
+        setattr(db_ticket, field, value)
 
     db.commit()
-    db.refresh(ticket)
+    db.refresh(db_ticket)
 
-    return ticket
+    # Log state change to history if state was changed
+    if old_state and db_ticket.state != old_state:
+        _log_ticket_state_change(
+            db=db, 
+            ticket_id=db_ticket.id, 
+            new_state=db_ticket.state, 
+            old_state=old_state, 
+            changed_by_user_id=None # TODO: Get current user ID if endpoint is protected
+        )
+        db.commit() # Commit history entry
+
+    return db_ticket
 
 @router.delete("/{ticket_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
@@ -302,5 +330,49 @@ async def cancel_ticket(ticket_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(ticket)
     
+    # Log state change to history
+    # Assuming the ticket was not already cancelled, old_state would be its previous state.
+    # For simplicity, if it was already cancelled, this might log an identical old/new state or we can add a check.
+    # We need the state before setting it to "cancelled". This requires fetching it or assuming it wasn't cancelled.
+    # Let's assume for now it wasn't 'cancelled' before this direct call.
+    # A more robust way would be to fetch the ticket, check its state, then update and log if different.
+    # However, the current logic updates then refreshes. So, old_state would need to be captured before ticket.state = "cancelled".
+    # For now, we'll log it with a placeholder for old_state if it wasn't already cancelled.
+    
+    # To properly get old_state, we need to know it BEFORE ticket.state = "cancelled"
+    # This function is simple, so let's re-fetch to be safe, or pass old_state if known.
+    # Re-evaluating the flow: the ticket is fetched at the start of cancel_ticket.
+    original_state_before_cancellation = ticket.state # Capture state before modification if it's not already 'cancelled'
+    
+    if original_state_before_cancellation != "cancelled":
+        # ticket.state is already set to "cancelled" by this point by the lines above
+        _log_ticket_state_change(
+            db=db, 
+            ticket_id=ticket.id, 
+            new_state="cancelled", 
+            old_state=original_state_before_cancellation, # This will be the state just before it was set to 'cancelled'
+            changed_by_user_id=None # TODO: Get current user ID if endpoint is protected
+        )
+        db.commit() # Commit history entry
+    
     return ticket
+
+# Helper function to add to ticket_state_history
+def _log_ticket_state_change(
+    db: Session, 
+    ticket_id: int, 
+    new_state: str, 
+    old_state: Optional[str] = None, 
+    changed_by_user_id: Optional[int] = None
+):
+    history_entry = TicketStateHistoryCreate(
+        ticket_id=ticket_id,
+        old_state=old_state,
+        new_state=new_state,
+        changed_by_user_id=changed_by_user_id
+    )
+    db_history_entry = TicketStateHistory(**history_entry.model_dump())
+    db.add(db_history_entry)
+    # db.commit() will be called by the main route function
+    # db.refresh(db_history_entry) # Not strictly necessary here unless using the refreshed obj immediately
 

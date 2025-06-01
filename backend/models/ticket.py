@@ -19,4 +19,7 @@ class Ticket(Base):
     price = Column(Numeric(10, 2), nullable=False)
     payment_method = Column(String(50), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)    
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Relationship to TicketStateHistory
+    state_history = relationship("TicketStateHistory", back_populates="ticket", order_by="desc(TicketStateHistory.changed_at)")    

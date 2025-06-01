@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_, desc, cast, Date
+from sqlalchemy import func, and_, or_, desc, cast, Date, extract
 from typing import List, Optional
 from datetime import datetime, timedelta, date
 from db.session import get_db
@@ -26,6 +26,7 @@ class TicketStats(BaseModel):
 
 class PackageStats(BaseModel):
     count: int
+    amount: float
     trend: float
     period: str
 
@@ -33,6 +34,25 @@ class TripStats(BaseModel):
     count: int
     trend: float
     period: str
+
+# New Pydantic model for Reserved Ticket Stats
+class ReservedTicketStats(BaseModel):
+    count: int
+    trend: float
+    period: str
+
+# Pydantic model for Monthly Data Point
+class MonthlyDataPoint(BaseModel):
+    month: str
+    label: str
+    value: float
+    count: int
+    amount: float
+
+# Pydantic model for Monthly Stats Response
+class MonthlyStats(BaseModel):
+    data: List[MonthlyDataPoint]
+    trend: float
 
 class DashboardStats(BaseModel):
     tickets: TicketStats
@@ -167,6 +187,7 @@ async def get_package_stats(
     
     Retorna:
     - **count**: Número de paquetes registrados en el período
+    - **amount**: Monto total de ventas de paquetes en el período
     - **trend**: Tendencia respecto al período anterior (porcentaje)
     - **period**: Período de las estadísticas
     """
@@ -203,12 +224,14 @@ async def get_package_stats(
         cast(PackageModel.created_at, Date) <= previous_end_date
     ).first()
     
-    # Calcular tendencia
-    trend = calculate_trend(current_packages.count, previous_packages.count)
+    # Calcular tendencias
+    count_trend = calculate_trend(current_packages.count, previous_packages.count)
+    amount_trend = calculate_trend(current_packages.amount, previous_packages.amount)
     
     return {
         "count": current_packages.count,
-        "trend": round(trend, 2),
+        "amount": float(current_packages.amount),
+        "trend": round(amount_trend, 2),
         "period": period
     }
 
@@ -505,4 +528,636 @@ async def get_sales_summary(
         "packageCount": current_package_count,
         "trend": round(trend, 2),
         "period": period
+    }
+
+# New endpoint for Reserved Ticket Stats
+@router.get("/tickets/reserved/stats", response_model=ReservedTicketStats)
+async def get_reserved_ticket_stats(
+    period: str = Query("today", description="Período para las estadísticas: today, yesterday, week, month, year"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas de boletos reservados (pendientes) para un período específico
+    
+    - **period**: Período para las estadísticas (today, yesterday, week, month, year)
+    
+    Retorna:
+    - **count**: Número de boletos reservados en el período
+    - **trend**: Tendencia respecto al período anterior (porcentaje)
+    - **period**: Período de las estadísticas
+    """
+    start_date, end_date, previous_start_date, previous_end_date = get_date_range(period)
+    
+    # Consultar boletos reservados (pendientes) del período actual
+    current_reserved_tickets = db.query(
+        func.count(TicketModel.id).label("count")
+    ).filter(
+        cast(TicketModel.created_at, Date) >= start_date,
+        cast(TicketModel.created_at, Date) <= end_date,
+        TicketModel.state == 'pending'
+    ).first()
+    
+    # Consultar boletos reservados (pendientes) del período anterior
+    previous_reserved_tickets = db.query(
+        func.count(TicketModel.id).label("count")
+    ).filter(
+        cast(TicketModel.created_at, Date) >= previous_start_date,
+        cast(TicketModel.created_at, Date) <= previous_end_date,
+        TicketModel.state == 'pending'
+    ).first()
+    
+    trend = calculate_trend(current_reserved_tickets.count, previous_reserved_tickets.count)
+    
+    return {
+        "count": current_reserved_tickets.count,
+        "trend": round(trend, 2),
+        "period": period
+    }
+
+@router.get("/tickets/monthly", response_model=MonthlyStats)
+async def get_monthly_ticket_stats(
+    months: int = Query(6, description="Número de meses para las estadísticas históricas"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas mensuales de boletos vendidos para los últimos N meses
+    
+    - **months**: Número de meses para obtener estadísticas (por defecto 6)
+    
+    Retorna:
+    - **data**: Lista de datos mensuales con tickets vendidos
+    - **trend**: Tendencia general en porcentaje
+    """
+    # Calcular fechas - obtener los últimos N meses completos
+    today = datetime.now().date()
+    
+    # Calcular la fecha de inicio (N meses atrás desde el primer día del mes actual)
+    current_month_start = today.replace(day=1)
+    
+    # Calcular N-1 meses atrás para obtener N meses en total
+    start_year = current_month_start.year
+    start_month = current_month_start.month - (months - 1)
+    
+    # Ajustar año si el mes es negativo
+    while start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    
+    start_date = date(start_year, start_month, 1)
+    
+    # Consultar tickets agrupados por mes y año
+    monthly_data = db.query(
+        extract('year', TicketModel.created_at).label('year'),
+        extract('month', TicketModel.created_at).label('month'),
+        func.count(TicketModel.id).label('count'),
+        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
+    ).join(
+        TripModel, TicketModel.trip_id == TripModel.id
+    ).join(
+        RouteModel, TripModel.route_id == RouteModel.id
+    ).filter(
+        TicketModel.created_at >= start_date,
+        TicketModel.state != 'cancelled'
+    ).group_by(
+        extract('year', TicketModel.created_at),
+        extract('month', TicketModel.created_at)
+    ).order_by(
+        extract('year', TicketModel.created_at),
+        extract('month', TicketModel.created_at)
+    ).all()
+    
+    # Crear diccionario para lookup rápido de datos existentes
+    data_dict = {}
+    for row in monthly_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        data_dict[key] = {
+            'count': row.count,
+            'amount': float(row.amount)
+        }
+    
+    # Generar datos para todos los meses en el rango
+    result_data = []
+    
+    # Nombres de meses en español (abreviados)
+    month_names = [
+        '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ]
+    
+    # Generar datos para cada mes
+    for i in range(months):
+        # Calcular año y mes para esta iteración
+        target_year = start_year
+        target_month = start_month + i
+        
+        # Ajustar año si el mes excede 12
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        month_label = month_names[target_month]
+        
+        # Buscar datos para este mes
+        key = f"{target_year}-{target_month}"
+        if key in data_dict:
+            count = data_dict[key]['count']
+            amount = data_dict[key]['amount']
+        else:
+            count = 0
+            amount = 0.0
+        
+        result_data.append({
+            "month": month_label,
+            "label": month_label,
+            "value": count,
+            "count": count,
+            "amount": amount
+        })
+    
+    # Calcular tendencia (comparar últimos 2 meses si hay datos)
+    trend = 0.0
+    if len(result_data) >= 2:
+        current_count = result_data[-1]['count']
+        previous_count = result_data[-2]['count']
+        if previous_count > 0:
+            trend = ((current_count - previous_count) / previous_count) * 100
+        elif current_count > 0:
+            trend = 100.0
+    
+    return {
+        "data": result_data,
+        "trend": round(trend, 2)
+    }
+
+@router.get("/reservations/monthly", response_model=MonthlyStats)
+async def get_monthly_reservation_stats(
+    months: int = Query(6, description="Número de meses para las estadísticas históricas de reservas"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas mensuales de reservas (tickets pendientes) para los últimos N meses
+    
+    - **months**: Número de meses para obtener estadísticas (por defecto 6)
+    
+    Retorna:
+    - **data**: Lista de datos mensuales con reservas
+    - **trend**: Tendencia general en porcentaje
+    """
+    # Calcular fechas - obtener los últimos N meses completos
+    today = datetime.now().date()
+    
+    # Calcular la fecha de inicio (N meses atrás desde el primer día del mes actual)
+    current_month_start = today.replace(day=1)
+    
+    # Calcular N-1 meses atrás para obtener N meses en total
+    start_year = current_month_start.year
+    start_month = current_month_start.month - (months - 1)
+    
+    # Ajustar año si el mes es negativo
+    while start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    
+    start_date = date(start_year, start_month, 1)
+    
+    # Consultar reservas (tickets pendientes) agrupadas por mes y año
+    monthly_data = db.query(
+        extract('year', TicketModel.created_at).label('year'),
+        extract('month', TicketModel.created_at).label('month'),
+        func.count(TicketModel.id).label('count'),
+        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
+    ).join(
+        TripModel, TicketModel.trip_id == TripModel.id
+    ).join(
+        RouteModel, TripModel.route_id == RouteModel.id
+    ).filter(
+        TicketModel.created_at >= start_date,
+        TicketModel.state == 'pending'  # Solo reservas (tickets pendientes)
+    ).group_by(
+        extract('year', TicketModel.created_at),
+        extract('month', TicketModel.created_at)
+    ).order_by(
+        extract('year', TicketModel.created_at),
+        extract('month', TicketModel.created_at)
+    ).all()
+    
+    # Crear diccionario para lookup rápido de datos existentes
+    data_dict = {}
+    for row in monthly_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        data_dict[key] = {
+            'count': row.count,
+            'amount': float(row.amount)
+        }
+    
+    # Generar datos para todos los meses en el rango
+    result_data = []
+    
+    # Nombres de meses en español (abreviados)
+    month_names = [
+        '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ]
+    
+    # Generar datos para cada mes
+    for i in range(months):
+        # Calcular año y mes para esta iteración
+        target_year = start_year
+        target_month = start_month + i
+        
+        # Ajustar año si el mes excede 12
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        month_label = month_names[target_month]
+        
+        # Buscar datos para este mes
+        key = f"{target_year}-{target_month}"
+        if key in data_dict:
+            count = data_dict[key]['count']
+            amount = data_dict[key]['amount']
+        else:
+            count = 0
+            amount = 0.0
+        
+        result_data.append({
+            "month": month_label,
+            "label": month_label,
+            "value": count,
+            "count": count,
+            "amount": amount
+        })
+    
+    # Calcular tendencia (comparar últimos 2 meses si hay datos)
+    trend = 0.0
+    if len(result_data) >= 2:
+        current_count = result_data[-1]['count']
+        previous_count = result_data[-2]['count']
+        if previous_count > 0:
+            trend = ((current_count - previous_count) / previous_count) * 100
+        elif current_count > 0:
+            trend = 100.0
+    
+    return {
+        "data": result_data,
+        "trend": round(trend, 2)
+    }
+
+@router.get("/packages/monthly", response_model=MonthlyStats)
+async def get_monthly_package_stats(
+    months: int = Query(6, description="Número de meses para las estadísticas históricas de paquetes"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas mensuales de paquetes enviados para los últimos N meses
+    
+    - **months**: Número de meses para obtener estadísticas (por defecto 6)
+    
+    Retorna:
+    - **data**: Lista de datos mensuales con paquetes enviados
+    - **trend**: Tendencia general en porcentaje
+    """
+    # Calcular fechas - obtener los últimos N meses completos
+    today = datetime.now().date()
+    
+    # Calcular la fecha de inicio (N meses atrás desde el primer día del mes actual)
+    current_month_start = today.replace(day=1)
+    
+    # Calcular N-1 meses atrás para obtener N meses en total
+    start_year = current_month_start.year
+    start_month = current_month_start.month - (months - 1)
+    
+    # Ajustar año si el mes es negativo
+    while start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    
+    start_date = date(start_year, start_month, 1)
+    
+    # Consultar paquetes agrupados por mes y año
+    monthly_data = db.query(
+        extract('year', PackageModel.created_at).label('year'),
+        extract('month', PackageModel.created_at).label('month'),
+        func.count(PackageModel.id).label('count'),
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label('amount')
+    ).filter(
+        PackageModel.created_at >= start_date,
+        PackageModel.status.in_(['registered', 'in_transit', 'delivered'])  # Excluir cancelados
+    ).group_by(
+        extract('year', PackageModel.created_at),
+        extract('month', PackageModel.created_at)
+    ).order_by(
+        extract('year', PackageModel.created_at),
+        extract('month', PackageModel.created_at)
+    ).all()
+    
+    # Crear diccionario para lookup rápido de datos existentes
+    data_dict = {}
+    for row in monthly_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        data_dict[key] = {
+            'count': row.count,
+            'amount': float(row.amount)
+        }
+    
+    # Generar datos para todos los meses en el rango
+    result_data = []
+    
+    # Nombres de meses en español (abreviados)
+    month_names = [
+        '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ]
+    
+    # Generar datos para cada mes
+    for i in range(months):
+        # Calcular año y mes para esta iteración
+        target_year = start_year
+        target_month = start_month + i
+        
+        # Ajustar año si el mes excede 12
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        month_label = month_names[target_month]
+        
+        # Buscar datos para este mes
+        key = f"{target_year}-{target_month}"
+        if key in data_dict:
+            count = data_dict[key]['count']
+            amount = data_dict[key]['amount']
+        else:
+            count = 0
+            amount = 0.0
+        
+        result_data.append({
+            "month": month_label,
+            "label": month_label,
+            "value": count,
+            "count": count,
+            "amount": amount
+        })
+    
+    # Calcular tendencia (comparar últimos 2 meses si hay datos)
+    trend = 0.0
+    if len(result_data) >= 2:
+        current_count = result_data[-1]['count']
+        previous_count = result_data[-2]['count']
+        if previous_count > 0:
+            trend = ((current_count - previous_count) / previous_count) * 100
+        elif current_count > 0:
+            trend = 100.0
+    
+    return {
+        "data": result_data,
+        "trend": round(trend, 2)
+    }
+
+@router.get("/trips/monthly", response_model=MonthlyStats)
+async def get_monthly_trip_stats(
+    months: int = Query(6, description="Número de meses para las estadísticas históricas de viajes"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas mensuales de viajes realizados para los últimos N meses
+    
+    - **months**: Número de meses para obtener estadísticas (por defecto 6)
+    
+    Retorna:
+    - **data**: Lista de datos mensuales con viajes realizados
+    - **trend**: Tendencia general en porcentaje
+    """
+    # Calcular fechas - obtener los últimos N meses completos
+    today = datetime.now().date()
+    
+    # Calcular la fecha de inicio (N meses atrás desde el primer día del mes actual)
+    current_month_start = today.replace(day=1)
+    
+    # Calcular N-1 meses atrás para obtener N meses en total
+    start_year = current_month_start.year
+    start_month = current_month_start.month - (months - 1)
+    
+    # Ajustar año si el mes es negativo
+    while start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    
+    start_date = date(start_year, start_month, 1)
+    
+    # Consultar viajes agrupados por mes y año
+    # Nota: Para viajes no calculamos amount ya que el ingreso viene de tickets y paquetes
+    monthly_data = db.query(
+        extract('year', TripModel.trip_datetime).label('year'),
+        extract('month', TripModel.trip_datetime).label('month'),
+        func.count(TripModel.id).label('count')
+    ).filter(
+        TripModel.trip_datetime >= start_date,
+        TripModel.status.in_(['scheduled', 'in_progress', 'completed'])  # Excluir cancelados
+    ).group_by(
+        extract('year', TripModel.trip_datetime),
+        extract('month', TripModel.trip_datetime)
+    ).order_by(
+        extract('year', TripModel.trip_datetime),
+        extract('month', TripModel.trip_datetime)
+    ).all()
+    
+    # Crear diccionario para lookup rápido de datos existentes
+    data_dict = {}
+    for row in monthly_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        data_dict[key] = {
+            'count': row.count,
+            'amount': 0.0  # Los viajes no tienen monto directo
+        }
+    
+    # Generar datos para todos los meses en el rango
+    result_data = []
+    
+    # Nombres de meses en español (abreviados)
+    month_names = [
+        '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ]
+    
+    # Generar datos para cada mes
+    for i in range(months):
+        # Calcular año y mes para esta iteración
+        target_year = start_year
+        target_month = start_month + i
+        
+        # Ajustar año si el mes excede 12
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        month_label = month_names[target_month]
+        
+        # Buscar datos para este mes
+        key = f"{target_year}-{target_month}"
+        if key in data_dict:
+            count = data_dict[key]['count']
+            amount = data_dict[key]['amount']
+        else:
+            count = 0
+            amount = 0.0
+        
+        result_data.append({
+            "month": month_label,
+            "label": month_label,
+            "value": count,
+            "count": count,
+            "amount": amount
+        })
+    
+    # Calcular tendencia (comparar últimos 2 meses si hay datos)
+    trend = 0.0
+    if len(result_data) >= 2:
+        current_count = result_data[-1]['count']
+        previous_count = result_data[-2]['count']
+        if previous_count > 0:
+            trend = ((current_count - previous_count) / previous_count) * 100
+        elif current_count > 0:
+            trend = 100.0
+    
+    return {
+        "data": result_data,
+        "trend": round(trend, 2)
+    }
+
+@router.get("/revenue/monthly", response_model=MonthlyStats)
+async def get_monthly_revenue_stats(
+    months: int = Query(6, description="Número de meses para las estadísticas históricas de ingresos"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas mensuales de ingresos totales para los últimos N meses
+    Combina ingresos de tickets y paquetes
+    
+    - **months**: Número de meses para obtener estadísticas (por defecto 6)
+    
+    Retorna:
+    - **data**: Lista de datos mensuales con ingresos totales
+    - **trend**: Tendencia general en porcentaje
+    """
+    # Calcular fechas - obtener los últimos N meses completos
+    today = datetime.now().date()
+    
+    # Calcular la fecha de inicio (N meses atrás desde el primer día del mes actual)
+    current_month_start = today.replace(day=1)
+    
+    # Calcular N-1 meses atrás para obtener N meses en total
+    start_year = current_month_start.year
+    start_month = current_month_start.month - (months - 1)
+    
+    # Ajustar año si el mes es negativo
+    while start_month <= 0:
+        start_month += 12
+        start_year -= 1
+    
+    start_date = date(start_year, start_month, 1)
+    
+    # Consultar ingresos de tickets agrupados por mes y año
+    ticket_revenue_data = db.query(
+        extract('year', TicketModel.created_at).label('year'),
+        extract('month', TicketModel.created_at).label('month'),
+        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
+    ).join(
+        TripModel, TicketModel.trip_id == TripModel.id
+    ).join(
+        RouteModel, TripModel.route_id == RouteModel.id
+    ).filter(
+        TicketModel.created_at >= start_date,
+        TicketModel.state != 'cancelled'  # Excluir boletos cancelados
+    ).group_by(
+        extract('year', TicketModel.created_at),
+        extract('month', TicketModel.created_at)
+    ).all()
+    
+    # Consultar ingresos de paquetes agrupados por mes y año
+    package_revenue_data = db.query(
+        extract('year', PackageModel.created_at).label('year'),
+        extract('month', PackageModel.created_at).label('month'),
+        func.coalesce(
+            func.sum(
+                db.query(func.sum(PackageItemModel.total_price))
+                .filter(PackageItemModel.package_id == PackageModel.id)
+                .scalar_subquery()
+            ), 0
+        ).label('amount')
+    ).filter(
+        PackageModel.created_at >= start_date,
+        PackageModel.status.in_(['registered', 'in_transit', 'delivered'])  # Excluir cancelados
+    ).group_by(
+        extract('year', PackageModel.created_at),
+        extract('month', PackageModel.created_at)
+    ).all()
+    
+    # Crear diccionarios para lookup rápido de datos existentes
+    ticket_revenue_dict = {}
+    for row in ticket_revenue_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        ticket_revenue_dict[key] = float(row.amount)
+    
+    package_revenue_dict = {}
+    for row in package_revenue_data:
+        key = f"{int(row.year)}-{int(row.month)}"
+        package_revenue_dict[key] = float(row.amount)
+    
+    # Generar datos para todos los meses en el rango
+    result_data = []
+    
+    # Nombres de meses en español (abreviados)
+    month_names = [
+        '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ]
+    
+    # Generar datos para cada mes
+    for i in range(months):
+        # Calcular año y mes para esta iteración
+        target_year = start_year
+        target_month = start_month + i
+        
+        # Ajustar año si el mes excede 12
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        month_label = month_names[target_month]
+        
+        # Buscar datos para este mes
+        key = f"{target_year}-{target_month}"
+        ticket_amount = ticket_revenue_dict.get(key, 0.0)
+        package_amount = package_revenue_dict.get(key, 0.0)
+        total_amount = ticket_amount + package_amount
+        
+        result_data.append({
+            "month": month_label,
+            "label": month_label,
+            "value": total_amount,
+            "count": 0,  # No aplicable para ingresos
+            "amount": total_amount
+        })
+    
+    # Calcular tendencia (comparar últimos 2 meses si hay datos)
+    trend = 0.0
+    if len(result_data) >= 2:
+        current_amount = result_data[-1]['amount']
+        previous_amount = result_data[-2]['amount']
+        if previous_amount > 0:
+            trend = ((current_amount - previous_amount) / previous_amount) * 100
+        elif current_amount > 0:
+            trend = 100.0
+    
+    return {
+        "data": result_data,
+        "trend": round(trend, 2)
     }
