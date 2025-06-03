@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, Float, Boolean, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from sqlalchemy.sql import func
 from sqlalchemy import ForeignKey
 from db.base import Base
@@ -22,9 +21,6 @@ class Package(Base):
     # Fechas y horarios
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    departure_time = Column(DateTime, nullable=True)  # Hora de salida
-    arrival_time = Column(DateTime, nullable=True)    # Hora de llegada estimada/real
-    delivered_at = Column(DateTime, nullable=True)    # Fecha/hora de entrega
     
     # Relaciones
     sender_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
@@ -41,6 +37,9 @@ class Package(Base):
     
     # Nueva relación con items
     items = relationship("PackageItem", back_populates="package", cascade="all, delete-orphan")
+    
+    # Relationship to PackageStateHistory
+    state_history = relationship("PackageStateHistory", back_populates="package", order_by="desc(PackageStateHistory.changed_at)")
     
     @property
     def total_amount(self):

@@ -17,6 +17,7 @@ from models.administrator import Administrator
 from models.office import Office
 from models.activity import Activity as ActivityModel
 from models.ticket_state_history import TicketStateHistory
+from models.package_state_history import PackageStateHistory
 from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
@@ -40,6 +41,7 @@ def clear_db():
     db = SessionLocal()
     try:
         # Delete all data in reverse order of dependencies
+        db.query(PackageStateHistory).delete()
         db.query(TicketStateHistory).delete()
         db.query(Ticket).delete()
         db.query(PackageItem).delete()
@@ -678,163 +680,266 @@ def seed_db():
         ticket_states = ["pending", "confirmed", "cancelled", "completed"]
         payment_methods = ["cash", "credit_card", "qr_payment", "bank_transfer"]
 
-        for trip in trips:
-            # Para cada viaje, crear entre 10-20 tickets
-            num_tickets = random.randint(10, 20)
-            # Obtener asientos para este bus
-            bus_seats = seats_by_bus.get(trip.bus_id, [])
+        all_tickets = [] # To store all created tickets for later simulation
+        now = datetime.now()
+        six_months_ago = now - timedelta(days=6*30)
 
-            # Obtener el precio de la ruta asociada al viaje
-            # Es importante que 'trip.route' esté cargado o accesible.
-            # Si 'trip.route' no está cargado por defecto (lazy loading),
-            # podrías necesitar obtener la ruta explícitamente o asegurar que se cargue.
-            # Aquí asumimos que 'trip.route' es accesible y tiene un atributo 'price'.
-            trip_route = db.query(Route).filter(Route.id == trip.route_id).first()
-            ticket_price = trip_route.price if trip_route and trip_route.price is not None else 30.0 # Precio por defecto si no se encuentra
+        for trip_item in trips:
+            num_tickets = random.randint(10, 20)
+            bus_seats = seats_by_bus.get(trip_item.bus_id, [])
+            trip_route_obj = db.query(Route).filter(Route.id == trip_item.route_id).first() # Renamed trip_route
+            ticket_price = trip_route_obj.price if trip_route_obj and trip_route_obj.price is not None else 30.0
 
             if bus_seats:
-                # Seleccionar asientos aleatorios para este viaje
-                # Asegurarse de no seleccionar más asientos de los disponibles
                 num_to_select = min(num_tickets, len(bus_seats))
                 if num_to_select > 0:
                     selected_seats = random.sample(bus_seats, num_to_select)
-
-                    for seat in selected_seats:
-                        # Seleccionar un cliente aleatorio
-                        client = random.choice(clients)
+                    for seat_item in selected_seats:
+                        client_instance = random.choice(clients)
                         secretary_for_ticket = random.choice(secretaries)
-                        ticket_created_at = trip.trip_datetime - timedelta(days=random.randint(1, 30)) # Ticket created before trip
-                        # Ensure ticket_created_at is within the 6-month window
-                        if ticket_created_at < six_months_ago:
-                            ticket_created_at = six_months_ago + timedelta(days=random.randint(0,5))
-                        if ticket_created_at > now:
-                            ticket_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
+                        
+                        ticket_created_at = trip_item.trip_datetime - timedelta(days=random.randint(1, 30), hours=random.randint(0,23))
+                        if ticket_created_at < six_months_ago: ticket_created_at = six_months_ago + timedelta(days=random.randint(0,5))
+                        if ticket_created_at > now: ticket_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
 
-                        # Determine ticket state based on trip status and creation date
-                        current_ticket_state = random.choice(ticket_states)
-                        if trip.status == 'completed' and ticket_created_at < trip.trip_datetime:
-                            current_ticket_state = 'completed'
-                        elif trip.status == 'cancelled':
-                            current_ticket_state = 'cancelled'
-                        elif trip.status == 'in_progress' and ticket_created_at < trip.trip_datetime:
-                            current_ticket_state = 'confirmed' # or completed if it's a short trip
-                        elif trip.status == 'scheduled' and ticket_created_at > now:
-                            current_ticket_state = 'pending' # Future scheduled trip, ticket likely pending
+                        current_initial_ticket_state = "pending"
+                        if trip_item.trip_datetime < now - timedelta(days=2) and ticket_created_at < trip_item.trip_datetime :
+                            current_initial_ticket_state = random.choice(["completed", "confirmed"])
+                        elif trip_item.status == 'cancelled':
+                            current_initial_ticket_state = "cancelled"
 
-                        # Crear ticket
                         ticket = Ticket(
-                            seat_id=seat.id,
-                            client_id=client.id,
-                            trip_id=trip.id,
-                            state=current_ticket_state,
-                            secretary_id=secretary_for_ticket.id,
-                            price=ticket_price,
-                            payment_method=random.choice(payment_methods),
-                            created_at=ticket_created_at
+                            seat_id=seat_item.id, client_id=client_instance.id, trip_id=trip_item.id,
+                            state=current_initial_ticket_state, secretary_id=secretary_for_ticket.id,
+                            price=ticket_price, payment_method=random.choice(payment_methods),
+                            created_at=ticket_created_at, updated_at=ticket_created_at # Init updated_at
                         )
                         db.add(ticket)
-                        db.flush() # Get ticket ID
+                        db.flush()
+                        all_tickets.append(ticket)
 
-                        # Log initial state to TicketStateHistory
-                        history_entry = TicketStateHistory(
-                            ticket_id=ticket.id,
-                            old_state=None,
-                            new_state=ticket.state,
-                            changed_at=ticket.created_at, # Use ticket creation time for initial state
-                            changed_by_user_id=secretary_for_ticket.user_id # Associate with secretary who created ticket
+                        initial_history_entry = TicketStateHistory(
+                            ticket_id=ticket.id, old_state=None, new_state=ticket.state,
+                            changed_at=ticket.created_at, changed_by_user_id=secretary_for_ticket.user_id
                         )
-                        db.add(history_entry)
-
-        # Crear paquetes de muestra con nueva estructura PackageItem
-        package_statuses = ["registered", "in_transit", "delivered", "cancelled"]
+                        db.add(initial_history_entry)
         
-        # Datos de items comunes para paquetes
+        db.commit() # Commit all tickets and their initial history entries
+
+        # --- Simulate Further Ticket State Changes (Simplified) ---
+        print("Simulating further ticket state changes (simplified)...")
+        num_tickets_to_simulate_changes_for = len(all_tickets) // 3
+        tickets_for_simulation = random.sample(all_tickets, num_tickets_to_simulate_changes_for)
+
+        for ticket_to_simulate in tickets_for_simulation:
+            # Directly use related objects; ensure your session/instance allows this or fetch if needed.
+            # For seeding, direct access to ticket_to_simulate.trip should work if relationships are okay.
+            ticket_trip = ticket_to_simulate.trip
+            if not ticket_trip : continue # Should not happen if data is consistent
+            trip_route_for_sim = ticket_trip.route
+            if not trip_route_for_sim : continue
+
+            last_changed_at = ticket_to_simulate.updated_at 
+            current_sim_state = ticket_to_simulate.state
+            simulating_secretary = random.choice(secretaries)
+            change_made = False
+
+            # Path 1: Pending -> Confirmed
+            if current_sim_state == "pending" and ticket_trip.trip_datetime > now:
+                old_state_sim = current_sim_state
+                new_state_sim = "confirmed"
+                # Confirm a bit after creation, well before trip, and before now.
+                changed_at_sim = max(last_changed_at + timedelta(hours=1), ticket_to_simulate.created_at + timedelta(hours=1))
+                changed_at_sim = min(changed_at_sim, ticket_trip.trip_datetime - timedelta(hours=2), now - timedelta(minutes=10))
+
+                if changed_at_sim > last_changed_at and changed_at_sim < ticket_trip.trip_datetime:
+                    ticket_to_simulate.state = new_state_sim
+                    ticket_to_simulate.updated_at = changed_at_sim
+                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
+                    db.add(ticket_to_simulate) 
+                    current_sim_state = new_state_sim
+                    last_changed_at = changed_at_sim
+                    change_made = True
+
+            # Path 2: Confirmed -> Completed (for past trips)
+            elif current_sim_state == "confirmed" and ticket_trip.trip_datetime < now:
+                old_state_sim = current_sim_state
+                new_state_sim = "completed"
+                route_duration_hours = float(trip_route_for_sim.duration if trip_route_for_sim else 3.0)
+                # Complete after trip ends, before now.
+                changed_at_sim = max(last_changed_at + timedelta(minutes=10), ticket_trip.trip_datetime + timedelta(hours=route_duration_hours + 0.5))
+                changed_at_sim = min(changed_at_sim, now - timedelta(minutes=5))
+                
+                if changed_at_sim > last_changed_at:
+                    ticket_to_simulate.state = new_state_sim
+                    ticket_to_simulate.updated_at = changed_at_sim
+                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
+                    db.add(ticket_to_simulate)
+                    current_sim_state = new_state_sim
+                    last_changed_at = changed_at_sim
+                    change_made = True
+            
+            # Path 3: Pending or Confirmed -> Cancelled (small chance, for future trips)
+            if not change_made and random.random() < 0.05 and current_sim_state in ["pending", "confirmed"] and ticket_trip.trip_datetime > now:
+                old_state_sim = current_sim_state
+                new_state_sim = "cancelled"
+                # Cancel a bit after creation/confirmation, well before trip, and before now.
+                changed_at_sim = max(last_changed_at + timedelta(minutes=15), ticket_to_simulate.created_at + timedelta(minutes=15))
+                changed_at_sim = min(changed_at_sim, ticket_trip.trip_datetime - timedelta(hours=1), now - timedelta(minutes=5))
+
+                if changed_at_sim > last_changed_at and changed_at_sim < ticket_trip.trip_datetime:
+                    ticket_to_simulate.state = new_state_sim
+                    ticket_to_simulate.updated_at = changed_at_sim
+                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
+                    db.add(ticket_to_simulate)
+                    # No further changes for cancelled tickets
+        
+        db.commit()
+
+        # --- Package Seeding and Initial State History ---
+        all_packages = [] 
+        package_statuses_options = ["registered", "in_transit", "delivered", "cancelled", "lost"] # Renamed
         item_descriptions = [
-            "Documentos importantes",
-            "Ropa de temporada", 
-            "Equipos electrónicos",
-            "Productos alimenticios",
-            "Medicamentos",
-            "Libros y material educativo",
-            "Herramientas de trabajo",
-            "Artículos de hogar",
-            "Productos de belleza",
-            "Juguetes",
-            "Artículos deportivos",
-            "Electrodomésticos pequeños"
+            "Documentos importantes", "Ropa de temporada", "Equipos electrónicos", "Productos alimenticios",
+            "Medicamentos", "Libros y material educativo", "Herramientas de trabajo", "Artículos de hogar",
+            "Productos de belleza", "Juguetes", "Artículos deportivos", "Electrodomésticos pequeños"
         ]
-
         package_counter = 1
-        for trip in trips:
-            # Para cada viaje, crear entre 3-8 paquetes
+        for trip_item in trips:
             num_packages = random.randint(3, 8)
-
             for _ in range(num_packages):
-                # Seleccionar remitente y destinatario aleatorios (clientes diferentes)
                 sender = random.choice(clients)
                 recipient = random.choice([c for c in clients if c.id != sender.id])
-                
-                # Generar tracking number único
                 tracking_number = f"PKG{package_counter:06d}"
                 package_counter += 1
 
-                # Crear paquete con nueva estructura
-                package_created_at = trip.trip_datetime - timedelta(days=random.randint(1, 15)) # Package created before trip
-                 # Ensure package_created_at is within the 6-month window
-                if package_created_at < six_months_ago:
-                    package_created_at = six_months_ago + timedelta(days=random.randint(0,5))
-                if package_created_at > now:
-                     package_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
+                package_created_at = trip_item.trip_datetime - timedelta(days=random.randint(1, 15), hours=random.randint(0,23))
+                if package_created_at < six_months_ago: package_created_at = six_months_ago + timedelta(days=random.randint(0,5))
+                if package_created_at > now: package_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
 
-                current_package_status = random.choice(package_statuses)
-                if trip.status == 'completed' and package_created_at < trip.trip_datetime:
-                    current_package_status = 'delivered'
-                elif trip.status == 'cancelled':
-                    current_package_status = 'cancelled'
-                elif trip.status == 'in_progress' and package_created_at < trip.trip_datetime:
-                    current_package_status = 'in_transit'
+                current_initial_package_state = "registered"
+                if trip_item.trip_datetime < now - timedelta(days=2) and package_created_at < trip_item.trip_datetime:
+                    current_initial_package_state = random.choice(["delivered", "in_transit"])
+                elif trip_item.status == 'cancelled': 
+                    if random.random() < 0.5: current_initial_package_state = "cancelled"
+
+                selected_secretary = random.choice(secretaries)
 
                 package = Package(
-                    tracking_number=tracking_number,
-                    total_weight=round(random.uniform(0.5, 20.0), 2),  # Peso total entre 0.5 y 20 kg
-                    total_declared_value=round(random.uniform(50.0, 500.0), 2),  # Valor declarado
+                    tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
+                    total_declared_value=round(random.uniform(50.0, 500.0), 2),
                     notes=f"Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
-                    status=current_package_status,
-                    sender_id=sender.id,
-                    recipient_id=recipient.id,
-                    trip_id=trip.id,
-                    secretary_id=random.choice(secretaries).id,
-                    created_at=package_created_at
+                    status=current_initial_package_state, sender_id=sender.id, recipient_id=recipient.id,
+                    trip_id=trip_item.id, secretary_id=selected_secretary.id, created_at=package_created_at,
+                    updated_at=package_created_at # Init updated_at
                 )
                 db.add(package)
-                db.flush()  # Para obtener el ID del paquete
+                db.flush()
+                all_packages.append(package) 
 
-                # Crear entre 1-4 items por paquete
+                initial_pkg_history_entry = PackageStateHistory(
+                    package_id=package.id, old_state=None, new_state=package.status,
+                    changed_at=package.created_at, changed_by_user_id=selected_secretary.user_id
+                )
+                db.add(initial_pkg_history_entry)
+
                 num_items = random.randint(1, 4)
-                total_package_amount = 0
-                
                 for item_index in range(num_items):
                     quantity = random.randint(1, 5)
                     description = random.choice(item_descriptions)
                     unit_price = round(random.uniform(10.0, 100.0), 2)
                     total_price = quantity * unit_price
-                    total_package_amount += total_price
-                    
-                    # Crear item del paquete
                     package_item = PackageItem(
-                        quantity=quantity,
-                        description=description,
-                        unit_price=unit_price,
-                        total_price=total_price,
-                        package_id=package.id
+                        quantity=quantity, description=description, unit_price=unit_price,
+                        total_price=total_price, package_id=package.id
                     )
                     db.add(package_item)
 
-                # Actualizar el total_amount del paquete (se calculará automáticamente por la propiedad)
-                # No necesitamos hacer nada aquí ya que total_amount es una propiedad calculada
+        db.commit() # Commit all packages and their initial history
 
-        # Commit todos los datos principales antes de crear actividades
-        db.commit()
+        # --- Simulate Further Package State Changes (Simplified) ---
+        print("Simulating further package state changes (simplified)...")
+        num_packages_to_simulate_changes_for = len(all_packages) // 2
+        packages_for_simulation = random.sample(all_packages, num_packages_to_simulate_changes_for)
+
+        for package_to_simulate in packages_for_simulation:
+            package_trip = package_to_simulate.trip
+            if not package_trip: continue
+            package_route = package_trip.route
+            if not package_route: continue
+
+            last_changed_at_pkg = package_to_simulate.updated_at
+            current_sim_state_pkg = package_to_simulate.status
+            simulating_secretary_pkg = random.choice(secretaries)
+            change_made_pkg = False
+
+            # Path 1: Registered -> In Transit
+            if current_sim_state_pkg == "registered" and package_trip.trip_datetime > now - timedelta(days=10): # If trip is not too far in past
+                old_state_pkg_sim = current_sim_state_pkg
+                new_state_pkg_sim = "in_transit"
+                # Change to in_transit around trip departure time
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_to_simulate.created_at + timedelta(hours=1))
+                changed_at_pkg_sim = min(changed_at_pkg_sim, package_trip.trip_datetime + timedelta(hours=1), now - timedelta(minutes=10))
+                # Ensure it's after creation and close to trip time, but before now if possible
+
+                if changed_at_pkg_sim > last_changed_at_pkg and changed_at_pkg_sim < (package_trip.trip_datetime + timedelta(days=1)): # Allow it to be slightly after trip_datetime
+                    package_to_simulate.status = new_state_pkg_sim
+                    package_to_simulate.updated_at = changed_at_pkg_sim
+                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
+                    db.add(package_to_simulate)
+                    current_sim_state_pkg = new_state_pkg_sim
+                    last_changed_at_pkg = changed_at_pkg_sim
+                    change_made_pkg = True
+
+            # Path 2: In Transit -> Delivered (for past trips)
+            elif current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now:
+                old_state_pkg_sim = current_sim_state_pkg
+                new_state_pkg_sim = "delivered"
+                route_duration_hours_pkg = float(package_route.duration if package_route else 3.0)
+                # Deliver after trip + duration, before now
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime + timedelta(hours=route_duration_hours_pkg + 1))
+                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=5))
+
+                if changed_at_pkg_sim > last_changed_at_pkg:
+                    package_to_simulate.status = new_state_pkg_sim
+                    package_to_simulate.updated_at = changed_at_pkg_sim
+                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
+                    db.add(package_to_simulate)
+                    current_sim_state_pkg = new_state_pkg_sim
+                    last_changed_at_pkg = changed_at_pkg_sim
+                    change_made_pkg = True
+
+            # Path 3: In Transit -> Lost (small chance, for past trips)
+            if not change_made_pkg and random.random() < 0.02 and current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now:
+                old_state_pkg_sim = current_sim_state_pkg
+                new_state_pkg_sim = "lost"
+                 # Lost sometime after going in transit, before now
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(days=1), package_trip.trip_datetime + timedelta(days=1))
+                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(hours=1))
+
+                if changed_at_pkg_sim > last_changed_at_pkg:
+                    package_to_simulate.status = new_state_pkg_sim
+                    package_to_simulate.updated_at = changed_at_pkg_sim
+                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
+                    db.add(package_to_simulate)
+                    change_made_pkg = True # No further changes for lost packages
+
+            # Path 4: Registered -> Cancelled (small chance, before trip starts)
+            elif not change_made_pkg and random.random() < 0.03 and current_sim_state_pkg == "registered" and package_trip.trip_datetime > now:
+                old_state_pkg_sim = current_sim_state_pkg
+                new_state_pkg_sim = "cancelled"
+                # Cancel after registration, before trip, and before now
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(minutes=30), package_to_simulate.created_at + timedelta(minutes=30))
+                changed_at_pkg_sim = min(changed_at_pkg_sim, package_trip.trip_datetime - timedelta(hours=1), now - timedelta(minutes=5))
+                
+                if changed_at_pkg_sim > last_changed_at_pkg and changed_at_pkg_sim < package_trip.trip_datetime:
+                    package_to_simulate.status = new_state_pkg_sim
+                    package_to_simulate.updated_at = changed_at_pkg_sim
+                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
+                    db.add(package_to_simulate)
+                    # No further changes for cancelled packages
+
+        db.commit() # Commit simulated package state changes
 
         # --- Seed Activities ---
         print("Seeding activities...")

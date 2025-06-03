@@ -34,9 +34,6 @@ class PackageUpdate(BaseModel):
     total_declared_value: Optional[float] = Field(None, ge=0)
     notes: Optional[str] = None
     status: Optional[str] = None
-    departure_time: Optional[datetime] = None
-    arrival_time: Optional[datetime] = None
-    delivered_at: Optional[datetime] = None
 
 class PackageResponse(PackageBase):
     id: int = Field(..., description="ID del paquete", example=1)
@@ -45,9 +42,6 @@ class PackageResponse(PackageBase):
     # Fechas y horarios
     created_at: datetime = Field(..., description="Fecha de creación")
     updated_at: datetime = Field(..., description="Fecha de última actualización")
-    departure_time: Optional[datetime] = Field(None, description="Hora de salida")
-    arrival_time: Optional[datetime] = Field(None, description="Hora de llegada")
-    delivered_at: Optional[datetime] = Field(None, description="Fecha de entrega")
     
     # Campos calculados
     total_amount: float = Field(..., description="Monto total calculado")

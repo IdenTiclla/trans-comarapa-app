@@ -137,18 +137,20 @@
           barColor="#f59e0b"
           @periodChanged="handleReservationPeriodChange"
         />
-        
-        <!-- Monthly Cancelled Tickets -->
+
+        <!-- Monthly Cancelled Reservations -->
         <MonthlyMetricsChart
-          title="Boletos Cancelados por Mes"
-          :chartData="monthlyCancelledTicketData.data"
-          :isLoading="monthlyCancelledTicketData.isLoading"
-          :error="monthlyCancelledTicketData.error"
-          :trend="monthlyCancelledTicketData.trend"
+          title="Reservas Canceladas por Mes"
+          :chartData="monthlyCancelledReservationData.data"
+          :isLoading="monthlyCancelledReservationData.isLoading"
+          :error="monthlyCancelledReservationData.error"
+          :trend="monthlyCancelledReservationData.trend"
           :valueFormatter="(value) => value?.toLocaleString() || '0'"
           barColor="#ef4444"
-          @periodChanged="handleCancelledTicketPeriodChange"
+          @periodChanged="handleCancelledReservationPeriodChange"
         />
+        
+        
       </div>
     </section>
     
@@ -261,30 +263,6 @@
         <h2 class="text-xl font-semibold text-gray-900">Métricas Clave a lo Largo del Tiempo</h2>
       </div>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4">
-        <!-- Monthly Ticket Stats -->
-        <MonthlyMetricsChart
-          title="Tickets Vendidos por Mes"
-          :chartData="monthlyTicketData.data"
-          :isLoading="monthlyTicketData.isLoading"
-          :error="monthlyTicketData.error"
-          :trend="monthlyTicketData.trend"
-          :valueFormatter="(value) => value?.toLocaleString() || '0'"
-          barColor="#3b82f6"
-          @periodChanged="handleTicketPeriodChange"
-        />
-        
-        <!-- Monthly Reservations Stats -->
-        <MonthlyMetricsChart
-          title="Reservas por Mes"
-          :chartData="monthlyReservationData.data"
-          :isLoading="monthlyReservationData.isLoading"
-          :error="monthlyReservationData.error"
-          :trend="monthlyReservationData.trend"
-          :valueFormatter="(value) => value?.toLocaleString() || '0'"
-          barColor="#ef4444"
-          @periodChanged="handleReservationPeriodChange"
-        />
-        
         <!-- Monthly Package Stats -->
         <MonthlyMetricsChart
           title="Paquetes Enviados por Mes"
@@ -840,6 +818,14 @@ const monthlyReservationData = ref({
   trend: 0
 })
 
+// Datos reactivos para gráfico de reservaciones canceladas mensuales
+const monthlyCancelledReservationData = ref({
+  data: [],
+  isLoading: true,
+  error: null,
+  trend: 0
+})
+
 // Datos reactivos para gráficos de ingresos específicos
 const monthlyTicketRevenueData = ref({
   data: [],
@@ -1018,6 +1004,11 @@ const handleReservationPeriodChange = (months) => {
   loadMonthlyReservationStats(months)
 }
 
+const handleCancelledReservationPeriodChange = (months) => {
+  console.log('📅 Cambiando período de reservaciones canceladas a:', months, 'meses')
+  loadMonthlyCancelledReservationStats(months)
+}
+
 // Funciones de manejo de cambios de período para gráficos de ingresos específicos
 const handleTicketRevenuePeriodChange = (months) => {
   console.log('📅 Cambiando período de ingresos por boletos a:', months, 'meses')
@@ -1097,6 +1088,7 @@ onMounted(() => {
   // Cargar estadísticas mensuales
   loadMonthlyTicketStats()
   loadMonthlyReservationStats()
+  loadMonthlyCancelledReservationStats()
   loadMonthlyPackageStats()
   loadMonthlyTripStats()
   loadMonthlyRevenueStats()
@@ -1267,6 +1259,24 @@ async function loadMonthlyDeliveredPackagesStats(months = 6) {
     monthlyDeliveredPackagesData.value.data = []
   } finally {
     monthlyDeliveredPackagesData.value.isLoading = false
+  }
+}
+
+async function loadMonthlyCancelledReservationStats(months = 6) {
+  monthlyCancelledReservationData.value.isLoading = true
+  monthlyCancelledReservationData.value.error = null
+  try {
+    console.log('🔄 Cargando estadísticas mensuales de reservaciones canceladas...')
+    const stats = await statsService.getMonthlyCancelledReservationStats(months)
+    monthlyCancelledReservationData.value.data = stats.data || []
+    monthlyCancelledReservationData.value.trend = stats.trend || 0
+    console.log('✅ Datos mensuales de reservaciones canceladas cargados:', stats)
+  } catch (error) {
+    console.error('❌ Error loading monthly cancelled reservation stats:', error)
+    monthlyCancelledReservationData.value.error = 'Error al cargar estadísticas mensuales de reservaciones canceladas'
+    monthlyCancelledReservationData.value.data = []
+  } finally {
+    monthlyCancelledReservationData.value.isLoading = false
   }
 }
 </script>

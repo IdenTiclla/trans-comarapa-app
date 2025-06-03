@@ -13,6 +13,9 @@ from .ticket import Ticket
 from .package import Package
 from .package_item import PackageItem
 from .office import Office
+from .package_state_history import PackageStateHistory
+from .ticket_state_history import TicketStateHistory
+from .activity import Activity
 
 __all__ = [
     "User",
@@ -29,5 +32,8 @@ __all__ = [
     "Ticket",
     "Package",
     "PackageItem",
-    "Office"
+    "Office",
+    "PackageStateHistory",
+    "TicketStateHistory",
+    "Activity"
 ]
