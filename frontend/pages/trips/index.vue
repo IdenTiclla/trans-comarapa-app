@@ -16,6 +16,7 @@
         <TripFilters
           :initial-filters="pageFilters"
           @filter-change="handleFilterChange"
+          @sort-change="handleSortChange" 
         />
 
         <!-- Alerta de error -->
@@ -23,17 +24,14 @@
           <p>Error al cargar los viajes: {{ tripStore.error }}</p>
         </div>
 
-        <!-- Tabla de viajes -->
-        <TripTable
+        <!-- Lista de tarjetas de viajes -->
+        <TripCardList
           :trips="tripStore.trips"
           :loading="tripStore.isLoading"
           :current-page="tripStore.pagination.currentPage"
           :total-items="tripStore.pagination.totalItems"
           :items-per-page="tripStore.pagination.itemsPerPage"
-          :sort-by="pageSortBy"
-          :sort-direction="pageSortDirection"
           @page-change="handlePageChange"
-          @sort-change="handleSortChange"
           @view-trip="handleViewTrip"
           @edit-trip="handleEditTrip"
         />
@@ -43,19 +41,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
-import { useRouter, navigateTo } from '#app'; // Using Nuxt 3 auto-imports
+import { ref, reactive, onMounted } from 'vue';
+import { useRouter, navigateTo } from '#app';
 import { useTripStore } from '~/stores/tripStore';
-
-// Componentes (Assuming these are correctly imported or auto-imported by Nuxt)
-// import TripFilters from '~/components/TripFilters.vue'; 
-// import TripTable from '~/components/TripTable.vue';
-// import AppButton from '~/components/AppButton.vue';
+import TripFilters from '~/components/TripFilters.vue'; 
+import TripCardList from '~/components/TripCardList.vue';
+// import AppButton from '~/components/AppButton.vue'; // Asumiendo que AppButton es global o auto-importado
 
 const router = useRouter();
 const tripStore = useTripStore();
 
-// Local state for page-specific controls that trigger store actions
 const pageFilters = reactive({
   origin: '',
   destination: '',
@@ -67,30 +62,24 @@ const pageFilters = reactive({
   minSeats: ''
 });
 
-// Local refs for sort, to be passed to the store action
-// The store itself doesn't need to hold sortBy/sortDirection if they are always passed in fetchTrips params
-const pageSortBy = ref(tripStore.pagination.sortBy || 'trip_datetime'); // Default from store or a sensible default
+const pageSortBy = ref(tripStore.pagination.sortBy || 'trip_datetime');
 const pageSortDirection = ref(tripStore.pagination.sortDirection || 'desc');
 
 const loadTrips = () => {
   tripStore.fetchTrips({
-    page: tripStore.pagination.currentPage, // Use current page from store for reloads
+    page: tripStore.pagination.currentPage,
     itemsPerPage: tripStore.pagination.itemsPerPage,
     sortBy: pageSortBy.value,
     sortDirection: pageSortDirection.value,
-    filters: { ...pageFilters } // Pass a copy of the filters
+    filters: { ...pageFilters }
   });
 };
 
 onMounted(() => {
-  // Initial load. If store has default page 1, it will use that.
   loadTrips(); 
 });
 
-// Manejar cambio de página
 const handlePageChange = (newPage) => {
-  // Update store's current page, then fetch.
-  // Or, more directly, pass the new page to fetchTrips
   tripStore.fetchTrips({
     page: newPage,
     itemsPerPage: tripStore.pagination.itemsPerPage,
@@ -100,11 +89,9 @@ const handlePageChange = (newPage) => {
   });
 };
 
-// Manejar cambio de ordenamiento
 const handleSortChange = ({ column, direction }) => {
   pageSortBy.value = column;
   pageSortDirection.value = direction;
-  // Reset to page 1 when sort changes, and then fetch.
   tripStore.fetchTrips({
     page: 1, 
     itemsPerPage: tripStore.pagination.itemsPerPage,
@@ -114,10 +101,8 @@ const handleSortChange = ({ column, direction }) => {
   });
 };
 
-// Manejar cambio de filtros
 const handleFilterChange = (newFilters) => {
   Object.assign(pageFilters, newFilters);
-  // Reset to page 1 when filters change, and then fetch.
   tripStore.fetchTrips({
     page: 1,
     itemsPerPage: tripStore.pagination.itemsPerPage,
@@ -127,12 +112,10 @@ const handleFilterChange = (newFilters) => {
   });
 };
 
-// Manejar ver viaje
 const handleViewTrip = (tripId) => {
   router.push(`/trips/${tripId}`);
 };
 
-// Manejar editar viaje
 const handleEditTrip = (tripId) => {
   router.push(`/trips/${tripId}/edit`);
 };
