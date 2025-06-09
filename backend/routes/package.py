@@ -29,7 +29,7 @@ async def get_packages(
         joinedload(PackageModel.items)
     )
     
-    if status:
+    if status and status.lower() != 'all':
         query = query.filter(PackageModel.status == status)
     
     packages = query.offset(skip).limit(limit).all()

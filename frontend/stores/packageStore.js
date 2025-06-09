@@ -85,14 +85,33 @@ export const usePackageStore = defineStore('packages', {
       this.isLoading = true;
       this.error = null;
       this.currentPackage = null;
+      console.log(`[Package Store] Fetching package with ID: ${id}`);
       try {
         const data = await packageService.getPackageById(id);
-        this.currentPackage = data;
+        console.log(`[Package Store] Received package data:`, data);
+        
+        // Normalize the data to ensure all expected fields are present
+        this.currentPackage = {
+          ...data,
+          // Ensure sender details are properly mapped
+          sender_details: data.sender || null,
+          receiver_details: data.recipient || null,
+          // Map backend fields to frontend expected names if needed
+          description: data.description || data.notes || null,
+          package_type: data.package_type || 'General',
+          weight: data.total_weight || null,
+          declared_value: data.total_declared_value || null,
+          price: data.total_amount || null,
+        };
+        
+        console.log(`[Package Store] Normalized package data:`, this.currentPackage);
+        
         // Set current package items
         if (data.items) {
           this.currentPackageItems = data.items;
         }
       } catch (err) {
+        console.error(`[Package Store] Error fetching package ${id}:`, err);
         this.error = err.data?.detail || err.message || 'Failed to fetch package details';
       } finally {
         this.isLoading = false;
