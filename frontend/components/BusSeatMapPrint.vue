@@ -97,29 +97,36 @@
                   <span class="text-[9px] sm:text-[10px] font-semibold bg-green-100 text-green-800 px-1 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}</span>
                 </div>
                 <div
-                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
+                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 flex flex-col justify-center text-center h-20"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
                   @contextmenu="handleContextMenu($event, seat)"
                 >
-                  <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
-                    <span class="font-medium">Destino:</span>
-                    <span class="font-medium">Bs.</span>
+                  <!-- Passenger info container. Hidden but occupies space for available seats -->
+                  <div :class="{'invisible': !seat.occupied && seat.status !== 'reserved'}">
+                      <div class="text-[9px] sm:text-[10px] leading-tight font-bold text-gray-800 truncate" :title="seat.passenger?.name">
+                          {{ seat.passenger?.name || '&nbsp;' }}
+                      </div>
+                      <div class="text-[8px] sm:text-[9px] text-gray-500 font-medium my-0.5">
+                          {{ seat.passenger?.phone || '&nbsp;' }}
+                      </div>
                   </div>
+
+                  <!-- Status Tag -->
                   <div>
-                    <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
-                      'bg-red-100 text-red-800': seat.occupied,
-                      'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
-                      'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
-                      'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
-                    }">
-                      {{ 
-                        seat.occupied ? 'OCUPADO' : 
-                        seat.status === 'reserved' ? 'RESERVADO' : 
-                        selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
-                        'DISPONIBLE' 
-                      }}
-                    </span>
+                      <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
+                          'bg-red-100 text-red-800': seat.occupied,
+                          'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
+                          'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
+                          'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
+                      }">
+                          {{ 
+                              seat.occupied ? 'OCUPADO' : 
+                              seat.status === 'reserved' ? 'RESERVADO' : 
+                              selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
+                              'DISPONIBLE' 
+                          }}
+                      </span>
                   </div>
                 </div>
               </div>
@@ -142,29 +149,36 @@
                   <span class="text-[9px] sm:text-[10px] font-semibold bg-green-100 text-green-800 px-1 py-0.5 rounded-full">{{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}</span>
                 </div>
                 <div
-                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 md:p-1.5 flex flex-col justify-around text-center"
+                  class="seat-box border-2 rounded-md p-1 sm:p-1.5 flex flex-col justify-center text-center h-20"
                   :class="getSeatClass(seat)"
                   @click="toggleSeatSelection(seat)"
                   @contextmenu="handleContextMenu($event, seat)"
                 >
-                  <div class="flex justify-between items-center text-[8px] sm:text-[9px] px-0.5">
-                    <span class="font-medium">Destino:</span>
-                    <span class="font-medium">Bs.</span>
+                  <!-- Passenger info container. Hidden but occupies space for available seats -->
+                  <div :class="{'invisible': !seat.occupied && seat.status !== 'reserved'}">
+                      <div class="text-[9px] sm:text-[10px] leading-tight font-bold text-gray-800 truncate" :title="seat.passenger?.name">
+                          {{ seat.passenger?.name || '&nbsp;' }}
+                      </div>
+                      <div class="text-[8px] sm:text-[9px] text-gray-500 font-medium my-0.5">
+                          {{ seat.passenger?.phone || '&nbsp;' }}
+                      </div>
                   </div>
+
+                  <!-- Status Tag -->
                   <div>
-                    <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
-                      'bg-red-100 text-red-800': seat.occupied,
-                      'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
-                      'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
-                      'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
-                    }">
-                      {{ 
-                        seat.occupied ? 'OCUPADO' : 
-                        seat.status === 'reserved' ? 'RESERVADO' : 
-                        selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
-                        'DISPONIBLE' 
-                      }}
-                    </span>
+                      <span class="text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded inline-block leading-tight" :class="{
+                          'bg-red-100 text-red-800': seat.occupied,
+                          'bg-yellow-100 text-yellow-800': seat.status === 'reserved',
+                          'bg-blue-100 text-blue-800': selectedSeatIds.includes(seat.id),
+                          'bg-gray-50 text-gray-400': !seat.occupied && seat.status !== 'reserved' && !selectedSeatIds.includes(seat.id)
+                      }">
+                          {{ 
+                              seat.occupied ? 'OCUPADO' : 
+                              seat.status === 'reserved' ? 'RESERVADO' : 
+                              selectedSeatIds.includes(seat.id) ? 'SELECCIONADO' : 
+                              'DISPONIBLE' 
+                          }}
+                      </span>
                   </div>
                 </div>
               </div>
@@ -305,6 +319,10 @@ const props = defineProps({
   trip: {
     type: Object,
     required: true
+  },
+  tickets: {
+    type: Array,
+    default: () => []
   },
   occupiedSeats: {
     type: Array,
@@ -460,11 +478,11 @@ const loadSeats = async () => {
 
     // Utilizar los asientos proporcionados por el backend a través de props.trip.seats_layout
     const backendSeats = props.trip.seats_layout;
+    const tickets = props.tickets || [];
     console.log('Estados de asientos:', backendSeats.map(seat => seat.status));
     console.log('Asientos reservados:', backendSeats.filter(seat => seat.status === 'reserved').length);
     
     // Obtener los tickets para identificar cuáles están en "pending" (reservados)
-    // Ya que el backend no distingue entre 'pending' y 'confirmed', ambos los marca como 'occupied'
     const reservedSeatNumbers = props.reserved_seat_numbers || [];
     console.log('Números de asientos reservados:', reservedSeatNumbers);
     
@@ -493,6 +511,16 @@ const loadSeats = async () => {
       // lo marcamos como 'reserved' en lugar de 'occupied'
       if (status === 'occupied' && isReserved) {
         status = 'reserved';
+      }
+
+      const ticket = tickets.find(t => t.seat?.id === backendSeat.id);
+
+      let passenger = null;
+      if (ticket && ticket.client) {
+        passenger = {
+          name: `${ticket.client.firstname || ''} ${ticket.client.lastname || ''}`.trim(),
+          phone: ticket.client.phone || ''
+        };
       }
 
       // Define typicalSeatsPerRow. This value might eventually come from bus configuration data.
@@ -537,7 +565,8 @@ const loadSeats = async () => {
         occupied: status === 'occupied', // Mantener 'occupied' para compatibilidad con getSeatClass
         position: position, // Inferido o del backend si disponible
         column: column,     // Inferido o del backend si disponible
-        deck: seatDeck      // Del backend, o default
+        deck: seatDeck,      // Del backend, o default
+        passenger: passenger
       });
     }
 
