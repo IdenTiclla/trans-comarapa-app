@@ -7,34 +7,47 @@ export default defineNuxtRouteMiddleware((to) => {
   
   const authStore = useAuthStore()
   
+  // Función helper para redirigir al dashboard según el rol
+  const redirectToDashboard = () => {
+    const role = authStore.userRole
+    switch (role) {
+      case 'admin':
+        return navigateTo('/dashboards/dashboard-admin')
+      case 'secretary':
+        return navigateTo('/dashboards/dashboard-secretary')
+      case 'driver':
+        return navigateTo('/dashboards/dashboard-driver')
+      case 'assistant':
+        return navigateTo('/dashboards/dashboard-assistant')
+      case 'client':
+        return navigateTo('/dashboards/dashboard-client')
+      default:
+        return navigateTo('/dashboards/dashboard-client') // fallback por defecto
+    }
+  }
+  
+  // Si está en la ruta raíz ("/"), redirigir según estado de autenticación
+  if (to.path === '/') {
+    if (authStore.isAuthenticated) {
+      return redirectToDashboard()
+    } else {
+      return navigateTo('/login')
+    }
+  }
+  
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/login']
+  const publicRoutes = ['/login', '/about', '/services', '/welcome']
   
   // Si la ruta es pública, permitir el acceso
   if (publicRoutes.includes(to.path)) {
     // Si el usuario ya está autenticado y trata de acceder a login, redirigir al dashboard
     if (authStore.isAuthenticated && to.path === '/login') {
-      // Redirigir al dashboard específico según el rol
-      const role = authStore.userRole
-      switch (role) {
-        case 'admin':
-          return navigateTo('/dashboards/dashboard-admin')
-        case 'secretary':
-          return navigateTo('/dashboards/dashboard-secretary')
-        case 'driver':
-          return navigateTo('/dashboards/dashboard-driver')
-        case 'assistant':
-          return navigateTo('/dashboards/dashboard-assistant')
-        case 'client':
-          return navigateTo('/dashboards/dashboard-client')
-        default:
-          return navigateTo('/dashboard')
-      }
+      return redirectToDashboard()
     }
     return
   }
   
-  // Si el usuario no está autenticado, redirigir a la página de inicio de sesión
+  // Si el usuario no está autenticado y trata de acceder a una ruta protegida, redirigir a login
   if (!authStore.isAuthenticated) {
     return navigateTo('/login')
   }
