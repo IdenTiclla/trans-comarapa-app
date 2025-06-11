@@ -31,7 +31,12 @@ export default defineNuxtRouteMiddleware((to) => {
     if (authStore.isAuthenticated) {
       return redirectToDashboard()
     } else {
-      return navigateTo('/login')
+      // Pequeño delay para asegurar que el layout se cargue correctamente
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(navigateTo('/login'))
+        }, 50)
+      })
     }
   }
   

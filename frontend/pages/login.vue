@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full p-8 bg-white rounded-lg shadow-lg">
+  <div class="forced-login-form">
     <div class="text-center mb-8">
       <div class="flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -122,3 +122,80 @@ definePageMeta({
   // No aplicamos el middleware aquí porque queremos que la página de login sea accesible
 })
 </script>
+
+<style>
+.forced-login-form {
+  width: 400px;
+  max-width: 90vw;
+  padding: 32px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+/* Resetear todos los estilos para asegurar que no haya conflictos */
+.forced-login-form * {
+  box-sizing: border-box;
+}
+
+.forced-login-form h1 {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.forced-login-form p {
+  color: #6b7280;
+  margin: 0 0 32px 0;
+}
+
+.forced-login-form input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.forced-login-form button {
+  width: 100%;
+  padding: 8px 16px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.forced-login-form button:hover {
+  background-color: #4338ca;
+}
+
+.forced-login-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.forced-login-form .text-center { text-align: center; }
+.forced-login-form .mb-8 { margin-bottom: 32px; }
+.forced-login-form .mb-4 { margin-bottom: 16px; }
+.forced-login-form .mb-2 { margin-bottom: 8px; }
+.forced-login-form .mt-6 { margin-top: 24px; }
+.forced-login-form .mt-1 { margin-top: 4px; }
+.forced-login-form .flex { display: flex; }
+.forced-login-form .items-center { align-items: center; }
+.forced-login-form .justify-center { justify-content: center; }
+.forced-login-form .mr-2 { margin-right: 8px; }
+.forced-login-form .space-y-6 > * + * { margin-top: 24px; }
+</style>
