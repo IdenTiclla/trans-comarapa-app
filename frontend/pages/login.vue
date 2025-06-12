@@ -19,10 +19,19 @@
           v-model="email"
           type="email"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          :class="{
+            'border-red-500': emailError,
+            'border-gray-300': !emailError
+          }"
           placeholder="usuario@transcomarapa.com"
           autofocus
+          @blur="validateEmail"
+          @input="clearEmailError"
         />
+        <div v-if="emailError" class="mt-1 text-sm text-red-600">
+          {{ emailError }}
+        </div>
       </div>
 
       <!-- Password input -->
@@ -33,11 +42,20 @@
           v-model="password"
           type="password"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          :class="{
+            'border-red-500': passwordError,
+            'border-gray-300': !passwordError
+          }"
+          @blur="validatePassword"
+          @input="clearPasswordError"
         />
+        <div v-if="passwordError" class="mt-1 text-sm text-red-600">
+          {{ passwordError }}
+        </div>
       </div>
 
-      <!-- Error message -->
+      <!-- Server error message -->
       <div v-if="authStore.error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
         <span class="block sm:inline">{{ authStore.error }}</span>
       </div>
@@ -46,8 +64,12 @@
       <div>
         <button
           type="submit"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          :disabled="authStore.loading"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          :class="{
+            'bg-gray-400 cursor-not-allowed': !isFormValid || authStore.loading,
+            'bg-indigo-600 hover:bg-indigo-700': isFormValid && !authStore.loading
+          }"
+          :disabled="!isFormValid || authStore.loading"
         >
           <span v-if="authStore.loading">Iniciando sesión...</span>
           <span v-else>Iniciar sesión</span>
@@ -62,15 +84,71 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 
 // Definir variables reactivas
 const email = ref('')
 const password = ref('')
+const emailError = ref('')
+const passwordError = ref('')
 const authStore = useAuthStore()
 const router = useRouter()
+
+// Expresiones regulares para validación
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Computed property para verificar si el formulario es válido
+const isFormValid = computed(() => {
+  return email.value && 
+         password.value && 
+         !emailError.value && 
+         !passwordError.value &&
+         emailRegex.test(email.value) &&
+         password.value.length >= 6
+})
+
+// Funciones de validación
+const validateEmail = () => {
+  if (!email.value) {
+    emailError.value = 'El email es requerido'
+  } else if (!emailRegex.test(email.value)) {
+    emailError.value = 'Por favor ingresa un email válido'
+  } else {
+    emailError.value = ''
+  }
+}
+
+const validatePassword = () => {
+  if (!password.value) {
+    passwordError.value = 'La contraseña es requerida'
+  } else if (password.value.length < 6) {
+    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+  } else {
+    passwordError.value = ''
+  }
+}
+
+// Funciones para limpiar errores mientras el usuario escribe
+const clearEmailError = () => {
+  if (emailError.value) {
+    emailError.value = ''
+  }
+}
+
+const clearPasswordError = () => {
+  if (passwordError.value) {
+    passwordError.value = ''
+  }
+}
+
+// Validar todo el formulario
+const validateForm = () => {
+  validateEmail()
+  validatePassword()
+  return !emailError.value && !passwordError.value
+}
 
 // Comprobar autenticación al montar el componente
 onMounted(() => {
@@ -105,6 +183,11 @@ const redirectToDashboard = (role) => {
 
 // Función para manejar el inicio de sesión
 const handleLogin = async () => {
+  // Validar el formulario antes de enviar
+  if (!validateForm()) {
+    return
+  }
+
   try {
     const response = await authStore.login(email.value, password.value)
 
