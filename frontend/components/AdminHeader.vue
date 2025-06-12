@@ -19,7 +19,7 @@
           <template v-if="authStore.userRole === 'secretary'">
             <NuxtLink to="/dashboards/dashboard-secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
             <NuxtLink to="/trips/manage" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Viajes</NuxtLink>
-            <NuxtLink to="/bookings" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Bookings</NuxtLink>
+            <NuxtLink to="/bookings" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Boletos</NuxtLink>
             <NuxtLink to="/packages" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Packages</NuxtLink>
             <NuxtLink to="/clients/manage" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Clientes</NuxtLink>
             <NuxtLink to="/reports/secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Reportes</NuxtLink>
@@ -79,7 +79,7 @@
             <template v-if="authStore.userRole === 'secretary'">
               <NuxtLink to="/dashboards/dashboard-secretary" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
               <NuxtLink to="/trips/manage" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Viajes</NuxtLink>
-              <NuxtLink to="/bookings" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Bookings</NuxtLink>
+              <NuxtLink to="/bookings" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Boletos</NuxtLink>
               <NuxtLink to="/packages" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Packages</NuxtLink>
               <NuxtLink to="/clients/manage" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Clientes</NuxtLink>
               <NuxtLink to="/reports/secretary" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Reportes</NuxtLink>

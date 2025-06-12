@@ -7,7 +7,7 @@
     </main>
 
     <footer class="bg-gray-100 text-center py-6 mt-auto w-full">
-      <p class="text-sm text-gray-600">@2024 Trans Comarapa</p>
+      <p class="text-sm text-gray-600">@2025 Trans Comarapa</p>
     </footer>
   </div>
 </template>

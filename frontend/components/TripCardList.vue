@@ -67,7 +67,7 @@
     <!-- Trip Cards Grid/List -->
     <div v-else>
       <!-- Grid View -->
-      <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+      <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <TripCard
           v-for="trip in trips"
           :key="trip.id"

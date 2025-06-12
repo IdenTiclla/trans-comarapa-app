@@ -77,7 +77,7 @@
               <img 
                 :src="trip.driver?.photoUrl || defaultPersonImage"
                 :alt="`Foto del conductor ${trip.driver?.name || 'No asignado'}`"
-                class="w-12 h-12 lg:w-14 lg:h-14 rounded-full mx-auto object-cover border-2 border-white shadow-md bg-gray-100 group-hover:border-indigo-300 transition-colors"
+                class="w-12 h-12 lg:w-14 lg:h-14 rounded-lg mx-auto object-cover border-2 border-white shadow-md bg-gray-100 group-hover:border-indigo-300 transition-colors"
                 @error="setDefaultPersonImage"
               />
               <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
@@ -92,7 +92,7 @@
               <img 
                 :src="trip.assistant?.photoUrl || defaultPersonImage"
                 :alt="`Foto del asistente ${trip.assistant?.name || 'No asignado'}`"
-                class="w-12 h-12 lg:w-14 lg:h-14 rounded-full mx-auto object-cover border-2 border-white shadow-md bg-gray-100 group-hover:border-indigo-300 transition-colors"
+                class="w-12 h-12 lg:w-14 lg:h-14 rounded-lg mx-auto object-cover border-2 border-white shadow-md bg-gray-100 group-hover:border-indigo-300 transition-colors"
                 @error="setDefaultPersonImage"
               />
               <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 border-2 border-white rounded-full"></div>
