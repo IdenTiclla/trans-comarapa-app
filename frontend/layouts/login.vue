@@ -7,10 +7,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const loginPageRef = ref(null)
 const loginContentRef = ref(null)
+let observer = null
+
+// Guardar los estilos originales del body para restaurarlos después
+let originalBodyStyles = {}
+let originalHtmlStyles = {}
 
 const forceCenter = () => {
   if (loginPageRef.value && loginContentRef.value) {
@@ -40,18 +45,46 @@ const forceCenter = () => {
     // Forzar reflow
     pageEl.offsetHeight
     contentEl.offsetHeight
-    
-    // Resetear body
-    document.body.style.margin = '0'
-    document.body.style.padding = '0'
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.height = '100vh'
-    document.body.style.height = '100vh'
   }
+}
+
+const applyLoginStyles = () => {
+  // Guardar estilos originales antes de modificarlos
+  originalBodyStyles = {
+    margin: document.body.style.margin,
+    padding: document.body.style.padding,
+    overflow: document.body.style.overflow,
+    height: document.body.style.height
+  }
+  
+  originalHtmlStyles = {
+    height: document.documentElement.style.height
+  }
+  
+  // Aplicar estilos para el login
+  document.body.style.margin = '0'
+  document.body.style.padding = '0'
+  document.body.style.overflow = 'hidden'
+  document.documentElement.style.height = '100vh'
+  document.body.style.height = '100vh'
+}
+
+const restoreOriginalStyles = () => {
+  // Restaurar estilos originales del body
+  document.body.style.margin = originalBodyStyles.margin || ''
+  document.body.style.padding = originalBodyStyles.padding || ''
+  document.body.style.overflow = originalBodyStyles.overflow || ''
+  document.body.style.height = originalBodyStyles.height || ''
+  
+  // Restaurar estilos originales del html
+  document.documentElement.style.height = originalHtmlStyles.height || ''
 }
 
 onMounted(async () => {
   await nextTick()
+  
+  // Aplicar estilos del login
+  applyLoginStyles()
   forceCenter()
   
   // Forzar centrado múltiples veces para asegurar que funcione
@@ -60,7 +93,7 @@ onMounted(async () => {
   setTimeout(forceCenter, 200)
   
   // Observer para detectar cambios en el DOM
-  const observer = new MutationObserver(() => {
+  observer = new MutationObserver(() => {
     forceCenter()
   })
   
@@ -73,10 +106,21 @@ onMounted(async () => {
     })
   }
 })
+
+onBeforeUnmount(() => {
+  // Limpiar el observer
+  if (observer) {
+    observer.disconnect()
+    observer = null
+  }
+  
+  // Restaurar estilos originales
+  restoreOriginalStyles()
+})
 </script>
 
-<style>
-/* Estilos de respaldo por si falla el JavaScript */
+<style scoped>
+/* Hacer los estilos más específicos y evitar que afecten otras páginas */
 .force-center-login {
   position: fixed !important;
   top: 0 !important;
@@ -97,13 +141,20 @@ onMounted(async () => {
   width: auto !important;
   max-width: 400px !important;
 }
+</style>
 
-/* Reseteos globales más agresivos */
-html, body {
+<!-- Estilos globales específicos solo para el login -->
+<style>
+/* Solo aplicar estos estilos cuando existe .force-center-login */
+body:has(.force-center-login) {
   margin: 0 !important;
   padding: 0 !important;
   height: 100vh !important;
   overflow: hidden !important;
+}
+
+html:has(.force-center-login) {
+  height: 100vh !important;
 }
 
 /* Ocultar todo lo demás cuando está el login */
