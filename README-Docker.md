@@ -8,7 +8,7 @@ Esta guía te ayudará a configurar y ejecutar todo el proyecto Trans Comarapa u
 - [Docker Compose](https://docs.docker.com/compose/install/) (versión 2.0 o superior)
 - [Make](https://www.gnu.org/software/make/) (opcional, para comandos simplificados)
 
-## �� Inicio Rápido
+## ⚡ Inicio Rápido
 
 ### Configuración Inicial (Una sola vez)
 
@@ -45,15 +45,6 @@ make down
 make status
 ```
 
-### 2. Acceder a la Aplicación
-
-Una vez que todos los servicios estén ejecutándose:
-
-- **Frontend (Nuxt.js)**: http://localhost:3000
-- **Backend API (FastAPI)**: http://localhost:8000
-- **Documentación API**: http://localhost:8000/docs
-- **Base de Datos MySQL**: localhost:3308
-
 ## 🏗️ Arquitectura del Proyecto
 
 ```
@@ -61,6 +52,10 @@ Una vez que todos los servicios estén ejecutándose:
 │   Frontend      │    │    Backend      │    │   Database      │
 │   (Nuxt.js)     │◄──►│   (FastAPI)     │◄──►│    (MySQL)      │
 │   Port: 3000    │    │   Port: 8000    │    │   Port: 3308    │
+│                 │    │                 │    │                 │
+│ ⭐ Página de    │    │ ⭐ API Optimi-  │    │ ⭐ Datos de     │
+│ Boletos         │    │ zada para       │    │ Prueba          │
+│ Modernizada     │    │ Frontend        │    │ Realistas       │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -74,11 +69,15 @@ trans-comarapa-app/
 ├── env.example                 # Variables de entorno de ejemplo
 ├── frontend/
 │   ├── Dockerfile             # Imagen del frontend
-│   └── .dockerignore          # Archivos excluidos
+│   ├── .dockerignore          # Archivos excluidos
+│   └── pages/
+│       └── bookings.vue       # ⭐ Página modernizada
 └── backend/
     ├── Dockerfile             # Imagen del backend
     ├── docker-compose.yml     # Configuración legacy (solo backend)
-    └── .dockerignore          # Archivos excluidos
+    ├── .dockerignore          # Archivos excluidos
+    └── db/
+        └── seed.py            # ⭐ Datos de prueba mejorados
 ```
 
 ## 🛠️ Comandos Disponibles
@@ -110,6 +109,11 @@ make logs-frontend   # Ver logs solo del frontend
 make shell-backend   # Acceder al shell del backend
 make shell-frontend  # Acceder al shell del frontend
 make shell-db        # Acceder a MySQL
+
+# Base de datos
+make seed            # Poblar con datos completos de prueba
+make seed-test-users # Crear solo usuarios de prueba (rápido)
+make clear-db        # Limpiar toda la base de datos
 
 # Limpieza
 make clean           # Limpiar contenedores y volúmenes
@@ -167,6 +171,7 @@ FRONTEND_TARGET=development
 - Volúmenes montados para desarrollo
 - Logs detallados
 - Debug habilitado
+- ⭐ Página de boletos con diseño moderno
 
 #### Producción
 - Imágenes optimizadas
@@ -187,7 +192,7 @@ make up-prod
 
 En modo desarrollo, los cambios en el código se reflejan automáticamente:
 
-- **Frontend**: Hot reload automático
+- **Frontend**: Hot reload automático (incluyendo página de boletos mejorada)
 - **Backend**: Recarga automática con uvicorn --reload
 
 ### Instalar Nuevas Dependencias
@@ -250,7 +255,7 @@ docker-compose exec -T db mysql -u root -p trans_comarapa < backup.sql
 
 El proyecto incluye un script completo de seeding que crea datos de prueba realistas:
 
-### Datos Incluidos
+### Datos Incluidos ⭐ Mejorados
 
 El script `backend/db/seed.py` crea:
 
@@ -260,7 +265,7 @@ El script `backend/db/seed.py` crea:
 - **Usuarios**: 40+ clientes, 10 conductores, 7 secretarios, 10 asistentes, 1 administrador
 - **Buses**: 5 buses con diferentes capacidades y modelos
 - **Viajes**: 60 viajes con fechas variadas (pasados, presentes y futuros)
-- **Tickets**: Tickets aleatorios para los viajes
+- **Tickets**: Tickets aleatorios para los viajes con diferentes estados
 - **Paquetes**: Paquetes con items detallados para cada viaje
 
 ### Comandos de Seeding
@@ -276,7 +281,7 @@ make seed-test-users
 make clear-db
 ```
 
-### Usuarios de Prueba
+### Usuarios de Prueba ⭐ Actualizados
 
 El script crea usuarios específicos para testing:
 
@@ -310,6 +315,32 @@ El script crea usuarios específicos para testing:
 2. **Desarrollo**: Usa `make seed-test-users` si solo necesitas usuarios
 3. **Reset**: Usa `make clear-db` seguido de `make seed` para empezar limpio
 
+## 🚀 Características Destacadas del Sistema
+
+### Frontend Modernizado ⭐
+- **Página de Boletos**: Completamente rediseñada con gradientes y efectos visuales
+- **Vista Dual**: Alternar entre tarjetas elegantes y tabla profesional
+- **Filtros Avanzados**: Sistema colapsable con múltiples criterios
+- **Exportación**: Descarga de datos filtrados en formato CSV
+- **Responsive**: Aprovechamiento completo del ancho de pantalla
+- **Estadísticas Mejoradas**: Porcentajes, promedios y comparativas
+
+### Backend Optimizado ⭐
+- **API para Boletos**: Endpoints optimizados para el frontend moderno
+- **Filtros Avanzados**: Soporte para búsqueda por múltiples campos
+- **Estadísticas en Tiempo Real**: APIs dedicadas para dashboard
+- **Paginación Mejorada**: Manejo eficiente de grandes volúmenes de datos
+
+### Acceso a la Aplicación
+
+Una vez que todos los servicios estén ejecutándose:
+
+- **Frontend (Nuxt.js)**: http://localhost:3000
+  - ⭐ Página de boletos modernizada: http://localhost:3000/bookings
+- **Backend API (FastAPI)**: http://localhost:8000
+- **Documentación API**: http://localhost:8000/docs
+- **Base de Datos MySQL**: localhost:3308
+
 ## 🚨 Solución de Problemas
 
 ### Problemas Comunes
@@ -338,6 +369,14 @@ El script crea usuarios específicos para testing:
    ```bash
    make logs-db
    make restart-db
+   ```
+
+5. **Frontend no carga cambios**
+   ```bash
+   # Limpiar cache de Node.js
+   make shell-frontend
+   rm -rf .nuxt node_modules
+   npm install
    ```
 
 ### Logs Detallados
@@ -394,6 +433,37 @@ make restart-db
 - Usar HTTPS en producción
 - Limitar acceso a la base de datos
 
+## 📊 Monitoreo y Métricas
+
+### Estado de Servicios
+
+```bash
+# Ver estado de todos los servicios
+make status
+
+# Ver uso de recursos
+docker stats
+
+# Ver logs de rendimiento
+make logs-f | grep -E "(time|performance|slow)"
+```
+
+### Métricas del Sistema
+
+```bash
+# Verificar base de datos
+make shell-db
+SHOW TABLES;
+SELECT COUNT(*) FROM tickets;
+SELECT COUNT(*) FROM trips;
+
+# Verificar API
+curl http://localhost:8000/api/v1/stats/dashboard
+
+# Verificar frontend
+curl http://localhost:3000/
+```
+
 ## 📚 Recursos Adicionales
 
 - [Documentación de Docker](https://docs.docker.com/)
@@ -409,3 +479,8 @@ Si encuentras problemas:
 2. Verifica el estado: `make status`
 3. Limpia y reconstruye: `make clean && make rebuild`
 4. Consulta la documentación específica de cada servicio 
+
+---
+
+**Última actualización**: Diciembre 2024  
+**Próxima revisión**: Enero 2025 

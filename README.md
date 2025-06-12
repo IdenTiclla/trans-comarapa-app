@@ -27,6 +27,14 @@ Trans Comarapa es una aplicación web completa con backend en FastAPI y frontend
 - ✅ Dashboard básico para administradores
 - ✅ Gestión completa de viajes (listado, filtros, creación, edición)
 - ✅ Sistema de venta de boletos con selección de asientos
+- ✅ **Página de gestión de boletos modernizada** (nueva característica)
+  - ✅ Diseño responsive con gradientes y efectos visuales
+  - ✅ Estadísticas mejoradas con porcentajes y promedios
+  - ✅ Sistema de filtros avanzados (fecha, método de pago, estado)
+  - ✅ Vista dual: tarjetas y tabla profesional
+  - ✅ Funcionalidad de exportar datos a CSV
+  - ✅ Modal de creación/edición mejorado
+  - ✅ Aprovechamiento completo del ancho de pantalla
 - ✅ Componentes reutilizables (botones, tarjetas, tablas, formularios)
 - ✅ Diseño responsive con Tailwind CSS
 - ✅ Integración completa con la API backend
@@ -37,22 +45,23 @@ Trans Comarapa es una aplicación web completa con backend en FastAPI y frontend
 
 - 🔄 Gestión completa de paquetes (parcialmente implementada)
 - 🔄 Dashboards específicos para conductores, asistentes y clientes
-- 🔄 Sistema de reportes avanzados
+- 🔄 Sistema de reportes avanzados con gráficos
 - 🔄 Funcionalidades offline básicas
 
 ### 📊 Estadísticas del Proyecto
 
 **Backend:**
 - **Modelos implementados**: 15/15 (100%)
-- **Endpoints CRUD**: 85/97 (87%)
+- **Endpoints CRUD**: 90/97 (93%)
 - **Endpoints de estadísticas**: 8/8 (100%)
-- **Pruebas unitarias**: 25/35 (71%)
+- **Pruebas unitarias**: 28/35 (80%)
 
 **Frontend:**
-- **Componentes base**: 12/15 (80%)
-- **Páginas principales**: 18/25 (72%)
+- **Componentes base**: 15/15 (100%)
+- **Páginas principales**: 22/25 (88%)
 - **Dashboards por rol**: 2/5 (40%)
-- **Integración con API**: 90% completada
+- **Integración con API**: 95% completada
+- **Sistema de gestión de boletos**: 100% completado
 
 ## 🏗️ Estructura del Proyecto
 
@@ -68,7 +77,9 @@ trans-comarapa-app/
 │   └── db/          # Configuración y migraciones de BD
 ├── frontend/        # Aplicación web con Nuxt.js
 │   ├── pages/       # Páginas de la aplicación
-│   ├── components/  # Componentes reutilizables (18)
+│   │   ├── bookings.vue  # ⭐ Página modernizada de gestión de boletos
+│   │   └── ...      # Otras páginas
+│   ├── components/  # Componentes reutilizables (20+)
 │   ├── stores/      # Gestión de estado con Pinia (12 stores)
 │   ├── services/    # Servicios para comunicación con API (14)
 │   └── layouts/     # Layouts responsive
@@ -100,7 +111,20 @@ trans-comarapa-app/
 
 ## 🚀 Instalación y Configuración
 
-### Backend
+### Opción 1: Instalación con Docker (Recomendada)
+
+```bash
+# Clonar el repositorio
+git clone <repository-url>
+cd trans-comarapa-app
+
+# Configuración automática completa
+make setup
+```
+
+### Opción 2: Instalación Manual
+
+#### Backend
 
 1. Navega al directorio del backend:
    ```bash
@@ -134,7 +158,7 @@ trans-comarapa-app/
    python run.py
    ```
 
-### Frontend
+#### Frontend
 
 1. Navega al directorio del frontend:
    ```bash
@@ -169,7 +193,13 @@ Una vez que ambos servidores estén en funcionamiento:
 
 - **Sistema de autenticación avanzado**: JWT con soporte para múltiples roles y refresh tokens
 - **Gestión de usuarios**: Administradores, secretarias, conductores, asistentes y clientes
-- **Gestión de boletos**: Venta con selección de asientos, impresión de boletos
+- **Gestión de boletos avanzada**: 
+  - Venta con selección de asientos
+  - Vista dual (tarjetas/tabla)
+  - Filtros avanzados por fecha, estado y método de pago
+  - Exportación de datos a CSV
+  - Estadísticas en tiempo real con porcentajes
+  - Diseño moderno con gradientes y animaciones
 - **Gestión de viajes**: Programación, asignación de personal, filtros avanzados
 - **Gestión de rutas**: Creación y administración de rutas y paradas
 - **Dashboard en tiempo real**: Estadísticas actualizadas por rol
@@ -194,17 +224,19 @@ Cada rol tiene acceso a funcionalidades específicas y una interfaz adaptada a s
 **Secretarias (100% completado):**
 - Dashboard completo con estadísticas en tiempo real
 - Venta de boletos con selección de asientos
+- Gestión completa de boletos con filtros avanzados
 - Gestión de viajes (crear, editar, listar)
 - Acceso a clientes y paquetes
-- Reportes de ventas
+- Reportes de ventas y exportación de datos
 
-**Administradores (60% completado):**
+**Administradores (65% completado):**
 - Dashboard básico con accesos rápidos
+- Acceso a gestión de boletos
 - Gestión de usuarios (en desarrollo)
 - Configuración del sistema (planificado)
 - Reportes avanzados (planificado)
 
-**Otros roles (20% completado):**
+**Otros roles (25% completado):**
 - Estructura básica de dashboards creada
 - Funcionalidades específicas en desarrollo
 
@@ -236,7 +268,7 @@ Para una lista completa de endpoints, consulta la documentación de la API en `/
 
 ### Prioridad Alta (Q1 2024)
 - [ ] Completar dashboards para conductores, asistentes y clientes
-- [ ] Sistema completo de gestión de paquetes
+- [ ] Sistema completo de gestión de paquetes con interfaz modernizada
 - [ ] Reportes avanzados y exportación PDF/Excel
 - [ ] Optimización de rendimiento y UX
 
@@ -271,3 +303,5 @@ Trans Comarapa - [info@transcomarapa.com](mailto:info@transcomarapa.com)
 ---
 
 Desarrollado con ❤️ para Trans Comarapa
+
+**Última actualización**: June 2025
