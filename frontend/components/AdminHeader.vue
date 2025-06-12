@@ -1,6 +1,6 @@
 <template>
-  <header class="bg-white shadow-sm">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+  <header class="bg-white shadow-sm w-full">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <div class="flex-shrink-0">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Mobile menu, show/hide based on menu state. -->
-    <div v-if="mobileMenuOpen" class="md:hidden" id="mobile-menu">
+    <div v-if="mobileMenuOpen" class="md:hidden w-full" id="mobile-menu">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <!-- Admin Links Mobile -->
             <template v-if="authStore.userRole === 'admin'">
