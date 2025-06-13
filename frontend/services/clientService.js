@@ -68,7 +68,7 @@ const updateClient = async (id, clientData) => {
   }
 };
 
-export const deleteClient = async (id) => {
+const deleteClient = async (id) => {
   try {
     return await apiFetch(`${resourceUrl}/${id}`, {
       method: 'DELETE',

@@ -63,7 +63,7 @@
             <!-- Secretary Links - Desktop -->
             <template v-if="authStore.userRole === 'secretary'">
               <NuxtLink to="/trips/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Viajes</NuxtLink>
-              <NuxtLink to="/clients/manage" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Clientes</NuxtLink>
+              <NuxtLink to="/clients" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Clientes</NuxtLink>
               <NuxtLink to="/reports/secretary" class="hover:underline px-2 py-1 rounded hover:bg-blue-700 transition-colors">Reportes</NuxtLink>
             </template>
             <!-- End Secretary Links - Desktop -->
@@ -147,7 +147,7 @@
                 Viajes
               </NuxtLink>
               <NuxtLink
-                to="/clients/manage"
+                to="/clients"
                 class="hover:bg-blue-800 px-3 py-2 rounded transition-colors"
                 @click="isMenuOpen = false"
               >
