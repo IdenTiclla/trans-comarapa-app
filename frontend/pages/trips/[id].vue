@@ -2,6 +2,7 @@
   <div>
     <div class="py-6">
       <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Botón de volver -->
         <div class="mb-6">
           <button
             @click="router.back()"
@@ -14,6 +15,7 @@
           </button>
         </div>
 
+        <!-- Estados de carga y error -->
         <div v-if="tripStore.isLoading" class="flex justify-center py-12">
           <p class="text-gray-500">Cargando información del viaje...</p>
         </div>
@@ -31,107 +33,16 @@
           </div>
         </div>
 
+        <!-- Contenido principal -->
         <div v-else-if="displayedTrip">
-          <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-            <div class="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-              <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
-                  Detalles del Viaje
-                </h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                  ID: {{ displayedTrip.id }}
-                </p>
-              </div>
-              <div>
-                <span
-                  class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full"
-                  :class="getStatusClass(displayedTrip.status)"
-                >
-                  {{ getStatusText(displayedTrip.status) }}
-                </span>
-              </div>
-            </div>
-            <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-              <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                  <dt class="text-sm font-medium text-gray-500">Ruta</dt>
-                  <dd class="mt-1 text-sm text-gray-900">
-                    <div class="flex items-center space-x-4 text-base font-semibold">
-                      <span>{{ displayedTrip.route?.origin }}</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                      <span>{{ displayedTrip.route?.destination }}</span>
-                    </div>
-                  </dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Fecha de salida</dt>
-                  <dd class="mt-1 text-sm text-gray-900 font-semibold">{{ formatDate(displayedTrip.trip_datetime) }}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Hora de salida</dt>
-                  <dd class="mt-1 text-sm text-gray-900 font-semibold">{{ formatTime(displayedTrip.departure_time, displayedTrip.trip_datetime) }}</dd>
-                </div>
-                
-                <div class="sm:col-span-2">
-                  <dt class="text-sm font-medium text-gray-500">Asientos</dt>
-                  <dd class="mt-2 text-sm text-gray-900">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex items-center text-green-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015.537-4.873 1 1 0 11-1.074 1.746A3 3 0 006 14v3H3v-1a5 5 0 013-4z" />
-                        </svg>
-                        <span class="font-bold">{{ displayedTrip.available_seats }}</span>
-                        <span class="ml-1">Disponibles</span>
-                      </div>
-                      <div class="flex items-center text-red-600">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="font-bold">{{ displayedTrip.occupied_seat_numbers.length }}</span>
-                        <span class="ml-1">Ocupados</span>
-                      </div>
-                       <div class="flex items-center text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v-1h8v1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a4 4 0 00-4-4H6a4 4 0 00-4 4v1h14z" />
-                        </svg>
-                        <span class="font-bold">{{ displayedTrip.total_seats }}</span>
-                        <span class="ml-1">Totales</span>
-                      </div>
-                    </div>
-                  </dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Conductor</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayedTrip.driver ? `${displayedTrip.driver.firstname} ${displayedTrip.driver.lastname}` : 'No asignado' }}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Asistente</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayedTrip.assistant ? `${displayedTrip.assistant.firstname} ${displayedTrip.assistant.lastname}` : 'No asignado' }}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Bus</dt>
-                  <dd class="mt-1 text-sm text-gray-900">
-                     <span v-if="displayedTrip.bus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {{ displayedTrip.bus.license_plate }}
-                    </span>
-                    <span v-if="!displayedTrip.bus">No asignado</span>
-                  </dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Secretaria</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ displayedTrip.secretary ? `${displayedTrip.secretary.firstname} ${displayedTrip.secretary.lastname}` : 'No asignada' }}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
+          <!-- Detalles del viaje -->
+          <TripDetailsCard
+            :trip="displayedTrip"
+            :format-date="formatDate"
+            :format-time="formatTime"
+            :get-status-class="getStatusClass"
+            :get-status-text="getStatusText"
+          />
 
           <!-- Mapa de asientos -->
           <div v-if="displayedTrip" class="mt-6 mb-8">
@@ -172,246 +83,35 @@
             </div>
           </div>
 
-          <!-- Sold Tickets Section -->
-          <div class="mt-8">
-            <button
-              @click="toggleSoldTickets"
-              class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
-            >
-              <h3 class="text-lg font-medium text-gray-800">
-                Boletos Vendidos ({{ soldTickets.length }})
-              </h3>
-              <ChevronDownIcon v-if="!showSoldTickets" class="w-6 h-6 text-gray-600" />
-              <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
-            </button>
+          <!-- Sección de boletos vendidos -->
+          <SoldTicketsSection
+            :sold-tickets="soldTickets"
+            :is-loading-sold-tickets="isLoadingSoldTickets"
+            :sold-tickets-error="soldTicketsError"
+            :show-sold-tickets="showSoldTickets"
+            :grouped-sold-tickets="groupedSoldTickets"
+            :show-tickets-by-state="showTicketsByState"
+            @toggle-sold-tickets="toggleSoldTickets"
+            @toggle-tickets-by-state="toggleTicketsByState"
+            @cancel-ticket="openCancelModal"
+            @view-ticket-details="openDetailsModal"
+          />
 
-            <div v-if="showSoldTickets" class="mt-4">
-              <div v-if="isLoadingSoldTickets" class="flex justify-center py-6">
-                <p class="text-gray-500 italic">Cargando boletos vendidos...</p>
-                <!-- You can add a spinner here -->
-              </div>
-              <div v-else-if="soldTicketsError" class="bg-red-50 border border-red-200 rounded-md p-4">
-                <p class="text-red-700 text-sm">{{ soldTicketsError }}</p>
-              </div>
-              <div v-else-if="soldTickets.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                <p class="text-blue-700 text-sm">No hay boletos vendidos para este viaje aún.</p>
-              </div>
-              <!-- Iterate over grouped tickets -->
-              <div v-else class="space-y-4">
-                <div v-for="(ticketsInState, state) in groupedSoldTickets" :key="state">
-                  <button
-                    @click="toggleTicketsByState(state)"
-                    class="w-full flex justify-between items-center px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-md shadow-sm focus:outline-none transition-colors duration-150 border border-gray-200"
-                  >
-                    <h4 class="text-md font-medium text-gray-700">
-                      {{ state.charAt(0).toUpperCase() + state.slice(1) }} ({{ ticketsInState.length }})
-                    </h4>
-                    <ChevronDownIcon v-if="!showTicketsByState[state]" class="w-5 h-5 text-gray-500" />
-                    <ChevronUpIcon v-else class="w-5 h-5 text-gray-500" />
-                  </button>
+          <!-- Sección de paquetes -->
+          <PackagesSection
+            :packages="packages"
+            :is-loading-packages="isLoadingPackages"
+            :packages-error="packagesError"
+            :show-packages="showPackages"
+            :grouped-packages="groupedPackages"
+            :show-packages-by-status="showPackagesByStatus"
+            :trip="displayedTrip"
+            @toggle-packages="togglePackages"
+            @toggle-packages-by-status="togglePackagesByStatus"
+            @open-package-modal="openPackageModal"
+          />
 
-                  <div v-if="showTicketsByState[state]" class="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <div
-                      v-for="ticket in ticketsInState"
-                      :key="ticket.id"
-                      class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-in-out flex flex-col"
-                    >
-                      <div class="p-5 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                          <h4 class="text-md font-semibold text-gray-800">
-                            Boleto #{{ ticket.id }}
-                          </h4>
-                          <span 
-                            class="px-2.5 py-1 text-xs font-semibold rounded-full tracking-wide"
-                            :class="{
-                              'bg-green-100 text-green-800': ticket.state === 'confirmed',
-                              'bg-yellow-100 text-yellow-800': ticket.state === 'pending',
-                              'bg-red-100 text-red-800': ticket.state === 'cancelled',
-                              'bg-gray-100 text-gray-800': ticket.state === 'completed' || ticket.state === 'used' || ticket.state === 'unknown',
-                            }"
-                          >
-                            {{ ticket.state ? ticket.state.charAt(0).toUpperCase() + ticket.state.slice(1) : 'N/D' }}
-                          </span>
-                        </div>
-
-                        <div class="space-y-3 text-sm text-gray-600">
-                          <div class="flex items-center">
-                            <UserCircleIcon class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
-                            <div>
-                              <p class="font-medium text-gray-800">Pasajero</p>
-                              <p>{{ ticket.client?.firstname }} {{ ticket.client?.lastname }}</p>
-                            </div>
-                          </div>
-                          <div class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                             <div>
-                              <p class="font-medium text-gray-800">Asiento</p>
-                              <p>{{ ticket.seat?.seat_number }} ({{ ticket.seat?.deck }})</p>
-                            </div>
-                          </div>
-                           <div class="flex items-center">
-                             <CurrencyDollarIcon class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
-                             <div>
-                              <p class="font-medium text-gray-800">Precio</p>
-                              <p>Bs. {{ ticket.price?.toFixed(2) }}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div v-if="ticket.state === 'confirmed' || ticket.state === 'pending'" class="px-5 py-3 bg-gray-50/70 border-t border-gray-100 flex justify-end space-x-2">
-                        <AppButton size="sm" variant="danger-outline" @click="openCancelModal(ticket)">Cancelar</AppButton>
-                        <AppButton size="sm" variant="primary" @click="openDetailsModal(ticket)">Imprimir</AppButton>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- End Sold Tickets Section -->
-
-          <!-- Packages Section -->
-          <div class="mt-8">
-            <div class="flex justify-between items-center mb-4">
-              <button
-                @click="togglePackages"
-                class="flex-1 flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg shadow focus:outline-none transition-colors duration-150"
-              >
-                <h3 class="text-lg font-medium text-gray-800">
-                  Paquetes ({{ packages.length }})
-                </h3>
-                <ChevronDownIcon v-if="!showPackages" class="w-6 h-6 text-gray-600" />
-                <ChevronUpIcon v-else class="w-6 h-6 text-gray-600" />
-              </button>
-              
-              <!-- Botón para registrar paquete -->
-              <AppButton
-                variant="primary"
-                size="sm"
-                @click="openPackageModal"
-                class="ml-3"
-                v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Registrar Paquete
-              </AppButton>
-            </div>
-
-            <div v-if="showPackages" class="mt-4">
-              <div v-if="isLoadingPackages" class="flex justify-center py-6">
-                <p class="text-gray-500 italic">Cargando paquetes...</p>
-              </div>
-              <div v-else-if="packagesError" class="bg-red-50 border border-red-200 rounded-md p-4">
-                <p class="text-red-700 text-sm">{{ packagesError }}</p>
-              </div>
-              <div v-else-if="packages.length === 0" class="bg-blue-50 border border-blue-200 rounded-md p-4 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-blue-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <p class="text-blue-700 text-sm font-medium mb-2">No hay paquetes registrados para este viaje</p>
-                <p class="text-blue-600 text-xs mb-4">¿Desea registrar el primer paquete?</p>
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  @click="openPackageModal"
-                  v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Registrar Primer Paquete
-                </AppButton>
-              </div>
-              <!-- Iterate over grouped packages -->
-              <div v-else class="space-y-4">
-                <div v-for="(packagesInStatus, status) in groupedPackages" :key="status">
-                  <button
-                    @click="togglePackagesByStatus(status)"
-                    class="w-full flex justify-between items-center px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-md shadow-sm focus:outline-none transition-colors duration-150 border border-gray-200"
-                  >
-                    <h4 class="text-md font-medium text-gray-700">
-                      {{ status.charAt(0).toUpperCase() + status.slice(1) }} ({{ packagesInStatus.length }})
-                    </h4>
-                    <ChevronDownIcon v-if="!showPackagesByStatus[status]" class="w-5 h-5 text-gray-500" />
-                    <ChevronUpIcon v-else class="w-5 h-5 text-gray-500" />
-                  </button>
-
-                  <div v-if="showPackagesByStatus[status]" class="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <div
-                      v-for="pkg in packagesInStatus"
-                      :key="pkg.id"
-                      class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200 ease-in-out flex flex-col"
-                    >
-                      <div class="p-5 flex-grow">
-                        <div class="flex justify-between items-start mb-4">
-                          <h4 class="text-md font-semibold text-gray-800">
-                            Paquete #{{ pkg.id }}
-                          </h4>
-                          <span 
-                            class="px-2.5 py-1 text-xs font-semibold rounded-full tracking-wide"
-                            :class="{
-                              'bg-green-100 text-green-800': pkg.status === 'delivered' || pkg.status === 'entregado',
-                              'bg-yellow-100 text-yellow-800': pkg.status === 'in transit' || pkg.status === 'en transito',
-                              'bg-blue-100 text-blue-800': pkg.status === 'pending' || pkg.status === 'pendiente',
-                              'bg-red-100 text-red-800': pkg.status === 'cancelled' || pkg.status === 'cancelado',
-                              'bg-gray-100 text-gray-800': pkg.status === 'unknown' || !pkg.status,
-                            }"
-                          >
-                            {{ pkg.status ? pkg.status.charAt(0).toUpperCase() + pkg.status.slice(1) : 'N/D' }}
-                          </span>
-                        </div>
-
-                        <div class="space-y-3 text-sm text-gray-600">
-                          <div class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
-                            </svg>
-                            <div>
-                              <p class="font-medium text-gray-800">Descripción</p>
-                              <p class="text-gray-600">{{ pkg.name }}</p>
-                            </div>
-                          </div>
-                          <div class="flex items-center">
-                            <UserCircleIcon class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
-                            <div>
-                              <p class="font-medium text-gray-800">Remitente</p>
-                              <p>{{ pkg.sender?.firstname }} {{ pkg.sender?.lastname }}</p>
-                            </div>
-                          </div>
-                          <div class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                            </svg>
-                            <div>
-                              <p class="font-medium text-gray-800">Destinatario</p>
-                              <p>{{ pkg.recipient?.firstname }} {{ pkg.recipient?.lastname }}</p>
-                            </div>
-                          </div>
-                          <div class="flex items-center">
-                            <CurrencyDollarIcon class="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
-                            <div>
-                              <p class="font-medium text-gray-800">Precio</p>
-                              <p>Bs. {{ pkg.price?.toFixed(2) }}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="px-5 py-3 bg-gray-50/70 border-t border-gray-100 flex justify-end space-x-2">
-                        <AppButton size="sm" variant="secondary-outline">Ver Detalles</AppButton>
-                        <AppButton v-if="pkg.status !== 'delivered' && pkg.status !== 'entregado'" size="sm" variant="primary">Actualizar Estado</AppButton>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- End Packages Section -->
-
+          <!-- Botones de acción -->
           <div v-if="displayedTrip" class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
             <AppButton
               variant="secondary"
@@ -429,1069 +129,18 @@
     </div>
   </div>
   
-  <!-- Modal para detalles o cancelación de ticket -->
-  <div v-if="showTicketModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg leading-6 font-medium text-white">
-              {{ modalType === 'cancel' ? 'Cancelar Reserva' : 'Detalles del Boleto' }}
-            </h3>
-            <button 
-              @click="closeModal" 
-              class="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-blue-100">
-            {{ modalType === 'cancel' ? 'Confirma la cancelación de la reserva' : 'Vista previa del boleto oficial' }}
-          </p>
-        </div>
-
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div v-if="modalType === 'details'" class="w-full">
-            <!-- Mostrar el ticket con el diseño oficial -->
-            <TicketDisplay 
-              :ticket="selectedTicket" 
-              :trip="displayedTrip"
-              v-if="selectedTicket"
-            />
-          </div>
-          
-          <!-- Modal de cancelación -->
-          <div v-else-if="modalType === 'cancel'" class="sm:flex sm:items-start">
-            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-              <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Cancelar Reserva
-              </h3>
-              
-              <!-- Contenido del modal -->
-              <div class="mt-4">
-                <!-- Detalles del ticket a cancelar -->
-                <div v-if="selectedTicket" class="bg-gray-50 p-3 rounded-md mb-4">
-                  <div class="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p class="text-gray-500">Boleto #:</p>
-                      <p class="font-medium">{{ selectedTicket.id }}</p>
-                    </div>
-                    <div>
-                      <p class="text-gray-500">Estado:</p>
-                      <p class="font-medium">{{ selectedTicket.state }}</p>
-                    </div>
-                    <div>
-                      <p class="text-gray-500">Asiento:</p>
-                      <p class="font-medium">{{ selectedTicket.seat?.seat_number }}</p>
-                    </div>
-                    <div>
-                      <p class="text-gray-500">Precio:</p>
-                      <p class="font-medium">Bs. {{ selectedTicket.price }}</p>
-                    </div>
-                    <div class="col-span-2">
-                      <p class="text-gray-500">Cliente:</p>
-                      <p class="font-medium">{{ selectedTicket.client?.firstname }} {{ selectedTicket.client?.lastname }}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Mensaje de confirmación de cancelación -->
-                <div class="text-sm text-gray-500">
-                  <p>¿Está seguro que desea cancelar la reserva del asiento {{ selectedTicket?.seat?.seat_number }}?</p>
-                  <p class="mt-2 text-red-600">Esta acción no se puede deshacer.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Botones de acción -->
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <!-- Botón de imprimir para detalles -->
-          <button 
-            v-if="modalType === 'details'"
-            @click="printTicket"
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Imprimir Boleto
-          </button>
-          
-          <!-- Botón de confirmación para cancelación -->
-          <button 
-            v-if="modalType === 'cancel'"
-            @click="confirmCancelReservation"
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
-            :disabled="cancellingReservation"
-          >
-            {{ cancellingReservation ? 'Cancelando...' : 'Confirmar Cancelación' }}
-          </button>
-          
-          <!-- Botón de cerrar -->
-          <button 
-            @click="closeModal" 
-            type="button" 
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            {{ modalType === 'cancel' ? 'Cancelar' : 'Cerrar' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para reserva de asiento -->
-  <div v-if="showReservationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeReservationModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xl leading-6 font-medium text-white">
-              <span v-if="selectedSeatsForReservation.length === 1">
-                Reserva de Boleto - Asiento {{ selectedSeatsForReservation[0]?.number || '' }}
-              </span>
-              <span v-else>
-                Reserva de {{ selectedSeatsForReservation.length }} Boletos
-              </span>
-            </h3>
-            <button 
-              @click="closeReservationModal" 
-              class="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-green-100">
-            Complete los datos del cliente y vea la vista previa del boleto antes de confirmar la reserva.
-          </p>
-        </div>
-        
-        <!-- Contenido del modal -->
-        <div class="bg-white px-6 py-6">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- COLUMNA IZQUIERDA: Formulario de Cliente -->
-            <div class="space-y-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
-                  Información del Cliente
-                </h4>
-                
-                <!-- Selector de tipo de cliente -->
-                <div class="mb-6">
-                  <div class="flex items-center space-x-6">
-                    <div class="flex items-center">
-                      <input
-                        id="reservation_new_client"
-                        type="radio"
-                        name="reservation_client_type"
-                        value="new"
-                        v-model="reservationClientType"
-                        class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                      />
-                      <label for="reservation_new_client" class="ml-2 text-sm font-medium text-gray-700">
-                        Cliente Nuevo
-                      </label>
-                    </div>
-                    <div class="flex items-center">
-                      <input
-                        id="reservation_existing_client"
-                        type="radio"
-                        name="reservation_client_type"
-                        value="existing"
-                        v-model="reservationClientType"
-                        class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                      />
-                      <label for="reservation_existing_client" class="ml-2 text-sm font-medium text-gray-700">
-                        Cliente Existente
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Buscar Cliente Existente (solo si está seleccionado) -->
-                <div v-if="reservationClientType === 'existing'" class="mb-6">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Buscar Cliente <span class="text-red-500">*</span>
-                  </label>
-                  <div class="relative">
-                    <input
-                      v-model="reservationClientSearchQuery"
-                      type="text"
-                      placeholder="Buscar por nombre, apellido o CI..."
-                      class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      @input="searchReservationClients"
-                    />
-                    
-                    <!-- Resultados de búsqueda -->
-                    <div v-if="reservationFoundClients.length > 0" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                      <div
-                        v-for="client in reservationFoundClients"
-                        :key="client.id"
-                        @click="selectReservationExistingClient(client)"
-                        class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-green-50"
-                      >
-                        <div class="flex items-center">
-                          <span class="font-medium block truncate">
-                            {{ client.firstname }} {{ client.lastname }}
-                          </span>
-                          <span class="text-gray-500 ml-2 text-sm">
-                            ({{ client.document_id }})
-                          </span>
-                        </div>
-                        <div class="text-gray-400 text-xs">
-                          {{ client.phone || 'Sin teléfono' }} • {{ client.email || 'Sin email' }}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Mensaje cuando no se encuentran clientes -->
-                    <div v-else-if="reservationHasSearched && reservationClientSearchQuery.length > 0" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-2 px-3 text-sm text-gray-500 ring-1 ring-black ring-opacity-5">
-                      No se encontraron clientes con ese criterio
-                    </div>
-                  </div>
-                  
-                  <!-- Cliente seleccionado -->
-                  <div v-if="selectedReservationExistingClient" class="mt-3 p-3 bg-green-50 rounded-md border border-green-200">
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <p class="text-sm font-medium text-green-800">
-                          {{ selectedReservationExistingClient.firstname }} {{ selectedReservationExistingClient.lastname }}
-                        </p>
-                        <p class="text-xs text-green-600">
-                          CI: {{ selectedReservationExistingClient.document_id }} • 
-                          {{ selectedReservationExistingClient.phone || 'Sin teléfono' }}
-                        </p>
-                      </div>
-                      <button
-                        @click="clearReservationExistingClientSelection"
-                        class="text-green-600 hover:text-green-800"
-                      >
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Formulario de datos del cliente -->
-                <div v-if="reservationClientType === 'new' || !selectedReservationExistingClient" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Primera columna: Datos personales -->
-                  <div class="space-y-4">
-                    <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos Personales</h4>
-                    <div>
-                      <label for="firstname" class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
-                      <div class="mt-1 relative rounded-md shadow-sm">
-                        <input
-                          id="firstname"
-                          v-model="reservationClientData.firstname"
-                          type="text"
-                          required
-                          :disabled="reservationClientType === 'existing' && selectedReservationExistingClient"
-                          class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
-                          :class="{'border-red-300': reservationClientData.firstname.trim() === '' && formTouched, 'bg-gray-100': reservationClientType === 'existing' && selectedReservationExistingClient}"
-                          @focus="formTouched = true"
-                          placeholder="Ej. Juan"
-                        />
-                        <div v-if="reservationClientData.firstname.trim() === '' && formTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                      <p v-if="reservationClientData.firstname.trim() === '' && formTouched" class="mt-1 text-xs text-red-600">El nombre es obligatorio</p>
-                    </div>
-                    
-                    <div>
-                      <label for="lastname" class="block text-sm font-medium text-gray-700">Apellido</label>
-                      <input
-                        id="lastname"
-                        v-model="reservationClientData.lastname"
-                        type="text"
-                        :disabled="reservationClientType === 'existing' && selectedReservationExistingClient"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        :class="{'bg-gray-100': reservationClientType === 'existing' && selectedReservationExistingClient}"
-                        placeholder="Ej. Pérez"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label for="document_id" class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
-                      <div class="mt-1 relative rounded-md shadow-sm">
-                        <input
-                          id="document_id"
-                          v-model="reservationClientData.document_id"
-                          type="text"
-                          required
-                          :disabled="reservationClientType === 'existing' && selectedReservationExistingClient"
-                          class="block w-full pr-10 focus:ring-green-500 focus:border-green-500 pl-3 py-2 sm:text-sm border-gray-300 rounded-md"
-                          :class="{'border-red-300': reservationClientData.document_id.trim() === '' && formTouched, 'bg-gray-100': reservationClientType === 'existing' && selectedReservationExistingClient}"
-                          @focus="formTouched = true"
-                          placeholder="Ej. 1234567"
-                        />
-                        <div v-if="reservationClientData.document_id.trim() === '' && formTouched" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                      <p v-if="reservationClientData.document_id.trim() === '' && formTouched" class="mt-1 text-xs text-red-600">El CI es obligatorio</p>
-                    </div>
-                    
-                    <div>
-                      <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                      <input
-                        id="phone"
-                        v-model="reservationClientData.phone"
-                        type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. 70123456"
-                      />
-                    </div>
-                  </div>
-                  
-                  <!-- Segunda columna: Dirección y datos adicionales -->
-                  <div class="space-y-4">
-                    <h4 class="text-sm font-medium text-gray-700 border-b pb-2">Datos de Contacto</h4>
-                    <div>
-                      <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                      <input
-                        id="email"
-                        v-model="reservationClientData.email"
-                        type="email"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. correo@ejemplo.com"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-                      <input
-                        id="address"
-                        v-model="reservationClientData.address"
-                        type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. Calle Principal #123"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
-                      <input
-                        id="city"
-                        v-model="reservationClientData.city"
-                        type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. Comarapa"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label for="state" class="block text-sm font-medium text-gray-700">Departamento</label>
-                      <input
-                        id="state"
-                        v-model="reservationClientData.state"
-                        type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. Santa Cruz"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Checkbox para menor de edad -->
-                <div v-if="reservationClientType === 'new' || !selectedReservationExistingClient" class="mt-4">
-                  <label for="is_minor" class="flex items-center">
-                    <input
-                      id="is_minor"
-                      v-model="reservationClientData.is_minor"
-                      type="checkbox"
-                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                    />
-                    <span class="ml-2 text-sm text-gray-700">Menor de edad</span>
-                  </label>
-                </div>
-              </div>
-              
-              <!-- Información del viaje -->
-              <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-blue-800 mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z" />
-                  </svg>
-                  Detalles del Viaje
-                </h4>
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Ruta:</span>
-                    <span class="text-blue-900">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Fecha:</span>
-                    <span class="text-blue-900">{{ formatDate(displayedTrip?.trip_datetime) }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Hora:</span>
-                    <span class="text-blue-900">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Asientos:</span>
-                    <span class="text-blue-900 font-bold">{{ selectedSeatsForReservation.map(seat => seat.number).join(', ') }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-blue-700 font-medium">Precio Total:</span>
-                    <span class="text-blue-900 font-bold">Bs. {{ (displayedTrip?.price || 0) * selectedSeatsForReservation.length }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- COLUMNA DERECHA: Vista Previa del Boleto -->
-            <div class="space-y-6">
-              <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <h4 class="text-lg font-medium text-orange-800 mb-4 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-orange-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                  </svg>
-                  Vista Previa del Boleto de Reserva
-                </h4>
-                
-                <p class="text-sm text-orange-700 mb-4">
-                  Esta es una vista previa de cómo se verá el boleto de reserva. Los datos se actualizan automáticamente mientras completa el formulario.
-                </p>
-                
-                <!-- Componente de vista previa del ticket -->
-                <div v-if="previewReservationTicketData" class="bg-white rounded-lg shadow-sm border">
-                  <TicketDisplay 
-                    :ticket="previewReservationTicketData" 
-                    :show-print-button="false"
-                    class="transform scale-90 origin-top"
-                  />
-                </div>
-                
-                <!-- Mensaje cuando no hay datos suficientes -->
-                <div v-else class="bg-white rounded-lg border-2 border-dashed border-orange-300 p-8 text-center">
-                  <svg class="mx-auto h-12 w-12 text-orange-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M34 40h10v-4a6 6 0 00-10.712-3.714M34 40H14m20 0v-4a9.971 9.971 0 00-.712-3.714M14 40H4v-4a6 6 0 0110.713-3.714M14 40v-4c0-1.313.253-2.566.713-3.714m0 0A9.971 9.971 0 0124 24c4.004 0 7.625 2.371 9.287 6.286" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                  <h3 class="mt-2 text-sm font-medium text-orange-900">Vista previa del boleto</h3>
-                  <p class="mt-1 text-sm text-orange-500">Complete el nombre y CI del cliente para ver la vista previa</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Pie del modal -->
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button 
-            @click="confirmReservation"
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-            :disabled="reservationLoading || !isReservationFormValid"
-            :class="{'opacity-50 cursor-not-allowed': reservationLoading || !isReservationFormValid}"
-          >
-            <svg v-if="reservationLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {{ reservationLoading ? 'Reservando...' : 'Confirmar Reserva' }}
-          </button>
-          <button 
-            @click="closeReservationModal" 
-            type="button" 
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para venta de boleto -->
-  <div v-if="showSaleModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeSaleModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal MÁS ANCHO -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xl leading-6 font-medium text-white">
-              <span v-if="selectedSeatsForSaleModal.length === 1">
-                Venta de Boleto - Asiento {{ selectedSeatsForSaleModal[0]?.number || '' }}
-              </span>
-              <span v-else>
-                Venta de {{ selectedSeatsForSaleModal.length }} Boletos
-              </span>
-            </h3>
-            <button 
-              @click="closeSaleModal" 
-              class="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-green-100">
-            <span v-if="selectedSeatsForSaleModal.length === 1">
-              Complete los datos del cliente y vea la vista previa del boleto antes de confirmar la venta.
-            </span>
-            <span v-else>
-              Complete los datos del cliente para vender {{ selectedSeatsForSaleModal.length }} boletos para los asientos: 
-              <span class="font-medium">
-                {{ selectedSeatsForSaleModal.map(seat => seat.number).join(', ') }}
-              </span>
-            </span>
-          </p>
-        </div>
-        
-        <!-- Contenido del modal - LAYOUT EN DOS COLUMNAS -->
-        <div class="bg-white px-6 py-6">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- COLUMNA IZQUIERDA: Formulario de Cliente -->
-            <div class="space-y-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
-                  Información del Cliente
-                </h4>
-                
-                <!-- Buscar Cliente Existente -->
-                <div class="mb-4">
-                  <div class="flex items-center space-x-2 mb-3">
-                    <input
-                      id="existing_client"
-                      type="radio"
-                      name="client_type"
-                      value="existing"
-                      v-model="clientType"
-                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                    />
-                    <label for="existing_client" class="text-sm font-medium text-gray-700">
-                      Cliente Existente
-                    </label>
-                  </div>
-                  
-                  <div v-if="clientType === 'existing'" class="space-y-3">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por CI o Nombre</label>
-                      <div class="relative">
-                        <input
-                          type="text"
-                          v-model="clientSearchQuery"
-                          @input="searchClients"
-                          class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                          :class="{'bg-gray-100': selectedExistingClient}"
-                          :disabled="selectedExistingClient"
-                          placeholder="Ingrese CI o nombre del cliente..."
-                        />
-                        <!-- Icono de búsqueda o spinner -->
-                        <div class="absolute right-2 top-2">
-                          <svg v-if="searchingClients" class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <svg v-else-if="!selectedExistingClient" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                      
-                      <!-- Botón para limpiar selección si hay un cliente seleccionado -->
-                      <div v-if="selectedExistingClient" class="mt-2 flex items-center justify-between bg-green-50 p-3 rounded-md border border-green-200">
-                        <div class="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <div>
-                            <p class="text-sm font-medium text-green-800">Cliente seleccionado:</p>
-                            <p class="text-xs text-green-700">{{ selectedExistingClient.firstname }} {{ selectedExistingClient.lastname }} ({{ selectedExistingClient.document_id }})</p>
-                          </div>
-                        </div>
-                        <button
-                          @click="clearExistingClientSelection"
-                          type="button"
-                          class="text-green-600 hover:text-green-800 focus:outline-none"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <!-- Resultados de búsqueda -->
-                    <div v-if="foundClients.length > 0 && !selectedExistingClient" class="max-h-40 overflow-y-auto border border-gray-200 rounded-md bg-white shadow-sm">
-                      <div class="p-2 border-b border-gray-100 bg-gray-50">
-                        <p class="text-xs font-medium text-gray-600">{{ foundClients.length }} cliente(s) encontrado(s)</p>
-                      </div>
-                      <div 
-                        v-for="client in foundClients" 
-                        :key="client.id"
-                        @click="selectExistingClient(client)"
-                        class="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
-                      >
-                        <div class="flex items-center justify-between">
-                          <div>
-                            <p class="text-sm font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</p>
-                            <p class="text-xs text-gray-500">CI: {{ client.document_id }} • Tel: {{ client.phone || 'N/A' }}</p>
-                            <p v-if="client.email" class="text-xs text-gray-500">Email: {{ client.email }}</p>
-                          </div>
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div v-else-if="clientSearchQuery && !searchingClients && hasSearched && foundClients.length === 0 && !selectedExistingClient" class="p-3 text-center bg-yellow-50 border border-yellow-200 rounded-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-yellow-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0118 12a8 8 0 10-8 8 7.962 7.962 0 014.291-1z" />
-                      </svg>
-                      <p class="text-sm text-yellow-700 font-medium">No se encontraron clientes</p>
-                      <p class="text-xs text-yellow-600">Intente con otro término de búsqueda o cree un cliente nuevo</p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Cliente Nuevo -->
-                <div class="mb-4">
-                  <div class="flex items-center space-x-2 mb-3">
-                    <input
-                      id="new_client"
-                      type="radio"
-                      name="client_type"
-                      value="new"
-                      v-model="clientType"
-                      class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                    />
-                    <label for="new_client" class="text-sm font-medium text-gray-700">
-                      Cliente Nuevo
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Formulario de datos del cliente -->
-                <div v-if="clientType === 'new' || selectedExistingClient" class="space-y-4">
-                  <!-- Información adicional si el cliente es existente -->
-                  <div v-if="selectedExistingClient" class="p-3 bg-blue-50 rounded-md border border-blue-200">
-                    <p class="text-xs text-blue-700">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                      </svg>
-                      <span class="font-medium">Cliente existente seleccionado.</span> Los campos de nombre y CI están deshabilitados. 
-                      Puede actualizar el teléfono y email si es necesario.
-                    </p>
-                  </div>
-                  
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
-                      <input
-                        v-model="saleClientData.firstname"
-                        type="text"
-                        :disabled="clientType === 'existing' && selectedExistingClient"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
-                        placeholder="Ej. Juan"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Apellido</label>
-                      <input
-                        v-model="saleClientData.lastname"
-                        type="text"
-                        :disabled="clientType === 'existing' && selectedExistingClient"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
-                        placeholder="Ej. Pérez"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">CI <span class="text-red-500">*</span></label>
-                      <input
-                        v-model="saleClientData.document_id"
-                        type="text"
-                        :disabled="clientType === 'existing' && selectedExistingClient"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        :class="{'bg-gray-100': clientType === 'existing' && selectedExistingClient}"
-                        placeholder="Ej. 1234567"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                      <input
-                        v-model="saleClientData.phone"
-                        type="text"
-                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ej. 70123456"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      v-model="saleClientData.email"
-                      type="email"
-                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      placeholder="Ej. correo@ejemplo.com"
-                    />
-                  </div>
-                </div>
-
-                <!-- Método de Pago -->
-                <div class="mt-6">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago <span class="text-red-500">*</span></label>
-                  <select
-                    v-model="saleClientData.payment_method"
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  >
-                    <option value="cash">Efectivo</option>
-                    <option value="card">Tarjeta</option>
-                    <option value="transfer">Transferencia</option>
-                    <option value="qr">QR</option>
-                  </select>
-                </div>
-
-                <!-- Resumen de la venta -->
-                <div class="mt-6 bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h5 class="text-sm font-medium text-green-800 mb-2">Resumen de la Venta</h5>
-                  <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div><span class="text-green-700">Ruta:</span></div>
-                    <div class="font-medium">{{ displayedTrip?.route?.origin }} → {{ displayedTrip?.route?.destination }}</div>
-                    
-                    <div><span class="text-green-700">Fecha:</span></div>
-                    <div class="font-medium">{{ formatDate(displayedTrip?.trip_datetime) }}</div>
-                    
-                    <div><span class="text-green-700">Hora:</span></div>
-                    <div class="font-medium">{{ formatTime(displayedTrip?.departure_time, displayedTrip?.trip_datetime) }}</div>
-                    
-                    <div><span class="text-green-700">Asiento(s):</span></div>
-                    <div class="font-medium">
-                      <span v-if="selectedSeatsForSaleModal.length === 1">
-                        {{ selectedSeatsForSaleModal[0]?.number }}
-                      </span>
-                      <div v-else class="space-y-2">
-                        <div class="flex flex-wrap gap-1">
-                          <span 
-                            v-for="seat in selectedSeatsForSaleModal" 
-                            :key="seat.id"
-                            class="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-200 text-green-800 border border-green-300"
-                          >
-                            {{ seat.number }}
-                          </span>
-                        </div>
-                        <p class="text-xs text-green-600 font-medium">
-                          {{ selectedSeatsForSaleModal.length }} asientos seleccionados
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div><span class="text-green-700">Precio Total:</span></div>
-                    <div class="space-y-1">
-                      <div class="font-bold text-green-600 text-lg">
-                        Bs. {{ ((displayedTrip?.price || 0) * selectedSeatsForSaleModal.length).toFixed(2) }}
-                      </div>
-                      <div v-if="selectedSeatsForSaleModal.length > 1" class="text-xs text-green-600">
-                        {{ selectedSeatsForSaleModal.length }} × Bs. {{ (displayedTrip?.price || 0).toFixed(2) }} c/u
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- COLUMNA DERECHA: Vista Previa del Ticket -->
-            <div class="space-y-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H6a1 1 0 110-2V4z" clip-rule="evenodd" />
-                  </svg>
-                  Vista Previa del Boleto de Reserva
-                </h4>
-                
-                <!-- Vista previa del ticket de reserva -->
-                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                  <div v-if="previewReservationTicketData" class="relative">
-                    <!-- Etiqueta de Vista Previa -->
-                    <div class="absolute top-2 right-2 z-10">
-                      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                        </svg>
-                        Reserva
-                      </span>
-                    </div>
-                    
-                    <!-- Contenedor del ticket con escala -->
-                    <div class="ticket-preview-container">
-                      <div class="ticket-scale-wrapper">
-                        <TicketDisplay 
-                          :ticket="previewTicketData" 
-                          :trip="displayedTrip"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else class="text-center py-12 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <p>Vista previa del boleto aparecerá aquí</p>
-                    <p class="text-xs">Complete los datos del cliente para ver el boleto</p>
-                  </div>
-                </div>
-                
-                <div v-if="selectedSeatsForSaleModal.length > 1" class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p class="text-sm text-blue-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="font-medium">Boleto de múltiples asientos:</span> Se muestra el boleto con todos los asientos seleccionados 
-                    ({{ selectedSeatsForSaleModal.map(seat => seat.number).join(', ') }}) y el precio total de la venta.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Pie del modal -->
-        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-          <button 
-            @click="closeSaleModal" 
-            type="button" 
-            class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
-          >
-            Cancelar
-          </button>
-          <button 
-            @click="confirmSale"
-            type="button" 
-            class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-6 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors duration-200"
-            :disabled="saleLoading || !isSaleFormValid"
-            :class="{'opacity-50 cursor-not-allowed': saleLoading || !isSaleFormValid}"
-          >
-            <svg v-if="saleLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {{ saleLoading ? 'Procesando...' : 'Confirmar Venta' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para confirmación de venta -->
-  <div v-if="showSaleConfirmationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeSaleConfirmationModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10 mr-3">
-                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 class="text-lg leading-6 font-medium text-white">
-                <span v-if="saleConfirmationData.success">¡Venta Exitosa!</span>
-                <span v-else>Error en la Venta</span>
-              </h3>
-            </div>
-            <button 
-              @click="closeSaleConfirmationModal" 
-              class="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-green-100">
-            <span v-if="saleConfirmationData.success">
-              <span v-if="saleConfirmationData.seats.length === 1">El boleto ha sido vendido exitosamente y está listo para imprimir.</span>
-              <span v-else>Los {{ saleConfirmationData.seats.length }} boletos han sido vendidos exitosamente y están listos para imprimir.</span>
-            </span>
-            <span v-else>Ha ocurrido un error durante la venta.</span>
-          </p>
-        </div>
-        
-        <!-- Contenido del modal -->
-        <div v-if="saleConfirmationData.success" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div class="w-full">
-            <!-- Mostrar el ticket con el diseño oficial -->
-            <TicketDisplay 
-              :ticket="saleConfirmationTicketData" 
-              :trip="displayedTrip"
-              v-if="saleConfirmationTicketData"
-            />
-            
-            <!-- Información adicional si hay múltiples asientos -->
-            <div v-if="saleConfirmationData.seats.length > 1" class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-                Información de Venta Múltiple
-              </h4>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span class="block text-blue-700 font-medium">Total de Boletos:</span>
-                  <span class="text-blue-900">{{ saleConfirmationData.seats.length }}</span>
-                </div>
-                <div>
-                  <span class="block text-blue-700 font-medium">Asientos:</span>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    <span 
-                      v-for="seat in saleConfirmationData.seats" 
-                      :key="seat.id"
-                      class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300"
-                    >
-                      {{ seat.number }}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <span class="block text-blue-700 font-medium">Precio Total:</span>
-                  <span class="text-blue-900 font-bold">Bs. {{ saleConfirmationData.totalPrice.toFixed(2) }}</span>
-                </div>
-              </div>
-              <p class="text-xs text-blue-600 mt-2">
-                <span class="font-medium">Boleto consolidado:</span> El boleto mostrado incluye todos los asientos vendidos 
-                ({{ saleConfirmationData.seats.map(seat => seat.number).join(', ') }}) con el precio total de la venta.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Contenido de error -->
-        <div v-else class="bg-white px-4 py-5 sm:p-6">
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Error en la Venta</h3>
-                <div class="mt-2 text-sm text-red-700">
-                  <p>{{ saleConfirmationData.errorMessage }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Pie del modal -->
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button 
-            v-if="saleConfirmationData.success"
-            @click="printTickets"
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Imprimir Boleto
-          </button>
-          <button 
-            @click="closeSaleConfirmationModal" 
-            type="button" 
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Modales -->
+  <TicketModal
+    v-if="showTicketModal"
+    :show="showTicketModal"
+    :ticket="selectedTicket"
+    :trip="displayedTrip"
+    :modal-type="modalType"
+    :cancelling="cancellingReservation"
+    @close="closeModal"
+    @confirm-cancel="confirmCancelReservation"
+    @print="printTicket"
+  />
 
   <!-- Modal para registro de paquete -->
   <PackageRegistrationModal
@@ -1501,283 +150,110 @@
     @package-registered="handlePackageRegistered"
   />
 
-  <!-- Modal para confirmación de reserva -->
-  <div v-if="showReservationConfirmationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeReservationConfirmationModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10 mr-3">
-                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 class="text-lg leading-6 font-medium text-white">
-                <span v-if="reservationConfirmationData.success">¡Reserva Exitosa!</span>
-                <span v-else>Error en la Reserva</span>
-              </h3>
-            </div>
-            <button 
-              @click="closeReservationConfirmationModal" 
-              class="text-white hover:text-gray-200 focus:outline-none"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <p class="mt-1 text-sm text-green-100">
-            <span v-if="reservationConfirmationData.success">
-              <span v-if="reservationConfirmationData.seats && reservationConfirmationData.seats.length === 1">
-                La reserva ha sido confirmada exitosamente para el asiento {{ reservationConfirmationData.seats[0]?.number }}.
-              </span>
-              <span v-else-if="reservationConfirmationData.seats && reservationConfirmationData.seats.length > 1">
-                Las reservas han sido confirmadas exitosamente para los asientos: {{ reservationConfirmationData.seats.map(s => s.number).join(', ') }}.
-              </span>
-              <span v-else>La reserva ha sido confirmada exitosamente.</span>
-            </span>
-            <span v-else>Ha ocurrido un error durante la reserva.</span>
-          </p>
-        </div>
-        
-        <!-- Contenido del modal -->
-        <div v-if="reservationConfirmationData.success" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div class="w-full">
-            <!-- Mostrar el ticket con el diseño oficial -->
-            <TicketDisplay 
-              :ticket="reservationConfirmationTicketData" 
-              :trip="displayedTrip"
-              v-if="reservationConfirmationTicketData"
-            />
-            
-          </div>
-        </div>
-        
-        <!-- Contenido de error -->
-        <div v-else class="bg-white px-4 py-5 sm:p-6">
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Error en la Reserva</h3>
-                <div class="mt-2 text-sm text-red-700">
-                  <p>{{ reservationConfirmationData.errorMessage }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Pie del modal -->
-        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button 
-            v-if="reservationConfirmationData.success"
-            @click="printTickets"
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Imprimir Boleto
-          </button>
-          <button 
-            @click="closeReservationConfirmationModal" 
-            type="button" 
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal de notificación general -->
-  <div v-if="showNotificationModal" class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeNotificationModal">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
+  <NotificationModal
+    v-if="showNotificationModal"
+    :show="showNotificationModal"
+    :type="notificationData.type"
+    :title="notificationData.title"
+    :message="notificationData.message"
+    @close="closeNotificationModal"
+  />
 
-      <!-- Centrar modal -->
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <!-- Modal -->
-      <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full"
-        @click.stop
-      >
-        <!-- Encabezado del modal -->
-        <div class="px-4 py-4 sm:px-6 border-b border-gray-200" :class="{
-          'bg-green-50': notificationData.type === 'success',
-          'bg-red-50': notificationData.type === 'error',
-          'bg-yellow-50': notificationData.type === 'warning',
-          'bg-blue-50': notificationData.type === 'info'
-        }">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg leading-6 font-medium" :class="{
-              'text-green-800': notificationData.type === 'success',
-              'text-red-800': notificationData.type === 'error',
-              'text-yellow-800': notificationData.type === 'warning',
-              'text-blue-800': notificationData.type === 'info'
-            }">
-              {{ notificationData.title }}
-            </h3>
-            <button 
-              @click="closeNotificationModal" 
-              class="hover:text-gray-600 focus:outline-none" :class="{
-                'text-green-600': notificationData.type === 'success',
-                'text-red-600': notificationData.type === 'error',
-                'text-yellow-600': notificationData.type === 'warning',
-                'text-blue-600': notificationData.type === 'info'
-              }"
-            >
-              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
-          <p class="text-sm text-gray-700">{{ notificationData.message }}</p>
-        </div>
-        
-        <!-- Botón de cerrar -->
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button 
-            @click="closeNotificationModal" 
-            type="button" 
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none sm:w-auto sm:text-sm" :class="{
-              'bg-green-600 hover:bg-green-700': notificationData.type === 'success',
-              'bg-red-600 hover:bg-red-700': notificationData.type === 'error',
-              'bg-yellow-600 hover:bg-yellow-700': notificationData.type === 'warning',
-              'bg-blue-600 hover:bg-blue-700': notificationData.type === 'info'
-            }"
-          >
-            Entendido
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Modal para venta/reserva de boleto -->
+  <TicketSaleModal
+    v-if="showTicketSaleModal"
+    :show="showTicketSaleModal"
+    :selected-seats="selectedSeatsForSale"
+    :action-type="saleActionType"
+    :trip="displayedTrip"
+    @close="closeTicketSaleModal"
+    @ticket-created="handleTicketCreated"
+  />
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTripStore } from '@/stores/tripStore'
 import { useAuthStore } from '@/stores/auth'
+import { useTripDetails } from '@/composables/useTripDetails'
 import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
-import { ChevronDownIcon, ChevronUpIcon, UserCircleIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/vue/24/outline/index.js'
-import TicketDisplay from '@/components/TicketDisplay.vue'
+import TripDetailsCard from '@/components/TripDetailsCard.vue'
+import SoldTicketsSection from '@/components/SoldTicketsSection.vue'
+import PackagesSection from '@/components/PackagesSection.vue'
+import TicketModal from '@/components/TicketModal.vue'
+import TicketSaleModal from '@/components/TicketSaleModal.vue'
 import PackageRegistrationModal from '@/components/PackageRegistrationModal.vue'
+import NotificationModal from '@/components/NotificationModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const tripStore = useTripStore()
 const authStore = useAuthStore()
-const config = useRuntimeConfig()
 
 const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
 
-const showAvailableSeats = ref(false)
-const showOccupiedSeats = ref(false)
+// Usar el composable para manejar los detalles del viaje
+const {
+  soldTickets,
+  isLoadingSoldTickets,
+  soldTicketsError,
+  showSoldTickets,
+  showTicketsByState,
+  packages,
+  isLoadingPackages,
+  packagesError,
+  showPackages,
+  showPackagesByStatus,
+  groupedSoldTickets,
+  groupedPackages,
+  reservedSeatNumbers,
+  fetchSoldTickets,
+  fetchPackages,
+  toggleSoldTickets,
+  toggleTicketsByState,
+  togglePackages,
+  togglePackagesByStatus,
+  clearState,
+  formatDate,
+  formatTime,
+  getStatusClass,
+  getStatusText
+} = useTripDetails()
 
-// New reactive properties for sold tickets
-const soldTickets = ref([])
-const isLoadingSoldTickets = ref(false)
-const soldTicketsError = ref(null)
-const showSoldTickets = ref(false) // To toggle visibility of the main sold tickets section
+// Estado para modales y selección de asientos
+const showTicketModal = ref(false)
+const showTicketSaleModal = ref(false)
+const selectedTicket = ref(null)
+const selectedSeatForSale = ref(null)
+const saleActionType = ref('sell')
+const modalType = ref('details')
+const cancellingReservation = ref(false)
+const selectedSeatsForSale = ref([])
+const showPackageModal = ref(false)
 
-// New reactive state for toggling visibility of tickets grouped by state
-const showTicketsByState = ref({});
-
-// New reactive properties for packages
-const packages = ref([])
-const isLoadingPackages = ref(false)
-const packagesError = ref(null)
-const showPackages = ref(false) // To toggle visibility of the main packages section
-
-// New reactive state for toggling visibility of packages grouped by status
-const showPackagesByStatus = ref({});
-
-const groupedSoldTickets = computed(() => {
-  if (!soldTickets.value || soldTickets.value.length === 0) {
-    return {};
-  }
-  return soldTickets.value.reduce((acc, ticket) => {
-    const state = ticket.state || 'unknown'; // Group tickets with no state under 'unknown'
-    if (!acc[state]) {
-      acc[state] = [];
-    }
-    acc[state].push(ticket);
-    return acc;
-  }, {});
-});
-
-const groupedPackages = computed(() => {
-  if (!packages.value || packages.value.length === 0) {
-    return {};
-  }
-  return packages.value.reduce((acc, pkg) => {
-    const status = pkg.status || 'unknown'; // Group packages with no status under 'unknown'
-    if (!acc[status]) {
-      acc[status] = [];
-    }
-    acc[status].push(pkg);
-    return acc;
-  }, {});
-});
-
-// Obtener los números de asientos que tienen tickets en estado "pending" (reservados)
-const reservedSeatNumbers = computed(() => {
-  if (!soldTickets.value || soldTickets.value.length === 0) {
-    return [];
-  }
-  
-  // Filtrar los tickets en estado "pending" y extraer los números de asiento
-  return soldTickets.value
-    .filter(ticket => ticket.state === 'pending' && ticket.seat)
-    .map(ticket => ticket.seat.seat_number);
-});
-
-const sortedAvailableSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.seats_layout) return []
-  return displayedTrip.value.seats_layout
-    .filter(seat => seat.status === 'available')
-    .map(seat => seat.seat_number)
-    .sort((a, b) => a - b)
+// Estado para notificaciones
+const showNotificationModal = ref(false)
+const notificationData = ref({
+  type: 'success',
+  title: 'Éxito',
+  message: 'La operación se ha completado exitosamente.'
 })
 
-const sortedOccupiedSeats = computed(() => {
-  if (!displayedTrip.value || !displayedTrip.value.occupied_seat_numbers) return []
-  return [...displayedTrip.value.occupied_seat_numbers].sort((a, b) => a - b)
-})
+// Función para mostrar notificaciones
+const showNotification = (type, title, message) => {
+  notificationData.value = { type, title, message }
+  showNotificationModal.value = true
+}
 
+// Cargar datos al montar el componente
 onMounted(async () => {
+  // Limpiar estado anterior
+  clearState()
+  
   if (isNaN(tripId.value)) {
     console.error("Invalid trip ID")
     router.push('/trips')
@@ -1786,16 +262,13 @@ onMounted(async () => {
   
   try {
     await tripStore.fetchTripById(tripId.value)
-    
-    // Use nextTick to ensure the trip is fully loaded and reactive
     await nextTick()
     
-    // If trip details are successfully fetched, then fetch sold tickets and packages
     if (displayedTrip.value && displayedTrip.value.id) {
       console.log('Cargando datos para el viaje:', displayedTrip.value.id)
       await Promise.all([
-        fetchSoldTickets(), // Call fetchSoldTickets on mount
-        fetchPackages() // Call fetchPackages on mount to show correct count
+        fetchSoldTickets(displayedTrip.value.id),
+        fetchPackages(displayedTrip.value.id)
       ])
     } else {
       console.error('Trip not loaded properly after fetchTripById')
@@ -1805,217 +278,31 @@ onMounted(async () => {
   }
 })
 
-const getStatusClass = (status) => {
-  switch (status) {
-    case 'scheduled': return 'bg-blue-100 text-blue-800'
-    case 'boarding': return 'bg-yellow-100 text-yellow-800'
-    case 'departed': return 'bg-indigo-100 text-indigo-800'
-    case 'arrived': return 'bg-green-100 text-green-800'
-    case 'cancelled': return 'bg-red-100 text-red-800'
-    case 'delayed': return 'bg-orange-100 text-orange-800'
-    default: return 'bg-gray-100 text-gray-800'
-  }
-}
+// Limpiar estado al desmontar el componente
+onBeforeUnmount(() => {
+  clearState()
+})
 
-const getStatusText = (status) => {
-  switch (status) {
-    case 'scheduled': return 'Programado'
-    case 'boarding': return 'Abordando'
-    case 'departed': return 'En Ruta'
-    case 'arrived': return 'Llegó'
-    case 'cancelled': return 'Cancelado'
-    case 'delayed': return 'Retrasado'
-    default: return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Desconocido'
-  }
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'Fecha no disponible'
-  const options = { year: 'numeric', month: 'long', day: 'numeric' }
-  try {
-    return new Date(dateString).toLocaleDateString('es-ES', options)
-  } catch (e) {
-    return 'Fecha inválida'
-  }
-}
-
-const formatTime = (timeString, dateString) => {
-  if (!timeString) return 'Hora no especificada'
-  if (timeString.includes('T')) {
-    const date = new Date(timeString)
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-  }
-  if (dateString && timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
-    const [hours, minutes] = timeString.split(':')
-    const date = new Date(dateString)
-    date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0)
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-  }
-  const parts = timeString.split(':');
-  if (parts.length >= 2) {
-    return `${parts[0]}:${parts[1]}`;
-  }
-  return timeString;
-}
-
-const toggleAvailableSeats = () => {
-  showAvailableSeats.value = !showAvailableSeats.value
-}
-
-const toggleOccupiedSeats = () => {
-  showOccupiedSeats.value = !showOccupiedSeats.value
-}
-
-// Method to fetch sold tickets
-const fetchSoldTickets = async () => {
-  if (!displayedTrip.value || !displayedTrip.value.id) {
-    soldTicketsError.value = 'ID del viaje no disponible para cargar boletos.';
-    return;
-  }
-  isLoadingSoldTickets.value = true;
-  soldTicketsError.value = null;
-  try {
-    const apiUrl = `${config.public.apiBaseUrl}/tickets/trip/${displayedTrip.value.id}`;
-    // Using $fetch as recommended for client-side fetching after mount
-    const responseData = await $fetch(apiUrl, {
-      method: 'GET',
-      // headers: { ... } // Add any necessary headers, like Authorization if needed
-    });
-
-    if (responseData) {
-        // Ensure plain objects for Pinia SSR/hydration
-        soldTickets.value = JSON.parse(JSON.stringify(responseData));
-        console.log('Tickets cargados:', soldTickets.value);
-        
-        // [DEBUG] Log client information for each ticket
-        console.log('[DEBUG TICKETS] Información de clientes por ticket:');
-        soldTickets.value.forEach(ticket => {
-          console.log(`Ticket ID: ${ticket.id}, Asiento: ${ticket.seat?.seat_number}, Cliente ID: ${ticket.client_id}, Cliente: ${ticket.client?.firstname} ${ticket.client?.lastname} (${ticket.client?.document_id})`);
-        });
-        
-        console.log('Asientos reservados:', reservedSeatNumbers.value);
-    } else {
-        soldTickets.value = [];
-    }
-  } catch (err) { 
-    console.error("API Error fetching sold tickets:", err);
-    // $fetch errors often have a `data` property with more details from the server
-    // Also, check err.response for more details if available
-    let errorMessage = 'No se pudieron cargar los boletos vendidos. Intente más tarde.';
-    if (err.response && err.response._data && err.response._data.detail) {
-      errorMessage = err.response._data.detail;
-    } else if (err.data && err.data.message) {
-      errorMessage = err.data.message;
-    } else if (err.message) {
-      errorMessage = err.message;
-    }
-    soldTicketsError.value = errorMessage;
-    soldTickets.value = [];
-  }
-  finally {
-    isLoadingSoldTickets.value = false;
-  }
-}
-
-// Method to fetch packages
-const fetchPackages = async () => {
-  if (!displayedTrip.value || !displayedTrip.value.id) {
-    packagesError.value = 'ID del viaje no disponible para cargar paquetes.';
-    return;
-  }
-  isLoadingPackages.value = true;
-  packagesError.value = null;
-  try {
-    const apiUrl = `${config.public.apiBaseUrl}/packages/by-trip/${displayedTrip.value.id}`;
-    const responseData = await $fetch(apiUrl, {
-      method: 'GET',
-    });
-
-    if (responseData) {
-        // Ensure plain objects for Pinia SSR/hydration
-        packages.value = JSON.parse(JSON.stringify(responseData));
-        console.log('Paquetes cargados:', packages.value);
-    } else {
-        packages.value = [];
-    }
-  } catch (err) { 
-    console.error("API Error fetching packages:", err);
-    let errorMessage = 'No se pudieron cargar los paquetes. Intente más tarde.';
-    if (err.response && err.response._data && err.response._data.detail) {
-      errorMessage = err.response._data.detail;
-    } else if (err.data && err.data.message) {
-      errorMessage = err.data.message;
-    } else if (err.message) {
-      errorMessage = err.message;
-    }
-    packagesError.value = errorMessage;
-    packages.value = [];
-  }
-  finally {
-    isLoadingPackages.value = false;
-  }
-}
-
-// Method to toggle sold tickets display and fetch if needed
-const toggleSoldTickets = () => {
-  showSoldTickets.value = !showSoldTickets.value;
-  if (showSoldTickets.value && (soldTickets.value.length === 0 || soldTicketsError.value) && !isLoadingSoldTickets.value) {
-    fetchSoldTickets();
-  }
-  // When closing the main dropdown, also reset individual group visibility if desired
-  // if (!showSoldTickets.value) {
-  //   showTicketsByState.value = {}; 
-  // }
-}
-
-// Method to toggle visibility of tickets for a specific state
-const toggleTicketsByState = (state) => {
-  showTicketsByState.value = {
-    ...showTicketsByState.value,
-    [state]: !showTicketsByState.value[state]
-  }
-}
-
-// Method to toggle packages display and fetch if needed
-const togglePackages = () => {
-  showPackages.value = !showPackages.value;
-  if (showPackages.value && (packages.value.length === 0 || packagesError.value) && !isLoadingPackages.value) {
-    fetchPackages();
-  }
-}
-
-// Method to toggle visibility of packages for a specific status
-const togglePackagesByStatus = (status) => {
-  showPackagesByStatus.value = {
-    ...showPackagesByStatus.value,
-    [status]: !showPackagesByStatus.value[status]
-  }
-}
-
-// Watch for changes in displayedTrip.id if the section is already open
+// Watchers para recargar datos cuando cambie el trip
 watch(() => displayedTrip.value?.id, (newId, oldId) => {
-  if (newId && newId !== oldId && showSoldTickets.value) {
-    fetchSoldTickets();
+  if (newId && newId !== oldId) {
+    if (showSoldTickets.value) {
+      fetchSoldTickets(newId)
+    }
+    if (showPackages.value) {
+      fetchPackages(newId)
+    }
   }
-  if (newId && newId !== oldId && showPackages.value) {
-    fetchPackages();
-  }
-});
+}, { immediate: false })
 
-// Watch for trip changes to ensure packages are loaded
-watch(() => displayedTrip.value?.id, async (newId) => {
-  if (newId) {
-    console.log('Trip ID changed to:', newId, 'loading packages...')
-    await fetchPackages()
-  }
-}, { immediate: false });
-
-// Make sure definePageMeta is correctly placed if it's outside script setup
-// For Nuxt 3, it's typically auto-imported or used in a separate <script> block if not setup.
-// definePageMeta({ middleware: ['auth'] }); // Example, if auth middleware is needed
+// Funciones para manejar eventos del mapa de asientos
+const handleSelectionChange = (selectedSeats) => {
+  console.log('handleSelectionChange called with:', selectedSeats)
+  selectedSeatsForSale.value = selectedSeats
+  console.log('Updated selectedSeatsForSale to:', selectedSeatsForSale.value)
+}
 
 const handleCancelReservation = async (seat) => {
-  // Buscar el ticket que corresponde a este asiento
   const ticket = soldTickets.value.find(t => 
     t.seat && t.seat.seat_number === seat.number && t.state === 'pending'
   )
@@ -2025,14 +312,12 @@ const handleCancelReservation = async (seat) => {
     return
   }
   
-  // Mostrar modal de confirmación
   selectedTicket.value = ticket
   modalType.value = 'cancel'
   showTicketModal.value = true
 }
 
 const handleViewSeatDetails = (seat) => {
-  // Buscar el ticket que corresponde a este asiento
   const ticket = soldTickets.value.find(t => 
     t.seat && t.seat.seat_number === seat.number
   )
@@ -2042,13 +327,92 @@ const handleViewSeatDetails = (seat) => {
     return
   }
   
-  // Mostrar modal de detalles
   selectedTicket.value = ticket
   modalType.value = 'details'
   showTicketModal.value = true
 }
 
-// Función para confirmar la cancelación de la reserva
+const handleChangeSeat = (seat) => {
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number && 
+    (t.state === 'confirmed' || t.state === 'paid')
+  )
+  
+  if (!ticket) {
+    showNotification('error', 'Ticket no encontrado', 'No se encontró un ticket para este asiento.')
+    return
+  }
+  
+  selectedTicket.value = ticket
+  modalType.value = 'details'
+  showTicketModal.value = true
+}
+
+const handleRescheduleTrip = (seat) => {
+  const ticket = soldTickets.value.find(t => 
+    t.seat && t.seat.seat_number === seat.number && 
+    (t.state === 'confirmed' || t.state === 'paid')
+  )
+  
+  if (!ticket) {
+    showNotification('error', 'Ticket no encontrado', 'No se encontró un ticket para este asiento.')
+    return
+  }
+  
+  selectedTicket.value = ticket
+  modalType.value = 'details'
+  showTicketModal.value = true
+}
+
+const handleSellTicket = (seatOrSeats) => {
+  // Manejar tanto asiento individual como array de asientos
+  const seats = Array.isArray(seatOrSeats) ? seatOrSeats : [seatOrSeats]
+  console.log('handleSellTicket called with:', seats)
+  console.log('Current selectedSeatsForSale:', selectedSeatsForSale.value)
+  
+  // Si ya hay asientos seleccionados, mantenerlos, sino usar los que vienen del evento
+  if (selectedSeatsForSale.value.length === 0) {
+    selectedSeatsForSale.value = seats
+  }
+  
+  saleActionType.value = 'sell'
+  showTicketSaleModal.value = true
+}
+
+const handleReserveSeat = (seatOrSeats) => {
+  // Manejar tanto asiento individual como array de asientos
+  const seats = Array.isArray(seatOrSeats) ? seatOrSeats : [seatOrSeats]
+  console.log('handleReserveSeat called with:', seats)
+  console.log('Current selectedSeatsForSale:', selectedSeatsForSale.value)
+  
+  // Si ya hay asientos seleccionados, mantenerlos, sino usar los que vienen del evento
+  if (selectedSeatsForSale.value.length === 0) {
+    selectedSeatsForSale.value = seats
+  }
+  
+  saleActionType.value = 'reserve'
+  showTicketSaleModal.value = true
+}
+
+// Funciones para modales
+const openCancelModal = (ticket) => {
+  selectedTicket.value = ticket
+  modalType.value = 'cancel'
+  showTicketModal.value = true
+}
+
+const openDetailsModal = (ticket) => {
+  selectedTicket.value = ticket
+  modalType.value = 'details'
+  showTicketModal.value = true
+}
+
+const closeModal = () => {
+  showTicketModal.value = false
+  selectedTicket.value = null
+  cancellingReservation.value = false
+}
+
 const confirmCancelReservation = async () => {
   if (!selectedTicket.value) return
   
@@ -2066,24 +430,12 @@ const confirmCancelReservation = async () => {
     const index = soldTickets.value.findIndex(t => t.id === selectedTicket.value.id)
     if (index !== -1) {
       soldTickets.value[index].state = 'cancelled'
-      
-      // Eliminar el número de asiento de reservedSeatNumbers
-      const seatNumber = soldTickets.value[index].seat?.seat_number
-      if (seatNumber) {
-        const seatIndex = reservedSeatNumbers.value.indexOf(seatNumber)
-        if (seatIndex !== -1) {
-          // Crear una nueva referencia para el array para que sea reactivo
-          const newReservedSeatNumbers = [...reservedSeatNumbers.value]
-          newReservedSeatNumbers.splice(seatIndex, 1)
-          reservedSeatNumbers.value = newReservedSeatNumbers
-        }
-      }
     }
     
     // Recargar los tickets para actualizar la vista
-    await fetchSoldTickets()
+    await fetchSoldTickets(tripId.value)
     
-    // Actualizar los datos del viaje para reflejar los cambios en los asientos
+    // Actualizar los datos del viaje
     if (tripId.value) {
       await tripStore.fetchTripById(tripId.value)
     }
@@ -2102,774 +454,16 @@ const confirmCancelReservation = async () => {
   }
 }
 
-// Función para cerrar el modal
-const closeModal = () => {
-  showTicketModal.value = false
-  selectedTicket.value = null
-  cancellingReservation.value = false
-}
-
-// Estado para mostrar modal de detalles o confirmación
-const showTicketModal = ref(false)
-const selectedTicket = ref(null)
-const modalType = ref('details') // 'details', 'cancel', 'change-seat', 'reschedule'
-const cancellingReservation = ref(false)
-
-// Manejar el cambio de asiento
-const handleChangeSeat = (seat) => {
-  // Buscar el ticket que corresponde a este asiento ocupado
-  const ticket = soldTickets.value.find(t => 
-    t.seat && t.seat.seat_number === seat.number && 
-    (t.state === 'confirmed' || t.state === 'paid')
-  )
-  
-  if (!ticket) {
-    showNotification('error', 'Ticket no encontrado', 'No se encontró un ticket para este asiento.')
-    return
-  }
-  
-  // Por ahora, solo mostrar el modal de detalles
-  selectedTicket.value = ticket
-  modalType.value = 'details' // En el futuro, esto podría ser 'change-seat'
-  showTicketModal.value = true
-  
-  // Aquí se podría implementar la lógica para cambiar el asiento
-  console.log('Cambiar asiento:', seat)
-}
-
-// Manejar la reprogramación de viaje
-const handleRescheduleTrip = (seat) => {
-  // Buscar el ticket que corresponde a este asiento ocupado
-  const ticket = soldTickets.value.find(t => 
-    t.seat && t.seat.seat_number === seat.number && 
-    (t.state === 'confirmed' || t.state === 'paid')
-  )
-  
-  if (!ticket) {
-    showNotification('error', 'Ticket no encontrado', 'No se encontró un ticket para este asiento.')
-    return
-  }
-  
-  // Por ahora, solo mostrar el modal de detalles
-  selectedTicket.value = ticket
-  modalType.value = 'details' // En el futuro, esto podría ser 'reschedule'
-  showTicketModal.value = true
-  
-  // Aquí se podría implementar la lógica para reprogramar el viaje
-  console.log('Reprogramar viaje para el asiento:', seat)
-}
-
-// Estado para modal de venta
-const showSaleModal = ref(false)
-const saleLoading = ref(false)
-const selectedSeatForSale = ref(null)
-const selectedSeatsForSaleModal = ref([])
-const saleFormTouched = ref(false)
-const saleClientData = ref({
-  firstname: '',
-  lastname: '',
-  document_id: '',
-  phone: '',
-  email: '',
-  address: '',
-  city: '',
-  state: '',
-  is_minor: false,
-  payment_method: 'cash'
-})
-
-// Estado para modal de confirmación de venta
-const showSaleConfirmationModal = ref(false)
-const saleConfirmationData = ref({
-  success: false,
-  client: null,
-  seats: [],
-  totalPrice: 0,
-  ticketIds: [],
-  errorMessage: ''
-})
-
-// Estado para selección múltiple de asientos
-const selectedSeatsForSale = ref([])
-
-// Función para manejar cambios en la selección de asientos
-const handleSelectionChange = (selectedSeats) => {
-  selectedSeatsForSale.value = selectedSeats
-}
-
-// Manejar la venta de boleto
-const handleSellTicket = (seat) => {
-  if (!displayedTrip.value || !displayedTrip.value.id) {
-    alert('No se puede vender el boleto en este momento. Intente nuevamente.')
-    return
-  }
-  
-  // Determinar qué asientos vender
-  // Si hay asientos seleccionados y el asiento del click derecho está entre ellos, usar todos los seleccionados
-  // Si no, usar solo el asiento del click derecho
-  let seatsToSell = []
-  
-  if (selectedSeatsForSale.value.length > 0 && 
-      selectedSeatsForSale.value.some(s => s.id === seat.id)) {
-    // Hay asientos seleccionados y el asiento clickeado está entre ellos
-    seatsToSell = [...selectedSeatsForSale.value]
-  } else {
-    // No hay selección múltiple o el asiento clickeado no está seleccionado
-    seatsToSell = [seat]
-  }
-  
-  // Filtrar solo asientos disponibles
-  seatsToSell = seatsToSell.filter(s => 
-    !s.occupied && s.status !== 'reserved' && s.status !== 'occupied'
-  )
-  
-  if (seatsToSell.length === 0) {
-    alert('No hay asientos disponibles para vender.')
-    return
-  }
-  
-  // Inicializar el formulario de venta
-  saleClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false,
-    payment_method: 'cash'
-  }
-  
-  // Resetear formulario y mostrar modal
-  resetSaleForm()
-  selectedSeatsForSaleModal.value = seatsToSell
-  showSaleModal.value = true
-  saleFormTouched.value = false
-}
-
-// Función para validar los datos del cliente para la venta
-const isSaleFormValid = computed(() => {
-  if (clientType.value === 'existing') {
-    // Para cliente existente, debe haberse seleccionado un cliente
-    return selectedExistingClient.value && 
-           selectedExistingClient.value.id &&
-           saleClientData.value.payment_method.trim() !== ''
-  } else {
-    // Para cliente nuevo, validar campos requeridos
-    return saleClientData.value.firstname.trim() !== '' &&
-           saleClientData.value.document_id.trim() !== '' &&
-           saleClientData.value.payment_method.trim() !== ''
-  }
-})
-
-// Confirmar la venta con los datos del modal
-const confirmSale = async () => {
-  if (!isSaleFormValid.value || !selectedSeatsForSaleModal.value || selectedSeatsForSaleModal.value.length === 0) {
-    return
-  }
-  
-  saleLoading.value = true
-  
-  try {
-    const config = useRuntimeConfig()
-    
-    // Obtener el usuario autenticado para crear la venta
-    if (!authStore.user || !authStore.user.id) {
-      saleConfirmationData.value = {
-        success: false,
-        client: null,
-        seats: [],
-        totalPrice: 0,
-        ticketIds: [],
-        errorMessage: 'Debe iniciar sesión para vender un boleto.'
-      }
-      showSaleModal.value = false
-      showSaleConfirmationModal.value = true
-      saleLoading.value = false
-      return
-    }
-    
-    // Crear o usar cliente existente
-    let clientResponse
-    
-    if (clientType.value === 'existing' && selectedExistingClient.value) {
-      // Usar cliente existente
-      clientResponse = selectedExistingClient.value
-    } else {
-      // Crear nuevo cliente
-      const clientApiUrl = `${config.public.apiBaseUrl}/clients`
-      clientResponse = await $fetch(clientApiUrl, {
-        method: 'POST',
-        body: {
-          firstname: saleClientData.value.firstname,
-          lastname: saleClientData.value.lastname,
-          document_id: saleClientData.value.document_id,
-          phone: saleClientData.value.phone,
-          email: saleClientData.value.email,
-          address: saleClientData.value.address,
-          city: saleClientData.value.city,
-          state: saleClientData.value.state,
-          is_minor: saleClientData.value.is_minor
-        }
-      })
-    }
-    
-    if (!clientResponse || !clientResponse.id) {
-      throw new Error('No se pudo obtener o crear el cliente para la venta.')
-    }
-    
-    // Crear tickets para todos los asientos seleccionados
-    const ticketPromises = selectedSeatsForSaleModal.value.map(seat => {
-      const ticketData = {
-        trip_id: displayedTrip.value.id,
-        seat_id: seat.id,
-        client_id: clientResponse.id,
-        state: 'confirmed', // Estado "confirmed" para venta directa
-        price: displayedTrip.value.price || 0,
-        payment_method: saleClientData.value.payment_method,
-        operator_user_id: authStore.user.id
-      }
-      
-      console.log(`[DEBUG VENTA] Creando ticket para asiento ${seat.number}:`, {
-        seat_id: seat.id,
-        client_id: clientResponse.id,
-        client_name: `${clientResponse.firstname} ${clientResponse.lastname}`,
-        trip_id: displayedTrip.value.id
-      })
-      
-      return $fetch(`${config.public.apiBaseUrl}/tickets`, {
-        method: 'POST',
-        body: ticketData
-      })
-    })
-    
-    console.log('Creando tickets para asientos:', selectedSeatsForSaleModal.value.map(s => s.number))
-    console.log('Usuario autenticado:', authStore.user)
-    console.log('Viaje:', displayedTrip.value)
-    
-    // Esperar a que se creen todos los tickets
-    const responses = await Promise.all(ticketPromises)
-    
-    console.log('[DEBUG VENTA] Respuestas de creación de tickets:');
-    responses.forEach((response, index) => {
-      console.log(`Ticket ${index + 1} creado:`, {
-        ticket_id: response.id,
-        seat_number: selectedSeatsForSaleModal.value[index]?.number,
-        client_id: response.client_id,
-        expected_client_id: clientResponse.id
-      });
-    });
-    
-    if (responses.length > 0) {
-      // Recargar los tickets para actualizar la vista
-      await fetchSoldTickets()
-      
-      // Actualizar los datos del viaje para reflejar los cambios en los asientos
-      if (tripId.value) {
-        await tripStore.fetchTripById(tripId.value)
-      }
-      
-      // Limpiar la selección
-      selectedSeatsForSale.value = []
-      
-      // Preparar datos para el modal de confirmación
-      const totalPrice = (displayedTrip.value.price || 0) * selectedSeatsForSaleModal.value.length
-      const ticketIds = responses.map(response => response.id).filter(id => id)
-      
-      saleConfirmationData.value = {
-        success: true,
-        client: clientResponse,
-        seats: [...selectedSeatsForSaleModal.value],
-        totalPrice: totalPrice,
-        ticketIds: ticketIds,
-        payment_method: saleClientData.value.payment_method,
-        errorMessage: ''
-      }
-      
-      // Cerrar modal de venta y mostrar modal de confirmación
-      showSaleModal.value = false
-      showSaleConfirmationModal.value = true
-    }
-  } catch (error) {
-    console.error('Error al vender el boleto:', error)
-    
-    // Mostrar mensaje de error específico si está disponible
-    let errorMessage = 'Error al vender el boleto. Por favor, intente nuevamente.'
-    
-    if (error.response && error.response._data && error.response._data.detail) {
-      errorMessage = error.response._data.detail
-    } else if (error.message) {
-      errorMessage = error.message
-    }
-    
-    saleConfirmationData.value = {
-      success: false,
-      client: null,
-      seats: [],
-      totalPrice: 0,
-      ticketIds: [],
-      errorMessage: errorMessage
-    }
-    
-    // Cerrar modal de venta y mostrar modal de error
-    showSaleModal.value = false
-    showSaleConfirmationModal.value = true
-  } finally {
-    saleLoading.value = false
-  }
-}
-
-// Cerrar el modal de venta
-const closeSaleModal = () => {
-  showSaleModal.value = false
-  selectedSeatForSale.value = null
-  selectedSeatsForSaleModal.value = []
-  saleLoading.value = false
-  saleFormTouched.value = false
-}
-
-// Cerrar el modal de confirmación de venta
-const closeSaleConfirmationModal = () => {
-  showSaleConfirmationModal.value = false
-  saleConfirmationData.value = {
-    success: false,
-    client: null,
-    seats: [],
-    totalPrice: 0,
-    ticketIds: [],
-    errorMessage: ''
-  }
-}
-
-// Función para imprimir los tickets (placeholder para futura implementación)
-const printTickets = () => {
-  // Aquí se implementaría la lógica de impresión
-  console.log('Imprimiendo tickets:', saleConfirmationData.value.ticketIds)
-  
-  // Imprimir el contenido del modal que contiene el ticket
-  try {
-    // Usar window.print() para imprimir
-    window.print()
-    
-    // Mostrar mensaje de éxito
-    console.log('Ticket enviado a impresora')
-    
-    // Cerrar el modal después de un breve delay para permitir la impresión
-    setTimeout(() => {
-      closeSaleConfirmationModal()
-    }, 1000)
-  } catch (error) {
-    console.error('Error al imprimir:', error)
-    // Cerrar el modal incluso si hay error
-    closeSaleConfirmationModal()
-  }
-  
-  // En el futuro, esto podría:
-  // 1. Generar un PDF con los boletos
-  // 2. Enviar a una impresora térmica
-  // 3. Mostrar una vista previa de impresión específica
-  // 4. Imprimir múltiples copias para múltiples asientos
-}
-
-// Estado para modal de reserva
-const showReservationModal = ref(false)
-const reservationLoading = ref(false)
-const selectedSeatsForReservation = ref([]) // For multiple seats
-const formTouched = ref(false)
-const reservationClientData = ref({
-  firstname: '',
-  lastname: '',
-  document_id: '',
-  phone: '',
-  email: '',
-  address: '',
-  city: '',
-  state: '',
-  is_minor: false
-})
-
-// Estado para modal de confirmación de reserva
-const showReservationConfirmationModal = ref(false)
-const reservationConfirmationData = ref({
-  success: false,
-  client: null,
-  seats: [], // For multiple seats
-  trip: null,
-  ticketIds: [], // For multiple tickets
-  errorMessage: ''
-})
-
-// New reactive properties for reservation
-const reservationClientType = ref('new')
-const reservationClientSearchQuery = ref('')
-const reservationFoundClients = ref([])
-const reservationHasSearched = ref(false)
-const selectedReservationExistingClient = ref(null)
-
-// Función para mostrar errores de reserva (reemplaza alerts)
-const showReservationErrorModal = (message) => {
-  reservationConfirmationData.value = {
-    success: false,
-    client: null,
-    seats: [],
-    trip: null,
-    ticketIds: [],
-    errorMessage: message
-  }
-  showReservationConfirmationModal.value = true
-}
-
-// Cerrar el modal de confirmación de reserva
-const closeReservationConfirmationModal = () => {
-  showReservationConfirmationModal.value = false
-  reservationConfirmationData.value = {
-    success: false,
-    client: null,
-    seats: [],
-    trip: null,
-    ticketIds: [],
-    errorMessage: ''
-  }
-}
-
-const getPaymentMethodText = (paymentMethod) => {
-  switch (paymentMethod) {
-    case 'cash': return 'Efectivo'
-    case 'card': return 'Tarjeta'
-    case 'transfer': return 'Transferencia'
-    case 'qr': return 'QR'
-    default: return 'Desconocido'
-  }
-}
-
-// Función para imprimir un boleto individual
 const printTicket = () => {
   if (!selectedTicket.value) {
     console.error('No hay ticket seleccionado para imprimir')
     return
   }
   
-  // Usar window.print() para imprimir la página completa
-  // En el futuro se puede implementar una versión más específica
   window.print()
 }
 
-// Función auxiliar para obtener los estilos CSS del ticket
-const getTicketStyles = () => {
-  return `
-    .ticket-preview-container {
-      padding: 12px;
-      background: #f8fafc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 180px;
-      max-height: 250px;
-      overflow: hidden;
-    }
-    
-    .ticket-scale-wrapper {
-      transform: scale(0.7);
-      transform-origin: center center;
-      width: 142.86%;
-      max-width: none;
-      display: flex;
-      justify-content: center;
-    }
-    
-    .ticket-scale-wrapper > div {
-      max-width: 950px !important;
-      width: 950px !important;
-      min-height: auto !important;
-    }
-    
-    @media (max-width: 1200px) {
-      .ticket-scale-wrapper {
-        transform: scale(0.6);
-        width: 166.67%;
-      }
-    }
-    
-    @media (max-width: 1024px) {
-      .ticket-scale-wrapper {
-        transform: scale(0.5);
-        width: 200%;
-      }
-      
-      .ticket-preview-container {
-        min-height: 150px;
-        max-height: 200px;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .ticket-scale-wrapper {
-        transform: scale(0.4);
-        width: 250%;
-      }
-      
-      .ticket-preview-container {
-        min-height: 120px;
-        max-height: 160px;
-      }
-    }
-  `
-}
-
-// Nuevas variables para manejo de clientes existentes y vista previa
-const clientType = ref('new') // 'new' o 'existing'
-const clientSearchQuery = ref('')
-const foundClients = ref([])
-const searchingClients = ref(false)
-const hasSearched = ref(false)
-const selectedExistingClient = ref(null)
-let searchTimeout = null // Para debounce
-
-// Función de búsqueda con debounce mejorada
-const searchClients = async () => {
-  // Limpiar timeout anterior
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-  
-  // Si no hay query, limpiar resultados
-  if (!clientSearchQuery.value.trim()) {
-    foundClients.value = []
-    hasSearched.value = false
-    selectedExistingClient.value = null
-    return
-  }
-  
-  // Aplicar debounce de 500ms
-  searchTimeout = setTimeout(async () => {
-    searchingClients.value = true
-    hasSearched.value = false
-    
-    try {
-      const config = useRuntimeConfig()
-      const searchTerm = clientSearchQuery.value.trim()
-      const apiUrl = `${config.public.apiBaseUrl}/clients/search?q=${encodeURIComponent(searchTerm)}`
-      
-      const response = await $fetch(apiUrl, {
-        method: 'GET'
-      })
-      
-      foundClients.value = response || []
-      hasSearched.value = true
-      
-      // Si solo hay un resultado y coincide exactamente, seleccionarlo automáticamente
-      if (foundClients.value.length === 1) {
-        const client = foundClients.value[0]
-        const searchLower = searchTerm.toLowerCase()
-        const clientName = `${client.firstname} ${client.lastname}`.toLowerCase()
-        const clientCI = client.document_id
-        
-        if (clientName.includes(searchLower) || clientCI === searchTerm) {
-          // No seleccionar automáticamente, dejar que el usuario elija
-          console.log('Cliente encontrado:', client)
-        }
-      }
-    } catch (error) {
-      console.error('Error searching clients:', error)
-      foundClients.value = []
-      hasSearched.value = true
-      
-      // Mostrar error específico al usuario si es necesario
-      if (error.response?.status === 400) {
-        console.warn('Término de búsqueda muy corto o inválido')
-      } else if (error.response?.status >= 500) {
-        console.error('Error del servidor al buscar clientes')
-      }
-    } finally {
-      searchingClients.value = false
-    }
-  }, 500)
-}
-
-const selectExistingClient = (client) => {
-  // Copiar datos del cliente al formulario pero deshabilitar campos clave
-  saleClientData.value = {
-    firstname: client.firstname || '',
-    lastname: client.lastname || '',
-    document_id: client.document_id || '',
-    phone: client.phone || '',
-    email: client.email || '',
-    address: client.address || '',
-    city: client.city || '',
-    state: client.state || '',
-    is_minor: client.is_minor || false,
-    payment_method: 'cash'
-  }
-  
-  selectedExistingClient.value = client
-  foundClients.value = [] // Limpiar resultados de búsqueda
-  clientSearchQuery.value = `${client.firstname} ${client.lastname} (${client.document_id})` // Mostrar cliente seleccionado
-}
-
-// Función para limpiar la selección de cliente existente
-const clearExistingClientSelection = () => {
-  selectedExistingClient.value = null
-  clientSearchQuery.value = ''
-  foundClients.value = []
-  hasSearched.value = false
-  
-  // Limpiar también el formulario
-  saleClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false,
-    payment_method: 'cash'
-  }
-}
-
-// Watch para limpiar la selección cuando se cambia el tipo de cliente
-watch(clientType, (newType) => {
-  if (newType === 'new') {
-    clearExistingClientSelection()
-  } else if (newType === 'existing') {
-    // Limpiar formulario cuando se cambia a cliente existente
-    saleClientData.value = {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: '',
-      email: '',
-      address: '',
-      city: '',
-      state: '',
-      is_minor: false,
-      payment_method: 'cash'
-    }
-  }
-})
-
-// Computed para la vista previa del ticket
-const previewTicketData = computed(() => {
-  if (!saleClientData.value.firstname || !selectedSeatsForSaleModal.value.length) {
-    return null
-  }
-  
-  // Si hay múltiples asientos, crear una lista de números de asiento
-  let seatNumbers = selectedSeatsForSaleModal.value.map(seat => seat.number)
-  
-  return {
-    id: 'PREVIEW',
-    client: {
-      firstname: saleClientData.value.firstname,
-      lastname: saleClientData.value.lastname,
-      document_id: saleClientData.value.document_id,
-      phone: saleClientData.value.phone,
-      email: saleClientData.value.email
-    },
-    seat: {
-      seat_number: selectedSeatsForSaleModal.value.length === 1 
-        ? selectedSeatsForSaleModal.value[0]?.number 
-        : seatNumbers.join(', '), // Mostrar todos los asientos separados por comas
-      multiple_seats: selectedSeatsForSaleModal.value.length > 1 ? seatNumbers : null
-    },
-    price: (displayedTrip.value?.price || 0) * selectedSeatsForSaleModal.value.length, // Precio total
-    trip: displayedTrip.value,
-    state: 'confirmed',
-    payment_method: saleClientData.value.payment_method
-  }
-})
-
-// Computed para la vista previa del ticket de reserva
-const previewReservationTicketData = computed(() => {
-  if (!reservationClientData.value.firstname || selectedSeatsForReservation.value.length === 0) {
-    return null
-  }
-  
-  const seatNumbers = selectedSeatsForReservation.value.map(seat => seat.number)
-  
-  return {
-    id: 'PREVIEW-RESERVA',
-    client: {
-      firstname: reservationClientData.value.firstname,
-      lastname: reservationClientData.value.lastname,
-      document_id: reservationClientData.value.document_id,
-      phone: reservationClientData.value.phone,
-      email: reservationClientData.value.email
-    },
-    seat: {
-      seat_number: seatNumbers.join(', '),
-      multiple_seats: seatNumbers.length > 1 ? seatNumbers : null
-    },
-    price: (displayedTrip.value?.price || 0) * selectedSeatsForReservation.value.length,
-    trip: displayedTrip.value,
-    state: 'reserved', // Estado de reserva
-    payment_method: 'pending' // Pago pendiente para reservas
-  }
-})
-
-// Función para limpiar y resetear el formulario de venta (actualizada)
-const resetSaleForm = () => {
-  clientType.value = 'new'
-  clientSearchQuery.value = ''
-  foundClients.value = []
-  hasSearched.value = false
-  selectedExistingClient.value = null
-  
-  // Limpiar timeout si existe
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-    searchTimeout = null
-  }
-  
-  saleClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false,
-    payment_method: 'cash'
-  }
-}
-
-// Computed para los datos del ticket de confirmación de venta
-const saleConfirmationTicketData = computed(() => {
-  if (!saleConfirmationData.value.success || !saleConfirmationData.value.client || !saleConfirmationData.value.seats.length) {
-    return null
-  }
-  
-  // Si hay múltiples asientos, crear una lista de números de asiento
-  let seatNumbers = saleConfirmationData.value.seats.map(seat => seat.number)
-  
-  return {
-    id: saleConfirmationData.value.ticketIds[0] || 'SOLD',
-    client: {
-      firstname: saleConfirmationData.value.client.firstname,
-      lastname: saleConfirmationData.value.client.lastname,
-      document_id: saleConfirmationData.value.client.document_id,
-      phone: saleConfirmationData.value.client.phone,
-      email: saleConfirmationData.value.client.email
-    },
-    seat: {
-      seat_number: saleConfirmationData.value.seats.length === 1 
-        ? saleConfirmationData.value.seats[0]?.number 
-        : seatNumbers.join(', '), // Mostrar todos los asientos separados por comas
-      multiple_seats: saleConfirmationData.value.seats.length > 1 ? seatNumbers : null
-    },
-    price: saleConfirmationData.value.totalPrice || 0, // Usar el precio total ya calculado
-    trip: displayedTrip.value,
-    state: 'confirmed',
-    payment_method: saleConfirmationData.value.payment_method || 'cash'
-  }
-})
-
-// Función para buscar clientes existentes
+// Funciones para paquetes
 const openPackageModal = () => {
   showPackageModal.value = true
 }
@@ -2881,400 +475,41 @@ const closePackageModal = () => {
 const handlePackageRegistered = async (newPackage) => {
   console.log('Paquete registrado exitosamente:', newPackage)
   
-  // Recargar la lista de paquetes para mostrar el nuevo paquete
-  await fetchPackages()
+  await fetchPackages(displayedTrip.value.id)
   
-  // El modal del recibo ya muestra la confirmación de éxito
-  // No necesitamos alert adicional
-  
-  // Si la sección de paquetes no está abierta, abrirla automáticamente
   if (!showPackages.value) {
     showPackages.value = true
   }
 }
 
-const showPackageModal = ref(false)
-
-// Función de búsqueda con debounce mejorada
-const searchReservationClients = async () => {
-  // Limpiar timeout anterior
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-  
-  // Si no hay query, limpiar resultados
-  if (!reservationClientSearchQuery.value.trim()) {
-    reservationFoundClients.value = []
-    reservationHasSearched.value = false
-    selectedReservationExistingClient.value = null
-    return
-  }
-  
-  // Aplicar debounce de 500ms
-  searchTimeout = setTimeout(async () => {
-    reservationHasSearched.value = true
-    
-    try {
-      const config = useRuntimeConfig()
-      const searchTerm = reservationClientSearchQuery.value.trim()
-      const apiUrl = `${config.public.apiBaseUrl}/clients/search?q=${encodeURIComponent(searchTerm)}`
-      
-      const response = await $fetch(apiUrl, {
-        method: 'GET'
-      })
-      
-      reservationFoundClients.value = response || []
-      
-      // Si solo hay un resultado y coincide exactamente, seleccionarlo automáticamente
-      if (reservationFoundClients.value.length === 1) {
-        const client = reservationFoundClients.value[0]
-        const searchLower = searchTerm.toLowerCase()
-        const clientName = `${client.firstname} ${client.lastname}`.toLowerCase()
-        const clientCI = client.document_id
-        
-        if (clientName.includes(searchLower) || clientCI === searchTerm) {
-          // No seleccionar automáticamente, dejar que el usuario elija
-          console.log('Cliente encontrado:', client)
-        }
-      }
-    } catch (error) {
-      console.error('Error searching clients:', error)
-      reservationFoundClients.value = []
-      reservationHasSearched.value = true
-      
-      // Mostrar error específico al usuario si es necesario
-      if (error.response?.status === 400) {
-        console.warn('Término de búsqueda muy corto o inválido')
-      } else if (error.response?.status >= 500) {
-        console.error('Error del servidor al buscar clientes')
-      }
-    } finally {
-      reservationHasSearched.value = false
-    }
-  }, 500)
-}
-
-const selectReservationExistingClient = (client) => {
-  // Copiar datos del cliente al formulario pero deshabilitar campos clave
-  reservationClientData.value = {
-    firstname: client.firstname || '',
-    lastname: client.lastname || '',
-    document_id: client.document_id || '',
-    phone: client.phone || '',
-    email: client.email || '',
-    address: client.address || '',
-    city: client.city || '',
-    state: client.state || '',
-    is_minor: client.is_minor || false
-  }
-  
-  selectedReservationExistingClient.value = client
-  reservationFoundClients.value = [] // Limpiar resultados de búsqueda
-  reservationClientSearchQuery.value = `${client.firstname} ${client.lastname} (${client.document_id})` // Mostrar cliente seleccionado
-}
-
-// Función para limpiar la selección de cliente existente
-const clearReservationExistingClientSelection = () => {
-  selectedReservationExistingClient.value = null
-  reservationClientSearchQuery.value = ''
-  reservationFoundClients.value = []
-  reservationHasSearched.value = false
-  
-  // Limpiar también el formulario
-  reservationClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false
-  }
-}
-
-// Watch para limpiar la selección cuando se cambia el tipo de cliente
-watch(reservationClientType, (newType) => {
-  if (newType === 'new') {
-    clearReservationExistingClientSelection()
-  } else if (newType === 'existing') {
-    // Limpiar formulario cuando se cambia a cliente existente
-    reservationClientData.value = {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: '',
-      email: '',
-      address: '',
-      city: '',
-      state: '',
-      is_minor: false
-    }
-  }
-})
-
-const handleReserveSeat = (seatOrSeats) => {
-  if (!displayedTrip.value || !displayedTrip.value.id) {
-    showReservationErrorModal('No se puede reservar el asiento en este momento. Intente nuevamente.')
-    return
-  }
-
-  // Inicializar el formulario
-  reservationClientType.value = 'new'
-  reservationClientSearchQuery.value = ''
-  reservationFoundClients.value = []
-  reservationHasSearched.value = false
-  selectedReservationExistingClient.value = null
-
-  reservationClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false
-  }
-
-  // Guardar el/los asiento(s) seleccionado(s) y mostrar el modal
-  if (Array.isArray(seatOrSeats)) {
-    selectedSeatsForReservation.value = [...seatOrSeats]
-  } else {
-    selectedSeatsForReservation.value = [seatOrSeats]
-  }
-  
-  // Filtrar solo asientos disponibles (seguridad extra)
-  selectedSeatsForReservation.value = selectedSeatsForReservation.value.filter(s => 
-    !s.occupied && s.status !== 'reserved' && s.status !== 'occupied'
-  );
-
-  if (selectedSeatsForReservation.value.length === 0) {
-    showReservationErrorModal('Los asientos seleccionados ya no están disponibles.');
-    return;
-  }
-
-  showReservationModal.value = true
-}
-
-// Confirmar la reserva con los datos del modal
-const confirmReservation = async () => {
-  if (!isReservationFormValid.value || selectedSeatsForReservation.value.length === 0) {
-    return
-  }
-
-  reservationLoading.value = true
-  let overallSuccess = true
-  const createdTicketsInfo = []
-  let clientResponse
-
-  try {
-    const config = useRuntimeConfig()
-
-    // Obtener el usuario autenticado para crear la reserva
-    if (!authStore.user || !authStore.user.id) {
-      showReservationErrorModal('Debe iniciar sesión para reservar un asiento.')
-      showReservationModal.value = false // Close modal before showing error
-      reservationLoading.value = false
-      return
-    }
-
-    // Crear o usar cliente existente (se hace una vez para todos los asientos)
-    if (reservationClientType.value === 'existing' && selectedReservationExistingClient.value) {
-      clientResponse = selectedReservationExistingClient.value
-    } else {
-      const clientApiUrl = `${config.public.apiBaseUrl}/clients`
-      clientResponse = await $fetch(clientApiUrl, {
-        method: 'POST',
-        body: reservationClientData.value
-      })
-    }
-
-    if (!clientResponse || !clientResponse.id) {
-      throw new Error('No se pudo obtener o crear el cliente para la reserva.')
-    }
-
-    // Iterar sobre cada asiento seleccionado para crear un ticket de reserva
-    for (const seat of selectedSeatsForReservation.value) {
-      try {
-        const ticketData = {
-          trip_id: displayedTrip.value.id,
-          seat_id: seat.id,
-          client_id: clientResponse.id,
-          state: 'pending',
-          price: displayedTrip.value.price,
-          payment_method: 'pending',
-          operator_user_id: authStore.user.id
-        }
-
-        const apiUrl = `${config.public.apiBaseUrl}/tickets`
-        const response = await $fetch(apiUrl, {
-          method: 'POST',
-          body: ticketData
-        })
-        
-        if (response && response.id) {
-          createdTicketsInfo.push({ seat, ticketId: response.id });
-        } else {
-          // Si una reserva falla, lo marcamos pero continuamos con las demás
-          overallSuccess = false; 
-          console.error(`Error al reservar el asiento ${seat.number}. Respuesta inesperada:`, response);
-          // Podrías añadir información específica del error por asiento si es necesario
-        }
-      } catch (seatError) {
-        overallSuccess = false;
-        console.error(`Error al reservar el asiento ${seat.number}:`, seatError);
-         // Podrías manejar errores por asiento aquí, e.g. guardarlos para mostrar al usuario
-      }
-    }
-
-    if (createdTicketsInfo.length > 0) {
-      await fetchSoldTickets()
-      if (tripId.value) {
-        await tripStore.fetchTripById(tripId.value)
-      }
-    }
-    
-    if (overallSuccess && createdTicketsInfo.length === selectedSeatsForReservation.value.length) {
-      reservationConfirmationData.value = {
-        success: true,
-        client: clientResponse,
-        seats: selectedSeatsForReservation.value, // Guardar todos los asientos
-        trip: displayedTrip.value,
-        ticketIds: createdTicketsInfo.map(info => info.ticketId),
-        errorMessage: ''
-      }
-    } else {
-       let partialSuccessMessage = `Algunas reservas fallaron. Asientos reservados con éxito: ${createdTicketsInfo.map(info => info.seat.number).join(', ')}. `;
-       if (createdTicketsInfo.length === 0) {
-        partialSuccessMessage = 'Todas las reservas fallaron. Por favor, intente nuevamente.'
-       }
-      // Si algunas fallaron o todas fallaron
-      reservationConfirmationData.value = {
-        success: false, // O true si al menos una fue exitosa, dependiendo de la UX deseada
-        client: clientResponse, // Puede que quieras mostrar datos del cliente aún si falla
-        seats: createdTicketsInfo.map(info => info.seat), // Solo los asientos reservados con éxito
-        trip: displayedTrip.value,
-        ticketIds: createdTicketsInfo.map(info => info.ticketId),
-        errorMessage: partialSuccessMessage + ' Consulte la consola para más detalles.'
-      }
-       // Aquí podrías tener un mensaje más detallado de qué falló si lo capturaste antes
-    }
-
-    showReservationModal.value = false
-    showReservationConfirmationModal.value = true
-
-  } catch (error) { // Error general (ej. error de cliente, error de autenticación)
-    console.error('Error general al procesar la reserva de múltiples asientos:', error)
-    let generalErrorMessage = 'Error general al procesar las reservas. Por favor, intente nuevamente.'
-    if (error.message) {
-      generalErrorMessage = error.message;
-    }
-    if (error.response && error.response._data && error.response._data.detail) {
-      generalErrorMessage = error.response._data.detail
-    }
-    
-    reservationConfirmationData.value = {
-      success: false,
-      client: null,
-      seats: [],
-      trip: null,
-      ticketIds: [],
-      errorMessage: generalErrorMessage
-    }
-    showReservationModal.value = false
-    showReservationConfirmationModal.value = true
-  } finally {
-    reservationLoading.value = false
-  }
-}
-
-// Cerrar el modal de reserva
-const closeReservationModal = () => {
-  showReservationModal.value = false
-  selectedSeatsForReservation.value = []
-  reservationLoading.value = false
-  // Resetear también el formulario de cliente y la selección
-  reservationClientType.value = 'new'
-  reservationClientSearchQuery.value = ''
-  reservationFoundClients.value = []
-  reservationHasSearched.value = false
-  selectedReservationExistingClient.value = null
-  reservationClientData.value = {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    is_minor: false
-  }
-  formTouched.value = false
-}
-
-const isReservationFormValid = computed(() => {
-  if (reservationClientType.value === 'existing') {
-    // Para cliente existente, debe haberse seleccionado un cliente
-    return selectedReservationExistingClient.value && 
-           selectedReservationExistingClient.value.id
-  } else {
-    // Para cliente nuevo, validar campos requeridos
-    return reservationClientData.value.firstname.trim() !== '' &&
-           reservationClientData.value.document_id.trim() !== ''
-  }
-})
-
-// Computed para los datos del ticket de confirmación de reserva
-const reservationConfirmationTicketData = computed(() => {
-  if (!reservationConfirmationData.value.success || !reservationConfirmationData.value.client || !reservationConfirmationData.value.seats.length) {
-    return null
-  }
-  
-  const seatNumbers = reservationConfirmationData.value.seats.map(seat => seat.number)
-
-  return {
-    id: reservationConfirmationData.value.ticketIds[0] || 'RESERVED', // Assuming you want the first ticketId for a general ID or handle multiple IDs appropriately
-    client: {
-      firstname: reservationConfirmationData.value.client.firstname,
-      lastname: reservationConfirmationData.value.client.lastname,
-      document_id: reservationConfirmationData.value.client.document_id,
-      phone: reservationConfirmationData.value.client.phone,
-      email: reservationConfirmationData.value.client.email
-    },
-    seat: {
-      seat_number: seatNumbers.join(', '),
-      multiple_seats: seatNumbers.length > 1 ? seatNumbers : null
-    },
-    price: (reservationConfirmationData.value.trip?.price || 0) * reservationConfirmationData.value.seats.length, // Corrected price calculation
-    trip: reservationConfirmationData.value.trip, // Use trip data from confirmation
-    state: 'pending', 
-    payment_method: 'pending'
-  }
-})
-
-// Estado para notificación general
-const showNotificationModal = ref(false)
-const notificationData = ref({
-  type: 'success',
-  title: 'Éxito',
-  message: 'La operación se ha completado exitosamente.'
-})
-
+// Funciones para notificaciones
 const closeNotificationModal = () => {
   showNotificationModal.value = false
 }
 
-// Función para imprimir ticket de reserva
-const printReservationTicket = () => {
-  if (reservationConfirmationTicketData.value) {
-    window.print()
-  }
+const closeTicketSaleModal = () => {
+  console.log('closeTicketSaleModal called, selectedSeatsForSale before:', selectedSeatsForSale.value)
+  showTicketSaleModal.value = false
+  // Don't clear selectedSeatsForSale when closing modal - keep selection
+  console.log('closeTicketSaleModal called, selectedSeatsForSale after:', selectedSeatsForSale.value)
 }
 
+const handleTicketCreated = async (ticket) => {
+  // Recargar los tickets vendidos
+  await fetchSoldTickets(tripId.value)
+  
+  // Actualizar los datos del viaje
+  if (tripId.value) {
+    await tripStore.fetchTripById(tripId.value)
+  }
+  
+  // Limpiar la selección de asientos después de la venta exitosa
+  selectedSeatsForSale.value = []
+  
+  // Mostrar mensaje de éxito
+  const actionText = saleActionType.value === 'sell' ? 'vendido' : 'reservado'
+  showNotification('success', 'Éxito', `El boleto ha sido ${actionText} exitosamente.`)
+}
 </script>
 
 <style scoped>

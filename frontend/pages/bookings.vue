@@ -712,12 +712,15 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useRouter, useRoute } from 'vue-router'
 
 definePageMeta({
   middleware: 'auth'
 })
 
 const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
 
 // Reactive data
 const tickets = ref([])
@@ -1082,7 +1085,7 @@ const submitTicketForm = async () => {
     const token = authStore.token
     
     if (showCreateModal.value) {
-      await $fetch(`${API_BASE}/tickets`, {
+      const createdTicket = await $fetch(`${API_BASE}/tickets`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1093,6 +1096,13 @@ const submitTicketForm = async () => {
           operator_user_id: authStore.user?.id
         }
       })
+      
+      // Si se vino desde trips, regresar a esa página
+      const tripId = route.query.trip_id
+      if (tripId) {
+        router.push(`/trips/${tripId}`)
+        return
+      }
     } else if (showEditModal.value && editingTicket.value) {
       await $fetch(`${API_BASE}/tickets/${editingTicket.value.id}`, {
         method: 'PUT',
@@ -1152,6 +1162,12 @@ const closeModal = () => {
   showEditModal.value = false
   editingTicket.value = null
   resetForm()
+  
+  // Si se vino desde trips, regresar a esa página
+  const tripId = route.query.trip_id
+  if (tripId) {
+    router.push(`/trips/${tripId}`)
+  }
 }
 
 // Pagination
@@ -1182,18 +1198,48 @@ watch([searchQuery, statusFilter, dateFromFilter, dateToFilter, paymentMethodFil
 })
 
 // Auto-fill price when trip is selected
-watch(() => ticketForm.value.trip_id, (newTripId) => {
+watch(() => ticketForm.value.trip_id, async (newTripId) => {
   if (newTripId) {
-    fetchAvailableSeats(newTripId)
+    await fetchAvailableSeats(newTripId)
     
     const selectedTrip = availableTrips.value.find(t => t.id == newTripId)
     if (selectedTrip && selectedTrip.route && selectedTrip.route.price) {
       ticketForm.value.price = selectedTrip.route.price
     }
+    
+    // Pre-seleccionar el asiento si viene de la URL
+    const seatNumber = route.query.seat_number
+    if (seatNumber && availableSeats.value.length > 0) {
+      const seat = availableSeats.value.find(s => s.seat_number === parseInt(seatNumber))
+      if (seat) {
+        ticketForm.value.seat_id = seat.id
+      }
+    }
   } else {
     availableSeats.value = []
   }
 })
+
+// Función para manejar parámetros de URL
+const handleUrlParams = () => {
+  const tripId = route.query.trip_id
+  const seatNumber = route.query.seat_number
+  const action = route.query.action
+
+  if (tripId) {
+    ticketForm.value.trip_id = parseInt(tripId)
+    
+    // Determinar el estado basado en la acción
+    if (action === 'reserve') {
+      ticketForm.value.state = 'pending'
+    } else if (action === 'sell') {
+      ticketForm.value.state = 'confirmed'
+    }
+    
+    // Abrir el modal de creación
+    showCreateModal.value = true
+  }
+}
 
 // Lifecycle
 onMounted(async () => {
@@ -1202,5 +1248,8 @@ onMounted(async () => {
     fetchClients(),
     fetchTrips()
   ])
+  
+  // Manejar parámetros de URL después de cargar los datos
+  handleUrlParams()
 })
 </script> 

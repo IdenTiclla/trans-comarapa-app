@@ -226,14 +226,14 @@
           </svg>
           Asientos sel: <span class="ml-1 bg-blue-200 text-blue-800 px-1 sm:px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px]">{{ selectedSeats.length }}</span>
         </h4>
-        <div class="flex flex-wrap gap-0.5 sm:gap-1">
+        <div class="flex flex-wrap gap-0.5 sm:gap-1 mb-2">
           <span
-            v-for="seat in selectedSeats"
-            :key="seat.id"
+            v-for="seat in selectedSeats" 
+            :key="seat.id" 
             class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-medium bg-blue-100 text-blue-800 shadow-sm"
           >
             {{ seat.number }}{{ seat.position === 'window' ? 'V' : 'P' }}
-            <button
+            <button 
               @click="toggleSeatSelection(seat)"
               class="ml-0.5 text-blue-600 hover:text-blue-800 focus:outline-none"
               aria-label="Quitar asiento"
@@ -243,6 +243,37 @@
               </svg>
             </button>
           </span>
+        </div>
+        
+        <!-- Botones de acción profesionales -->
+        <div class="flex gap-1 sm:gap-2">
+          <button 
+            @click="handleSellTicket"
+            class="flex items-center px-2 sm:px-3 py-1 text-[8px] sm:text-[9px] md:text-xs bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Vender
+          </button>
+          <button 
+            @click="handleReserveSeat"
+            class="flex items-center px-2 sm:px-3 py-1 text-[8px] sm:text-[9px] md:text-xs bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors duration-200 shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Reservar
+          </button>
+          <button 
+            @click="clearSelection"
+            class="flex items-center px-2 sm:px-3 py-1 text-[8px] sm:text-[9px] md:text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200 shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Limpiar
+          </button>
         </div>
       </div>
     </div>
@@ -369,7 +400,7 @@ const emit = defineEmits([
 const loading = ref(true)
 const error = ref(null)
 const seats = ref([])
-const selectedSeatIds = ref(props.initialSelectedSeats.map(seat => seat.id))
+const selectedSeatIds = ref([])
 
 // Estado para el menú contextual
 const showContextMenu = ref(false)
@@ -442,14 +473,17 @@ const toggleSeatSelection = (seat) => {
 
     // Seleccionar asiento
     selectedSeatIds.value.push(seat.id)
+    console.log('Seat selected:', seat.number, 'Current selection:', selectedSeatIds.value)
     emit('seat-selected', seat)
   } else {
     // Deseleccionar asiento
     selectedSeatIds.value.splice(index, 1)
+    console.log('Seat deselected:', seat.number, 'Current selection:', selectedSeatIds.value)
     emit('seat-deselected', seat)
   }
 
   // Emitir evento de cambio de selección
+  console.log('Emitting selection-change with:', selectedSeats.value)
   emit('selection-change', selectedSeats.value)
   
   // Sincronizar animaciones después de un pequeño delay para permitir que el DOM se actualice
@@ -572,6 +606,12 @@ const loadSeats = async () => {
 
     seats.value = generatedSeats.sort((a, b) => a.number - b.number); // Asegurar orden por número de asiento
 
+    // Reinicializar la selección basada en props.initialSelectedSeats después de cargar los asientos
+    if (props.initialSelectedSeats && props.initialSelectedSeats.length > 0) {
+      selectedSeatIds.value = props.initialSelectedSeats.map(seat => seat.id || seat.seat_id)
+      console.log('Reinitialized selectedSeatIds after loading seats:', selectedSeatIds.value)
+    }
+
   } catch (err) {
     console.error('Error al procesar los asientos:', err)
     error.value = 'No se pudieron procesar los asientos. Intente nuevamente.'
@@ -611,9 +651,23 @@ watch(() => props.occupiedSeats, () => {
   // loadSeats() 
 }, { deep: true });
 
-watch(() => props.initialSelectedSeats, (newVal) => {
-  selectedSeatIds.value = newVal.map(seat => seat.id) // Asegurarse que esto use el ID PK
-})
+watch(() => props.initialSelectedSeats, (newVal, oldVal) => {
+  // Solo actualizar si realmente cambió el contenido y no es una re-emisión de lo mismo
+  const newIds = newVal ? newVal.map(seat => seat.id || seat.seat_id) : []
+  const currentIds = selectedSeatIds.value
+  
+  // Verificar si realmente hay un cambio
+  const hasChanged = newIds.length !== currentIds.length || 
+    !newIds.every(id => currentIds.includes(id))
+  
+  if (hasChanged) {
+    console.log('Props initialSelectedSeats changed from:', oldVal, 'to:', newVal)
+    console.log('Updating selectedSeatIds from:', currentIds, 'to:', newIds)
+    selectedSeatIds.value = newIds
+  } else {
+    console.log('Props initialSelectedSeats received but no real change detected')
+  }
+}, { immediate: true, deep: true })
 
 // Añadir watcher para reserved_seat_numbers
 watch(() => props.reserved_seat_numbers, () => {
@@ -683,36 +737,28 @@ const sellTicket = () => {
 // Reservar asiento
 const reserveSeat = () => {
   if (selectedSeatForContext.value) {
-    // Verificar si el asiento del menú contextual está entre los seleccionados globalmente (selectedSeats)
-    // selectedSeats es un computed property que obtiene los asientos de selectedSeatIds
-    const isContextSeatInGlobalSelection = selectedSeatIds.value.includes(selectedSeatForContext.value.id);
-
-    if (isContextSeatInGlobalSelection && selectedSeats.value.length > 0) {
-      // Si el asiento del menú contextual está en la selección global y hay asientos seleccionados,
-      // emitir todos los asientos seleccionados globalmente.
-      // Asegurarse de que todos los asientos emitidos estén disponibles para reserva.
-      const availableSelectedSeats = selectedSeats.value.filter(seat => 
-        !seat.occupied && seat.status !== 'reserved' && seat.status !== 'occupied'
-      );
-      if (availableSelectedSeats.length > 0) {
-        emit('reserve-seat', [...availableSelectedSeats]);
-      } else {
-        // Si ninguno de los seleccionados está disponible, solo emitir el del contexto (si está disponible)
-        if (!selectedSeatForContext.value.occupied && selectedSeatForContext.value.status !== 'reserved' && selectedSeatForContext.value.status !== 'occupied') {
-          emit('reserve-seat', [selectedSeatForContext.value]);
+    // Verificar que el asiento esté disponible para reservar
+    if (!selectedSeatForContext.value.occupied && 
+        selectedSeatForContext.value.status !== 'reserved' && 
+        selectedSeatForContext.value.status !== 'occupied') {
+      
+      // Si hay asientos seleccionados globalmente, usar esos
+      if (selectedSeats.value.length > 0) {
+        const availableSelectedSeats = selectedSeats.value.filter(seat => 
+          !seat.occupied && seat.status !== 'reserved' && seat.status !== 'occupied'
+        );
+        if (availableSelectedSeats.length > 0) {
+          emit('reserve-seat', availableSelectedSeats);
         } else {
-          // Aquí podrías emitir un error o no hacer nada si ni el asiento del contexto está disponible
-          console.warn('El asiento del contexto tampoco está disponible para reservar');
+          // Si ninguno de los seleccionados está disponible, usar el del contexto
+          emit('reserve-seat', [selectedSeatForContext.value]);
         }
+      } else {
+        // Si no hay selección global, usar solo el asiento del menú contextual
+        emit('reserve-seat', [selectedSeatForContext.value]);
       }
     } else {
-      // Si no hay selección global o el asiento del menú contextual no está en ella,
-      // emitir solo el asiento del menú contextual (si está disponible).
-      if (!selectedSeatForContext.value.occupied && selectedSeatForContext.value.status !== 'reserved' && selectedSeatForContext.value.status !== 'occupied') {
-        emit('reserve-seat', [selectedSeatForContext.value]);
-      } else {
-         console.warn('El asiento del contexto no está disponible para reservar');
-      }
+      console.warn('El asiento no está disponible para reservar');
     }
     closeContextMenu();
   }
@@ -726,6 +772,29 @@ onMounted(() => {
     }
   })
 })
+
+// Funciones para botones de acción
+const handleSellTicket = () => {
+  if (selectedSeats.value.length > 0) {
+    console.log('Selling tickets for seats:', selectedSeats.value);
+    // Emitir todos los asientos seleccionados para vender
+    emit('sell-ticket', selectedSeats.value);
+  }
+};
+
+const handleReserveSeat = () => {
+  if (selectedSeats.value.length > 0) {
+    console.log('Reserving seats:', selectedSeats.value);
+    // Emitir todos los asientos seleccionados para reservar
+    emit('reserve-seat', selectedSeats.value);
+  }
+};
+
+const clearSelection = () => {
+  selectedSeatIds.value = [];
+  emit('selection-change', []);
+  console.log('Cleared selection manually');
+};
 </script>
 
 <style scoped>
