@@ -423,7 +423,25 @@ const applyFilters = () => {
     filters.dateTo = filters.date
   }
 
-  emit('filter-change', { ...filters })
+  // Preparar los filtros para enviar al backend
+  const filtersToSend = {
+    search: filters.search || '',
+    origin: filters.origin || '',
+    destination: filters.destination || '',
+    status: filters.status || '',
+    dateFrom: filters.dateFrom || '',
+    dateTo: filters.dateTo || '',
+    minSeats: filters.minSeats || ''
+  }
+
+  // Limpiar valores vacíos
+  Object.keys(filtersToSend).forEach(key => {
+    if (!filtersToSend[key]) {
+      delete filtersToSend[key]
+    }
+  })
+
+  emit('filter-change', filtersToSend)
 }
 
 // Resetear filtros
@@ -436,6 +454,8 @@ const resetFilters = () => {
   filters.dateFrom = ''
   filters.dateTo = ''
   filters.minSeats = ''
-  emit('filter-change', { ...filters })
+  
+  // Enviar filtros vacíos
+  emit('filter-change', {})
 }
 </script>

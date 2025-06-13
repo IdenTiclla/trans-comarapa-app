@@ -27,11 +27,15 @@ async def get_trips(
     skip: int = Query(0, description="Number of records to skip"),
     limit: int = Query(100, description="Maximum number of records to return"),
     upcoming: bool = Query(False, description="Filter for upcoming trips only"),
+    search: Optional[str] = Query(None, description="Search by trip ID, origin, or destination"),
     origin: Optional[str] = Query(None, description="Filter by origin location name"),
     destination: Optional[str] = Query(None, description="Filter by destination location name"),
     date_from: Optional[datetime] = Query(None, description="Filter by minimum departure date"),
     date_to: Optional[datetime] = Query(None, description="Filter by maximum departure date"),
     status: Optional[str] = Query(None, description="Filter by trip status (comma-separated list)"),
+    min_seats: Optional[int] = Query(None, description="Filter by minimum available seats"),
+    sort_by: Optional[str] = Query("trip_datetime", description="Field to sort by"),
+    sort_direction: Optional[str] = Query("asc", description="Sort direction (asc or desc)"),
     db: Session = Depends(get_db)
 ):
     """
@@ -46,15 +50,48 @@ async def get_trips(
     if upcoming:
         query = query.filter(TripModel.trip_datetime >= datetime.now())
 
+    # Search filter - searches across trip ID, origin, and destination  
+    if search:
+        search_conditions = []
+        
+        # Search by trip ID (convert search term to integer if possible)
+        try:
+            trip_id = int(search)
+            search_conditions.append(TripModel.id == trip_id)
+        except ValueError:
+            pass
+        
+        # Create subqueries for origin and destination searches
+        origin_subquery = db.query(TripModel.id).join(RouteModel)\
+                           .join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
+                           .filter(LocationModel.name.ilike(f"%{search}%"))
+        
+        destination_subquery = db.query(TripModel.id).join(RouteModel)\
+                              .join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
+                              .filter(LocationModel.name.ilike(f"%{search}%"))
+        
+        # Add location-based searches to conditions
+        search_conditions.extend([
+            TripModel.id.in_(origin_subquery),
+            TripModel.id.in_(destination_subquery)
+        ])
+        
+        # Apply OR condition for all search terms
+        query = query.filter(or_(*search_conditions))
+
     if origin:
-        query = query.join(RouteModel, TripModel.route_id == RouteModel.id)\
-                    .join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
-                    .filter(LocationModel.name.ilike(f"%{origin}%"))
+        # Use subquery approach for origin filter to avoid join conflicts
+        origin_subquery = db.query(TripModel.id).join(RouteModel)\
+                           .join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
+                           .filter(LocationModel.name.ilike(f"%{origin}%"))
+        query = query.filter(TripModel.id.in_(origin_subquery))
 
     if destination:
-        query = query.join(RouteModel, TripModel.route_id == RouteModel.id)\
-                    .join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
-                    .filter(LocationModel.name.ilike(f"%{destination}%"))
+        # Use subquery approach for destination filter to avoid join conflicts
+        destination_subquery = db.query(TripModel.id).join(RouteModel)\
+                              .join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
+                              .filter(LocationModel.name.ilike(f"%{destination}%"))
+        query = query.filter(TripModel.id.in_(destination_subquery))
 
     if date_from:
         query = query.filter(TripModel.trip_datetime >= date_from)
@@ -67,11 +104,46 @@ async def get_trips(
         status_values = [s.strip() for s in status.split(',')]
         query = query.filter(TripModel.status.in_(status_values))
 
-    # Get total count for pagination
+    # Filter by minimum available seats (this requires a subquery to count occupied seats)
+    if min_seats:
+        # Subquery to get occupied seats count for each trip
+        occupied_seats_subquery = db.query(
+            TicketModel.trip_id,
+            func.count(TicketModel.id).label('occupied_count')
+        ).filter(TicketModel.state != 'cancelled')\
+         .group_by(TicketModel.trip_id).subquery()
+        
+        # Join with bus to get capacity and with occupied seats subquery
+        query = query.join(BusModel, TripModel.bus_id == BusModel.id)\
+                    .outerjoin(occupied_seats_subquery, TripModel.id == occupied_seats_subquery.c.trip_id)\
+                    .filter(
+                        BusModel.capacity - func.coalesce(occupied_seats_subquery.c.occupied_count, 0) >= min_seats
+                    )
+
+    # Get total count for pagination (before applying sorting and pagination)
     total_count = query.count()
 
+    # Apply sorting
+    if sort_by and sort_direction:
+        if sort_by == "trip_datetime":
+            order_column = TripModel.trip_datetime
+        elif sort_by == "status":
+            order_column = TripModel.status
+        elif sort_by == "id":
+            order_column = TripModel.id
+        else:
+            order_column = TripModel.trip_datetime  # Default fallback
+        
+        if sort_direction.lower() == "desc":
+            query = query.order_by(desc(order_column))
+        else:
+            query = query.order_by(order_column)
+    else:
+        # Default ordering
+        query = query.order_by(TripModel.trip_datetime)
+
     # Apply pagination
-    query = query.order_by(TripModel.trip_datetime).offset(skip).limit(limit)
+    query = query.offset(skip).limit(limit)
 
     # Execute query
     trips = query.all()

@@ -26,6 +26,7 @@ export const useTripStore = defineStore('trips', {
           sort_by: params.sortBy,
           sort_direction: params.sortDirection,
         };
+        
         const response = await tripService.getTrips(apiParams);
         
         if (response && response.pagination &&

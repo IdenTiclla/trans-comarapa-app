@@ -60,6 +60,32 @@ export const getTrips = async (params = {}) => {
     delete queryParams.page;
   }
 
+  // Map frontend filter parameters to backend expected names
+  if (params.dateFrom) {
+    queryParams.date_from = params.dateFrom;
+    delete queryParams.dateFrom;
+  }
+  
+  if (params.dateTo) {
+    queryParams.date_to = params.dateTo;
+    delete queryParams.dateTo;
+  }
+  
+  if (params.minSeats) {
+    queryParams.min_seats = params.minSeats;
+    delete queryParams.minSeats;
+  }
+  
+  if (params.sortBy) {
+    queryParams.sort_by = params.sortBy;
+    delete queryParams.sortBy;
+  }
+  
+  if (params.sortDirection) {
+    queryParams.sort_direction = params.sortDirection;
+    delete queryParams.sortDirection;
+  }
+
 
   // The 'upcoming' filter might be a boolean frontend concept.
   // If backend expects specific date ranges or status for "upcoming":
@@ -76,6 +102,13 @@ export const getTrips = async (params = {}) => {
     delete queryParams.upcoming;
   }
 
+
+  // Clean up undefined/null/empty values before sending to API
+  Object.keys(queryParams).forEach(key => {
+    if (queryParams[key] === undefined || queryParams[key] === null || queryParams[key] === '') {
+      delete queryParams[key];
+    }
+  });
 
   try {
     const response = await apiFetch(resourceUrl, { params: queryParams });
