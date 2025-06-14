@@ -267,13 +267,7 @@
                   class="bg-blue-100 rounded font-bold text-blue-600"
                   :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
                 >
-                  AM
-                </span>
-                <span 
-                  class="bg-blue-100 rounded font-bold text-blue-600"
-                  :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
-                >
-                  PM
+                  {{ getOfficeTimeAmPm() }}
                 </span>
               </div>
               <div 
@@ -305,13 +299,7 @@
                   class="bg-blue-100 rounded font-bold text-blue-600"
                   :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
                 >
-                  AM
-                </span>
-                <span 
-                  class="bg-blue-100 rounded font-bold text-blue-600"
-                  :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
-                >
-                  PM
+                  {{ getDepartureTimeAmPm() }}
                 </span>
               </div>
               <div 
@@ -451,8 +439,21 @@ const getYearFromDate = () => {
 }
 
 const getCurrentTime = () => {
+  const datetime = props.trip?.trip_datetime || props.ticket.trip?.trip_datetime
+  if (datetime) {
+    const departureDate = new Date(datetime)
+    // Restar 30 minutos a la hora de salida
+    const officeTime = new Date(departureDate.getTime() - (30 * 60 * 1000))
+    return officeTime.toLocaleTimeString('es-BO', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    })
+  }
+  // Fallback si no hay datetime disponible
   const now = new Date()
-  return now.toLocaleTimeString('es-BO', { 
+  const officeTime = new Date(now.getTime() - (30 * 60 * 1000))
+  return officeTime.toLocaleTimeString('es-BO', { 
     hour: '2-digit', 
     minute: '2-digit',
     hour12: false 
@@ -501,6 +502,28 @@ const getSeatNumbers = () => {
   } else {
     return '36'
   }
+}
+
+// Funciones para determinar AM/PM
+const getOfficeTimeAmPm = () => {
+  const datetime = props.trip?.trip_datetime || props.ticket.trip?.trip_datetime
+  if (datetime) {
+    const departureDate = new Date(datetime)
+    const officeTime = new Date(departureDate.getTime() - (30 * 60 * 1000))
+    return officeTime.getHours() < 12 ? 'AM' : 'PM'
+  }
+  const now = new Date()
+  const officeTime = new Date(now.getTime() - (30 * 60 * 1000))
+  return officeTime.getHours() < 12 ? 'AM' : 'PM'
+}
+
+const getDepartureTimeAmPm = () => {
+  const datetime = props.trip?.trip_datetime || props.ticket.trip?.trip_datetime
+  if (datetime) {
+    const date = new Date(datetime)
+    return date.getHours() < 12 ? 'AM' : 'PM'
+  }
+  return 'AM'
 }
 </script>
 
