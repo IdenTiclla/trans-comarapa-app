@@ -83,3 +83,15 @@ export const getTicketsBySeatId = async (seatId) => {
     throw error;
   }
 };
+
+// Change seat assignment for a ticket
+export const changeSeat = async (ticketId, newSeatId) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${ticketId}/change-seat/${newSeatId}`, {
+      method: 'PUT',
+    });
+  } catch (error) {
+    console.error(`Error in ticketService.changeSeat for ticket ${ticketId} to seat ${newSeatId}:`, error.data?.detail || error.message);
+    throw error;
+  }
+};

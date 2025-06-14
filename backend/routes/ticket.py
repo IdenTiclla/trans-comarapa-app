@@ -357,6 +357,79 @@ async def cancel_ticket(ticket_id: int, db: Session = Depends(get_db)):
     
     return ticket
 
+@router.put("/{ticket_id}/change-seat/{new_seat_id}", response_model=TicketSchema)
+async def change_ticket_seat(
+    ticket_id: int, 
+    new_seat_id: int, 
+    db: Session = Depends(get_db)
+):
+    """Change the seat assignment for a ticket"""
+    # Check if ticket exists
+    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket with id {ticket_id} not found"
+        )
+    
+    # Check if new seat exists
+    new_seat = db.query(SeatModel).filter(SeatModel.id == new_seat_id).first()
+    if not new_seat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Seat with id {new_seat_id} not found"
+        )
+    
+    # Check if the new seat belongs to the same bus as the ticket's trip
+    trip = db.query(TripModel).filter(TripModel.id == ticket.trip_id).first()
+    if not trip:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Trip with id {ticket.trip_id} not found"
+        )
+    
+    if new_seat.bus_id != trip.bus_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The new seat does not belong to the same bus as the trip"
+        )
+    
+    # Check if the new seat is already occupied for this trip
+    existing_ticket_on_new_seat = db.query(TicketModel).filter(
+        TicketModel.trip_id == ticket.trip_id,
+        TicketModel.seat_id == new_seat_id,
+        TicketModel.state.in_(["sold", "confirmed", "reserved"])
+    ).first()
+    
+    if existing_ticket_on_new_seat:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Seat {new_seat.seat_number} is already occupied for this trip"
+        )
+    
+    # Store old seat info for history
+    old_seat = db.query(SeatModel).filter(SeatModel.id == ticket.seat_id).first()
+    old_seat_number = old_seat.seat_number if old_seat else "N/A"
+    
+    # Update the ticket with the new seat
+    ticket.seat_id = new_seat_id
+    db.commit()
+    db.refresh(ticket)
+    
+    # Log the seat change (we can extend the history model to include seat changes)
+    # For now, we'll use the existing state history with a custom format
+    _log_ticket_state_change(
+        db=db,
+        ticket_id=ticket.id,
+        new_state=f"seat_changed_to_{new_seat.seat_number}",
+        old_state=f"seat_was_{old_seat_number}",
+        changed_by_user_id=None  # TODO: Get current user ID from auth
+    )
+    
+    db.commit()
+    
+    return ticket
+
 # Helper function to add to ticket_state_history
 def _log_ticket_state_change(
     db: Session, 
