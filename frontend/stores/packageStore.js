@@ -36,6 +36,8 @@ export const usePackageStore = defineStore('packages', {
 
   actions: {
     _handleApiResponse(response) {
+      console.log('Handling API response:', response);
+      
       // Handle new PackageSummary array response
       if (Array.isArray(response)) {
         this.packages = response;
@@ -45,6 +47,7 @@ export const usePackageStore = defineStore('packages', {
           currentPage: 1,
           itemsPerPage: response.length > 0 ? response.length : 10,
         };
+        console.log('Set packages array:', this.packages.length, 'packages');
       } else if (response && typeof response === 'object' && response.packages) {
         // Handle paginated response with packages property
         this.packages = response.packages;
@@ -54,6 +57,7 @@ export const usePackageStore = defineStore('packages', {
           currentPage: response.pagination?.currentPage || 1,
           itemsPerPage: response.pagination?.itemsPerPage || this.pagination.itemsPerPage,
         };
+        console.log('Set packages from paginated response:', this.packages.length, 'packages');
       } else {
         // Handle unexpected response structure
         this.packages = [];
@@ -68,12 +72,28 @@ export const usePackageStore = defineStore('packages', {
         const queryParams = { 
           skip: ((params.page || this.pagination.currentPage) - 1) * (params.limit || this.pagination.itemsPerPage),
           limit: params.limit || this.pagination.itemsPerPage,
-          status: params.status,
-          ...params.filters,
         };
+        
+        // Only add filters if they have valid values
+        if (params.status && params.status !== 'all' && params.status !== 'undefined') {
+          queryParams.status = params.status;
+        }
+        
+        if (params.filters) {
+          Object.keys(params.filters).forEach(key => {
+            const value = params.filters[key];
+            if (value !== undefined && value !== null && value !== 'all' && value !== '') {
+              queryParams[key] = value;
+            }
+          });
+        }
+        
+        console.log('Fetching packages with params:', queryParams);
         const response = await packageService.getAllPackages(queryParams);
+        console.log('Package API response:', response);
         this._handleApiResponse(response);
       } catch (err) {
+        console.error('Error fetching packages:', err);
         this.error = err.data?.detail || err.message || 'Failed to fetch packages';
         this.packages = [];
       } finally {

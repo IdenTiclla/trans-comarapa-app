@@ -27,15 +27,15 @@
         </div>
          <div>
           <strong class="font-medium text-gray-700">Peso:</strong>
-          <p>{{ pkg.weight_kg ? `${pkg.weight_kg} kg` : 'N/A' }}</p>
+          <p>{{ pkg.total_weight ? `${pkg.total_weight} kg` : 'N/A' }}</p>
         </div>
         <div>
           <strong class="font-medium text-gray-700">Items:</strong>
-          <p>{{ pkg.items_count || 0 }}</p> <!-- Assuming items_count is available -->
+          <p>{{ pkg.total_items_count || 0 }}</p>
         </div>
         <div>
           <strong class="font-medium text-gray-700">Monto Total:</strong>
-          <p>{{ formatCurrency(pkg.total_amount) }}</p> <!-- Assuming total_amount is available -->
+          <p>Bs. {{ pkg.total_amount || '0.00' }}</p>
         </div>
       </div>
 
