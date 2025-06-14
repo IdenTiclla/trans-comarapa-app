@@ -1,27 +1,9 @@
 // Servicio para gestionar usuarios desde el panel de administración
-import { useRuntimeConfig } from 'nuxt/app'
-import authService from './authService'
-
-// Obtener la URL base de la API
-const getApiBaseUrl = () => {
-  const config = useRuntimeConfig()
-  return config.public.apiBaseUrl
-}
-
-// Obtener el token de autenticación
-const getAuthHeader = () => {
-  const token = authService.getToken()
-  return {
-    'Authorization': `Bearer ${token}`
-  }
-}
+import apiFetch from '~/utils/api'
 
 // Obtener todos los usuarios con filtros y paginación
 const getUsers = async (params = {}) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
     // Construir query string para los parámetros
     const queryParams = new URLSearchParams()
 
@@ -33,20 +15,7 @@ const getUsers = async (params = {}) => {
 
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
 
-    const response = await fetch(`${apiBaseUrl}/users${queryString}`, {
-      method: 'GET',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al obtener usuarios: ${response.status}`)
-    }
-
-    return await response.json()
+    return await apiFetch(`/users${queryString}`)
   } catch (error) {
     console.error('Error al obtener usuarios:', error)
     throw error
@@ -56,23 +25,7 @@ const getUsers = async (params = {}) => {
 // Obtener un usuario por ID
 const getUserById = async (userId) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
-      method: 'GET',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al obtener usuario: ${response.status}`)
-    }
-
-    return await response.json()
+    return await apiFetch(`/users/${userId}`)
   } catch (error) {
     console.error(`Error al obtener usuario con ID ${userId}:`, error)
     throw error
@@ -82,24 +35,10 @@ const getUserById = async (userId) => {
 // Crear un nuevo usuario
 const createUser = async (userData) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users`, {
+    return await apiFetch('/users', {
       method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(userData)
+      body: userData
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al crear usuario: ${response.status}`)
-    }
-
-    return await response.json()
   } catch (error) {
     console.error('Error al crear usuario:', error)
     throw error
@@ -109,24 +48,10 @@ const createUser = async (userData) => {
 // Actualizar un usuario existente
 const updateUser = async (userId, userData) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
+    return await apiFetch(`/users/${userId}`, {
       method: 'PUT',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(userData)
+      body: userData
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al actualizar usuario: ${response.status}`)
-    }
-
-    return await response.json()
   } catch (error) {
     console.error(`Error al actualizar usuario con ID ${userId}:`, error)
     throw error
@@ -136,22 +61,9 @@ const updateUser = async (userId, userData) => {
 // Eliminar un usuario
 const deleteUser = async (userId) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
-      method: 'DELETE',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
+    await apiFetch(`/users/${userId}`, {
+      method: 'DELETE'
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al eliminar usuario: ${response.status}`)
-    }
-
     return true
   } catch (error) {
     console.error(`Error al eliminar usuario con ID ${userId}:`, error)
@@ -162,23 +74,9 @@ const deleteUser = async (userId) => {
 // Activar un usuario
 const activateUser = async (userId) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users/${userId}/activate`, {
-      method: 'PATCH',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
+    return await apiFetch(`/users/${userId}/activate`, {
+      method: 'PATCH'
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al activar usuario: ${response.status}`)
-    }
-
-    return await response.json()
   } catch (error) {
     console.error(`Error al activar usuario con ID ${userId}:`, error)
     throw error
@@ -188,23 +86,9 @@ const activateUser = async (userId) => {
 // Desactivar un usuario
 const deactivateUser = async (userId) => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/users/${userId}/deactivate`, {
-      method: 'PATCH',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
+    return await apiFetch(`/users/${userId}/deactivate`, {
+      method: 'PATCH'
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al desactivar usuario: ${response.status}`)
-    }
-
-    return await response.json()
   } catch (error) {
     console.error(`Error al desactivar usuario con ID ${userId}:`, error)
     throw error
@@ -214,23 +98,7 @@ const deactivateUser = async (userId) => {
 // Obtener todos los roles disponibles
 const getRoles = async () => {
   try {
-    const apiBaseUrl = getApiBaseUrl()
-    const headers = getAuthHeader()
-
-    const response = await fetch(`${apiBaseUrl}/roles`, {
-      method: 'GET',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || `Error al obtener roles: ${response.status}`)
-    }
-
-    return await response.json()
+    return await apiFetch('/roles')
   } catch (error) {
     console.error('Error al obtener roles:', error)
     throw error
