@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from typing import List, Optional
 from db.session import get_db
 from models.location import Location as LocationModel
+from models.route import Route as RouteModel
 from schemas.location import LocationCreate, Location as LocationSchema, LocationUpdate
 
 router = APIRouter(
@@ -68,6 +69,37 @@ def get_locations(
         query = query.filter(LocationModel.state == state)
     
     return query.offset(skip).limit(limit).all()
+
+@router.get("/search-destinations", response_model=List[LocationSchema])
+def search_destinations(
+    search: str = Query(..., description="Search term for destination names"),
+    origin_location_id: Optional[int] = Query(None, description="Filter by origin location ID"),
+    db: Session = Depends(get_db)
+):
+    """Search for destination locations, optionally filtered by origin location"""
+    query = db.query(LocationModel)
+    
+    # If origin_location_id is provided, filter to only show destinations 
+    # that are reachable from that origin via existing routes
+    if origin_location_id:
+        # Get all destination location IDs from routes that start from the origin
+        route_destinations = db.query(RouteModel.destination_location_id).filter(
+            RouteModel.origin_location_id == origin_location_id
+        ).subquery()
+        
+        query = query.filter(LocationModel.id.in_(route_destinations))
+    
+    # Apply search filter
+    if search.strip():
+        query = query.filter(
+            or_(
+                LocationModel.name.ilike(f"%{search.strip()}%"),
+                LocationModel.description.ilike(f"%{search.strip()}%")
+            )
+        )
+    
+    # Limit results to prevent too many results
+    return query.limit(20).all()
 
 @router.get("/{location_id}", response_model=LocationSchema)
 def get_location(location_id: int, db: Session = Depends(get_db)):

@@ -214,6 +214,18 @@
                   Información del Boleto
                 </h4>
                 
+                <!-- Destino -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Destino *</label>
+                  <input
+                    v-model="ticketForm.destination"
+                    type="text"
+                    required
+                    placeholder="Ej: Los Negros, Samaipata, Cochabamba..."
+                    class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  >
+                </div>
+                
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Precio (Bs.) *</label>
@@ -378,6 +390,7 @@ const {
   getOrCreateClient
 } = useClientSearch()
 
+
 // Formulario para cliente nuevo
 const newClientForm = ref({
   firstname: '',
@@ -395,7 +408,8 @@ const newClientForm = ref({
 const ticketForm = ref({
   price: 0,
   payment_method: '',
-  state: 'pending'
+  state: 'pending',
+  destination: ''
 })
 
 const isSubmitting = ref(false)
@@ -407,7 +421,9 @@ const canSubmit = computed(() => {
   const hasClient = clientType.value === 'existing' ? hasSelectedExistingClient.value : 
     (newClientForm.value.firstname && newClientForm.value.lastname && newClientForm.value.document_id)
   
-  return hasClient && ticketForm.value.price > 0 && ticketForm.value.payment_method
+  const hasDestination = ticketForm.value.destination && ticketForm.value.destination.trim()
+  
+  return hasClient && hasDestination && ticketForm.value.price > 0 && ticketForm.value.payment_method
 })
 
 // Computed para la previsualización del boleto
@@ -426,9 +442,18 @@ const previewTicket = computed(() => {
     phone: newClientForm.value.phone || ''
   }
 
+  // Obtener el nombre del destino del formulario
+  const destinationName = ticketForm.value.destination || 
+    props.trip?.route?.destination_location?.name || 
+    props.trip?.route?.destination || 
+    ''
+
+  console.log('Preview destinationName:', destinationName) // Debug log
+
   return {
     id: 'PREVIEW',
     client,
+    destination: destinationName,
     seats: props.selectedSeats.map(seat => ({
       seat_number: seat.number,
       deck: seat.deck || 'Planta Baja'
@@ -443,6 +468,7 @@ const previewTicket = computed(() => {
     created_at: new Date().toISOString()
   }
 })
+
 
 // Establecer precio inicial basado en la ruta del viaje
 watch(() => props.trip, (newTrip) => {
@@ -471,13 +497,28 @@ const clearSelectedClient = () => {
   clearExistingClientSelection()
 }
 
+// Función para seleccionar destino
+const selectDestination = (destination) => {
+  selectExistingDestination(destination)
+}
+
+// Función para limpiar destino seleccionado
+const clearSelectedDestination = () => {
+  clearExistingDestinationSelection()
+}
+
 // Manejar envío del formulario
 const handleSubmit = async () => {
   hasTriedSubmit.value = true
   errorMessage.value = ''
 
   if (!canSubmit.value) {
-    if (!ticketForm.value.payment_method) {
+    const hasDestination = destinationType.value === 'existing' ? hasSelectedExistingDestination.value : 
+      (newDestinationForm.value.name && newDestinationForm.value.name.trim())
+    
+    if (!hasDestination) {
+      errorMessage.value = 'Debe seleccionar o crear un destino'
+    } else if (!ticketForm.value.payment_method) {
       errorMessage.value = 'Debe seleccionar un método de pago'
     }
     return
@@ -491,6 +532,11 @@ const handleSubmit = async () => {
     if (clientType.value === 'new') {
       const newClient = await createClient(newClientForm.value)
       clientId = newClient.id
+    }
+
+    // Validar destino
+    if (!ticketForm.value.destination || !ticketForm.value.destination.trim()) {
+      throw new Error('Debe ingresar un destino')
     }
 
     // Buscar los asientos en el layout del viaje
@@ -516,6 +562,7 @@ const handleSubmit = async () => {
         trip_id: props.trip.id,
         client_id: clientId,
         seat_id: seat.id,
+        destination: ticketForm.value.destination.trim(),
         price: ticketForm.value.price,
         payment_method: ticketForm.value.payment_method,
         state: ticketForm.value.state,
@@ -554,6 +601,7 @@ const handleSubmit = async () => {
   }
 }
 
+
 // Limpiar formulario cuando se cierre el modal
 watch(() => props.show, (show) => {
   if (!show) {
@@ -561,7 +609,8 @@ watch(() => props.show, (show) => {
     ticketForm.value = {
       price: props.trip?.route?.price || 0,
       payment_method: '',
-      state: props.actionType === 'sell' ? 'confirmed' : 'pending'
+      state: props.actionType === 'sell' ? 'confirmed' : 'pending',
+      destination: ''
     }
     newClientForm.value = {
       firstname: '',

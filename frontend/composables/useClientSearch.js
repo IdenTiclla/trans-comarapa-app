@@ -64,7 +64,19 @@ export const useClientSearch = () => {
 
   // Función para seleccionar un cliente existente
   const selectExistingClient = (client) => {
-    selectedExistingClient.value = client
+    // Crear un objeto plano para evitar problemas de serialización
+    selectedExistingClient.value = {
+      id: client.id,
+      firstname: client.firstname,
+      lastname: client.lastname,
+      document_id: client.document_id,
+      phone: client.phone,
+      email: client.email,
+      address: client.address,
+      city: client.city,
+      state: client.state,
+      is_minor: client.is_minor
+    }
     foundClients.value = []
     clientSearchQuery.value = `${client.firstname} ${client.lastname} (${client.document_id})`
     

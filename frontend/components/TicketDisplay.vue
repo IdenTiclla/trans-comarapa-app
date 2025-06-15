@@ -400,6 +400,11 @@ const formatPrice = (price) => {
 }
 
 const getDestination = () => {
+  // Priorizar destination del ticket si está disponible
+  if (props.ticket?.destination) {
+    return props.ticket.destination
+  }
+  // Fallback a la información de la ruta
   if (props.trip?.route?.destination) {
     return props.trip.route.destination
   }

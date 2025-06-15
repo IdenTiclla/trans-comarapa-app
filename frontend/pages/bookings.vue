@@ -10,7 +10,12 @@
             </h1>
             <p class="mt-2 text-gray-600">Administra los boletos de viaje de los pasajeros</p>
             <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-              <span>Última actualización: {{ new Date().toLocaleString('es-BO') }}</span>
+              <ClientOnly>
+                <span>Última actualización: {{ new Date().toLocaleString('es-BO') }}</span>
+                <template #fallback>
+                  <span>Última actualización: Cargando...</span>
+                </template>
+              </ClientOnly>
               <span>•</span>
               <span>{{ filteredTickets.length }} boletos total</span>
             </div>

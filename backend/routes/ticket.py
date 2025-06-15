@@ -8,6 +8,7 @@ from models.trip import Trip as TripModel
 from models.bus import Bus as BusModel
 from models.secretary import Secretary as SecretaryModel
 from models.ticket_state_history import TicketStateHistory
+from models.location import Location as LocationModel
 from schemas.ticket import TicketCreate, Ticket as TicketSchema, TicketUpdate
 from schemas.ticket_state_history import TicketStateHistoryCreate
 from typing import List, Optional
@@ -99,18 +100,36 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     # The ticket.operator_user_id is the user_id of the secretary/admin creating the ticket
     print(f"[DEBUG] Looking for secretary profile with user_id: {ticket.operator_user_id}")
     secretary_profile = db.query(SecretaryModel).filter(SecretaryModel.user_id == ticket.operator_user_id).first()
+    
     if not secretary_profile:
         print(f"[DEBUG] No secretary profile found for user ID {ticket.operator_user_id}")
-        # Fallback or alternative logic for admins if they don't have a secretary profile
-        # For now, we'll raise an error if no secretary profile is found for the user.
-        # This might need adjustment based on how admins are handled (e.g., do they also have a secretary profile, or is there a default secretary_id for admin operations?)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, # Or 404 if preferred
-            detail=f"No secretary profile found for user ID {ticket.operator_user_id}. Cannot create ticket."
-        )
-    
-    actual_secretary_id = secretary_profile.id
-    print(f"[DEBUG] Secretary profile found: {actual_secretary_id}")
+        # Check if it's an admin user, if so, use the first available secretary
+        from models.user import User
+        user = db.query(User).filter(User.id == ticket.operator_user_id).first()
+        if user and ('admin' in str(user.role).lower() or user.is_admin):
+            print(f"[DEBUG] User is admin, looking for default secretary")
+            # Use the first available secretary as default for admin operations
+            default_secretary = db.query(SecretaryModel).first()
+            if default_secretary:
+                actual_secretary_id = default_secretary.id
+                print(f"[DEBUG] Using default secretary: {actual_secretary_id}")
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No secretaries available in the system. Cannot create ticket."
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"No secretary profile found for user ID {ticket.operator_user_id}. Cannot create ticket."
+            )
+    else:
+        actual_secretary_id = secretary_profile.id
+        print(f"[DEBUG] Secretary profile found: {actual_secretary_id}")
+
+    # 4.5. Log destination if provided (simple validation)
+    if ticket.destination:
+        print(f"[DEBUG] Destination provided: {ticket.destination}")
 
     # 5. Verify that the trip hasn't already departed
     min_departure = datetime.now() + timedelta(minutes=10)
@@ -161,6 +180,7 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
         seat_id=ticket.seat_id,
         client_id=ticket.client_id,
         trip_id=ticket.trip_id,
+        destination=ticket.destination,
         secretary_id=actual_secretary_id,
         price=ticket.price,
         payment_method=ticket.payment_method.lower() if ticket.payment_method else None

@@ -40,6 +40,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def clear_db():
     db = SessionLocal()
     try:
+        # Disable foreign key checks temporarily for MySQL
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        
         # Delete all data in reverse order of dependencies
         db.query(PackageStateHistory).delete()
         db.query(TicketStateHistory).delete()
@@ -60,6 +63,9 @@ def clear_db():
         db.query(ActivityModel).delete()
         db.query(User).delete()
 
+        # Re-enable foreign key checks
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        
         db.commit()
         print("Database cleared successfully!")
     except Exception as e:
@@ -73,57 +79,240 @@ def seed_db():
     # Inicializar Faker con localización española para nombres más realistas
     fake = Faker(['es_ES'])
     try:
-        # Create sample locations first
+        # Create real locations for Trans Comarapa route
         location_data = [
+            # Terminal principal Santa Cruz
             {
-                "name": "Terminal Bimodal Santa Cruz",
+                "name": "Santa Cruz",
                 "latitude": -17.783333,
                 "longitude": -63.182222,
                 "address": "Av. Omar Chávez Ortiz",
                 "city": "Santa Cruz de la Sierra",
                 "state": "Santa Cruz",
                 "country": "Bolivia",
-                "description": "Terminal principal de Santa Cruz"
+                "description": "Terminal Bimodal Santa Cruz"
             },
+            # Pueblos en orden de la ruta Santa Cruz -> Comarapa
             {
-                "name": "Terminal Comarapa",
-                "latitude": -17.916667,
-                "longitude": -64.533333,
-                "address": "Av. Principal",
-                "city": "Comarapa",
+                "name": "La Guardia",
+                "latitude": -17.8833,
+                "longitude": -63.3167,
+                "address": "Plaza Principal",
+                "city": "La Guardia",
                 "state": "Santa Cruz",
                 "country": "Bolivia",
-                "description": "Terminal de buses de Comarapa"
+                "description": "Pueblo de La Guardia"
             },
             {
-                "name": "Terminal Cochabamba",
-                "latitude": -17.393888,
-                "longitude": -66.156944,
-                "address": "Av. Aroma",
-                "city": "Cochabamba",
-                "state": "Cochabamba",
+                "name": "San José",
+                "latitude": -17.9167,
+                "longitude": -63.45,
+                "address": "Plaza Central",
+                "city": "San José",
+                "state": "Santa Cruz",
                 "country": "Bolivia",
-                "description": "Terminal de buses de Cochabamba"
+                "description": "Pueblo de San José"
             },
             {
-                "name": "Terminal Samaipata",
+                "name": "Santa Rita",
+                "latitude": -17.95,
+                "longitude": -63.5833,
+                "address": "Centro del pueblo",
+                "city": "Santa Rita",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Santa Rita"
+            },
+            {
+                "name": "El Torno",
+                "latitude": -17.9833,
+                "longitude": -63.7167,
+                "address": "Plaza Principal",
+                "city": "El Torno",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de El Torno"
+            },
+            {
+                "name": "Limoncito",
+                "latitude": -18.0167,
+                "longitude": -63.85,
+                "address": "Centro",
+                "city": "Limoncito",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Limoncito"
+            },
+            {
+                "name": "Jorochito",
+                "latitude": -18.05,
+                "longitude": -63.9833,
+                "address": "Plaza Central",
+                "city": "Jorochito",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Jorochito"
+            },
+            {
+                "name": "Taruma",
+                "latitude": -18.0833,
+                "longitude": -64.1167,
+                "address": "Centro del pueblo",
+                "city": "Taruma",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Taruma"
+            },
+            {
+                "name": "San Luis",
+                "latitude": -18.1167,
+                "longitude": -64.25,
+                "address": "Plaza Principal",
+                "city": "San Luis",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de San Luis"
+            },
+            {
+                "name": "La Angostura",
+                "latitude": -18.15,
+                "longitude": -64.3833,
+                "address": "Centro",
+                "city": "La Angostura",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de La Angostura"
+            },
+            {
+                "name": "Cuevas",
+                "latitude": -18.1833,
+                "longitude": -64.5167,
+                "address": "Plaza Central",
+                "city": "Cuevas",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Cuevas"
+            },
+            {
+                "name": "Achiras",
+                "latitude": -18.2167,
+                "longitude": -64.65,
+                "address": "Centro del pueblo",
+                "city": "Achiras",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Achiras"
+            },
+            {
+                "name": "Samaipata",
                 "latitude": -18.183333,
                 "longitude": -63.866667,
-                "address": "Calle Principal",
+                "address": "Plaza Principal",
                 "city": "Samaipata",
                 "state": "Santa Cruz",
                 "country": "Bolivia",
-                "description": "Terminal de Samaipata"
+                "description": "Ciudad de Samaipata"
             },
             {
-                "name": "Terminal Mairana",
+                "name": "Mairana",
                 "latitude": -18.116667,
                 "longitude": -63.95,
-                "address": "Av. Principal",
+                "address": "Plaza Central",
                 "city": "Mairana",
                 "state": "Santa Cruz",
                 "country": "Bolivia",
-                "description": "Terminal de Mairana"
+                "description": "Ciudad de Mairana"
+            },
+            {
+                "name": "Hierba Buena",
+                "latitude": -18.25,
+                "longitude": -64.7833,
+                "address": "Centro",
+                "city": "Hierba Buena",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Hierba Buena"
+            },
+            {
+                "name": "Agua Clara",
+                "latitude": -18.2833,
+                "longitude": -64.9167,
+                "address": "Plaza Principal",
+                "city": "Agua Clara",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Agua Clara"
+            },
+            {
+                "name": "Los Negros",
+                "latitude": -18.3167,
+                "longitude": -65.05,
+                "address": "Centro del pueblo",
+                "city": "Los Negros",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Los Negros"
+            },
+            {
+                "name": "Mataral",
+                "latitude": -18.35,
+                "longitude": -65.1833,
+                "address": "Plaza Central",
+                "city": "Mataral",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Mataral"
+            },
+            {
+                "name": "El Quiñe",
+                "latitude": -18.3833,
+                "longitude": -65.3167,
+                "address": "Centro",
+                "city": "El Quiñe",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de El Quiñe"
+            },
+            {
+                "name": "La Palizada",
+                "latitude": -18.4167,
+                "longitude": -65.45,
+                "address": "Plaza Principal",
+                "city": "La Palizada",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de La Palizada"
+            },
+            {
+                "name": "San Isidro",
+                "latitude": -18.45,
+                "longitude": -65.5833,
+                "address": "Centro del pueblo",
+                "city": "San Isidro",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de San Isidro"
+            },
+            {
+                "name": "Tambo",
+                "latitude": -18.4833,
+                "longitude": -65.7167,
+                "address": "Plaza Central",
+                "city": "Tambo",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Pueblo de Tambo"
+            },
+            # Terminal destino Comarapa
+            {
+                "name": "Comarapa",
+                "latitude": -17.916667,
+                "longitude": -64.533333,
+                "address": "Terminal de Buses",
+                "city": "Comarapa",
+                "state": "Santa Cruz",
+                "country": "Bolivia",
+                "description": "Terminal de Comarapa"
             }
         ]
 
@@ -134,37 +323,31 @@ def seed_db():
             db.flush()  # Flush to get IDs
             locations[location_info["name"]] = location
 
-        # Crear oficinas en las ubicaciones
+        # Crear oficinas principales de Trans Comarapa con números reales
         office_data = [
             {
-                "name": "Oficina Central Santa Cruz",
-                "phone": "33445566",
+                "name": "Oficina Santa Cruz",
+                "phone": "78175576",
                 "email": "santacruz@transcomarapa.com",
-                "location_id": locations["Terminal Bimodal Santa Cruz"].id
-            },
-            {
-                "name": "Oficina Cochabamba",
-                "phone": "44556677",
-                "email": "cochabamba@transcomarapa.com",
-                "location_id": locations["Terminal Cochabamba"].id
+                "location_id": locations["Santa Cruz"].id
             },
             {
                 "name": "Oficina Comarapa",
-                "phone": "77889900",
+                "phone": "78175578",
                 "email": "comarapa@transcomarapa.com",
-                "location_id": locations["Terminal Comarapa"].id
+                "location_id": locations["Comarapa"].id
             },
             {
-                "name": "Oficina Samaipata",
-                "phone": "66778899",
-                "email": "samaipata@transcomarapa.com",
-                "location_id": locations["Terminal Samaipata"].id
+                "name": "Oficina San Isidro",
+                "phone": "78515650",
+                "email": "sanisidro@transcomarapa.com",
+                "location_id": locations["San Isidro"].id
             },
             {
-                "name": "Oficina Mairana",
-                "phone": "55667788",
-                "email": "mairana@transcomarapa.com",
-                "location_id": locations["Terminal Mairana"].id
+                "name": "Oficina Los Negros",
+                "phone": "69029690",
+                "email": "losnegros@transcomarapa.com",
+                "location_id": locations["Los Negros"].id
             }
         ]
 
@@ -175,42 +358,21 @@ def seed_db():
             db.flush()  # Flush to get IDs
             offices[office_info["name"]] = office
 
-        # Create sample routes with location references
+        # Create real Trans Comarapa routes
         route_data = [
             {
-                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
-                "destination_location_id": locations["Terminal Comarapa"].id,
+                "origin_location_id": locations["Santa Cruz"].id,
+                "destination_location_id": locations["Comarapa"].id,
                 "distance": 240.5,
                 "duration": 4.5,
                 "price": 35.0
             },
             {
-                "origin_location_id": locations["Terminal Comarapa"].id,
-                "destination_location_id": locations["Terminal Cochabamba"].id,
-                "distance": 195.0,
-                "duration": 3.5,
-                "price": 40.0
-            },
-            {
-                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
-                "destination_location_id": locations["Terminal Samaipata"].id,
-                "distance": 120.0,
-                "duration": 2.0,
-                "price": 25.0
-            },
-            {
-                "origin_location_id": locations["Terminal Comarapa"].id,
-                "destination_location_id": locations["Terminal Samaipata"].id,
-                "distance": 120.5,
-                "duration": 2.5,
-                "price": 20.0
-            },
-            {
-                "origin_location_id": locations["Terminal Bimodal Santa Cruz"].id,
-                "destination_location_id": locations["Terminal Mairana"].id,
-                "distance": 150.0,
-                "duration": 2.75,
-                "price": 30.0
+                "origin_location_id": locations["Comarapa"].id,
+                "destination_location_id": locations["Santa Cruz"].id,
+                "distance": 240.5,
+                "duration": 4.5,
+                "price": 35.0
             }
         ]
 
@@ -561,18 +723,24 @@ def seed_db():
         # Commit first batch to get IDs
         db.commit()
 
-        # Crear viajes con fechas y horas variadas
+        # Crear viajes con fechas y horas reales de Trans Comarapa
         trips = []
 
-        # Horarios comunes de salida
-        departure_times = [
-            (6, 0),    # 6:00 AM
+        # Horarios reales de Trans Comarapa
+        # Comarapa -> Santa Cruz: 08:30 AM, 02:00 PM, 08:30 PM, 11:30 PM
+        comarapa_to_santa_cruz_times = [
             (8, 30),   # 8:30 AM
-            (11, 0),   # 11:00 AM
-            (14, 30),  # 2:30 PM
-            (17, 0),   # 5:00 PM
-            (20, 0),   # 8:00 PM
-            (22, 30)   # 10:30 PM
+            (14, 0),   # 2:00 PM
+            (20, 30),  # 8:30 PM
+            (23, 30)   # 11:30 PM
+        ]
+        
+        # Santa Cruz -> Comarapa: 10:30 AM, 02:00 PM, 06:30 PM, 08:30 PM
+        santa_cruz_to_comarapa_times = [
+            (10, 30),  # 10:30 AM
+            (14, 0),   # 2:00 PM
+            (18, 30),  # 6:30 PM
+            (20, 30)   # 8:30 PM
         ]
 
         # Posibles estados para los viajes
@@ -589,34 +757,50 @@ def seed_db():
         date_range_for_creation = [six_months_ago + timedelta(days=x) for x in range((now - six_months_ago).days + 1)]
 
         for _ in range(num_trips_to_create):
-            # Seleccionar fecha y hora aleatorias within the last 6 months for trip_datetime
+            # Seleccionar fecha aleatoria dentro del rango de 6 meses
             base_trip_date = random.choice(date_range_for_creation).date()
-            hour, minute = random.choice(departure_times)
+            
+            # Seleccionar ruta aleatoria (Santa Cruz <-> Comarapa)
+            selected_route = random.choice(routes)
+            
+            # Determinar horarios según la ruta
+            if selected_route.origin_location.name == "Santa Cruz":
+                # Santa Cruz -> Comarapa
+                hour, minute = random.choice(santa_cruz_to_comarapa_times)
+            else:
+                # Comarapa -> Santa Cruz
+                hour, minute = random.choice(comarapa_to_santa_cruz_times)
+            
             trip_datetime_val = datetime.combine(base_trip_date, datetime.min.time()).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
             selected_status = random.choice(possible_trip_statuses)
 
-            # Adjust datetime based on status for realism (simplified for seeding)
+            # Adjust DATE based on status for realism, but keep the TIME intact
             if selected_status == 'completed' or selected_status == 'cancelled':
                 # Ensure completed/cancelled trips are in the past portion of the 6 months
-                if trip_datetime_val > now - timedelta(days=7): # if in last week, shift further back
-                    trip_datetime_val = now - timedelta(days=random.randint(8,180))
+                if trip_datetime_val.date() > (now - timedelta(days=7)).date():
+                    # Shift date back but keep the time
+                    new_date = (now - timedelta(days=random.randint(8,180))).date()
+                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
             elif selected_status == 'in_progress':
-                # Ensure in_progress trips are very recent or today
-                trip_datetime_val = now - timedelta(hours=random.randint(0, 24))
+                # Ensure in_progress trips are very recent or today, but keep time
+                new_date = (now - timedelta(hours=random.randint(0, 24))).date()
+                trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
             elif selected_status == 'scheduled':
-                 # Ensure scheduled trips are in the future, but within a reasonable seeding window (e.g. next 30 days from now)
+                # Ensure scheduled trips are in the future, but keep the time
                 if trip_datetime_val <= now:
-                    trip_datetime_val = now + timedelta(days=random.randint(1, 30))
-                elif trip_datetime_val > now + timedelta(days=60): # if too far in future due to date_range_for_creation
-                    trip_datetime_val = now + timedelta(days=random.randint(1,60))
+                    new_date = (now + timedelta(days=random.randint(1, 30))).date()
+                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
+                elif trip_datetime_val.date() > (now + timedelta(days=60)).date():
+                    new_date = (now + timedelta(days=random.randint(1,60))).date()
+                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
 
-            # Seleccionar conductor, asistente, bus, ruta y secretario aleatorios
+            # Seleccionar conductor, asistente, bus y secretario aleatorios
             driver = random.choice(drivers)
             assistant = random.choice(assistants)
             bus = random.choice(buses)
-            route = random.choice(routes)
             secretary = random.choice(secretaries)
+            # La ruta ya fue seleccionada arriba para determinar los horarios
 
             trip = Trip(
                 trip_datetime=trip_datetime_val,
@@ -624,7 +808,7 @@ def seed_db():
                 driver_id=driver.id,
                 assistant_id=assistant.id,
                 bus_id=bus.id,
-                route_id=route.id,
+                route_id=selected_route.id,
                 secretary_id=secretary.id
             )
             db.add(trip)
@@ -708,8 +892,32 @@ def seed_db():
                         elif trip_item.status == 'cancelled':
                             current_initial_ticket_state = "cancelled"
 
+                        # Asignar destino específico usando nombres simples
+                        # Lista de destinos posibles para Trans Comarapa
+                        possible_destinations = [
+                            "Comarapa", "Santa Cruz", "Samaipata", "Mairana", "Los Negros", 
+                            "San Isidro", "Tambo", "La Angostura", "Cuevas", "Achiras"
+                        ]
+                        
+                        # 70% de probabilidad de usar el destino de la ruta, 30% destino alternativo
+                        if random.random() < 0.7:
+                            destination_name = trip_route_obj.destination_location.name
+                        else:
+                            # Elegir un destino alternativo
+                            alternative_destinations = [d for d in possible_destinations if d != trip_route_obj.destination_location.name]
+                            if alternative_destinations:
+                                destination_name = random.choice(alternative_destinations)
+                                # Ajustar precio para destinos intermedios (generalmente menor)
+                                if destination_name in ["Samaipata", "Mairana"]:
+                                    ticket_price = ticket_price * 0.6  # 60% del precio completo
+                                elif destination_name in ["Los Negros", "San Isidro"]:
+                                    ticket_price = ticket_price * 0.8  # 80% del precio completo
+                            else:
+                                destination_name = trip_route_obj.destination_location.name
+                        
                         ticket = Ticket(
                             seat_id=seat_item.id, client_id=client_instance.id, trip_id=trip_item.id,
+                            destination=destination_name,
                             state=current_initial_ticket_state, secretary_id=secretary_for_ticket.id,
                             price=ticket_price, payment_method=random.choice(payment_methods),
                             created_at=ticket_created_at, updated_at=ticket_created_at # Init updated_at
@@ -1036,6 +1244,9 @@ def create_test_users():
             "client5@comarapa.com"
         ]
 
+        # Disable foreign key checks temporarily for MySQL
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        
         for email in test_emails:
             user = db.query(User).filter(User.email == email).first()
             if user:
@@ -1053,6 +1264,9 @@ def create_test_users():
 
                 # Eliminar usuario
                 db.delete(user)
+        
+        # Re-enable foreign key checks
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
 
         db.commit()
         print("Datos de usuarios de prueba limpiados correctamente")

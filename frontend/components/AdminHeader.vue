@@ -9,21 +9,23 @@
           </div>
         </div>
         <nav class="hidden md:flex space-x-4">
-          <!-- Admin Links -->
-          <template v-if="authStore.userRole === 'admin'">
-            <NuxtLink to="/dashboards/dashboard-admin" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
-            <NuxtLink to="/admin/users" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Usuarios</NuxtLink>
-          </template>
-          
-          <!-- Secretary Links -->
-          <template v-if="authStore.userRole === 'secretary'">
-            <NuxtLink to="/dashboards/dashboard-secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
-            <NuxtLink to="/trips/manage" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Viajes</NuxtLink>
-            <NuxtLink to="/bookings" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Boletos</NuxtLink>
-            <NuxtLink to="/packages" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Packages</NuxtLink>
-            <NuxtLink to="/clients" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Clientes</NuxtLink>
-            <NuxtLink to="/reports/secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Reportes</NuxtLink>
-          </template>
+          <ClientOnly>
+            <!-- Admin Links -->
+            <template v-if="authStore.userRole === 'admin'">
+              <NuxtLink to="/dashboards/dashboard-admin" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
+              <NuxtLink to="/admin/users" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Usuarios</NuxtLink>
+            </template>
+            
+            <!-- Secretary Links -->
+            <template v-if="authStore.userRole === 'secretary'">
+              <NuxtLink to="/dashboards/dashboard-secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
+              <NuxtLink to="/trips/manage" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Viajes</NuxtLink>
+              <NuxtLink to="/bookings" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Boletos</NuxtLink>
+              <NuxtLink to="/packages" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Packages</NuxtLink>
+              <NuxtLink to="/clients" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Clientes</NuxtLink>
+              <!-- <NuxtLink to="/reports/secretary" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Reportes</NuxtLink> -->
+            </template>
+          </ClientOnly>
         </nav>
         <div class="flex items-center">
           <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -69,6 +71,7 @@
     <!-- Mobile menu, show/hide based on menu state. -->
     <div v-if="mobileMenuOpen" class="md:hidden w-full" id="mobile-menu">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <ClientOnly>
             <!-- Admin Links Mobile -->
             <template v-if="authStore.userRole === 'admin'">
               <NuxtLink to="/dashboards/dashboard-admin" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
@@ -84,6 +87,7 @@
               <NuxtLink to="/clients" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Clientes</NuxtLink>
               <NuxtLink to="/reports/secretary" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Reportes</NuxtLink>
             </template>
+          </ClientOnly>
         </div>
         <div class="pt-4 pb-3 border-t border-gray-200">
             <div class="flex items-center px-5">

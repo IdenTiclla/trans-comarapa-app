@@ -4,12 +4,14 @@ from typing import Optional, Any, Literal
 from schemas.client import Client as ClientSchema
 from schemas.secretary import Secretary as SecretarySchema
 from schemas.seat import Seat as SeatSchema
+from schemas.location import Location as LocationSchema
 
 class TicketBase(BaseModel):
     state: str = Field(..., description="State of the ticket", example="pending")
     seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
     client_id: int = Field(..., description="ID of the client", example=1, gt=0)
     trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
+    destination: Optional[str] = Field(None, description="Name of the destination", example="Terminal Cochabamba")
     price: float = Field(..., description="Price of the ticket", example=30.0, gt=0)
     payment_method: str = Field(..., description="Payment method used", example="cash")
 
@@ -56,6 +58,7 @@ class TicketUpdate(BaseModel):
     seat_id: Optional[int] = None
     client_id: Optional[int] = None
     trip_id: Optional[int] = None
+    destination: Optional[str] = Field(None, description="Name of the destination", example="Terminal Cochabamba")
     price: Optional[float] = Field(default=None, description="Price of the ticket", example=30.0, gt=0)
     payment_method: Optional[str] = Field(default=None, description="Payment method used", example="cash")
     secretary_id: Optional[int] = Field(default=None, description="ID of the secretary associated with the ticket", example=1, gt=0)
