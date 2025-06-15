@@ -799,7 +799,7 @@ const clearSelection = () => {
 
 <style scoped>
 .print-layout {
-  max-width: 900px;
+  max-width: 100%;
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

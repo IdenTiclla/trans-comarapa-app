@@ -44,73 +44,82 @@
             :get-status-text="getStatusText"
           />
 
-          <!-- Mapa de asientos -->
-          <div v-if="displayedTrip" class="mt-6 mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
-              <div class="mt-2 sm:mt-0 flex items-center space-x-4">
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats }} disponibles</span>
-                  <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                </div>
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seat_numbers ? displayedTrip.occupied_seat_numbers.length : 0 }} ocupados</span>
-                  <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-                </div>
-                <div class="flex items-center">
-                  <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.total_seats }} totales</span>
-                  <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
-                </div>
-              </div>
-            </div>
+        </div>
+      </div>
+    </div>
 
-            <!-- Indicador de modo cambio de asiento -->
-            <div v-if="seatChangeMode" class="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                  <svg class="h-5 w-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-orange-800">Modo Cambio de Asiento Activo</p>
-                    <p class="text-xs text-orange-600">
-                      Cambiando ticket de {{ seatChangeTicket?.client?.firstname || 'Cliente' }} 
-                      del asiento {{ seatChangeTicket?.seat?.seat_number }}. Selecciona un asiento libre.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  @click="cancelSeatChange"
-                  class="px-3 py-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-300 rounded hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  Cancelar
-                </button>
-              </div>
+    <!-- Mapa de asientos - Ancho completo -->
+    <div v-if="displayedTrip" class="mt-6 mb-8">
+      <div class="px-4 sm:px-6 lg:px-8 mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
+          <div class="mt-2 sm:mt-0 flex items-center space-x-4">
+            <div class="flex items-center">
+              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats }} disponibles</span>
+              <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
             </div>
-
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-              <BusSeatMapPrint
-                :key="`seat-map-${displayedTrip?.id}-${soldTickets?.length || 0}-${seatMapUpdateKey}`"
-                :trip="displayedTrip" 
-                :tickets="soldTickets"
-                :selection-enabled="true"
-                :reserved_seat_numbers="reservedSeatNumbers"
-                :enable-context-menu="true"
-                :initial-selected-seats="selectedSeatsForSale"
-                :seat-change-mode="seatChangeMode"
-                :seat-change-ticket="seatChangeTicket"
-                @cancel-reservation="handleCancelReservation"
-                @view-details="handleViewSeatDetails"
-                @change-seat="handleChangeSeat"
-                @reschedule-trip="handleRescheduleTrip"
-                @sell-ticket="handleSellTicket"
-                @reserve-seat="handleReserveSeat"
-                @selection-change="handleSelectionChange"
-              />
+            <div class="flex items-center">
+              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seat_numbers ? displayedTrip.occupied_seat_numbers.length : 0 }} ocupados</span>
+              <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.total_seats }} totales</span>
+              <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Sección de boletos vendidos -->
+      <!-- Indicador de modo cambio de asiento -->
+      <div v-if="seatChangeMode" class="px-4 sm:px-6 lg:px-8 mb-4">
+        <div class="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="h-5 w-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-orange-800">Modo Cambio de Asiento Activo</p>
+                <p class="text-xs text-orange-600">
+                  Cambiando ticket de {{ seatChangeTicket?.client?.firstname || 'Cliente' }} 
+                  del asiento {{ seatChangeTicket?.seat?.seat_number }}. Selecciona un asiento libre.
+                </p>
+              </div>
+            </div>
+            <button
+              @click="cancelSeatChange"
+              class="px-3 py-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-300 rounded hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <BusSeatMapPrint
+        :key="`seat-map-${displayedTrip?.id}-${soldTickets?.length || 0}-${seatMapUpdateKey}`"
+        :trip="displayedTrip" 
+        :tickets="soldTickets"
+        :selection-enabled="true"
+        :reserved_seat_numbers="reservedSeatNumbers"
+        :enable-context-menu="true"
+        :initial-selected-seats="selectedSeatsForSale"
+        :seat-change-mode="seatChangeMode"
+        :seat-change-ticket="seatChangeTicket"
+        @cancel-reservation="handleCancelReservation"
+        @view-details="handleViewSeatDetails"
+        @change-seat="handleChangeSeat"
+        @reschedule-trip="handleRescheduleTrip"
+        @sell-ticket="handleSellTicket"
+        @reserve-seat="handleReserveSeat"
+        @selection-change="handleSelectionChange"
+      />
+    </div>
+
+    <!-- Resto del contenido -->
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div v-if="displayedTrip">
+        <!-- Sección de boletos vendidos -->
           <SoldTicketsSection
             :sold-tickets="soldTickets"
             :is-loading-sold-tickets="isLoadingSoldTickets"
@@ -150,7 +159,6 @@
               </svg>
               Editar
             </AppButton>
-          </div>
         </div>
       </div>
     </div>
