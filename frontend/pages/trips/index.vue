@@ -211,19 +211,30 @@ const tripStore = useTripStore();
 // View mode for trips display
 const viewMode = ref('grid');
 
+// Set default filters to show upcoming trips
+const getCurrentDateString = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const getDateInDays = (days) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+};
+
 const pageFilters = reactive({
   origin: '',
   destination: '',
   date: '',
-  status: '',
+  status: 'scheduled', // Default to scheduled trips
   search: '',
-  dateFrom: '',
-  dateTo: '',
+  dateFrom: getCurrentDateString(), // From today
+  dateTo: getDateInDays(30), // Next 30 days
   minSeats: ''
 });
 
 const pageSortBy = ref(tripStore.pagination.sortBy || 'trip_datetime');
-const pageSortDirection = ref(tripStore.pagination.sortDirection || 'desc');
+const pageSortDirection = ref(tripStore.pagination.sortDirection || 'asc'); // Show nearest first
 
 // Quick stats computed from trips data
 const quickStats = computed(() => {
