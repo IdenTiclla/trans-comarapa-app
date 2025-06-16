@@ -1,0 +1,45 @@
+
+%% Diagrama de Estados: Tickets (Trans Comarapa)
+%% Estados basados en el sistema real implementado
+stateDiagram-v2
+    [*] --> pending : Reserva (sin pago inmediato)
+    [*] --> confirmed : Venta directa en oficina (con pago)
+    
+    pending --> confirmed : Pago confirmado por secretaria
+    pending --> cancelled : Cancelado antes del pago
+    
+    confirmed --> completed : Viaje finalizado (automático)
+    confirmed --> cancelled : Cancelado después del pago
+    
+    cancelled --> [*] : Estado final
+    completed --> [*] : Estado final
+    
+    note right of pending
+        Estado para reservas
+        - Ticket reservado sin pago inmediato
+        - Pendiente de confirmación de pago
+        - Asiento bloqueado temporalmente
+        - Usado para reservas telefónicas/online
+    end note
+    
+    note right of confirmed
+        Ticket confirmado
+        - Pago procesado (inmediato o diferido)
+        - Asiento asignado definitivamente
+        - Cliente puede abordar
+        - Estado inicial para ventas directas en oficina
+    end note
+    
+    note right of completed
+        Viaje completado
+        - Ticket utilizado
+        - Viaje finalizado
+        - Estado automático del sistema
+    end note
+    
+    note right of cancelled
+        Ticket cancelado
+        - Asiento liberado
+        - Reembolso procesado (si aplica)
+        - Estado final
+    end note

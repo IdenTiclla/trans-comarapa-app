@@ -153,19 +153,6 @@
             @open-package-modal="openPackageModal"
           />
 
-          <!-- Botones de acción -->
-          <div v-if="displayedTrip" class="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
-            <AppButton
-              variant="secondary"
-              @click="router.push(`/trips/${displayedTrip.id}/edit`)"
-              class="w-full sm:w-auto"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Editar
-            </AppButton>
-        </div>
       </div>
     </div>
   </div>
@@ -314,6 +301,7 @@ const {
   togglePackages,
   togglePackagesByStatus,
   clearState,
+  initializeAllSections,
   formatDate,
   formatTime,
   getStatusClass,

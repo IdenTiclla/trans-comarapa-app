@@ -64,6 +64,16 @@ export const useTripDetails = () => {
   })
 
   // Métodos para fetch de datos
+  // Helper function to initialize all states as closed
+  const initializeTicketStates = (tickets) => {
+    const states = [...new Set(tickets.map(ticket => ticket.state || 'unknown'))]
+    states.forEach(state => {
+      if (showTicketsByState[state] === undefined) {
+        showTicketsByState[state] = false // Start all states closed
+      }
+    })
+  }
+
   const fetchSoldTickets = async (tripId) => {
     if (!tripId) {
       soldTicketsError.value = 'ID del viaje no disponible para cargar boletos.'
@@ -82,6 +92,11 @@ export const useTripDetails = () => {
       if (responseData) {
         soldTickets.value = Array.isArray(responseData) ? [...responseData] : responseData
         console.log('Tickets cargados:', soldTickets.value)
+        
+        // Initialize all ticket states as visible
+        initializeTicketStates(soldTickets.value)
+        // Initialize main sections as visible
+        initializeMainSections()
       } else {
         soldTickets.value = []
       }
@@ -102,6 +117,16 @@ export const useTripDetails = () => {
     }
   }
 
+  // Helper function to initialize all package statuses as closed
+  const initializePackageStatuses = (packages) => {
+    const statuses = [...new Set(packages.map(pkg => pkg.status || 'unknown'))]
+    statuses.forEach(status => {
+      if (showPackagesByStatus[status] === undefined) {
+        showPackagesByStatus[status] = false // Start all statuses closed
+      }
+    })
+  }
+
   const fetchPackages = async (tripId) => {
     if (!tripId) {
       packagesError.value = 'ID del viaje no disponible para cargar paquetes.'
@@ -120,6 +145,11 @@ export const useTripDetails = () => {
       if (responseData) {
         packages.value = Array.isArray(responseData) ? [...responseData] : responseData
         console.log('Paquetes cargados:', packages.value)
+        
+        // Initialize all package statuses as visible
+        initializePackageStatuses(packages.value)
+        // Initialize main sections as visible
+        initializeMainSections()
       } else {
         packages.value = []
       }
@@ -143,6 +173,13 @@ export const useTripDetails = () => {
   // Métodos para toggle de secciones
   const toggleSoldTickets = () => {
     showSoldTickets.value = !showSoldTickets.value
+  }
+  
+  // Initialize main sections as closed by default
+  const initializeMainSections = () => {
+    // Keep sections closed by default, they will be opened only when user clicks
+    showSoldTickets.value = false
+    showPackages.value = false
   }
 
   const toggleTicketsByState = (state) => {
@@ -233,6 +270,18 @@ export const useTripDetails = () => {
     })
   }
 
+  // Function to manually initialize sections (useful for existing data)
+  const initializeAllSections = () => {
+    if (soldTickets.value.length > 0) {
+      showSoldTickets.value = false  // Start closed
+      initializeTicketStates(soldTickets.value)
+    }
+    if (packages.value.length > 0) {
+      showPackages.value = false  // Start closed
+      initializePackageStatuses(packages.value)
+    }
+  }
+
   return {
     // Estado
     soldTickets,
@@ -259,6 +308,7 @@ export const useTripDetails = () => {
     togglePackages,
     togglePackagesByStatus,
     clearState,
+    initializeAllSections,
     
     // Utilidades
     formatDate,

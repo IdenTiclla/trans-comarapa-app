@@ -1,0 +1,65 @@
+%% Diagrama de Estados: Paquetes/Encomiendas (Trans Comarapa)
+%% Estados basados en el sistema real implementado
+stateDiagram-v2
+    [*] --> registered : Paquete registrado
+    
+    registered --> in_transit : Viaje iniciado (automático)
+    registered --> cancelled : Cancelado antes del viaje
+    
+    in_transit --> arrived : Bus llegó a destino (automático)
+    in_transit --> lost : Paquete perdido durante transporte
+    
+    arrived --> delivered : Entregado al destinatario
+    arrived --> lost : Paquete no encontrado en destino
+    
+    delivered --> [*] : Estado final exitoso
+    lost --> [*] : Estado final (pérdida)
+    cancelled --> [*] : Estado final (cancelación)
+    
+    note right of registered
+        Estado inicial
+        - Paquete recibido y registrado
+        - Datos del remitente y destinatario confirmados
+        - Esperando inicio del viaje
+        - Posible cancelación (3% probabilidad)
+    end note
+    
+    note right of in_transit
+        En tránsito
+        - Viaje en curso
+        - Paquete a bordo del bus
+        - Tracking activo
+        - Riesgo de pérdida durante transporte
+    end note
+    
+    note right of arrived
+        Llegó a destino
+        - Bus arribó al destino
+        - Paquete en terminal de destino
+        - Pendiente de entrega al destinatario
+        - Posible pérdida en terminal
+    end note
+    
+    note right of delivered
+        Entregado exitosamente
+        - Paquete entregado al destinatario
+        - Firma/confirmación de recepción
+        - Transacción completada
+        - Estado final exitoso
+    end note
+    
+    note right of lost
+        Paquete perdido
+        - Pérdida durante transporte o en terminal
+        - Proceso de reclamación iniciado
+        - Compensación al remitente
+        - Estado final (problema)
+    end note
+    
+    note right of cancelled
+        Paquete cancelado
+        - Cancelado antes del viaje
+        - Devolución al remitente
+        - Reembolso procesado
+        - Estado final
+    end note
