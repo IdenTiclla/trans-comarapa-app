@@ -35,6 +35,12 @@
 
         <!-- Contenido principal -->
         <div v-else-if="displayedTrip">
+          <!-- Countdown del viaje -->
+          <TripCountdown
+            :trip-date-time="displayedTrip.trip_datetime"
+            :departure-time="displayedTrip.departure_time"
+          />
+
           <!-- Detalles del viaje -->
           <TripDetailsCard
             :trip="displayedTrip"
@@ -269,6 +275,7 @@ import { useTripDetails } from '@/composables/useTripDetails'
 import { changeSeat } from '@/services/ticketService'
 import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
+import TripCountdown from '@/components/TripCountdown.vue'
 import TripDetailsCard from '@/components/TripDetailsCard.vue'
 import SoldTicketsSection from '@/components/SoldTicketsSection.vue'
 import PackagesSection from '@/components/PackagesSection.vue'
