@@ -135,24 +135,36 @@ async def get_ticket_stats(
     # Obtener el rango de fechas
     start_date, end_date, previous_start_date, previous_end_date = get_date_range(period)
     
-    # Consultar boletos del período actual
+    # Consultar boletos del período actual usando fecha de confirmación
     current_tickets = db.query(
         func.count(TicketModel.id).label("count"),
         func.coalesce(func.sum(TicketModel.price), 0).label("amount")
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        cast(TicketModel.created_at, Date) >= start_date,
-        cast(TicketModel.created_at, Date) <= end_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        cast(TicketStateHistoryModel.changed_at, Date) >= start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).first()
     
-    # Consultar boletos del período anterior
+    # Consultar boletos del período anterior usando fecha de confirmación
     previous_tickets = db.query(
         func.count(TicketModel.id).label("count"),
         func.coalesce(func.sum(TicketModel.price), 0).label("amount")
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        cast(TicketModel.created_at, Date) >= previous_start_date,
-        cast(TicketModel.created_at, Date) <= previous_end_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        cast(TicketStateHistoryModel.changed_at, Date) >= previous_start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= previous_end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).first()
     
     # Calcular tendencias
@@ -362,10 +374,10 @@ async def get_recent_sales(
     
     Retorna una lista de las ventas más recientes con información básica
     """
-    # Consultar los boletos más recientes
+    # Consultar los boletos más recientes usando fecha de confirmación
     recent_tickets = db.query(
         TicketModel.id,
-        TicketModel.created_at,
+        TicketStateHistoryModel.changed_at.label("confirmed_at"),
         TicketModel.state,
         TicketModel.price,
         ClientModel.firstname,
@@ -375,10 +387,16 @@ async def get_recent_sales(
         ClientModel, TicketModel.client_id == ClientModel.id
     ).join(
         TripModel, TicketModel.trip_id == TripModel.id
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).order_by(
-        desc(TicketModel.created_at)
+        desc(TicketStateHistoryModel.changed_at)
     ).limit(limit).all()
     
     # Consultar los paquetes más recientes
@@ -404,7 +422,7 @@ async def get_recent_sales(
             "reference": f"T-{ticket.id}",
             "client_name": f"{ticket.firstname} {ticket.lastname}",
             "amount": float(ticket.price),
-            "date": ticket.created_at,
+            "date": ticket.confirmed_at,
             "status": ticket.state,
             "trip_id": ticket.trip_id
         })
@@ -447,14 +465,20 @@ async def get_sales_summary(
     # Obtener el rango de fechas
     start_date, end_date, previous_start_date, previous_end_date = get_date_range(period)
     
-    # Consultar boletos del período actual
+    # Consultar boletos del período actual usando fecha de confirmación
     current_tickets = db.query(
         func.count(TicketModel.id).label("count"),
         func.coalesce(func.sum(TicketModel.price), 0).label("amount")
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        cast(TicketModel.created_at, Date) >= start_date,
-        cast(TicketModel.created_at, Date) <= end_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        cast(TicketStateHistoryModel.changed_at, Date) >= start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).first()
     
     # Consultar paquetes del período actual
@@ -472,14 +496,20 @@ async def get_sales_summary(
         cast(PackageModel.created_at, Date) <= end_date
     ).first()
     
-    # Consultar boletos del período anterior
+    # Consultar boletos del período anterior usando fecha de confirmación
     previous_tickets = db.query(
         func.count(TicketModel.id).label("count"),
         func.coalesce(func.sum(TicketModel.price), 0).label("amount")
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        cast(TicketModel.created_at, Date) >= previous_start_date,
-        cast(TicketModel.created_at, Date) <= previous_end_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        cast(TicketStateHistoryModel.changed_at, Date) >= previous_start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= previous_end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).first()
     
     # Consultar paquetes del período anterior
@@ -591,21 +621,27 @@ async def get_monthly_ticket_stats(
     
     start_date = date(start_year, start_month, 1)
     
-    # Consultar tickets agrupados por mes y año
+    # Consultar tickets agrupados por mes y año usando fecha de confirmación
     monthly_data = db.query(
-        extract('year', TicketModel.created_at).label('year'),
-        extract('month', TicketModel.created_at).label('month'),
+        extract('year', TicketStateHistoryModel.changed_at).label('year'),
+        extract('month', TicketStateHistoryModel.changed_at).label('month'),
         func.count(TicketModel.id).label('count'),
         func.coalesce(func.sum(TicketModel.price), 0).label('amount')
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        TicketModel.created_at >= start_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        TicketStateHistoryModel.changed_at >= start_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).group_by(
-        extract('year', TicketModel.created_at),
-        extract('month', TicketModel.created_at)
+        extract('year', TicketStateHistoryModel.changed_at),
+        extract('month', TicketStateHistoryModel.changed_at)
     ).order_by(
-        extract('year', TicketModel.created_at),
-        extract('month', TicketModel.created_at)
+        extract('year', TicketStateHistoryModel.changed_at),
+        extract('month', TicketStateHistoryModel.changed_at)
     ).all()
     
     # Crear diccionario para lookup rápido de datos existentes
@@ -1047,17 +1083,23 @@ async def get_monthly_revenue_stats(
     
     start_date = date(start_year, start_month, 1)
     
-    # Consultar ingresos de tickets agrupados por mes y año
+    # Consultar ingresos de tickets agrupados por mes y año usando fecha de confirmación
     ticket_revenue_data = db.query(
-        extract('year', TicketModel.created_at).label('year'),
-        extract('month', TicketModel.created_at).label('month'),
+        extract('year', TicketStateHistoryModel.changed_at).label('year'),
+        extract('month', TicketStateHistoryModel.changed_at).label('month'),
         func.coalesce(func.sum(TicketModel.price), 0).label('amount')
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        TicketModel.created_at >= start_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        TicketStateHistoryModel.changed_at >= start_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).group_by(
-        extract('year', TicketModel.created_at),
-        extract('month', TicketModel.created_at)
+        extract('year', TicketStateHistoryModel.changed_at),
+        extract('month', TicketStateHistoryModel.changed_at)
     ).all()
     
     # Consultar ingresos de paquetes agrupados por mes y año
@@ -1172,21 +1214,27 @@ async def get_monthly_ticket_revenue_stats(
     
     start_date = date(start_year, start_month, 1)
     
-    # Consultar ingresos de tickets agrupados por mes y año
+    # Consultar ingresos de tickets agrupados por mes y año usando fecha de confirmación
     monthly_data = db.query(
-        extract('year', TicketModel.created_at).label('year'),
-        extract('month', TicketModel.created_at).label('month'),
+        extract('year', TicketStateHistoryModel.changed_at).label('year'),
+        extract('month', TicketStateHistoryModel.changed_at).label('month'),
         func.count(TicketModel.id).label('count'),
         func.coalesce(func.sum(TicketModel.price), 0).label('amount')
+    ).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
     ).filter(
-        TicketModel.created_at >= start_date,
-        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
+        TicketStateHistoryModel.changed_at >= start_date,
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados
     ).group_by(
-        extract('year', TicketModel.created_at),
-        extract('month', TicketModel.created_at)
+        extract('year', TicketStateHistoryModel.changed_at),
+        extract('month', TicketStateHistoryModel.changed_at)
     ).order_by(
-        extract('year', TicketModel.created_at),
-        extract('month', TicketModel.created_at)
+        extract('year', TicketStateHistoryModel.changed_at),
+        extract('month', TicketStateHistoryModel.changed_at)
     ).all()
     
     # Crear diccionario para lookup rápido de datos existentes
