@@ -1,0 +1,53 @@
+graph TD
+    %% Trip States Diagram - Trans Comarapa
+    %% Estados de Viajes/Trips
+    
+    %% Initial State
+    START([Inicio]) --> SCHEDULED[📅 Programado<br/>scheduled]
+    
+    %% Main Flow
+    SCHEDULED --> BOARDING[🚌 Abordando<br/>boarding]
+    BOARDING --> IN_PROGRESS[🔄 En Progreso<br/>in_progress]
+    IN_PROGRESS --> COMPLETED[✅ Completado<br/>completed]
+    
+    %% Delay Handling
+    SCHEDULED --> DELAYED[⏰ Retrasado<br/>delayed]
+    DELAYED --> BOARDING
+    DELAYED --> IN_PROGRESS
+    
+    %% Cancellation
+    SCHEDULED --> CANCELLED[❌ Cancelado<br/>cancelled]
+    BOARDING --> CANCELLED
+    DELAYED --> CANCELLED
+    
+    %% Terminal States
+    COMPLETED --> END([Fin])
+    CANCELLED --> END
+    
+    %% Styling
+    classDef scheduled fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#1976d2
+    classDef boarding fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2  
+    classDef inProgress fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#f57c00
+    classDef completed fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#388e3c
+    classDef cancelled fill:#fdeded,stroke:#d32f2f,stroke-width:2px,color:#d32f2f
+    classDef delayed fill:#fffde7,stroke:#f9a825,stroke-width:2px,color:#f9a825
+    classDef terminal fill:#f5f5f5,stroke:#616161,stroke-width:2px,color:#616161
+    
+    class SCHEDULED scheduled
+    class BOARDING boarding
+    class IN_PROGRESS inProgress
+    class COMPLETED completed
+    class CANCELLED cancelled
+    class DELAYED delayed
+    class START,END terminal
+    
+    %% Labels for transitions
+    SCHEDULED -.->|"Secretaria/Conductor<br/>Inicia abordaje"| BOARDING
+    BOARDING -.->|"Conductor<br/>Inicia viaje"| IN_PROGRESS
+    IN_PROGRESS -.->|"Conductor<br/>Llega a destino"| COMPLETED
+    SCHEDULED -.->|"Secretaria/Admin<br/>Problemas operativos"| DELAYED
+    DELAYED -.->|"Conductor<br/>Recupera horario"| BOARDING
+    DELAYED -.->|"Conductor<br/>Viaje directo"| IN_PROGRESS
+    SCHEDULED -.->|"Secretaria/Admin<br/>Cancelación"| CANCELLED
+    BOARDING -.->|"Conductor<br/>Emergencia"| CANCELLED
+    DELAYED -.->|"Secretaria/Admin<br/>No se puede realizar"| CANCELLED

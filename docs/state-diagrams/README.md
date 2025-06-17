@@ -16,6 +16,12 @@ Esta carpeta contiene todos los diagramas de estados y documentación relacionad
   - Flujo completo desde registro hasta entrega
   - Manejo de excepciones (pérdidas, cancelaciones)
 
+### 🚌 Diagramas de Viajes
+- **[`trip_states.mmd`](./trip_states.mmd)** - Diagrama Mermaid de estados de viajes
+  - Estados: `scheduled`, `boarding`, `in_progress`, `completed`, `cancelled`, `delayed`
+  - Flujo operativo desde programación hasta finalización
+  - Gestión de retrasos y cancelaciones
+
 ### 📚 Documentación Técnica
 - **[`states_documentation.md`](./states_documentation.md)** - Documentación completa del sistema de estados
   - Especificaciones técnicas de cada estado
@@ -61,6 +67,7 @@ npm install -g @mermaid-js/mermaid-cli
 # Generar imagen PNG del diagrama
 mmdc -i ticket_states.mmd -o ticket_states.png
 mmdc -i package_states.mmd -o package_states.png
+mmdc -i trip_states.mmd -o trip_states.png
 ```
 
 ## 🚀 Próximos Pasos
