@@ -138,29 +138,21 @@ async def get_ticket_stats(
     # Consultar boletos del período actual
     current_tickets = db.query(
         func.count(TicketModel.id).label("count"),
-        func.coalesce(func.sum(RouteModel.price), 0).label("amount")
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label("amount")
     ).filter(
         cast(TicketModel.created_at, Date) >= start_date,
         cast(TicketModel.created_at, Date) <= end_date,
-        TicketModel.state != 'cancelled'  # Excluir boletos cancelados
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).first()
     
     # Consultar boletos del período anterior
     previous_tickets = db.query(
         func.count(TicketModel.id).label("count"),
-        func.coalesce(func.sum(RouteModel.price), 0).label("amount")
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label("amount")
     ).filter(
         cast(TicketModel.created_at, Date) >= previous_start_date,
         cast(TicketModel.created_at, Date) <= previous_end_date,
-        TicketModel.state != 'cancelled'  # Excluir boletos cancelados
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).first()
     
     # Calcular tendencias
@@ -340,7 +332,7 @@ async def get_upcoming_trips(
         total_seats = trip.bus.capacity if trip.bus else 40
         occupied_seats = db.query(func.count(TicketModel.id)).filter(
             TicketModel.trip_id == trip.id,
-            TicketModel.state != 'cancelled'
+            TicketModel.state.in_(['pending', 'confirmed', 'completed'])  # Incluir reservas para contar asientos ocupados
         ).scalar()
         available_seats = total_seats - occupied_seats
         
@@ -375,16 +367,16 @@ async def get_recent_sales(
         TicketModel.id,
         TicketModel.created_at,
         TicketModel.state,
+        TicketModel.price,
         ClientModel.firstname,
         ClientModel.lastname,
-        RouteModel.price,
         TripModel.id.label("trip_id")
     ).join(
         ClientModel, TicketModel.client_id == ClientModel.id
     ).join(
         TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+    ).filter(
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).order_by(
         desc(TicketModel.created_at)
     ).limit(limit).all()
@@ -458,15 +450,11 @@ async def get_sales_summary(
     # Consultar boletos del período actual
     current_tickets = db.query(
         func.count(TicketModel.id).label("count"),
-        func.coalesce(func.sum(RouteModel.price), 0).label("amount")
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label("amount")
     ).filter(
         cast(TicketModel.created_at, Date) >= start_date,
         cast(TicketModel.created_at, Date) <= end_date,
-        TicketModel.state != 'cancelled'
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).first()
     
     # Consultar paquetes del período actual
@@ -487,15 +475,11 @@ async def get_sales_summary(
     # Consultar boletos del período anterior
     previous_tickets = db.query(
         func.count(TicketModel.id).label("count"),
-        func.coalesce(func.sum(RouteModel.price), 0).label("amount")
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label("amount")
     ).filter(
         cast(TicketModel.created_at, Date) >= previous_start_date,
         cast(TicketModel.created_at, Date) <= previous_end_date,
-        TicketModel.state != 'cancelled'
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).first()
     
     # Consultar paquetes del período anterior
@@ -612,11 +596,7 @@ async def get_monthly_ticket_stats(
         extract('year', TicketModel.created_at).label('year'),
         extract('month', TicketModel.created_at).label('month'),
         func.count(TicketModel.id).label('count'),
-        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label('amount')
     ).filter(
         TicketModel.created_at >= start_date,
         TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
@@ -1071,14 +1051,10 @@ async def get_monthly_revenue_stats(
     ticket_revenue_data = db.query(
         extract('year', TicketModel.created_at).label('year'),
         extract('month', TicketModel.created_at).label('month'),
-        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label('amount')
     ).filter(
         TicketModel.created_at >= start_date,
-        TicketModel.state != 'cancelled'  # Excluir boletos cancelados
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).group_by(
         extract('year', TicketModel.created_at),
         extract('month', TicketModel.created_at)
@@ -1201,14 +1177,10 @@ async def get_monthly_ticket_revenue_stats(
         extract('year', TicketModel.created_at).label('year'),
         extract('month', TicketModel.created_at).label('month'),
         func.count(TicketModel.id).label('count'),
-        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label('amount')
     ).filter(
         TicketModel.created_at >= start_date,
-        TicketModel.state != 'cancelled'  # Excluir boletos cancelados
+        TicketModel.state.in_(['confirmed', 'completed'])  # Solo tickets vendidos/completados, no reservas pendientes
     ).group_by(
         extract('year', TicketModel.created_at),
         extract('month', TicketModel.created_at)
@@ -1429,11 +1401,7 @@ async def get_monthly_cancelled_ticket_stats(
         extract('year', TicketModel.created_at).label('year'),
         extract('month', TicketModel.created_at).label('month'),
         func.count(TicketModel.id).label('count'),
-        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label('amount')
     ).filter(
         TicketModel.created_at >= start_date,
         TicketModel.state == 'cancelled'  # Solo boletos cancelados
@@ -2102,11 +2070,7 @@ async def get_monthly_cancelled_reservation_stats(
         extract('year', TicketModel.created_at).label('year'),
         extract('month', TicketModel.created_at).label('month'),
         func.count(TicketModel.id).label('count'),
-        func.coalesce(func.sum(RouteModel.price), 0).label('amount')
-    ).join(
-        TripModel, TicketModel.trip_id == TripModel.id
-    ).join(
-        RouteModel, TripModel.route_id == RouteModel.id
+        func.coalesce(func.sum(TicketModel.price), 0).label('amount')
     ).filter(
         TicketModel.created_at >= start_date,
         TicketModel.state == 'cancelled'  # Solo reservaciones canceladas

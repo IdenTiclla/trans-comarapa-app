@@ -53,6 +53,7 @@
       @reserve-seat="reserveSeat"
       @view-details="viewSeatDetails"
       @cancel-reservation="cancelReservation"
+      @confirm-sale="confirmSale"
       @change-seat="changeSeat"
       @reschedule-trip="rescheduleTrip"
     />
@@ -110,7 +111,8 @@ const emit = defineEmits([
   'seat-selected', 
   'seat-deselected', 
   'selection-change', 
-  'cancel-reservation', 
+  'cancel-reservation',
+  'confirm-sale',
   'view-details',
   'change-seat',
   'reschedule-trip',
@@ -388,6 +390,14 @@ const closeContextMenu = () => {
 const cancelReservation = () => {
   if (selectedSeatForContext.value) {
     emit('cancel-reservation', selectedSeatForContext.value)
+    closeContextMenu()
+  }
+}
+
+// Confirmar venta de reserva
+const confirmSale = () => {
+  if (selectedSeatForContext.value) {
+    emit('confirm-sale', selectedSeatForContext.value)
     closeContextMenu()
   }
 }

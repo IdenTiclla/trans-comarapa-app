@@ -37,6 +37,12 @@
     <!-- Opciones para asientos reservados -->
     <template v-if="selectedSeat?.status === 'reserved'">
       <button 
+        @click="$emit('confirm-sale')"
+        class="w-full text-left block px-4 py-1.5 text-sm text-green-600 hover:bg-gray-100"
+      >
+        Confirmar venta
+      </button>
+      <button 
         @click="$emit('cancel-reservation')"
         class="w-full text-left block px-4 py-1.5 text-sm text-red-600 hover:bg-gray-100"
       >
@@ -87,6 +93,7 @@ defineEmits([
   'reserve-seat',
   'view-details',
   'cancel-reservation',
+  'confirm-sale',
   'change-seat',
   'reschedule-trip'
 ])

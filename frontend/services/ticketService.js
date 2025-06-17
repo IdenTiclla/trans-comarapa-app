@@ -95,3 +95,18 @@ export const changeSeat = async (ticketId, newSeatId) => {
     throw error;
   }
 };
+
+// Confirm sale of a reserved ticket (change state from 'pending' to 'confirmed')
+export const confirmSale = async (ticketId) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${ticketId}`, {
+      method: 'PUT',
+      body: {
+        state: 'confirmed'
+      }
+    });
+  } catch (error) {
+    console.error(`Error in ticketService.confirmSale for ticket ${ticketId}:`, error.data?.detail || error.message);
+    throw error;
+  }
+};
