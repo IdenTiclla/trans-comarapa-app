@@ -63,7 +63,7 @@
         </div>
         <div class="bg-gradient-to-b from-orange-500 to-red-600 rounded-2xl p-4 text-center shadow-xl">
           <div class="text-white font-bold opacity-90 text-xs mb-2">HORA</div>
-          <div class="text-white font-black text-lg">{{ trip.departure_time }}</div>
+          <div class="text-white font-black text-lg">{{ formatTimeWithAmPm(trip.departure_time) }}</div>
         </div>
       </div>
     </div>
@@ -139,6 +139,21 @@ const formatShortDate = (dateString) => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'Fecha inválida';
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date);
+}
+
+// Formatear hora con AM/PM
+const formatTimeWithAmPm = (timeString) => {
+  if (!timeString) return 'Hora no especificada'
+  
+  const parts = timeString.split(':')
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0], 10)
+    const minutes = parts[1]
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+    return `${displayHours}:${minutes} ${period}`
+  }
+  return timeString
 }
 </script>
 

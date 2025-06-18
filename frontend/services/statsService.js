@@ -1683,15 +1683,46 @@ const getBookingsStats = async (period = 'today') => {
       data: error.data
     });
     
-    // Datos de respaldo para desarrollo
-    console.warn('🔄 Usando datos simulados para estadísticas de bookings');
-    return {
-      confirmed: 0,
-      pending: 0,
-      cancelled: 0,
-      totalRevenue: 0,
-      period: period
+    // Re-lanzar el error para que se maneje en el nivel superior
+    throw error;
+  }
+};
+
+// Obtener estadísticas comparativas (hoy vs ayer)
+const getBookingsStatsComparison = async () => {
+  try {
+    console.log('🔄 Intentando obtener estadísticas comparativas de bookings desde la API...');
+    
+    // Obtener datos de hoy y ayer en paralelo
+    const [todayData, yesterdayData] = await Promise.all([
+      getBookingsStats('today'),
+      getBookingsStats('yesterday')
+    ]);
+    
+    console.log('✅ Datos de hoy:', todayData);
+    console.log('✅ Datos de ayer:', yesterdayData);
+    
+    // Calcular porcentajes de diferencia
+    const calculatePercentageChange = (today, yesterday) => {
+      if (yesterday === 0) return today > 0 ? 100 : 0;
+      return Math.round(((today - yesterday) / yesterday) * 100);
     };
+    
+    return {
+      today: todayData,
+      yesterday: yesterdayData,
+      comparison: {
+        confirmed: calculatePercentageChange(todayData.confirmed, yesterdayData.confirmed),
+        pending: calculatePercentageChange(todayData.pending, yesterdayData.pending),
+        cancelled: calculatePercentageChange(todayData.cancelled, yesterdayData.cancelled),
+        totalRevenue: calculatePercentageChange(todayData.totalRevenue, yesterdayData.totalRevenue)
+      }
+    };
+  } catch (error) {
+    console.error('❌ Error al obtener estadísticas comparativas de bookings:', error);
+    
+    // Re-lanzar el error para que se maneje en el componente
+    throw error;
   }
 };
 
@@ -1723,5 +1754,6 @@ export {
   getMonthlyRegisteredClientsStats,
   getMonthlyDeliveredPackagesStats,
   getMonthlyCancelledReservationStats,
-  getBookingsStats
+  getBookingsStats,
+  getBookingsStatsComparison
 };

@@ -213,17 +213,21 @@ export const useTripDetails = () => {
     if (!timeString) return 'Hora no especificada'
     if (timeString.includes('T')) {
       const date = new Date(timeString)
-      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true })
     }
     if (dateString && timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
       const [hours, minutes] = timeString.split(':')
       const date = new Date(dateString)
       date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0)
-      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true })
     }
     const parts = timeString.split(':')
     if (parts.length >= 2) {
-      return `${parts[0]}:${parts[1]}`
+      const hours = parseInt(parts[0], 10)
+      const minutes = parts[1]
+      const period = hours >= 12 ? 'PM' : 'AM'
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+      return `${displayHours}:${minutes} ${period}`
     }
     return timeString
   }

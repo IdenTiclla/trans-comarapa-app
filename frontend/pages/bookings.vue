@@ -34,9 +34,11 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-blue-600">Boletos Confirmados</p>
+                  <p class="text-sm font-medium text-blue-600">Boletos Confirmados Hoy</p>
                   <p class="text-3xl font-bold text-blue-900">{{ stats.confirmed }}</p>
-                  <p class="text-xs text-blue-600 mt-1">{{ getPercentage(stats.confirmed) }}% del total</p>
+                  <p :class="getComparisonClass(comparison.confirmed)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison.confirmed) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -59,9 +61,11 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-yellow-600">Boletos Pendientes</p>
+                  <p class="text-sm font-medium text-yellow-600">Boletos Reservados Hoy</p>
                   <p class="text-3xl font-bold text-yellow-900">{{ stats.pending }}</p>
-                  <p class="text-xs text-yellow-600 mt-1">{{ getPercentage(stats.pending) }}% del total</p>
+                  <p :class="getComparisonClass(comparison.pending)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison.pending) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -84,9 +88,11 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-red-600">Boletos Cancelados</p>
+                  <p class="text-sm font-medium text-red-600">Boletos Cancelados Hoy</p>
                   <p class="text-3xl font-bold text-red-900">{{ stats.cancelled }}</p>
-                  <p class="text-xs text-red-600 mt-1">{{ getPercentage(stats.cancelled) }}% del total</p>
+                  <p :class="getComparisonClass(comparison.cancelled)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison.cancelled) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -109,9 +115,11 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-green-600">Total Ingresos</p>
+                  <p class="text-sm font-medium text-green-600">Total Ingresos Hoy</p>
                   <p class="text-3xl font-bold text-green-900">{{ formatCurrency(stats.totalRevenue) }}</p>
-                  <p class="text-xs text-green-600 mt-1">Promedio: {{ formatCurrency(stats.totalRevenue / (stats.confirmed + stats.pending) || 0) }}</p>
+                  <p :class="getComparisonClass(comparison.totalRevenue)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison.totalRevenue) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -735,7 +743,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
-import { getBookingsStats } from '~/services/statsService'
+import { getBookingsStatsComparison } from '~/services/statsService'
 
 definePageMeta({
   middleware: 'auth'
@@ -782,6 +790,14 @@ const ticketForm = ref({
 
 // Stats
 const stats = ref({
+  confirmed: 0,
+  pending: 0,
+  cancelled: 0,
+  totalRevenue: 0
+})
+
+// Comparison stats
+const comparison = ref({
   confirmed: 0,
   pending: 0,
   cancelled: 0,
@@ -942,6 +958,18 @@ const getPercentage = (count) => {
   return total > 0 ? Math.round((count / total) * 100) : 0
 }
 
+const getComparisonText = (percentage) => {
+  if (percentage === 0) return 'Sin cambios vs ayer'
+  const sign = percentage > 0 ? '+' : ''
+  return `${sign}${percentage}% vs ayer`
+}
+
+const getComparisonClass = (percentage) => {
+  if (percentage > 0) return 'text-green-600'
+  if (percentage < 0) return 'text-red-600'
+  return 'text-gray-600'
+}
+
 const toggleView = () => {
   viewMode.value = viewMode.value === 'cards' ? 'table' : 'cards'
 }
@@ -1088,25 +1116,54 @@ const fetchAvailableSeats = async (tripId) => {
 
 const calculateStats = async () => {
   try {
-    // Usar el nuevo endpoint de estadísticas que filtra por día actual
-    const statsData = await getBookingsStats('today')
+    console.log('🔄 Obteniendo estadísticas comparativas desde la API...')
+    // Usar el nuevo endpoint de estadísticas comparativas
+    const statsData = await getBookingsStatsComparison()
+    
+    console.log('✅ Estadísticas obtenidas exitosamente:', statsData)
+    
     stats.value = {
-      confirmed: statsData.confirmed,
-      pending: statsData.pending,
-      cancelled: statsData.cancelled,
-      totalRevenue: statsData.totalRevenue
+      confirmed: statsData.today.confirmed,
+      pending: statsData.today.pending,
+      cancelled: statsData.today.cancelled,
+      totalRevenue: statsData.today.totalRevenue
+    }
+    comparison.value = {
+      confirmed: statsData.comparison.confirmed,
+      pending: statsData.comparison.pending,
+      cancelled: statsData.comparison.cancelled,
+      totalRevenue: statsData.comparison.totalRevenue
     }
   } catch (error) {
-    console.error('Error al obtener estadísticas de bookings:', error)
-    // Fallback a cálculo local en caso de error
+    console.error('❌ Error al obtener estadísticas de bookings:', error)
+    
+    // Fallback: calcular estadísticas localmente desde los tickets cargados
+    console.warn('🔄 Calculando estadísticas localmente como fallback')
+    
+    const confirmedCount = tickets.value.filter(t => t.state === 'confirmed').length
+    const pendingCount = tickets.value.filter(t => t.state === 'pending').length  
+    const cancelledCount = tickets.value.filter(t => t.state === 'cancelled').length
+    const revenue = tickets.value
+      .filter(t => t.state === 'confirmed' || t.state === 'completed')
+      .reduce((sum, ticket) => sum + (ticket.price || 0), 0)
+    
     stats.value = {
-      confirmed: tickets.value.filter(t => t.state === 'confirmed').length,
-      pending: tickets.value.filter(t => t.state === 'pending').length,
-      cancelled: tickets.value.filter(t => t.state === 'cancelled').length,
-      totalRevenue: tickets.value
-        .filter(t => t.state === 'confirmed' || t.state === 'completed')
-        .reduce((sum, ticket) => sum + (ticket.price || 0), 0)
+      confirmed: confirmedCount,
+      pending: pendingCount,
+      cancelled: cancelledCount,
+      totalRevenue: revenue
     }
+    
+    // Sin datos de comparación disponibles en modo fallback
+    comparison.value = {
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      totalRevenue: 0
+    }
+    
+    // Mostrar mensaje informativo al usuario
+    console.warn('📊 Mostrando estadísticas calculadas localmente (sin comparación con ayer)')
   }
 }
 
