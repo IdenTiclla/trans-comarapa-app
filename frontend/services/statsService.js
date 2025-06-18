@@ -1661,3 +1661,67 @@ export default {
   getMonthlyDeliveredPackagesStats,
   getMonthlyCancelledReservationStats
 };
+
+// Obtener estadísticas específicas para la página de bookings
+const getBookingsStats = async (period = 'today') => {
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append('period', period);
+    
+    console.log('🔄 Intentando obtener estadísticas de bookings desde la API...');
+    console.log('📍 URL:', `/stats/bookings/stats?${queryParams.toString()}`);
+    
+    const data = await apiFetch(`/stats/bookings/stats?${queryParams.toString()}`);
+    console.log('✅ Respuesta exitosa de la API (estadísticas de bookings):', data);
+    return data;
+  } catch (error) {
+    console.error('❌ Error al obtener estadísticas de bookings:', error);
+    console.error('📋 Detalles del error:', {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      data: error.data
+    });
+    
+    // Datos de respaldo para desarrollo
+    console.warn('🔄 Usando datos simulados para estadísticas de bookings');
+    return {
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      totalRevenue: 0,
+      period: period
+    };
+  }
+};
+
+// Exportar también la nueva función
+export { 
+  getTicketStats, 
+  getPackageStats, 
+  getTripStats, 
+  getSalesSummary, 
+  getDashboardStats,
+  getReservedTicketStats,
+  getActiveDriversStats,
+  getActiveBusesStats,
+  getActiveSecretariesStats,
+  getActiveAssistantsStats,
+  getClientFeedbackStats,
+  getRegisteredClientsStats,
+  getMonthlyTicketStats,
+  getMonthlyPackageStats,
+  getMonthlyTripStats,
+  getMonthlyRevenueStats,
+  getMonthlyReservationStats,
+  getMonthlyTicketRevenueStats,
+  getMonthlyPackageRevenueStats,
+  getMonthlyCancelledTicketStats,
+  getMonthlyCompletedTripStats,
+  getMonthlyCancelledTripStats,
+  getMonthlyClientFeedbackStats,
+  getMonthlyRegisteredClientsStats,
+  getMonthlyDeliveredPackagesStats,
+  getMonthlyCancelledReservationStats,
+  getBookingsStats
+};

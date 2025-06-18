@@ -61,6 +61,13 @@ class DashboardStats(BaseModel):
     packages: PackageStats
     trips: TripStats
 
+class BookingsStats(BaseModel):
+    confirmed: int
+    pending: int
+    cancelled: int
+    totalRevenue: float
+    period: str
+
 # Función auxiliar para obtener el rango de fechas según el período
 def get_date_range(period: str):
     today = datetime.now().date()
@@ -309,6 +316,69 @@ async def get_dashboard_stats(
         "tickets": ticket_stats,
         "packages": package_stats,
         "trips": trip_stats
+    }
+
+@router.get("/bookings/stats", response_model=BookingsStats)
+async def get_bookings_stats(
+    period: str = Query("today", description="Período para las estadísticas: today, yesterday, week, month, year"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estadísticas específicas para la página de bookings
+    
+    - **period**: Período para las estadísticas (today, yesterday, week, month, year)
+    
+    Retorna estadísticas de boletos confirmados, pendientes, cancelados y ingresos totales
+    """
+    # Obtener el rango de fechas
+    start_date, end_date, previous_start_date, previous_end_date = get_date_range(period)
+    
+    # Consultar boletos confirmados usando fecha de confirmación
+    confirmed = db.query(func.count(TicketModel.id)).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
+    ).filter(
+        cast(TicketStateHistoryModel.changed_at, Date) >= start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])
+    ).scalar() or 0
+    
+    # Consultar boletos pendientes (por fecha de creación)
+    pending = db.query(func.count(TicketModel.id)).filter(
+        cast(TicketModel.created_at, Date) >= start_date,
+        cast(TicketModel.created_at, Date) <= end_date,
+        TicketModel.state == 'pending'
+    ).scalar() or 0
+    
+    # Consultar boletos cancelados (por fecha de actualización)
+    cancelled = db.query(func.count(TicketModel.id)).filter(
+        cast(TicketModel.updated_at, Date) >= start_date,
+        cast(TicketModel.updated_at, Date) <= end_date,
+        TicketModel.state == 'cancelled'
+    ).scalar() or 0
+    
+    # Consultar ingresos totales usando fecha de confirmación
+    total_revenue = db.query(func.coalesce(func.sum(TicketModel.price), 0)).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'confirmed'
+        )
+    ).filter(
+        cast(TicketStateHistoryModel.changed_at, Date) >= start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= end_date,
+        TicketModel.state.in_(['confirmed', 'completed'])
+    ).scalar() or 0
+    
+    return {
+        "confirmed": confirmed,
+        "pending": pending,
+        "cancelled": cancelled,
+        "totalRevenue": float(total_revenue),
+        "period": period
     }
 
 @router.get("/trips/upcoming", response_model=List[dict])

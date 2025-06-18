@@ -718,6 +718,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
+import { getBookingsStats } from '~/services/statsService'
 
 definePageMeta({
   middleware: 'auth'
@@ -978,7 +979,7 @@ const fetchTickets = async () => {
     })
 
     tickets.value = response || []
-    calculateStats()
+    await calculateStats()
   } catch (error) {
     console.error('Error fetching tickets:', error)
     tickets.value = []
@@ -1060,14 +1061,27 @@ const fetchAvailableSeats = async (tripId) => {
   }
 }
 
-const calculateStats = () => {
-  stats.value = {
-    confirmed: tickets.value.filter(t => t.state === 'confirmed').length,
-    pending: tickets.value.filter(t => t.state === 'pending').length,
-    cancelled: tickets.value.filter(t => t.state === 'cancelled').length,
-    totalRevenue: tickets.value
-      .filter(t => t.state === 'confirmed' || t.state === 'completed')
-      .reduce((sum, ticket) => sum + (ticket.price || 0), 0)
+const calculateStats = async () => {
+  try {
+    // Usar el nuevo endpoint de estadísticas que filtra por día actual
+    const statsData = await getBookingsStats('today')
+    stats.value = {
+      confirmed: statsData.confirmed,
+      pending: statsData.pending,
+      cancelled: statsData.cancelled,
+      totalRevenue: statsData.totalRevenue
+    }
+  } catch (error) {
+    console.error('Error al obtener estadísticas de bookings:', error)
+    // Fallback a cálculo local en caso de error
+    stats.value = {
+      confirmed: tickets.value.filter(t => t.state === 'confirmed').length,
+      pending: tickets.value.filter(t => t.state === 'pending').length,
+      cancelled: tickets.value.filter(t => t.state === 'cancelled').length,
+      totalRevenue: tickets.value
+        .filter(t => t.state === 'confirmed' || t.state === 'completed')
+        .reduce((sum, ticket) => sum + (ticket.price || 0), 0)
+    }
   }
 }
 
