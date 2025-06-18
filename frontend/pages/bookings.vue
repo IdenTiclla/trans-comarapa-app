@@ -715,7 +715,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { getBookingsStats } from '~/services/statsService'
@@ -770,6 +770,10 @@ const stats = ref({
   cancelled: 0,
   totalRevenue: 0
 })
+
+// Midnight refresh tracker
+const currentDate = ref(new Date().toDateString())
+let midnightChecker = null
 
 // API Configuration
 const config = useRuntimeConfig()
@@ -1085,6 +1089,30 @@ const calculateStats = async () => {
   }
 }
 
+// Función para verificar si cambió el día y refrescar stats
+const checkMidnightRefresh = () => {
+  const newDate = new Date().toDateString()
+  if (newDate !== currentDate.value) {
+    console.log('🌅 Nuevo día detectado, refrescando estadísticas...')
+    currentDate.value = newDate
+    calculateStats()
+  }
+}
+
+// Configurar verificación de medianoche
+const setupMidnightChecker = () => {
+  // Verificar cada minuto si cambió el día
+  midnightChecker = setInterval(checkMidnightRefresh, 60000)
+}
+
+// Limpiar el intervalo de verificación
+const cleanupMidnightChecker = () => {
+  if (midnightChecker) {
+    clearInterval(midnightChecker)
+    midnightChecker = null
+  }
+}
+
 const resetForm = () => {
   ticketForm.value = {
     trip_id: '',
@@ -1270,5 +1298,13 @@ onMounted(async () => {
   
   // Manejar parámetros de URL después de cargar los datos
   handleUrlParams()
+  
+  // Configurar verificación automática de medianoche
+  setupMidnightChecker()
+})
+
+onUnmounted(() => {
+  // Limpiar intervalo al desmontar el componente
+  cleanupMidnightChecker()
 })
 </script> 
