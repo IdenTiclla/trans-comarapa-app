@@ -9,6 +9,9 @@ from models.bus import Bus as BusModel
 from models.secretary import Secretary as SecretaryModel
 from models.ticket_state_history import TicketStateHistory
 from models.location import Location as LocationModel
+from models.route import Route as RouteModel
+from models.driver import Driver as DriverModel
+from models.assistant import Assistant as AssistantModel
 from schemas.ticket import TicketCreate, Ticket as TicketSchema, TicketUpdate
 from schemas.ticket_state_history import TicketStateHistoryCreate
 from typing import List, Optional
@@ -468,4 +471,5 @@ def _log_ticket_state_change(
     db.add(db_history_entry)
     # db.commit() will be called by the main route function
     # db.refresh(db_history_entry) # Not strictly necessary here unless using the refreshed obj immediately
+
 

@@ -206,7 +206,7 @@ defineEmits([
   'toggle-sold-tickets',
   'toggle-tickets-by-state',
   'cancel-ticket',
-  'view-ticket-details'
+  'view-ticket-details',
 ])
 
 // Helper functions for UI
