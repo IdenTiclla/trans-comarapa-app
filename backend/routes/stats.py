@@ -346,17 +346,23 @@ async def get_bookings_stats(
         TicketModel.state.in_(['confirmed', 'completed'])
     ).scalar() or 0
     
-    # Consultar boletos pendientes (por fecha de creación)
+    # Consultar boletos pendientes creados en el período
     pending = db.query(func.count(TicketModel.id)).filter(
         cast(TicketModel.created_at, Date) >= start_date,
         cast(TicketModel.created_at, Date) <= end_date,
         TicketModel.state == 'pending'
     ).scalar() or 0
     
-    # Consultar boletos cancelados (por fecha de actualización)
-    cancelled = db.query(func.count(TicketModel.id)).filter(
-        cast(TicketModel.updated_at, Date) >= start_date,
-        cast(TicketModel.updated_at, Date) <= end_date,
+    # Consultar boletos cancelados en el período (usando fecha de la última actualización al estado cancelado)
+    cancelled = db.query(func.count(TicketModel.id)).join(
+        TicketStateHistoryModel,
+        and_(
+            TicketStateHistoryModel.ticket_id == TicketModel.id,
+            TicketStateHistoryModel.new_state == 'cancelled'
+        )
+    ).filter(
+        cast(TicketStateHistoryModel.changed_at, Date) >= start_date,
+        cast(TicketStateHistoryModel.changed_at, Date) <= end_date,
         TicketModel.state == 'cancelled'
     ).scalar() or 0
     

@@ -16,33 +16,6 @@
                   <span>Última actualización: Cargando...</span>
                 </template>
               </ClientOnly>
-              <span>•</span>
-              <span>{{ filteredTickets.length }} boletos total</span>
-            </div>
-          </div>
-          <div class="mt-4 sm:mt-0">
-            <div class="flex space-x-2">
-              <button
-                @click="toggleView"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <svg v-if="viewMode === 'cards'" class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                </svg>
-                <svg v-else class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                </svg>
-                {{ viewMode === 'cards' ? 'Vista Tabla' : 'Vista Tarjetas' }}
-              </button>
-              <button
-                @click="exportData"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Exportar
-              </button>
             </div>
           </div>
         </div>
@@ -281,11 +254,55 @@
 
       <!-- Tickets Cards -->
       <div class="mb-6">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-medium text-gray-900">Lista de Boletos</h3>
-          <p class="text-sm text-gray-500">
-            {{ paginatedTickets.length }} de {{ filteredTickets.length }} boletos
-          </p>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-4">
+            <h2 class="text-xl font-bold text-gray-900">Lista de Boletos</h2>
+            <div v-if="!isLoading && filteredTickets.length > 0" class="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+              </svg>
+              <span class="font-medium">{{ filteredTickets.length }} boletos encontrados</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <!-- Export button -->
+            <button
+              @click="exportData"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Exportar
+            </button>
+            <!-- View toggle buttons -->
+            <div class="flex bg-gray-100 rounded-lg p-1">
+              <button
+                @click="viewMode = 'cards'"
+                :class="[
+                  viewMode === 'cards' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900',
+                  'p-2 rounded-md transition-colors duration-200'
+                ]"
+                aria-label="Vista en tarjetas"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+              </button>
+              <button
+                @click="viewMode = 'table'"
+                :class="[
+                  viewMode === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900',
+                  'p-2 rounded-md transition-colors duration-200'
+                ]"
+                aria-label="Vista en tabla"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Loading State -->
@@ -801,15 +818,19 @@ const filteredTickets = computed(() => {
 
   // Date range filter
   if (dateFromFilter.value) {
-    filtered = filtered.filter(ticket =>
-      new Date(ticket.created_at) >= new Date(dateFromFilter.value)
-    )
+    filtered = filtered.filter(ticket => {
+      // Extraer solo la fecha sin conversión de zona horaria
+      const ticketDate = ticket.created_at.split('T')[0]
+      return ticketDate >= dateFromFilter.value
+    })
   }
 
   if (dateToFilter.value) {
-    filtered = filtered.filter(ticket =>
-      new Date(ticket.created_at) <= new Date(dateToFilter.value + 'T23:59:59')
-    )
+    filtered = filtered.filter(ticket => {
+      // Extraer solo la fecha sin conversión de zona horaria
+      const ticketDate = ticket.created_at.split('T')[0]
+      return ticketDate <= dateToFilter.value
+    })
   }
 
   // Payment method filter
