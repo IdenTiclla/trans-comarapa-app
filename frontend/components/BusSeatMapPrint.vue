@@ -23,6 +23,7 @@
         :selected-seat-ids="selectedSeatIds"
         :disabled="disabled"
         :max-selections="maxSelections"
+        :tickets="tickets"
         @seat-selected="handleSeatSelected"
         @seat-deselected="handleSeatDeselected"
         @selection-change="handleSelectionChange"

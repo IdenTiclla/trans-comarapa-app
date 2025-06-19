@@ -23,28 +23,33 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-center text-center h-24 sm:h-28 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-between text-center h-32 sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
             >
-              <!-- Passenger info container -->
-              <div :class="{'invisible': !seat.occupied && seat.status !== 'reserved'}" class="mb-2">
-                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate" :title="seat.passenger?.name">
-                      {{ seat.passenger?.name || '&nbsp;' }}
-                  </div>
-                  <div class="text-xs text-gray-600 font-medium">
-                      {{ seat.passenger?.phone || '&nbsp;' }}
-                  </div>
+              <!-- Price Display -->
+              <div v-if="getSeatPrice(seat)" class="absolute top-2 right-2">
+                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-xs font-bold">
+                  Bs. {{ formatPrice(getSeatPrice(seat)) }}
+                </div>
               </div>
 
-              <!-- Status Indicator -->
-              <div class="absolute top-2 right-2">
-                <div class="w-3 h-3 rounded-full" :class="getStatusDotClass(seat)"></div>
+              <!-- Passenger info container - Always takes space to maintain consistent height -->
+              <div class="flex flex-col justify-center items-center text-center px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
+                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
+                      {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.name || '') : '' }}
+                  </div>
+                  <div class="text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
+                      {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.phone || '') : '' }}
+                  </div>
+                  <div class="text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
+                      {{ getSeatDestination(seat) ? `→ ${getSeatDestination(seat)}` : '' }}
+                  </div>
               </div>
 
               <!-- Status Tag -->
-              <div class="mt-auto">
+              <div class="flex-shrink-0">
                   <span class="text-xs font-bold px-2 py-1 rounded-full inline-block" :class="getModernStatusClass(seat)">
                       {{ getSeatStatusText(seat) }}
                   </span>
@@ -79,28 +84,33 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-center text-center h-24 sm:h-28 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-between text-center h-32 sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
             >
-              <!-- Passenger info container -->
-              <div :class="{'invisible': !seat.occupied && seat.status !== 'reserved'}" class="mb-2">
-                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate" :title="seat.passenger?.name">
-                      {{ seat.passenger?.name || '&nbsp;' }}
-                  </div>
-                  <div class="text-xs text-gray-600 font-medium">
-                      {{ seat.passenger?.phone || '&nbsp;' }}
-                  </div>
+              <!-- Price Display -->
+              <div v-if="getSeatPrice(seat)" class="absolute top-2 right-2">
+                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-xs font-bold">
+                  Bs. {{ formatPrice(getSeatPrice(seat)) }}
+                </div>
               </div>
 
-              <!-- Status Indicator -->
-              <div class="absolute top-2 right-2">
-                <div class="w-3 h-3 rounded-full" :class="getStatusDotClass(seat)"></div>
+              <!-- Passenger info container - Always takes space to maintain consistent height -->
+              <div class="flex flex-col justify-center items-center text-center px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
+                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
+                      {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.name || '') : '' }}
+                  </div>
+                  <div class="text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
+                      {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.phone || '') : '' }}
+                  </div>
+                  <div class="text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
+                      {{ getSeatDestination(seat) ? `→ ${getSeatDestination(seat)}` : '' }}
+                  </div>
               </div>
 
               <!-- Status Tag -->
-              <div class="mt-auto">
+              <div class="flex-shrink-0">
                   <span class="text-xs font-bold px-2 py-1 rounded-full inline-block" :class="getModernStatusClass(seat)">
                       {{ getSeatStatusText(seat) }}
                   </span>
@@ -132,6 +142,10 @@ const props = defineProps({
   maxSelections: {
     type: Number,
     default: 0
+  },
+  tickets: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -182,17 +196,6 @@ const getModernStatusClass = (seat) => {
   }
 }
 
-const getStatusDotClass = (seat) => {
-  if (seat.occupied) {
-    return 'bg-gradient-to-br from-red-400 to-red-600 shadow-lg animate-pulse'
-  } else if (seat.status === 'reserved') {
-    return 'bg-gradient-to-br from-amber-400 to-orange-600 shadow-lg animate-pulse'
-  } else if (props.selectedSeatIds.includes(seat.id)) {
-    return 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg animate-pulse'
-  } else {
-    return 'bg-gradient-to-br from-emerald-400 to-green-600 shadow-lg'
-  }
-}
 
 const getSeatStatusText = (seat) => {
   if (seat.occupied) {
@@ -253,6 +256,57 @@ const toggleSeatSelection = (seat) => {
 const handleContextMenu = (event, seat) => {
   event.preventDefault()
   emit('context-menu', event, seat)
+}
+
+// Obtener precio del boleto específico
+const getSeatPrice = (seat) => {
+  // Solo mostrar precio para asientos ocupados o reservados
+  if (!seat.occupied && seat.status !== 'reserved') {
+    return null
+  }
+  
+  // Buscar el ticket correspondiente a este asiento
+  const ticket = props.tickets.find(t => 
+    t.seat && t.seat.seat_number === seat.number
+  )
+  
+  // Retornar el precio del ticket si existe
+  return ticket?.price || null
+}
+
+// Formatear precio con dos decimales
+const formatPrice = (price) => {
+  if (price === null || price === undefined) {
+    return '0.00'
+  }
+  return parseFloat(price).toFixed(2)
+}
+
+// Obtener destino del boleto
+const getSeatDestination = (seat) => {
+  // Solo mostrar destino para asientos ocupados o reservados
+  if (!seat.occupied && seat.status !== 'reserved') {
+    return null
+  }
+  
+  // Buscar el ticket correspondiente a este asiento
+  const ticket = props.tickets.find(t => 
+    t.seat && t.seat.seat_number === seat.number
+  )
+  
+  if (!ticket) return null
+  
+  // Priorizar el destino personalizado del ticket
+  if (ticket.destination && ticket.destination.trim()) {
+    return ticket.destination
+  }
+  
+  // Fallback al destino de la location si existe
+  if (ticket.destination_location?.name) {
+    return ticket.destination_location.name
+  }
+  
+  return null
 }
 </script>
 
