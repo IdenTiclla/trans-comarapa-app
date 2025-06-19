@@ -1,5 +1,5 @@
 # Makefile para Trans Comarapa
-.PHONY: help build up down logs clean restart shell-backend shell-frontend shell-db seed seed-test-users clear-db setup
+.PHONY: help build up down logs clean restart shell-backend shell-frontend shell-db seed seed-test-users clear-db setup test test-watch test-coverage
 
 # Variables
 COMPOSE_FILE = docker-compose.yml
@@ -27,6 +27,9 @@ help:
 	@echo "  make seed-demo   - Sembrar con muchos datos (para demos)"
 	@echo "  make seed-test-users - Crear usuarios de prueba solo (más rápido para desarrollo)"
 	@echo "  make clear-db    - Limpiar todos los datos de la base de datos (PELIGROSO!)"
+	@echo "  make test        - Ejecutar todas las pruebas unitarias y de componentes"
+	@echo "  make test-watch  - Ejecutar pruebas en modo observador (watch mode)"
+	@echo "  make test-coverage - Generar reporte de cobertura de pruebas"
 
 # Comandos principales
 up:
@@ -167,4 +170,17 @@ seed-test-users: ## Create test users only (faster for development)
 clear-db: ## Clear all data from database (DANGEROUS!)
 	@echo "⚠️  WARNING: This will delete ALL data from the database!"
 	@read -p "Are you sure? Type 'yes' to continue: " confirm && [ "$$confirm" = "yes" ] || exit 1
-	docker-compose exec backend python -c "from db.seed import clear_db; clear_db()" 
+	docker-compose exec backend python -c "from db.seed import clear_db; clear_db()"
+
+# Pruebas
+test: ## Ejecutar todas las pruebas
+	@echo "🧪  Ejecutando pruebas..."
+	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --run
+
+test-watch: ## Ejecutar pruebas en modo observador
+	@echo "👀  Ejecutando pruebas en modo observador..."
+	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test
+
+test-coverage: ## Generar reporte de cobertura de pruebas
+	@echo "📊  Generando reporte de cobertura..."
+	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage 
