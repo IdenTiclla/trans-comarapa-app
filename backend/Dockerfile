@@ -41,19 +41,15 @@ COPY pyproject.toml uv.lock* ./
 # Instalar dependencias usando pyproject.toml
 RUN uv pip install --system -e .
 
-# Copiar script de espera
-COPY scripts/wait-for-db.sh /wait-for-db.sh
-RUN chmod +x /wait-for-db.sh
-
 # Copiar el código de la aplicación
 COPY . .
 
 # Exponer puerto
 EXPOSE 8000
 
-# Crear script de entrada
+# Crear script de entrada simple
 RUN echo '#!/bin/bash\n\
-/wait-for-db.sh db 3306\n\
+sleep 10\n\
 exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
@@ -68,10 +64,6 @@ COPY pyproject.toml uv.lock* ./
 # Instalar dependencias de producción
 RUN uv pip install --system .
 
-# Copiar script de espera
-COPY scripts/wait-for-db.sh /wait-for-db.sh
-RUN chmod +x /wait-for-db.sh
-
 # Copiar el código de la aplicación
 COPY . .
 
@@ -80,7 +72,7 @@ EXPOSE 8000
 
 # Crear script de entrada para producción (sin reload)
 RUN echo '#!/bin/bash\n\
-/wait-for-db.sh db 3306\n\
+sleep 10\n\
 exec uvicorn main:app --host 0.0.0.0 --port 8000\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 

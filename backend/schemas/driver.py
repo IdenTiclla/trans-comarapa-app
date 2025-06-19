@@ -7,6 +7,7 @@ class DriverBase(PersonBase):
     Esquema base para conductores, hereda de PersonBase.
     """
     license_number: str = Field(..., description="Driver's license number", example="LC123456")
+    license_type: Optional[str] = Field(None, description="Driver's license type/category", example="A")
     experience_years: Optional[int] = Field(None, description="Driver's years of experience", example=5)
 
 class DriverCreate(PersonCreate, DriverBase):

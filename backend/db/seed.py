@@ -530,8 +530,10 @@ def seed_db():
             db.add(driver)
             drivers.append(driver)
 
-        # Create sample buses with realistic models
-        bus_models = ["Mercedes Benz O-500", "Volvo 9800", "Scania K410", "Mercedes Benz O-400", "Volvo B420R"]
+        # Create sample buses with realistic models, brands, and colors
+        bus_models = ["O-500", "9800", "K410", "O-400", "B420R"]
+        bus_brands = ["Mercedes Benz", "Volvo", "Scania", "Mercedes Benz", "Volvo"]
+        bus_colors = ["Azul", "Blanco", "Rojo", "Verde", "Amarillo"]
         bus_capacities = [45, 50, 42, 48, 46]
         bus_data = []
 
@@ -543,7 +545,9 @@ def seed_db():
             bus_info = {
                 "license_plate": license_plate,
                 "capacity": bus_capacities[i],
-                "model": bus_models[i]
+                "model": bus_models[i],
+                "brand": bus_brands[i],
+                "color": bus_colors[i]
             }
             bus_data.append(bus_info)
 

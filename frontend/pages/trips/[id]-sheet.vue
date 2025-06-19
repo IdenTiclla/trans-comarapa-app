@@ -42,79 +42,55 @@
     </div>
 
     <!-- Planilla de Pasajeros -->
-    <div v-else-if="trip" class="passenger-sheet printable-area">
+    <div v-else-if="trip" class="passenger-sheet printable-area" style="position: relative;">
+       <!-- ID del Viaje (Posicionado Absolutamente) -->
+      <div style="position: absolute; top: 0; right: 0;">
+        <div class="border border-red-500 p-1 inline-block">
+          <p class="text-red-500 text-xs leading-tight">Nº <span class="font-bold text-base">{{ trip.id.toString().padStart(6, '0') }}</span></p>
+        </div>
+      </div>
+
       <!-- Encabezado -->
-      <header class="mb-2">
-        <div class="flex justify-between items-start">
-          <div class="w-1/3">
-            <h1 class="text-xl font-bold font-serif" style="letter-spacing: 1px;">TRANS</h1>
-            <h1 class="text-3xl font-bold font-serif -mt-2" style="letter-spacing: 1px;">COMARAPA</h1>
-            <p class="text-xs scale-90 origin-top-left">SINDICATO MIXTO DE TRANSPORTISTAS DE LARGA Y CORTA DISTANCIA</p>
-            <p class="text-xs scale-90 origin-top-left">"MANUEL MARIA CABALLERO"</p>
-            <p class="text-xs mt-1 scale-90 origin-top-left">OF. SANTA CRUZ: Av. Doble Vía La Guardia 4to. Anillo Cel.: 78175576</p>
-            <p class="text-xs scale-90 origin-top-left">OF. COMARAPA: Av. Comarapa - Cel.: 781-75578</p>
+      <header class="mb-2 flex items-start space-x-4">
+        <!-- Columna Izquierda: Logo -->
+        <div class="flex-shrink-0" style="width: 25%;">
+          <h1 class="text-xl font-bold font-serif" style="letter-spacing: 1px;">TRANS</h1>
+          <h1 class="text-3xl font-bold font-serif -mt-2" style="letter-spacing: 1px;">COMARAPA</h1>
+          <p class="text-xs scale-90 origin-top-left">SINDICATO MIXTO DE TRANSPORTISTAS</p>
+          <p class="text-xs scale-90 origin-top-left">"MANUEL MARIA CABALLERO"</p>
+          <div class="mt-1 text-left text-xs">
+            <p class="text-xs scale-90 origin-top-left">OF. STA. CRUZ: 78175576</p>
+            <p class="text-xs scale-90 origin-top-left">OF. COMARAPA: 781-75578</p>
           </div>
-          <div class="w-2/3 text-center -ml-8">
-            <p class="text-xs font-bold whitespace-nowrap">MAIRANA - YERBA BUENA - AGUA CLARA - LOS NEGROS - MATARAL - QUINE - PALIZADA - SAN ISIDRO - COMARAPA</p>
-            <div class="grid grid-cols-2 gap-x-2 mt-1 text-left text-xs">
-              <div class="flex items-end">
-                <span class="font-bold">Destino:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1"></span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Fecha:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1 text-center">{{ formatDate(trip.trip_datetime) }}</span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Conductor:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.driver?.firstname }} {{ trip.driver?.lastname }}</span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Lic.:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1"></span>
-              </div>
-               <div class="flex items-end">
-                <span class="font-bold">Ayudante:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.assistant?.firstname }} {{ trip.assistant?.lastname }}</span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Cat.:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1"></span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Marca:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.brand || 'N/A' }}</span>
-              </div>
-               <div class="flex items-end">
-                <span class="font-bold">Hora:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1 text-center">{{ formatTime(trip.departure_time) }}</span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Color:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.color || 'N/A' }}</span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Cel.:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1"></span>
-              </div>
-              <div class="flex items-end">
-                <span class="font-bold">Placa:</span>
-                <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.plate_number || 'N/A' }}</span>
-              </div>
+        </div>
+
+        <!-- Columna Central: Detalles -->
+        <div class="flex-1 text-center">
+          <p class="text-xs font-bold whitespace-nowrap">MAIRANA - YERBA BUENA - AGUA CLARA - LOS NEGROS - MATARAL - QUINE - PALIZADA - SAN ISIDRO - COMARAPA</p>
+          <div class="grid grid-cols-2 gap-x-4 mt-1 text-left text-xs">
+            <div class="flex items-end">
+              <span class="font-bold min-w-[3rem]">Ruta:</span>
+              <span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.route?.origin?.name || trip.route?.origin }} - {{ trip.route?.destination?.name || trip.route?.destination }}</span>
             </div>
-          </div>
-          <div class="w-1/6 text-right">
-            <div class="border-2 border-red-500 p-1">
-              <p class="text-red-500 text-sm leading-tight">Nº <span class="font-bold text-lg">{{ trip.id.toString().padStart(6, '0') }}</span></p>
-            </div>
+            <div><!-- Empty div for balance --></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Conductor:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.driver?.firstname }} {{ trip.driver?.lastname }}</span></div>
+            <div class="flex items-end"><span class="font-bold  min-w-[3rem]">Fecha:</span><span class="border-b border-dotted border-black flex-grow ml-1 text-center">{{ formatDate(trip.trip_datetime) }}</span></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Lic.:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.driver?.license_number || '' }}</span></div>
+            <div class="flex items-end"><span class="font-bold  min-w-[3rem]">Hora:</span><span class="border-b border-dotted border-black flex-grow ml-1 text-center">{{ formatTime(trip.departure_time) }}</span></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Ayudante:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.assistant?.firstname }} {{ trip.assistant?.lastname }}</span></div>
+            <div class="flex items-end"><span class="font-bold  min-w-[3rem]">Placa:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.license_plate || 'N/A' }}</span></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Cat.:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.driver?.license_type || '' }}</span></div>
+            <div class="flex items-end"><span class="font-bold  min-w-[3rem]">Marca:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.brand || 'N/A' }}</span></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Modelo:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.model || 'N/A' }}</span></div>
+            <div class="flex items-end"><span class="font-bold min-w-[3rem]">Color:</span><span class="border-b border-dotted border-black flex-grow ml-1">{{ trip.bus?.color || '' }}</span></div>
           </div>
         </div>
       </header>
 
       <!-- Tabla de pasajeros -->
-      <div class="flex justify-between mt-2">
+      <div class="grid grid-cols-2 gap-x-4 mt-2">
         <!-- Columna Izquierda (Asientos 1-25) -->
-        <div class="w-[49%]">
+        <div>
           <table class="w-full border-collapse">
             <thead class="bg-green-100">
               <tr>
@@ -129,13 +105,13 @@
                 <td class="border border-green-600 text-center text-xs h-5">{{ i }}</td>
                 <td class="border border-green-600 p-1 text-xs">{{ getPassengerNameForSeat(i) }}</td>
                 <td class="border border-green-600 p-1 text-xs">{{ getPassengerDocForSeat(i) }}</td>
-                <td class="border border-green-600 p-1 text-xs"></td>
+                <td class="border border-green-600 p-1 text-xs">{{ getPassengerDestinationForSeat(i) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <!-- Columna Derecha (Asientos 26-50) -->
-        <div class="w-[49%]">
+        <div>
            <table class="w-full border-collapse">
             <thead class="bg-green-100">
               <tr>
@@ -150,7 +126,7 @@
                 <td class="border border-green-600 text-center text-xs h-5">{{ i + 25 }}</td>
                 <td class="border border-green-600 p-1 text-xs">{{ getPassengerNameForSeat(i + 25) }}</td>
                 <td class="border border-green-600 p-1 text-xs">{{ getPassengerDocForSeat(i + 25) }}</td>
-                <td class="border border-green-600 p-1 text-xs"></td>
+                <td class="border border-green-600 p-1 text-xs">{{ getPassengerDestinationForSeat(i + 25) }}</td>
               </tr>
             </tbody>
           </table>
@@ -169,6 +145,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTripStore } from '@/stores/tripStore'
+
+definePageMeta({
+  layout: 'print'
+})
 
 const route = useRoute()
 const tripStore = useTripStore()
@@ -194,7 +174,24 @@ const getPassengerNameForSeat = (seatNumber) => {
 
 const getPassengerDocForSeat = (seatNumber) => {
   const passenger = passengersBySeat.value[seatNumber]
-  return passenger ? passenger.client?.identity_document || '' : ''
+  return passenger ? passenger.client?.document_id || '' : ''
+}
+
+const getPassengerDestinationForSeat = (seatNumber) => {
+  const passenger = passengersBySeat.value[seatNumber]
+  if (!passenger) return ''
+  
+  // Priorizar el destino personalizado si existe
+  if (passenger.destination && passenger.destination.trim()) {
+    return passenger.destination
+  }
+  
+  // Si no hay destino personalizado, usar el destino de la ruta
+  if (trip.value?.route?.destination?.name) {
+    return trip.value.route.destination.name
+  }
+  
+  return ''
 }
 
 const formatDate = (dateString) => {
@@ -220,7 +217,7 @@ const formatTime = (timeString) => {
   return date.toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: true
   })
 }
 

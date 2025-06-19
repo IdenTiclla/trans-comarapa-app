@@ -426,7 +426,10 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
             "bus": {
                 "id": trip.bus.id,
                 "license_plate": trip.bus.license_plate,
-                "capacity": trip.bus.capacity
+                "capacity": trip.bus.capacity,
+                "model": trip.bus.model,
+                "brand": trip.bus.brand,
+                "color": trip.bus.color
             } if trip.bus else None,
             "secretary": {
                 "id": trip.secretary.id,
