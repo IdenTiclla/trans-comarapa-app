@@ -600,3 +600,26 @@ def create_new_user(user: UserCreate, db: Session = Depends(get_db), _: UserMode
             detail="Email already registered"
         )
     return create_user(db=db, user=user)
+
+@router.get("/verify")
+def verify_token(current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Endpoint para verificar si el token JWT actual es válido.
+    
+    Args:
+        current_user: Usuario actual (obtenido del token)
+        db: Sesión de base de datos
+        
+    Returns:
+        Información básica del usuario si el token es válido
+    """
+    # Si llegamos aquí, el token es válido (get_current_user ya lo validó)
+    return {
+        "valid": True,
+        "user_id": current_user.id,
+        "email": current_user.email,
+        "role": str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role),
+        "is_active": current_user.is_active,
+        "firstname": current_user.firstname or "",
+        "lastname": current_user.lastname or ""
+    }

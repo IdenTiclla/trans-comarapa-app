@@ -1,7 +1,7 @@
 // Middleware global que se ejecuta en todas las páginas
 import { useAuthStore } from '~/stores/auth'
 
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   // Si estamos en el servidor, no hacer nada
   if (process.server) return
   
@@ -54,6 +54,40 @@ export default defineNuxtRouteMiddleware((to) => {
   
   // Si el usuario no está autenticado y trata de acceder a una ruta protegida, redirigir a login
   if (!authStore.isAuthenticated) {
+    return navigateTo('/login')
+  }
+  
+  // VALIDACIÓN ADICIONAL: Verificar que el token sea válido en el servidor
+  // Solo para rutas protegidas (no públicas)
+  try {
+    // Importar authService dinámicamente para evitar problemas de SSR
+    const { default: authService } = await import('~/services/authService')
+    
+    // Intentar verificar el token en el servidor
+    const tokenVerification = await authService.verifyToken()
+    
+    // Si llegamos aquí, el token es válido
+    console.log('✅ Token válido - acceso permitido a', to.path)
+    
+    // Actualizar datos del usuario si es necesario
+    if (tokenVerification && tokenVerification.user_id !== authStore.user?.id) {
+      console.log('🔄 Actualizando datos del usuario desde servidor')
+      authStore.user = {
+        id: tokenVerification.user_id,
+        email: tokenVerification.email,
+        role: tokenVerification.role,
+        firstname: tokenVerification.firstname,
+        lastname: tokenVerification.lastname
+      }
+    }
+    
+  } catch (error) {
+    console.warn('🔒 Token inválido o expirado, cerrando sesión automáticamente')
+    
+    // Token inválido o expirado - hacer logout automático
+    await authStore.logout()
+    
+    // Redirigir al login
     return navigateTo('/login')
   }
 })

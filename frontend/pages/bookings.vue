@@ -760,7 +760,7 @@ const availableTrips = ref([])
 const availableSeats = ref([])
 const searchQuery = ref('')
 const statusFilter = ref('')
-const dateFromFilter = ref('')
+const dateFromFilter = ref(new Date().toISOString().split('T')[0])
 const dateToFilter = ref('')
 const paymentMethodFilter = ref('')
 const currentPage = ref(1)
@@ -1243,6 +1243,16 @@ const submitTicketForm = async () => {
     await fetchTickets()
   } catch (error) {
     console.error('Error submitting ticket:', error)
+    
+    // Handle errors (401 errors are handled globally by interceptor)
+    if (error.message?.includes('Sesión expirada')) {
+      // El interceptor ya maneja este caso
+      console.log('Redirigiendo al login...')
+    } else if (error.status === 403 || error.statusCode === 403) {
+      alert('No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.')
+    } else {
+      alert('Error al crear el boleto: ' + (error.message || 'Error desconocido'))
+    }
   } finally {
     isSubmitting.value = false
   }

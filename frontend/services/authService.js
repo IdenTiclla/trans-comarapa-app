@@ -93,6 +93,27 @@ const getUserData = () => {
   return null
 }
 
+// Verificar si el token es válido en el servidor
+const verifyToken = async () => {
+  try {
+    const token = getToken()
+    if (!token) {
+      throw new Error('No token available')
+    }
+
+    const response = await apiFetch('/auth/verify', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    return response
+  } catch (error) {
+    console.error('Token verification failed:', error)
+    throw error
+  }
+}
+
 // Refrescar el token
 const refreshToken = async () => {
   try {
@@ -145,5 +166,6 @@ export default {
   isAuthenticated,
   getToken,
   getUserData,
-  refreshToken
+  refreshToken,
+  verifyToken
 }

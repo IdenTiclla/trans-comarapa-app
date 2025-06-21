@@ -122,10 +122,17 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
                     detail="No secretaries available in the system. Cannot create ticket."
                 )
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"No secretary profile found for user ID {ticket.operator_user_id}. Cannot create ticket."
-            )
+            # Check if the user exists at all
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Usuario no válido. Su sesión ha expirado o su cuenta no existe. Por favor, inicie sesión nuevamente."
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Su usuario no tiene permisos para crear boletos. Solo secretarios y administradores pueden crear boletos."
+                )
     else:
         actual_secretary_id = secretary_profile.id
         print(f"[DEBUG] Secretary profile found: {actual_secretary_id}")

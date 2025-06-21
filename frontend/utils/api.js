@@ -31,6 +31,7 @@ export const apiFetch = $fetch.create({
       if (options.url === '/auth/refresh') {
         console.error('Refresh token request failed with 401. Logging out.')
         authStore.logout()
+        await navigateTo('/login')
         return
       }
 
@@ -48,10 +49,12 @@ export const apiFetch = $fetch.create({
         } else {
           console.warn('No refresh token function available. Logging out.');
           authStore.logout();
+          await navigateTo('/login');
         }
       } catch (refreshError) {
         console.error('Error during token refresh or retrying request:', refreshError);
         authStore.logout();
+        await navigateTo('/login');
       } 
     }
     // If not a 401 or if refresh failed, the error will be re-thrown by $fetch, 

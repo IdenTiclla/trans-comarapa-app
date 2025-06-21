@@ -589,10 +589,19 @@ const handleSubmit = async () => {
 
   } catch (error) {
     console.error('Error al crear los boletos:', error)
-    if (error.message?.includes('payment_method')) {
+    
+    // Handle different error types (401 errors are handled globally by interceptor)
+    if (error.message?.includes('Sesión expirada')) {
+      // El interceptor ya maneja este caso, solo mostrar mensaje temporal
+      errorMessage.value = 'Redirigiendo al login...'
+    } else if (error.status === 403 || error.statusCode === 403) {
+      errorMessage.value = 'No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.'
+    } else if (error.message?.includes('payment_method')) {
       errorMessage.value = 'El método de pago es requerido'
     } else if (error.message?.includes('CORS') || error.message?.includes('fetch')) {
       errorMessage.value = 'Error de conexión con el servidor. Verifique que todos los campos estén completos.'
+    } else if (error.status === 400 && error.statusText === 'Bad Request') {
+      errorMessage.value = 'Error en los datos del boleto. Verifique que todos los campos estén completos y correctos.'
     } else {
       errorMessage.value = error.message || 'Error al crear los boletos'
     }
