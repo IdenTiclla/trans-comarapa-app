@@ -36,6 +36,16 @@ export const useAuthStore = defineStore('auth', {
       this.token = authService.getToken()
       const userData = authService.getUserData()
       this.user = userData ? createPlainObject(userData) : null
+      
+      // Migrar datos existentes si no tienen email
+      if (this.user && !this.user.email && typeof window !== 'undefined') {
+        const storedEmail = localStorage.getItem('user_email')
+        if (storedEmail) {
+          this.user.email = storedEmail
+          // Actualizar localStorage con el email incluido
+          localStorage.setItem('user_data', JSON.stringify(this.user))
+        }
+      }
     },
 
     // Iniciar sesión
@@ -53,7 +63,8 @@ export const useAuthStore = defineStore('auth', {
           id: data.user_id,
           role: data.role,
           firstname: data.firstname || '',
-          lastname: data.lastname || ''
+          lastname: data.lastname || '',
+          email: email // Incluir el email en el objeto usuario
         })
 
         return data

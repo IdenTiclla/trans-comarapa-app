@@ -38,8 +38,10 @@ const login = async (email, password) => {
           role: data.role,
           firstname: data.firstname || '',
           lastname: data.lastname || '',
+          email: email // Incluir el email en los datos del usuario
         }
         localStorage.setItem('user_data', JSON.stringify(userInfo))
+        localStorage.setItem('user_email', email) // Guardar email por separado para migración
       }
     }
     return data
