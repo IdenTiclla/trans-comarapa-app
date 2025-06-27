@@ -133,7 +133,7 @@
               <div class="flex items-center">
                 <span class="text-blue-800 font-bold w-28 text-base">Remitente:</span>
                 <div class="flex-1 relative">
-                  <span class="bg-white pr-2 relative z-10 font-medium">{{ packageData.sender?.firstname }} {{ packageData.sender?.lastname }} (CI: {{ packageData.sender?.document_id }})</span>
+                  <span class="bg-white pr-2 relative z-10 font-medium">{{ getSenderName(packageData.sender) }} (CI: {{ packageData.sender?.document_id }})</span>
                   <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
                 </div>
               </div>
@@ -142,7 +142,7 @@
               <div class="flex items-center">
                 <span class="text-blue-800 font-bold w-28 text-base">Consignatario:</span>
                 <div class="flex-1 relative">
-                  <span class="bg-white pr-2 relative z-10 font-medium">{{ packageData.recipient?.firstname }} {{ packageData.recipient?.lastname }} (CI: {{ packageData.recipient?.document_id }})</span>
+                  <span class="bg-white pr-2 relative z-10 font-medium">{{ getRecipientName(packageData.recipient) }} (CI: {{ packageData.recipient?.document_id }})</span>
                   <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
                 </div>
               </div>
@@ -284,6 +284,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
   showModal: {
@@ -297,6 +298,17 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+const { getEffectiveName } = usePersonData()
+
+// Funciones auxiliares para obtener nombres
+const getSenderName = (sender) => {
+  return getEffectiveName(sender)
+}
+
+const getRecipientName = (recipient) => {
+  return getEffectiveName(recipient)
+}
 
 // Número de paquete
 const packageNumber = ref('000000')

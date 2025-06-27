@@ -69,16 +69,7 @@
             <!-- End Secretary Links - Desktop -->
 
             <span class="text-white hidden lg:inline-block">
-              <template v-if="authStore.user && (authStore.user.firstname || authStore.user.lastname)">
-                {{ authStore.user.firstname }} {{ authStore.user.lastname }}
-              </template>
-              <template v-else-if="authStore.fullName">
-                {{ authStore.fullName }}
-              </template>
-              <template v-else>
-                Usuario
-              </template>
-
+              {{ userName }}
             </span>
             <button
               @click="handleLogout"
@@ -165,15 +156,7 @@
             <!-- End Secretary Links - Mobile -->
 
             <div class="text-white text-sm bg-blue-800 px-3 py-2 rounded-md">
-              <template v-if="authStore.user && (authStore.user.firstname || authStore.user.lastname)">
-                {{ authStore.user.firstname }} {{ authStore.user.lastname }}
-              </template>
-              <template v-else-if="authStore.fullName">
-                {{ authStore.fullName }}
-              </template>
-              <template v-else>
-                Usuario
-              </template>
+              {{ userName }}
             </div>
             <button
               @click="handleLogoutMobile"
@@ -191,11 +174,15 @@
 <script setup>
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, computed } from 'vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const isMenuOpen = ref(false)
+const { getEffectiveName } = usePersonData()
+
+const userName = computed(() => getEffectiveName(authStore.user))
 
 // Inicializar el estado de autenticación al montar el componente
 onMounted(() => {

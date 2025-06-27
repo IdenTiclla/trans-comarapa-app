@@ -143,10 +143,10 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
                 <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                  {{ getInitials(user.firstname, user.lastname) }}
+                  {{ getUserInitials(user) }}
                 </div>
                 <div class="ml-4">
-                  <div class="text-sm font-medium text-gray-900">{{ user.firstname }} {{ user.lastname }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ getUserName(user) }}</div>
                   <div class="text-sm text-gray-500">@{{ user.username }}</div>
                 </div>
               </div>
@@ -287,6 +287,7 @@
 
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
   users: {
@@ -332,6 +333,8 @@ const emit = defineEmits([
   'filter-change',
   'search'
 ])
+
+const { getEffectiveName, getInitials } = usePersonData()
 
 // Estado local para filtros
 const searchTerm = ref('')
@@ -397,11 +400,13 @@ const displayedPages = computed(() => {
   return pages
 })
 
-// Funciones auxiliares
-const getInitials = (firstname, lastname) => {
-  const first = firstname ? firstname.charAt(0).toUpperCase() : ''
-  const last = lastname ? lastname.charAt(0).toUpperCase() : ''
-  return `${first}${last}`
+// Funciones auxiliares para usuarios
+const getUserName = (user) => {
+  return getEffectiveName(user)
+}
+
+const getUserInitials = (user) => {
+  return getInitials(user)
 }
 
 const formatDate = (dateString) => {

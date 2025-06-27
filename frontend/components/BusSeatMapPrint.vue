@@ -68,6 +68,7 @@ import BusSeatGrid from './BusSeatGrid.vue'
 import BusSeatLegend from './BusSeatLegend.vue'
 import SelectedSeatsPanel from './SelectedSeatsPanel.vue'
 import SeatContextMenu from './SeatContextMenu.vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
   trip: {
@@ -120,6 +121,17 @@ const emit = defineEmits([
   'sell-ticket',
   'reserve-seat'
 ])
+
+const { getEffectiveName, getEffectivePhone } = usePersonData()
+
+// Funciones auxiliares para obtener datos de clientes
+const getClientName = (client) => {
+  return getEffectiveName(client)
+}
+
+const getClientPhone = (client) => {
+  return getEffectivePhone(client)
+}
 
 const loading = ref(true)
 const error = ref(null)
@@ -243,8 +255,8 @@ const loadSeats = async () => {
       let passenger = null;
       if (ticket && ticket.client) {
         passenger = {
-          name: `${ticket.client.firstname || ''} ${ticket.client.lastname || ''}`.trim(),
-          phone: ticket.client.phone || ''
+          name: getClientName(ticket.client),
+          phone: getClientPhone(ticket.client)
         };
       }
 

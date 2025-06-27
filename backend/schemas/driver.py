@@ -1,38 +1,27 @@
-from pydantic import Field
+from pydantic import BaseModel, Field
 from typing import Optional
-from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
+from datetime import date
+from schemas.person import PersonBase, PersonCreate, PersonResponse, PersonUpdate, DriverResponse, DriverUpdate
 
-class DriverBase(PersonBase):
-    """
-    Esquema base para conductores, hereda de PersonBase.
-    """
-    license_number: str = Field(..., description="Driver's license number", example="LC123456")
-    license_type: Optional[str] = Field(None, description="Driver's license type/category", example="A")
-    experience_years: Optional[int] = Field(None, description="Driver's years of experience", example=5)
-
-class DriverCreate(PersonCreate, DriverBase):
+# Esquemas de creación específicos para Driver
+class DriverCreate(PersonCreate):
     """
     Esquema para crear un nuevo conductor.
     """
-    pass
+    license_number: Optional[str] = Field(None, description="Driver's license number", example="LC123456")
+    license_type: Optional[str] = Field(None, description="Driver's license type/category", example="A")
+    license_expiry: Optional[date] = Field(None, description="License expiry date")
+    status: Optional[str] = Field(None, description="Driver status", example="active")
 
-class DriverPatch(DriverBase):
-    """
-    Esquema para actualizar un conductor.
-    """
-    pass
+# Alias para compatibilidad hacia atrás
+Driver = DriverResponse
+DriverPatch = DriverUpdate
 
-    class Config:
-        from_attributes = True
-
-class Driver(PersonSchema, DriverBase):
+class DriverBase(PersonBase):
     """
-    Esquema para representar un conductor.
+    Esquema base para conductores - LEGACY, usar DriverResponse en su lugar.
     """
-    # Campos específicos de Driver en la respuesta (si los hubiera)
-
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
-        # Excluir el campo user para evitar la recursión
-        exclude = {"user"}
+    license_number: Optional[str] = Field(None, description="Driver's license number", example="LC123456")
+    license_type: Optional[str] = Field(None, description="Driver's license type/category", example="A")
+    license_expiry: Optional[date] = Field(None, description="License expiry date")
+    status: Optional[str] = Field(None, description="Driver status", example="active")

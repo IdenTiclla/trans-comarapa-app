@@ -6,19 +6,29 @@
         <div class="flex items-center space-x-3 mb-2">
           <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg flex-shrink-0">
             <span class="text-white font-bold text-sm">
-              {{ getInitials(client.name) }}
+              {{ client.initials || getInitials(client.full_name || `${client.firstname} ${client.lastname}`) }}
             </span>
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-lg font-bold text-gray-900 truncate">
-              {{ client.name }}
+              {{ client.full_name || `${client.firstname} ${client.lastname}` }}
             </h3>
             <div class="flex items-center space-x-2 text-sm text-gray-700">
-              <span v-if="client.is_minor" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                👶 Menor
+              <!-- Mostrar categoría de edad si está disponible -->
+              <span v-if="client.age_category" 
+                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                    :class="getAgeCategoryClass(client.age_category)">
+                {{ getAgeCategoryIcon(client.age_category) }} {{ getAgeCategoryLabel(client.age_category) }}
               </span>
-              <span v-else class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                👤 Adulto
+              <!-- Fallback para is_minor si no hay age_category -->
+              <span v-else-if="client.is_minor !== undefined" 
+                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                    :class="client.is_minor ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'">
+                {{ client.is_minor ? '👶 Menor' : '👤 Adulto' }}
+              </span>
+              <!-- Mostrar edad si está disponible -->
+              <span v-if="client.age !== undefined" class="text-xs text-gray-600">
+                {{ client.age }} años
               </span>
             </div>
           </div>
@@ -43,7 +53,7 @@
         <div class="min-w-0 flex-1">
           <p class="text-sm text-gray-600 font-medium">Documento</p>
           <p class="text-sm font-semibold text-gray-900 truncate">
-            {{ client.ci || 'Sin CI' }}
+            {{ client.document_id || 'Sin CI' }}
           </p>
         </div>
       </div>
@@ -108,7 +118,7 @@
       <button
         @click="$emit('view-client', client)"
         class="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-        :aria-label="`Ver detalles de ${client.name}`"
+        :aria-label="`Ver detalles de ${client.full_name || `${client.firstname} ${client.lastname}`}`"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -120,7 +130,7 @@
       <button
         @click="$emit('edit-client', client)"
         class="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200"
-        :aria-label="`Editar ${client.name}`"
+        :aria-label="`Editar ${client.full_name || `${client.firstname} ${client.lastname}`}`"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -131,7 +141,7 @@
       <button
         @click="$emit('delete-client', client)"
         class="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
-        :aria-label="`Eliminar ${client.name}`"
+        :aria-label="`Eliminar ${client.full_name || `${client.firstname} ${client.lastname}`}`"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -161,6 +171,45 @@ const getInitials = (name) => {
     return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase()
   }
   return name.charAt(0).toUpperCase() + (name.charAt(1) || '').toUpperCase()
+}
+
+const getAgeCategoryClass = (category) => {
+  switch (category) {
+    case 'senior':
+      return 'bg-purple-100 text-purple-800'
+    case 'adult':
+      return 'bg-blue-100 text-blue-800'
+    case 'minor':
+      return 'bg-orange-100 text-orange-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const getAgeCategoryIcon = (category) => {
+  switch (category) {
+    case 'senior':
+      return '👴'
+    case 'adult':
+      return '👤'
+    case 'minor':
+      return '👶'
+    default:
+      return '👤'
+  }
+}
+
+const getAgeCategoryLabel = (category) => {
+  switch (category) {
+    case 'senior':
+      return 'Adulto Mayor'
+    case 'adult':
+      return 'Adulto'
+    case 'minor':
+      return 'Menor'
+    default:
+      return 'N/A'
+  }
 }
 
 const getStatusText = () => {

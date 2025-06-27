@@ -74,12 +74,12 @@
 
         <div>
           <dt class="text-sm font-medium text-gray-500">Conductor</dt>
-          <dd class="mt-1 text-sm text-gray-900">{{ trip.driver ? `${trip.driver.firstname} ${trip.driver.lastname}` : 'No asignado' }}</dd>
+          <dd class="mt-1 text-sm text-gray-900">{{ getDriverName(trip.driver) }}</dd>
         </div>
 
         <div>
           <dt class="text-sm font-medium text-gray-500">Asistente</dt>
-          <dd class="mt-1 text-sm text-gray-900">{{ trip.assistant ? `${trip.assistant.firstname} ${trip.assistant.lastname}` : 'No asignado' }}</dd>
+          <dd class="mt-1 text-sm text-gray-900">{{ getAssistantName(trip.assistant) }}</dd>
         </div>
 
         <div>
@@ -102,6 +102,19 @@
 </template>
 
 <script setup>
+import { usePersonData } from '~/composables/usePersonData'
+
+const { getEffectiveName } = usePersonData()
+
+// Funciones auxiliares para obtener nombres
+const getDriverName = (driver) => {
+  return driver ? getEffectiveName(driver) : 'No asignado'
+}
+
+const getAssistantName = (assistant) => {
+  return assistant ? getEffectiveName(assistant) : 'No asignado'
+}
+
 const props = defineProps({
   trip: {
     type: Object,

@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from models.person import Person
 from models.driver import Driver
 from models.bus import Bus
 from models.assistant import Assistant
@@ -61,6 +62,8 @@ def clear_db():
         db.query(Secretary).delete()
         db.query(Administrator).delete()
         db.query(ActivityModel).delete()
+        # Delete Person instances before User since Person has FK to User
+        db.query(Person).delete()
         db.query(User).delete()
 
         # Re-enable foreign key checks
@@ -418,8 +421,8 @@ def seed_db():
         # Commit para obtener IDs de usuarios
         db.commit()
 
-        # Crear clientes con datos realistas bolivianos
-        client_data = []
+        # Crear clientes con datos realistas bolivianos - Nuevo enfoque con Person
+        clients = []
         bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija"]
         bolivian_states = ["Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija", "Oruro", "Potosí", "Beni", "Pando"]
 
@@ -436,24 +439,19 @@ def seed_db():
             ci_length = random.choice([7, 8, 9, 10])
             document_id = str(random.randint(10**(ci_length-1), 10**ci_length - 1))
 
-            client_info = {
-                "firstname": firstname,
-                "lastname": lastname,
-                "document_id": document_id,  # Nuevo campo CI
-                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
-                "email": fake.email(),  # Agregar email aleatorio
-                "address": fake.street_address(),
-                "city": random.choice(bolivian_cities),
-                "state": random.choice(bolivian_states),
-                "birth_date": fake.date_of_birth(minimum_age=18, maximum_age=70),
-                "is_minor": False,  # Agregar campo is_minor
-                "user_id": user.id
-            }
-            client_data.append(client_info)
-
-        clients = []
-        for client_info in client_data:
-            client = Client(**client_info)
+            # Crear el Cliente que hereda de Person
+            client = Client(
+                user_id=user.id,
+                firstname=firstname,
+                lastname=lastname,
+                phone=f"7{random.randint(1000000, 9999999)}",
+                birth_date=fake.date_of_birth(minimum_age=18, maximum_age=70),
+                # Campos específicos de Client
+                document_id=document_id,
+                address=fake.street_address(),
+                city=random.choice(bolivian_cities),
+                state=random.choice(bolivian_states)
+            )
             db.add(client)
             clients.append(client)
 
@@ -493,8 +491,8 @@ def seed_db():
         # Commit para obtener IDs de usuarios
         db.commit()
 
-        # Crear conductores con datos realistas bolivianos
-        driver_data = []
+        # Crear conductores con datos realistas bolivianos - Nuevo enfoque con Person
+        drivers = []
         license_types = ["A", "B", "C", "P"]
         status_options = ["active", "on_leave", "suspended", "inactive"]
 
@@ -511,22 +509,19 @@ def seed_db():
             firstname = name_parts[0]
             lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-            driver_info = {
-                "firstname": firstname,
-                "lastname": lastname,
-                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
-                "birth_date": fake.date_of_birth(minimum_age=25, maximum_age=60),
-                "license_number": f"LC{random.randint(100000, 999999)}",
-                "license_type": random.choice(license_types),
-                "license_expiry": license_expiry,
-                "status": random.choice(status_options),
-                "user_id": user.id
-            }
-            driver_data.append(driver_info)
-
-        drivers = []
-        for driver_info in driver_data:
-            driver = Driver(**driver_info)
+            # Crear el Conductor que hereda de Person
+            driver = Driver(
+                user_id=user.id,
+                firstname=firstname,
+                lastname=lastname,
+                phone=f"7{random.randint(1000000, 9999999)}",
+                birth_date=fake.date_of_birth(minimum_age=25, maximum_age=60),
+                # Campos específicos de Driver
+                license_number=f"LC{random.randint(100000, 999999)}",
+                license_type=random.choice(license_types),
+                license_expiry=license_expiry,
+                status=random.choice(status_options)
+            )
             db.add(driver)
             drivers.append(driver)
 
@@ -582,13 +577,13 @@ def seed_db():
         db.add(admin_user)
         db.commit()
 
-        # Crear administrador asociado al usuario admin
+        # Crear administrador asociado al usuario admin - Nuevo enfoque con Person
         administrator = Administrator(
+            user_id=admin_user.id,
             firstname="Administrador",
             lastname="Sistema",
             phone="77000000",
-            birth_date=date(1980, 1, 1),
-            user_id=admin_user.id
+            birth_date=date(1980, 1, 1)
         )
         db.add(administrator)
         db.commit()
@@ -629,8 +624,8 @@ def seed_db():
         # Commit para obtener IDs de usuarios
         db.commit()
 
-        # Crear secretarios con datos realistas bolivianos
-        secretary_data = []
+        # Crear secretarios con datos realistas bolivianos - Nuevo enfoque con Person
+        secretaries = []
         office_names = list(offices.keys())
 
         # Generar nombres completos para los secretarios
@@ -645,19 +640,16 @@ def seed_db():
             firstname = name_parts[0]
             lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-            secretary_info = {
-                "firstname": firstname,
-                "lastname": lastname,
-                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
-                "birth_date": fake.date_of_birth(minimum_age=22, maximum_age=55),
-                "office_id": offices[office_name].id,
-                "user_id": user.id
-            }
-            secretary_data.append(secretary_info)
-
-        secretaries = []
-        for secretary_info in secretary_data:
-            secretary = Secretary(**secretary_info)
+            # Crear el Secretario que hereda de Person
+            secretary = Secretary(
+                user_id=user.id,
+                firstname=firstname,
+                lastname=lastname,
+                phone=f"7{random.randint(1000000, 9999999)}",
+                birth_date=fake.date_of_birth(minimum_age=22, maximum_age=55),
+                # Campo específico de Secretary
+                office_id=offices[office_name].id
+            )
             db.add(secretary)
             secretaries.append(secretary)
 
@@ -697,8 +689,8 @@ def seed_db():
         # Commit para obtener IDs de usuarios
         db.commit()
 
-        # Crear asistentes con datos realistas bolivianos
-        assistant_data = []
+        # Crear asistentes con datos realistas bolivianos - Nuevo enfoque con Person
+        assistants = []
 
         # Generar nombres completos para los asistentes
         assistant_full_names = [fake.name() for _ in range(len(assistant_users))]
@@ -709,18 +701,14 @@ def seed_db():
             firstname = name_parts[0]
             lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-            assistant_info = {
-                "firstname": firstname,
-                "lastname": lastname,
-                "phone": f"7{random.randint(1000000, 9999999)}",  # Número de teléfono boliviano
-                "birth_date": fake.date_of_birth(minimum_age=20, maximum_age=50),
-                "user_id": user.id
-            }
-            assistant_data.append(assistant_info)
-
-        assistants = []
-        for assistant_info in assistant_data:
-            assistant = Assistant(**assistant_info)
+            # Crear el Asistente que hereda de Person  
+            assistant = Assistant(
+                user_id=user.id,
+                firstname=firstname,
+                lastname=lastname,
+                phone=f"7{random.randint(1000000, 9999999)}",
+                birth_date=fake.date_of_birth(minimum_age=20, maximum_age=50)
+            )
             db.add(assistant)
             assistants.append(assistant)
 
@@ -1254,7 +1242,7 @@ def create_test_users():
         for email in test_emails:
             user = db.query(User).filter(User.email == email).first()
             if user:
-                # Eliminar entidades asociadas
+                # Eliminar entidades asociadas (estas ahora heredan de Person)
                 if user.role == "admin" or user.role == "ADMIN":
                     db.query(Administrator).filter(Administrator.user_id == user.id).delete()
                 elif user.role == "secretary" or user.role == "SECRETARY":
@@ -1265,6 +1253,9 @@ def create_test_users():
                     db.query(Assistant).filter(Assistant.user_id == user.id).delete()
                 elif user.role == "client" or user.role == "CLIENT":
                     db.query(Client).filter(Client.user_id == user.id).delete()
+
+                # También eliminar instancias de Person que pudieran existir
+                db.query(Person).filter(Person.user_id == user.id).delete()
 
                 # Eliminar usuario
                 db.delete(user)
@@ -1387,8 +1378,7 @@ def create_test_users():
                 "document_id": "12693562",  # CI de prueba
                 "address": "Av. Principal 123",
                 "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "is_minor": False
+                "state": "Santa Cruz"
             },
             {
                 "username": "client2",
@@ -1402,8 +1392,7 @@ def create_test_users():
                 "document_id": "9876543",  # CI de prueba para búsqueda
                 "address": "Calle Falsa 456",
                 "city": "Cochabamba",
-                "state": "Cochabamba",
-                "is_minor": False
+                "state": "Cochabamba"
             },
             {
                 "username": "client3",
@@ -1417,8 +1406,7 @@ def create_test_users():
                 "document_id": "5432109",  # CI de prueba para búsqueda
                 "address": "Av. Libertad 789",
                 "city": "La Paz",
-                "state": "La Paz",
-                "is_minor": False
+                "state": "La Paz"
             },
             {
                 "username": "client4",
@@ -1432,8 +1420,7 @@ def create_test_users():
                 "document_id": "151985270",  # CI que apareció en los logs de error
                 "address": "Calle Nueva 321",
                 "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "is_minor": False
+                "state": "Santa Cruz"
             },
             {
                 "username": "client5",
@@ -1447,8 +1434,7 @@ def create_test_users():
                 "document_id": "9753228",  # CI que apareció en los logs de error
                 "address": "Av. Central 654",
                 "city": "Cochabamba",
-                "state": "Cochabamba",
-                "is_minor": False
+                "state": "Cochabamba"
             }
         ]
 
@@ -1467,30 +1453,31 @@ def create_test_users():
             )
             db.add(new_user)
             db.flush()  # Para obtener el ID del usuario
-            # Crear la entidad asociada según el rol
+            # Crear la entidad asociada según el rol - Nuevo enfoque con Person
             if user_data["role"] == "admin":
                 entity = Administrator(
+                    user_id=new_user.id,
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
                     phone=user_data["phone"],
-                    birth_date=user_data["birth_date"],
-                    user_id=new_user.id
+                    birth_date=user_data["birth_date"]
                 )
                 db.add(entity)
                 db.flush()
             elif user_data["role"] == "secretary":
                 entity = Secretary(
+                    user_id=new_user.id,
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
                     phone=user_data["phone"],
                     birth_date=user_data["birth_date"],
-                    office_id=user_data["office_id"],
-                    user_id=new_user.id
+                    office_id=user_data["office_id"]
                 )
                 db.add(entity)
                 db.flush()
             elif user_data["role"] == "driver":
                 entity = Driver(
+                    user_id=new_user.id,
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
                     phone=user_data["phone"],
@@ -1498,34 +1485,32 @@ def create_test_users():
                     license_number=user_data["license_number"],
                     license_type=user_data["license_type"],
                     license_expiry=user_data["license_expiry"],
-                    status=user_data["status"],
-                    user_id=new_user.id
+                    status=user_data["status"]
                 )
                 db.add(entity)
                 db.flush()
             elif user_data["role"] == "assistant":
                 entity = Assistant(
+                    user_id=new_user.id,
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
                     phone=user_data["phone"],
-                    birth_date=user_data["birth_date"],
-                    user_id=new_user.id
+                    birth_date=user_data["birth_date"]
                 )
                 db.add(entity)
                 db.flush()
             elif user_data["role"] == "client":
                 entity = Client(
+                    user_id=new_user.id,
                     firstname=user_data["firstname"],
                     lastname=user_data["lastname"],
-                    document_id=user_data.get("document_id"),  # Nuevo campo CI
                     phone=user_data["phone"],
-                    email=user_data["email"],  # Nuevo campo email
                     birth_date=user_data["birth_date"],
-                    is_minor=user_data.get("is_minor", False),  # Nuevo campo is_minor
+                    # Campos específicos de Client
+                    document_id=user_data.get("document_id"),
                     address=user_data["address"],
                     city=user_data["city"],
-                    state=user_data["state"],
-                    user_id=new_user.id
+                    state=user_data["state"]
                 )
                 db.add(entity)
                 db.flush()

@@ -1,28 +1,27 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
-from db.base import Base
+from models.person import Person
 
-class Driver(Base):
+class Driver(Person):
     __tablename__ = "drivers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    firstname = Column(String(255), nullable=False)
-    lastname = Column(String(255), nullable=False)
-    phone = Column(String(255), nullable=True)
-    birth_date = Column(Date, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-    # Campos específicos de Driver según el UML
-    license_number = Column(String(50), unique=True)
-    license_type = Column(String(50))
-    license_expiry = Column(Date)
+    
+    id = Column(Integer, ForeignKey('persons.id'), primary_key=True)
+    
+    # Campos específicos del conductor
+    license_number = Column(String(50), unique=True, nullable=True)
+    license_type = Column(String(50), nullable=True)
+    license_expiry = Column(Date, nullable=True)
     status = Column(String(20), default="active")
-
-    # Relación con User (uno a uno)
-    user_id = Column(Integer, ForeignKey('users.id'), unique=True, nullable=True)
-    user = relationship("User", back_populates="driver")
+    
+    __mapper_args__ = {
+        'polymorphic_identity': 'driver'
+    }
 
     # Relaciones específicas de Driver
     trips = relationship("Trip", back_populates="driver")
+    
+    # MANTENER temporalmente para compatibilidad - será removido en FASE 6
+    # Relación legacy con User 
+    @property
+    def user_id_legacy(self):
+        return self.user_id if hasattr(self, 'user_id') else None

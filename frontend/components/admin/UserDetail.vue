@@ -38,10 +38,10 @@
       <!-- Cabecera con avatar y nombre -->
       <div class="flex flex-col sm:flex-row items-center sm:items-start mb-8">
         <div class="h-24 w-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-semibold text-white shadow-md">
-          {{ getInitials(user.firstname, user.lastname) }}
+          {{ getUserInitials(user) }}
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-6 text-center sm:text-left">
-          <h2 class="text-2xl font-bold text-gray-900">{{ user.firstname }} {{ user.lastname }}</h2>
+          <h2 class="text-2xl font-bold text-gray-900">{{ getUserName(user) }}</h2>
           <p class="text-gray-600">@{{ user.username }}</p>
           <div class="mt-2 flex flex-wrap justify-center sm:justify-start gap-2">
             <span :class="getRoleBadgeClass(user.role)" class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
@@ -104,9 +104,9 @@
               <p class="font-medium text-gray-900">{{ user.related_entity.entity_id }}</p>
             </div>
             
-            <div v-if="user.related_entity.phone" class="flex justify-between">
+            <div v-if="getUserPhone(user) || user.related_entity?.phone" class="flex justify-between">
               <p class="text-sm text-gray-500">Teléfono</p>
-              <p class="font-medium text-gray-900">{{ user.related_entity.phone }}</p>
+              <p class="font-medium text-gray-900">{{ getUserPhone(user) || user.related_entity?.phone }}</p>
             </div>
             
             <div v-if="user.related_entity.birth_date" class="flex justify-between">
@@ -197,6 +197,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
   user: {
@@ -215,11 +216,19 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'edit', 'delete', 'activate', 'deactivate', 'refresh'])
 
-// Funciones auxiliares
-const getInitials = (firstname, lastname) => {
-  const first = firstname ? firstname.charAt(0).toUpperCase() : ''
-  const last = lastname ? lastname.charAt(0).toUpperCase() : ''
-  return `${first}${last}`
+const { getEffectiveName, getInitials, getEffectivePhone } = usePersonData()
+
+// Funciones auxiliares para usuarios
+const getUserName = (user) => {
+  return getEffectiveName(user)
+}
+
+const getUserInitials = (user) => {
+  return getInitials(user)
+}
+
+const getUserPhone = (user) => {
+  return getEffectivePhone(user)
 }
 
 const formatDate = (dateString) => {

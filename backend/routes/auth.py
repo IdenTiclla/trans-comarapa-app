@@ -44,6 +44,10 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # 🆕 Usar propiedades de compatibilidad para obtener nombres efectivos
+    effective_firstname = user.effective_firstname or ""
+    effective_lastname = user.effective_lastname or ""
+
     # Crear token JWT con datos adicionales del usuario
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token_data = {
@@ -51,8 +55,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         "role": str(user.role.value) if hasattr(user.role, 'value') else str(user.role),
         "is_admin": user.is_admin,
         "is_active": user.is_active,
-        "firstname": user.firstname or "",
-        "lastname": user.lastname or ""
+        "firstname": effective_firstname,
+        "lastname": effective_lastname
     }
     access_token = create_access_token(
         data=token_data,
@@ -65,8 +69,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         "sub": user.email,
         "role": str(user.role.value) if hasattr(user.role, 'value') else str(user.role),
         "token_type": "refresh",
-        "firstname": user.firstname or "",
-        "lastname": user.lastname or ""
+        "firstname": effective_firstname,
+        "lastname": effective_lastname
     }
     refresh_token = create_access_token(
         data=refresh_token_data,
@@ -82,38 +86,47 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         "refresh_token_expires_in": 7 * 24 * 60 * 60,  # 7 días en segundos
         "role": user.role,
         "user_id": user.id,
-        "firstname": user.firstname or "",  # Usar datos del usuario directamente
-        "lastname": user.lastname or ""   # Usar datos del usuario directamente
+        "firstname": effective_firstname,  # ✅ Frontend sigue recibiendo esto
+        "lastname": effective_lastname    # ✅ Frontend sigue recibiendo esto
     }
+    
+    # 🆕 Incluir información de person si existe
+    if user.person:
+        response["person"] = {
+            "id": user.person.id,
+            "type": user.person.type,
+            "phone": user.person.phone,
+            "birth_date": user.person.birth_date.isoformat() if user.person.birth_date else None,
+            "avatar_url": user.person.avatar_url,
+            "bio": user.person.bio
+        }
 
-    # Obtener la entidad asociada al usuario según su rol
-    entity = None
+    # 🔧 MANTENER compatibilidad con lógica legacy hasta completar migración
+    # Esta lógica será removida en FASE 6 cuando todos los datos estén en Person
+    if not user.person:
+        # Solo buscar en modelos legacy si no hay Person asociado
+        entity = None
+        role_lower = user.role.lower() if isinstance(user.role, str) else str(user.role).lower()
 
-    # Normalizar el rol a minúsculas para comparación
-    role_lower = user.role.lower() if isinstance(user.role, str) else str(user.role).lower()
+        if role_lower == "secretary":
+            entity = db.query(SecretaryModel).filter(SecretaryModel.user_id == user.id).first()
+        elif role_lower == "driver":
+            from models.driver import Driver as DriverModel
+            entity = db.query(DriverModel).filter(DriverModel.user_id == user.id).first()
+        elif role_lower == "assistant":
+            from models.assistant import Assistant as AssistantModel
+            entity = db.query(AssistantModel).filter(AssistantModel.user_id == user.id).first()
+        elif role_lower == "admin":
+            from models.administrator import Administrator as AdminModel
+            entity = db.query(AdminModel).filter(AdminModel.user_id == user.id).first()
+        elif role_lower == "client":
+            from models.client import Client as ClientModel
+            entity = db.query(ClientModel).filter(ClientModel.user_id == user.id).first()
 
-    if role_lower == "secretary":
-        entity = db.query(SecretaryModel).filter(SecretaryModel.user_id == user.id).first()
-    elif role_lower == "driver":
-        from models.driver import Driver as DriverModel
-        entity = db.query(DriverModel).filter(DriverModel.user_id == user.id).first()
-    elif role_lower == "assistant":
-        from models.assistant import Assistant as AssistantModel
-        entity = db.query(AssistantModel).filter(AssistantModel.user_id == user.id).first()
-    elif role_lower == "admin":
-        from models.administrator import Administrator as AdminModel
-        entity = db.query(AdminModel).filter(AdminModel.user_id == user.id).first()
-    elif role_lower == "client":
-        from models.client import Client as ClientModel
-        entity = db.query(ClientModel).filter(ClientModel.user_id == user.id).first()
-
-    # Si encontramos la entidad y el usuario no tiene firstname o lastname, usar los de la entidad
-    if entity:
-        if not user.firstname and hasattr(entity, 'firstname'):
-            response["firstname"] = entity.firstname
-
-        if not user.lastname and hasattr(entity, 'lastname'):
-            response["lastname"] = entity.lastname
+        # Si encontramos entidad legacy, usar sus datos
+        if entity and hasattr(entity, 'firstname'):
+            response["firstname"] = entity.firstname or response["firstname"]
+            response["lastname"] = entity.lastname or response["lastname"]
 
     return response
 
@@ -151,6 +164,10 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
     Returns:
         Nuevo token JWT con información adicional según el rol del usuario
     """
+    # 🆕 Usar propiedades de compatibilidad para obtener nombres efectivos
+    effective_firstname = current_user.effective_firstname or ""
+    effective_lastname = current_user.effective_lastname or ""
+
     # Crear nuevo token JWT con datos adicionales del usuario
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token_data = {
@@ -158,8 +175,8 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
         "role": str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role),
         "is_admin": current_user.is_admin,
         "is_active": current_user.is_active,
-        "firstname": current_user.firstname or "",
-        "lastname": current_user.lastname or ""
+        "firstname": effective_firstname,
+        "lastname": effective_lastname
     }
     access_token = create_access_token(
         data=token_data,
@@ -172,8 +189,8 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
         "sub": current_user.email,
         "role": str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role),
         "token_type": "refresh",
-        "firstname": current_user.firstname or "",
-        "lastname": current_user.lastname or ""
+        "firstname": effective_firstname,
+        "lastname": effective_lastname
     }
     refresh_token = create_access_token(
         data=refresh_token_data,
@@ -189,38 +206,46 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
         "refresh_token_expires_in": 7 * 24 * 60 * 60,  # 7 días en segundos
         "role": current_user.role,
         "user_id": current_user.id,
-        "firstname": current_user.firstname or "",  # Usar datos del usuario directamente
-        "lastname": current_user.lastname or ""   # Usar datos del usuario directamente
+        "firstname": effective_firstname,  # ✅ Frontend sigue recibiendo esto
+        "lastname": effective_lastname    # ✅ Frontend sigue recibiendo esto
     }
+    
+    # 🆕 Incluir información de person si existe
+    if current_user.person:
+        response["person"] = {
+            "id": current_user.person.id,
+            "type": current_user.person.type,
+            "phone": current_user.person.phone,
+            "birth_date": current_user.person.birth_date.isoformat() if current_user.person.birth_date else None,
+            "avatar_url": current_user.person.avatar_url,
+            "bio": current_user.person.bio
+        }
 
-    # Obtener la entidad asociada al usuario según su rol
-    entity = None
+    # 🔧 MANTENER compatibilidad con lógica legacy hasta completar migración
+    if not current_user.person:
+        # Solo buscar en modelos legacy si no hay Person asociado
+        entity = None
+        role_lower = current_user.role.lower() if isinstance(current_user.role, str) else str(current_user.role).lower()
 
-    # Normalizar el rol a minúsculas para comparación
-    role_lower = current_user.role.lower() if isinstance(current_user.role, str) else str(current_user.role).lower()
+        if role_lower == "secretary":
+            entity = db.query(SecretaryModel).filter(SecretaryModel.user_id == current_user.id).first()
+        elif role_lower == "driver":
+            from models.driver import Driver as DriverModel
+            entity = db.query(DriverModel).filter(DriverModel.user_id == current_user.id).first()
+        elif role_lower == "assistant":
+            from models.assistant import Assistant as AssistantModel
+            entity = db.query(AssistantModel).filter(AssistantModel.user_id == current_user.id).first()
+        elif role_lower == "admin":
+            from models.administrator import Administrator as AdminModel
+            entity = db.query(AdminModel).filter(AdminModel.user_id == current_user.id).first()
+        elif role_lower == "client":
+            from models.client import Client as ClientModel
+            entity = db.query(ClientModel).filter(ClientModel.user_id == current_user.id).first()
 
-    if role_lower == "secretary":
-        entity = db.query(SecretaryModel).filter(SecretaryModel.user_id == current_user.id).first()
-    elif role_lower == "driver":
-        from models.driver import Driver as DriverModel
-        entity = db.query(DriverModel).filter(DriverModel.user_id == current_user.id).first()
-    elif role_lower == "assistant":
-        from models.assistant import Assistant as AssistantModel
-        entity = db.query(AssistantModel).filter(AssistantModel.user_id == current_user.id).first()
-    elif role_lower == "admin":
-        from models.administrator import Administrator as AdminModel
-        entity = db.query(AdminModel).filter(AdminModel.user_id == current_user.id).first()
-    elif role_lower == "client":
-        from models.client import Client as ClientModel
-        entity = db.query(ClientModel).filter(ClientModel.user_id == current_user.id).first()
-
-    # Si encontramos la entidad y el usuario no tiene firstname o lastname, usar los de la entidad
-    if entity:
-        if not current_user.firstname and hasattr(entity, 'firstname'):
-            response["firstname"] = entity.firstname
-
-        if not current_user.lastname and hasattr(entity, 'lastname'):
-            response["lastname"] = entity.lastname
+        # Si encontramos entidad legacy, usar sus datos
+        if entity and hasattr(entity, 'firstname'):
+            response["firstname"] = entity.firstname or response["firstname"]
+            response["lastname"] = entity.lastname or response["lastname"]
 
     return response
 
@@ -620,6 +645,12 @@ def verify_token(current_user: UserModel = Depends(get_current_user), db: Sessio
         "email": current_user.email,
         "role": str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role),
         "is_active": current_user.is_active,
-        "firstname": current_user.firstname or "",
-        "lastname": current_user.lastname or ""
+        "firstname": current_user.effective_firstname or "",  # 🆕 Usar propiedad de compatibilidad
+        "lastname": current_user.effective_lastname or "",    # 🆕 Usar propiedad de compatibilidad
+        "person": {
+            "id": current_user.person.id,
+            "type": current_user.person.type,
+            "phone": current_user.person.phone,
+            "avatar_url": current_user.person.avatar_url
+        } if current_user.person else None  # 🆕 Incluir datos de person si existe
     }

@@ -16,27 +16,34 @@ class UserRole(enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    username = Column(String(255), unique=True, nullable=False)
-    email = Column(String(255), unique=True, nullable=False)
-    role = Column(SQLAlchemyEnum(UserRole), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    role = Column(SQLAlchemyEnum(UserRole), nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
     is_admin = Column(Boolean, default=False, nullable=False)
+    
+    # 🔧 CAMPOS LEGACY - MANTENER por compatibilidad
+    firstname = Column(String(255), nullable=True)  # DEPRECADO pero mantenido
+    lastname = Column(String(255), nullable=True)   # DEPRECADO pero mantenido
+    
+    # Nuevos campos de seguridad
+    last_login = Column(DateTime, nullable=True)
+    failed_login_attempts = Column(Integer, default=0)
+    
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Campos de persona directamente en el usuario
-    firstname = Column(String(255), nullable=True)
-    lastname = Column(String(255), nullable=True)
-
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-    # Relaciones uno a uno con los diferentes tipos de personas
-    secretary = relationship("Secretary", uselist=False, back_populates="user")
-    driver = relationship("Driver", uselist=False, back_populates="user")
-    assistant = relationship("Assistant", uselist=False, back_populates="user")
-    administrator = relationship("Administrator", uselist=False, back_populates="user")
-    client = relationship("Client", uselist=False, back_populates="user")
+    # 🆕 NUEVA relación con Person
+    person = relationship("Person", uselist=False, back_populates="user", cascade="all, delete-orphan")
+    
+    # Relaciones legacy (MANTENER temporalmente) - Agregamos overlaps para evitar warnings
+    secretary = relationship("Secretary", uselist=False, back_populates="user", overlaps="person")
+    driver = relationship("Driver", uselist=False, back_populates="user", overlaps="person")
+    assistant = relationship("Assistant", uselist=False, back_populates="user", overlaps="person")
+    administrator = relationship("Administrator", uselist=False, back_populates="user", overlaps="person")
+    client = relationship("Client", uselist=False, back_populates="user", overlaps="person")
 
     # Definir el contexto de contraseña una sola vez para evitar problemas con bcrypt
     _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -59,3 +66,21 @@ class User(Base):
 
     def set_password(self, password):
         self.hashed_password = self.get_password_hash(password)
+
+    # 🔧 PROPIEDADES DE COMPATIBILIDAD
+    @property
+    def effective_firstname(self):
+        """Obtener firstname desde person o fallback a campo legacy"""
+        return (self.person.firstname if self.person else None) or self.firstname
+
+    @property
+    def effective_lastname(self):
+        """Obtener lastname desde person o fallback a campo legacy"""
+        return (self.person.lastname if self.person else None) or self.lastname
+
+    @property
+    def full_name(self):
+        """Nombre completo con fallback"""
+        first = self.effective_firstname or ''
+        last = self.effective_lastname or ''
+        return f"{first} {last}".strip() or self.username
