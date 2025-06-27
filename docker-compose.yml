@@ -25,6 +25,23 @@ services:
       - trans-comarapa-network
     command: --default-authentication-plugin=mysql_native_password
 
+  # Redis para blacklist de tokens
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trans-comarapa-network
+
   # Backend API (FastAPI)
   backend:
     build:
@@ -43,8 +60,11 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
       - DEBUG=${DEBUG:-true}
       - TZ=America/La_Paz
+      - REDIS_URL=redis://redis:6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - trans-comarapa-network
@@ -75,4 +95,6 @@ networks:
 
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
     driver: local 

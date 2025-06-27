@@ -9,13 +9,16 @@ from models.user import User
 from schemas.auth import TokenData
 from auth.blacklist import token_blacklist
 import os
+import uuid
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
 load_dotenv()
 
 # Configuración de JWT
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")  # Debe ser reemplazado por una clave segura en producción
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required and must not be empty")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
@@ -41,7 +44,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    
+    # Agregar JTI (JWT ID) único para poder revocar tokens específicos
+    to_encode.update({
+        "exp": expire,
+        "jti": str(uuid.uuid4())  # Identificador único del token
+    })
+    
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -56,20 +65,24 @@ def verify_token(token: str, credentials_exception):
     Returns:
         Datos del token
     """
-    # Verificar si el token está en la lista negra
-    if token_blacklist.is_token_blacklisted(token):
-        raise credentials_exception
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        jti: str = payload.get("jti")
+        
+        if email is None or jti is None:
             raise credentials_exception
+        
+        # Verificar si el token está en la lista negra usando JTI
+        if token_blacklist.is_token_blacklisted(jti):
+            raise credentials_exception
+        
         role: str = payload.get("role")
         is_admin: bool = payload.get("is_admin", False)
         is_active: bool = payload.get("is_active", True)
         firstname: str = payload.get("firstname", "")
         lastname: str = payload.get("lastname", "")
+        
         token_data = TokenData(
             email=email,
             role=role,
@@ -78,6 +91,8 @@ def verify_token(token: str, credentials_exception):
             firstname=firstname,
             lastname=lastname
         )
+        # Agregar JTI a los datos del token para uso posterior
+        token_data.jti = jti
         return token_data
     except JWTError:
         raise credentials_exception
@@ -113,16 +128,16 @@ async def get_token(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)):
+def get_current_user_with_token_data(token: str = Depends(get_token), db: Session = Depends(get_db)):
     """
-    Obtiene el usuario actual a partir del token JWT.
+    Obtiene el usuario actual y los datos del token JWT.
 
     Args:
         token: Token JWT
         db: Sesión de base de datos
 
     Returns:
-        Usuario actual
+        Tuple con (usuario, token_data)
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,6 +150,20 @@ def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_
         raise credentials_exception
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return user, token_data
+
+def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)):
+    """
+    Obtiene el usuario actual a partir del token JWT.
+
+    Args:
+        token: Token JWT
+        db: Sesión de base de datos
+
+    Returns:
+        Usuario actual
+    """
+    user, _ = get_current_user_with_token_data(token, db)
     return user
 
 def get_current_active_user(current_user: User = Depends(get_current_user)):

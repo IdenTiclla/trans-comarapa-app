@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from db.session import get_db
-from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token
+from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data
 from auth.blacklist import token_blacklist
 from auth.utils import authenticate_user, create_user
 from schemas.auth import TokenWithRoleInfo
@@ -131,23 +131,25 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     return response
 
 @router.post("/logout")
-def logout(token: str = Depends(get_token)):
+def logout(user_data: tuple = Depends(get_current_user_with_token_data)):
     """
     Endpoint para cerrar la sesión del usuario.
 
-    Agrega el token actual a la lista negra para invalidarlo.
+    Agrega el JTI del token actual a la lista negra para invalidarlo.
 
     Args:
-        token: Token JWT actual
+        user_data: Tupla con (usuario, token_data) que incluye el JTI
 
     Returns:
         Mensaje de confirmación
     """
-    # Agregar el token a la lista negra
-    # El token expirará en la lista negra después de su tiempo de expiración original
-    # o después de 24 horas, lo que ocurra primero
-    token_blacklist.add_token_to_blacklist(token)
-
+    current_user, token_data = user_data
+    
+    # Agregar el JTI del token a la lista negra para invalidarlo
+    if token_data.jti:
+        token_blacklist.add_token_to_blacklist(token_data.jti)
+        logger.info(f"User {current_user.email} logged out, token JTI {token_data.jti} blacklisted")
+    
     return {"message": "Logout successful"}
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
