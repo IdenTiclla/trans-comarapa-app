@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status, Request, Cookie
 from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from db.session import get_db
@@ -23,7 +23,7 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # Configuración de OAuth2
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 # Configuración de HTTPBearer
 http_bearer = HTTPBearer(auto_error=False)
@@ -99,29 +99,37 @@ def verify_token(token: str, credentials_exception):
 
 # Función para extraer el token de cualquiera de los esquemas de autenticación
 async def get_token(
+    request: Request,
     oauth2_token: str = Depends(oauth2_scheme),
-    http_auth: HTTPAuthorizationCredentials = Depends(http_bearer)
+    http_auth: HTTPAuthorizationCredentials = Depends(http_bearer),
+    access_token: Optional[str] = Cookie(None)
 ) -> str:
     """
     Obtiene el token JWT de cualquiera de los esquemas de autenticación disponibles.
-    Prioriza el token de OAuth2 si está disponible.
+    Prioriza las cookies httpOnly, luego OAuth2, luego HTTPBearer para mantener compatibilidad.
 
     Args:
-        oauth2_token: Token de OAuth2
-        http_auth: Credenciales de HTTPBearer
+        request: Request object para acceso a cookies
+        oauth2_token: Token de OAuth2 (header Authorization)
+        http_auth: Credenciales de HTTPBearer (header Authorization)
+        access_token: Token desde cookie httpOnly
 
     Returns:
         Token JWT
     """
-    # Si hay un token OAuth2, úsalo
+    # PRIORIDAD 1: Cookie httpOnly (nuevo método seguro)
+    if access_token:
+        return access_token
+    
+    # PRIORIDAD 2: OAuth2 (método actual para compatibilidad)
     if oauth2_token:
         return oauth2_token
 
-    # Si hay credenciales de HTTPBearer, usa el token
+    # PRIORIDAD 3: HTTPBearer (método actual para compatibilidad)
     if http_auth:
         return http_auth.credentials
 
-    # Si no hay token, lanza una excepción
+    # Si no hay token en ningún lugar, lanza una excepción
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",

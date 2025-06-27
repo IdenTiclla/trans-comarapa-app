@@ -177,22 +177,24 @@ const isFormValid = computed(() => {
 
 // Funciones de validación
 const validateEmail = () => {
-  if (!email.value) {
-    emailError.value = 'El email es requerido'
-  } else if (!emailRegex.test(email.value)) {
-    emailError.value = 'Por favor ingresa un email válido'
-  } else {
-    emailError.value = ''
+  // Solo validar si el usuario ha empezado a escribir algo
+  if (email.value.length > 0) {
+    if (!emailRegex.test(email.value)) {
+      emailError.value = 'Por favor ingresa un email válido'
+    } else {
+      emailError.value = ''
+    }
   }
 }
 
 const validatePassword = () => {
-  if (!password.value) {
-    passwordError.value = 'La contraseña es requerida'
-  } else if (password.value.length < 6) {
-    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
-  } else {
-    passwordError.value = ''
+  // Solo validar si el usuario ha empezado a escribir algo
+  if (password.value.length > 0) {
+    if (password.value.length < 6) {
+      passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+    } else {
+      passwordError.value = ''
+    }
   }
 }
 
@@ -201,18 +203,41 @@ const clearEmailError = () => {
   if (emailError.value) {
     emailError.value = ''
   }
+  // También limpiar errores del servidor cuando el usuario empiece a escribir
+  if (authStore.error) {
+    authStore.clearError()
+  }
 }
 
 const clearPasswordError = () => {
   if (passwordError.value) {
     passwordError.value = ''
   }
+  // También limpiar errores del servidor cuando el usuario empiece a escribir  
+  if (authStore.error) {
+    authStore.clearError()
+  }
 }
 
 // Validar todo el formulario
 const validateForm = () => {
-  validateEmail()
-  validatePassword()
+  // Validación completa al enviar el formulario
+  if (!email.value) {
+    emailError.value = 'El email es requerido'
+  } else if (!emailRegex.test(email.value)) {
+    emailError.value = 'Por favor ingresa un email válido'
+  } else {
+    emailError.value = ''
+  }
+
+  if (!password.value) {
+    passwordError.value = 'La contraseña es requerida'
+  } else if (password.value.length < 6) {
+    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+  } else {
+    passwordError.value = ''
+  }
+
   return !emailError.value && !passwordError.value
 }
 
@@ -261,6 +286,8 @@ const handleLogin = async () => {
     redirectToDashboard(response.role)
   } catch (error) {
     console.error('Error en el inicio de sesión:', error)
+    // El error ya se maneja en el store, no necesitamos hacer nada más aquí
+    // El componente mostrará automáticamente el error a través de authStore.error
   }
 }
 

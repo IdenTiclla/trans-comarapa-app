@@ -9,7 +9,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       // authStore.init() is likely already called by the auth-init plugin,
       // but calling it here ensures state is loaded before check if plugin hasn't run yet for some reason.
       // It should be idempotent.
-      if (!authStore.token) { // Check token directly or after init if init isn't guaranteed
+      // 🔒 FASE 2: Ya no verificamos token, solo si hay datos de usuario
+      if (!authStore.user) { // Check user data instead of token
         authStore.init();
       }
 

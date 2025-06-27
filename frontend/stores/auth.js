@@ -14,12 +14,14 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     token: null,
-    isLoading: false,
+    loading: false,
     error: null
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token && !!state.user,
+    // 🔒 FASE 2: La autenticación se basa en la existencia de datos de usuario
+    // ya que los tokens están en cookies httpOnly
+    isAuthenticated: (state) => !!state.user,
     userRole: (state) => state.user?.role || null,
     
     // ✅ MANTENER getters existentes para compatibilidad
@@ -57,8 +59,10 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     // Inicializar el store con los datos del localStorage
+    // 🔒 FASE 2: La autenticación se basa en cookies httpOnly
     init() {
-      this.token = authService.getToken()
+      // Ya no obtenemos token del localStorage, se maneja vía cookies
+      this.token = null
       const userData = authService.getUserData()
       this.user = userData ? createPlainObject(userData) : null
       
@@ -75,12 +79,13 @@ export const useAuthStore = defineStore('auth', {
 
     // Iniciar sesión
     async login(email, password) {
-      this.isLoading = true
+      this.loading = true
       this.error = null
 
       try {
         const data = await authService.login(email, password)
-        this.token = data.access_token
+        // 🔒 FASE 2: No guardamos token en el store, se maneja vía cookies
+        this.token = null
 
         // Construir objeto usuario compatible con todas las estructuras
         this.user = createPlainObject({
@@ -102,27 +107,41 @@ export const useAuthStore = defineStore('auth', {
 
         return data
       } catch (error) {
-        this.error = error.message
+        this.error = error.message || 'Error en el inicio de sesión'
         throw error
       } finally {
-        this.isLoading = false
+        this.loading = false
       }
     },
 
     // Cerrar sesión
-    logout() {
-      authService.logout()
+    // 🔒 FASE 2: logout ahora es async para notificar al servidor
+    async logout(skipServerLogout = false) {
+      await authService.logout(skipServerLogout)
       this.token = null
       this.user = null
     },
 
     // Refrescar el token
+    // 🔒 FASE 2: Los tokens se manejan vía cookies httpOnly
     async refreshToken() {
-      this.isLoading = true
+      this.loading = true
 
       try {
         const data = await authService.refreshToken()
-        this.token = data.access_token
+        // No guardamos token en el store, se maneja vía cookies
+        this.token = null
+        
+        // Actualizar datos del usuario si han cambiado
+        if (data.user_id) {
+          this.user = createPlainObject({
+            ...this.user,
+            firstname: data.firstname || this.user?.firstname,
+            lastname: data.lastname || this.user?.lastname,
+            person: data.person || this.user?.person
+          })
+        }
+        
         return data
       } catch (error) {
         this.error = error.message
@@ -130,7 +149,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         throw error
       } finally {
-        this.isLoading = false
+        this.loading = false
       }
     },
     
@@ -153,6 +172,11 @@ export const useAuthStore = defineStore('auth', {
         console.error('Error actualizando datos de persona:', error)
         throw error
       }
+    },
+
+    // Limpiar errores
+    clearError() {
+      this.error = null
     }
   }
 })

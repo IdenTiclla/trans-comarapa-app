@@ -1,8 +1,9 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from db.session import get_db
+import os
 from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data
 from auth.blacklist import token_blacklist
 from auth.utils import authenticate_user, create_user
@@ -23,7 +24,7 @@ router = APIRouter(
 )
 
 @router.post("/login", response_model=TokenWithRoleInfo)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Endpoint para autenticar a un usuario y obtener un token JWT.
     Si el usuario está asociado a un rol específico (Secretary, Driver, Assistant),
@@ -78,7 +79,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     )
 
     # Inicializar respuesta con token y datos básicos
-    response = {
+    response_data = {
         "access_token": access_token,
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convertir minutos a segundos
@@ -92,7 +93,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     
     # 🆕 Incluir información de person si existe
     if user.person:
-        response["person"] = {
+        response_data["person"] = {
             "id": user.person.id,
             "type": user.person.type,
             "phone": user.person.phone,
@@ -125,13 +126,41 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
         # Si encontramos entidad legacy, usar sus datos
         if entity and hasattr(entity, 'firstname'):
-            response["firstname"] = entity.firstname or response["firstname"]
-            response["lastname"] = entity.lastname or response["lastname"]
+            response_data["firstname"] = entity.firstname or response_data["firstname"]
+            response_data["lastname"] = entity.lastname or response_data["lastname"]
 
-    return response
+    # 🔒 FASE 2: Establecer cookies httpOnly para almacenamiento seguro de tokens
+    # Configurar cookies con las mejores prácticas de seguridad
+    is_production = os.getenv("DEBUG", "true").lower() != "true"
+    cookie_settings = {
+        "httponly": True,  # Previene acceso desde JavaScript (protección XSS)
+        "secure": is_production,    # Solo HTTPS en producción, HTTP en desarrollo
+        "samesite": "strict"  # Protección CSRF
+    }
+    
+    # Cookie para access token (corta duración)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convertir minutos a segundos
+        **cookie_settings
+    )
+    
+    # Cookie para refresh token (larga duración)
+    response.set_cookie(
+        key="refresh_token", 
+        value=refresh_token,
+        max_age=7 * 24 * 60 * 60,  # 7 días en segundos
+        path="/api/v1/auth/refresh",  # Restricción de path para refresh
+        **cookie_settings
+    )
+    
+    logger.info(f"Cookies httpOnly establecidas para usuario {user.email}")
+
+    return response_data
 
 @router.post("/logout")
-def logout(user_data: tuple = Depends(get_current_user_with_token_data)):
+def logout(response: Response, user_data: tuple = Depends(get_current_user_with_token_data)):
     """
     Endpoint para cerrar la sesión del usuario.
 
@@ -150,10 +179,17 @@ def logout(user_data: tuple = Depends(get_current_user_with_token_data)):
         token_blacklist.add_token_to_blacklist(token_data.jti)
         logger.info(f"User {current_user.email} logged out, token JTI {token_data.jti} blacklisted")
     
+    # 🔒 FASE 2: Limpiar cookies httpOnly al hacer logout
+    is_production = os.getenv("DEBUG", "true").lower() != "true"
+    response.delete_cookie(key="access_token", httponly=True, secure=is_production, samesite="strict")
+    response.delete_cookie(key="refresh_token", path="/api/v1/auth/refresh", httponly=True, secure=is_production, samesite="strict")
+    
+    logger.info(f"Cookies httpOnly limpiadas para usuario {current_user.email}")
+    
     return {"message": "Logout successful"}
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
-def refresh_token(current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+def refresh_token(response: Response, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Endpoint para refrescar el token JWT.
     Si el usuario está asociado a un rol específico (Secretary, Driver, Assistant),
@@ -200,7 +236,7 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
     )
 
     # Inicializar respuesta con token y datos básicos
-    response = {
+    response_data = {
         "access_token": access_token,
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convertir minutos a segundos
@@ -214,7 +250,7 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
     
     # 🆕 Incluir información de person si existe
     if current_user.person:
-        response["person"] = {
+        response_data["person"] = {
             "id": current_user.person.id,
             "type": current_user.person.type,
             "phone": current_user.person.phone,
@@ -246,10 +282,36 @@ def refresh_token(current_user: UserModel = Depends(get_current_user), db: Sessi
 
         # Si encontramos entidad legacy, usar sus datos
         if entity and hasattr(entity, 'firstname'):
-            response["firstname"] = entity.firstname or response["firstname"]
-            response["lastname"] = entity.lastname or response["lastname"]
+            response_data["firstname"] = entity.firstname or response_data["firstname"]
+            response_data["lastname"] = entity.lastname or response_data["lastname"]
 
-    return response
+    # 🔒 FASE 2: Establecer cookies httpOnly para tokens refrescados
+    is_production = os.getenv("DEBUG", "true").lower() != "true"
+    cookie_settings = {
+        "httponly": True,
+        "secure": is_production,
+        "samesite": "strict"
+    }
+    
+    # Establecer nuevas cookies con los tokens refrescados
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        **cookie_settings
+    )
+    
+    response.set_cookie(
+        key="refresh_token", 
+        value=refresh_token,
+        max_age=7 * 24 * 60 * 60,
+        path="/api/v1/auth/refresh",
+        **cookie_settings
+    )
+    
+    logger.info(f"Cookies httpOnly actualizadas para usuario {current_user.email}")
+
+    return response_data
 
 @router.post("/register", response_model=User)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
