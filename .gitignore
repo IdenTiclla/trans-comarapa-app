@@ -9,3 +9,10 @@ node_modules
 dist
 
 .DS_Store
+
+# Temporary test files
+cookies.txt
+cookies_after_logout.txt
+
+# Documentation drafts
+docs/auth_consolidated_plan.md

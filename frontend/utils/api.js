@@ -1,6 +1,6 @@
 import { $fetch } from 'ofetch'
 import { useRuntimeConfig } from '#app' // Nuxt 3 auto-import
-import { useAuthStore } from '~/stores/auth' // Assuming auth store is the source of truth for the token after init
+import { useAuthStore } from '~/stores/auth'
 
 // The helper functions getApiBaseUrl, getAuthToken, and handleApiError previously here are removed.
 // All API call logic should now go through the apiFetch instance below.
@@ -8,25 +8,14 @@ import { useAuthStore } from '~/stores/auth' // Assuming auth store is the sourc
 export const apiFetch = $fetch.create({
   onRequest({ options }) {
     const config = useRuntimeConfig()
-    const authStore = useAuthStore()
 
     options.baseURL = config.public.apiBaseUrl
     
-    // 🔒 FASE 2: Configurar para usar cookies httpOnly
-    // Incluir cookies en todas las peticiones para autenticación
+    // 🔒 FASE 3: Solo cookies httpOnly - eliminado soporte para Authorization headers
+    // Incluir cookies httpOnly en todas las peticiones para autenticación
     options.credentials = 'include'
-
-    // MANTENER compatibilidad: Si hay token en store/localStorage, aún enviarlo
-    // Esto permite transición gradual y compatibilidad con ambos métodos
-    const token = authStore.token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
-
-    if (token) {
-      options.headers = {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      }
-    }
-    // console.log('[apiFetch] onRequest:', options.method, options.baseURL, options.url, options.headers)
+    
+    // console.log('[apiFetch] onRequest:', options.method, options.baseURL, options.url)
   },
   async onResponseError({ response, options, error }) {
     // console.error('[apiFetch] onResponseError:', response.status, response._data, error)
@@ -77,12 +66,9 @@ export const apiFetch = $fetch.create({
           console.log('Attempting to refresh token...');
           await authStore.refreshToken();
           console.log('Token refreshed, retrying original request to:', options.url);
-          // Retry the original request. The new token is in the store and will be picked up by onRequest.
-          // Create a new options object for the retry, ensuring original method, body, etc., are preserved.
-          const retryOptions = { ...options, headers: { ...options.headers }, _retryCount: (options._retryCount || 0) + 1 }; // Clone headers and add retry count
-          // Remove the original Authorization header if it was set, onRequest will re-add it with the new token.
-          delete retryOptions.headers.Authorization; 
-          return apiFetch(options.url, retryOptions); // Use options.url directly as baseURL is handled by apiFetch
+          // Retry the original request with new cookies
+          const retryOptions = { ...options, _retryCount: (options._retryCount || 0) + 1 };
+          return apiFetch(options.url, retryOptions);
         } else {
           console.warn('No refresh token function available. Logging out.');
           authStore.logout(true); // Skip server logout to avoid additional 401 errors

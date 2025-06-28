@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import authService from '~/services/authService'
 import personService from '~/services/personService'
+import profileService from '~/services/profileService'
 import { usePersonData } from '~/composables/usePersonData'
 
 // Función auxiliar para crear objetos planos
@@ -13,7 +14,6 @@ const createPlainObject = (obj) => {
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
-    token: null,
     loading: false,
     error: null
   }),
@@ -58,11 +58,9 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // Inicializar el store con los datos del localStorage
-    // 🔒 FASE 2: La autenticación se basa en cookies httpOnly
+    // Inicializar el store con los datos del localStorage  
+    // 🔒 FASE 3: La autenticación se basa completamente en cookies httpOnly
     init() {
-      // Ya no obtenemos token del localStorage, se maneja vía cookies
-      this.token = null
       const userData = authService.getUserData()
       this.user = userData ? createPlainObject(userData) : null
       
@@ -84,8 +82,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const data = await authService.login(email, password)
-        // 🔒 FASE 2: No guardamos token en el store, se maneja vía cookies
-        this.token = null
+        // 🔒 FASE 3: Los tokens se manejan completamente vía cookies httpOnly
 
         // Construir objeto usuario compatible con todas las estructuras
         this.user = createPlainObject({
@@ -115,22 +112,19 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Cerrar sesión
-    // 🔒 FASE 2: logout ahora es async para notificar al servidor
+    // 🔒 FASE 3: logout notifica al servidor para limpiar cookies httpOnly
     async logout(skipServerLogout = false) {
       await authService.logout(skipServerLogout)
-      this.token = null
       this.user = null
     },
 
     // Refrescar el token
-    // 🔒 FASE 2: Los tokens se manejan vía cookies httpOnly
+    // 🔒 FASE 3: Los tokens se manejan completamente vía cookies httpOnly
     async refreshToken() {
       this.loading = true
 
       try {
         const data = await authService.refreshToken()
-        // No guardamos token en el store, se maneja vía cookies
-        this.token = null
         
         // Actualizar datos del usuario si han cambiado
         if (data.user_id) {
@@ -145,7 +139,6 @@ export const useAuthStore = defineStore('auth', {
         return data
       } catch (error) {
         this.error = error.message
-        this.token = null
         this.user = null
         throw error
       } finally {
@@ -171,6 +164,85 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Error actualizando datos de persona:', error)
         throw error
+      }
+    },
+
+    // 🔒 FASE 3: Cargar perfil unificado desde el nuevo endpoint
+    async loadUnifiedProfile() {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const profileData = await profileService.getProfile()
+        
+        // Actualizar datos del usuario con el perfil unificado
+        this.user = createPlainObject({
+          id: profileData.id,
+          username: profileData.username,
+          email: profileData.email,
+          role: profileData.role,
+          is_active: profileData.is_active,
+          is_admin: profileData.is_admin,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at,
+          
+          // Campos de compatibilidad
+          firstname: profileData.firstname,
+          lastname: profileData.lastname,
+          phone: profileData.phone,
+          birth_date: profileData.birth_date,
+          
+          // Datos completos de persona
+          person: profileData.person
+        })
+        
+        // Actualizar localStorage para persistencia
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user_data', JSON.stringify(this.user))
+        }
+        
+        return profileData
+      } catch (error) {
+        this.error = error.message || 'Error al cargar el perfil'
+        console.error('Error cargando perfil unificado:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // 🔒 FASE 3: Actualizar perfil unificado
+    async updateUnifiedProfile(profileData) {
+      this.loading = true
+      this.error = null
+      
+      try {
+        const updatedProfile = await profileService.updateProfile(profileData)
+        
+        // Actualizar el store con los datos actualizados
+        this.user = createPlainObject({
+          ...this.user,
+          email: updatedProfile.email,
+          firstname: updatedProfile.firstname,
+          lastname: updatedProfile.lastname,
+          phone: updatedProfile.phone,
+          birth_date: updatedProfile.birth_date,
+          person: updatedProfile.person,
+          updated_at: updatedProfile.updated_at
+        })
+        
+        // Actualizar localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user_data', JSON.stringify(this.user))
+        }
+        
+        return updatedProfile
+      } catch (error) {
+        this.error = error.message || 'Error al actualizar el perfil'
+        console.error('Error actualizando perfil unificado:', error)
+        throw error
+      } finally {
+        this.loading = false
       }
     },
 

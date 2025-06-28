@@ -1,12 +1,15 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from db.session import get_db
 import os
 from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data
 from auth.blacklist import token_blacklist
 from auth.utils import authenticate_user, create_user
+from auth.brute_force import brute_force_protection
 from schemas.auth import TokenWithRoleInfo
 from schemas.user import User, UserCreate
 from schemas.secretary import Secretary as SecretarySchema
@@ -17,6 +20,9 @@ import logging
 # Configurar logging
 logger = logging.getLogger(__name__)
 
+# Rate limiter configuration
+limiter = Limiter(key_func=get_remote_address)
+
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -24,26 +30,60 @@ router = APIRouter(
 )
 
 @router.post("/login", response_model=TokenWithRoleInfo)
-def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_for_access_token(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Endpoint para autenticar a un usuario y obtener un token JWT.
     Si el usuario está asociado a un rol específico (Secretary, Driver, Assistant),
     se incluye información adicional en la respuesta.
 
     Args:
+        request: Request object para obtener IP del cliente
+        response: Response object para establecer cookies
         form_data: Formulario con email y contraseña
         db: Sesión de base de datos
 
     Returns:
         Token JWT con información adicional según el rol del usuario
     """
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
+    # Obtener IP del cliente
+    client_ip = get_remote_address(request)
+    username = form_data.username
+    
+    # Verificar si está bloqueado por intentos fallidos
+    is_locked, lockout_reason = brute_force_protection.is_locked_out(client_ip, username)
+    if is_locked:
+        logger.warning(f"Login attempt blocked for {username} from {client_ip}: {lockout_reason}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Demasiados intentos fallidos. {lockout_reason}",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        # Registrar intento fallido
+        attempt_info = brute_force_protection.record_failed_attempt(client_ip, username)
+        logger.warning(f"Failed login attempt for {username} from {client_ip}. Attempts: IP={attempt_info['ip_attempts']}, User={attempt_info['user_attempts']}")
+        
+        # Preparar mensaje de error informativo
+        error_detail = "Incorrect email or password"
+        remaining = brute_force_protection.get_remaining_attempts(client_ip, username)
+        
+        if attempt_info['ip_locked'] or attempt_info['user_locked']:
+            error_detail = f"Demasiados intentos fallidos. Cuenta bloqueada por {attempt_info['lockout_duration_minutes']} minutos."
+        elif remaining['user_attempts_remaining'] <= 2:
+            error_detail = f"Credenciales incorrectas. Te quedan {remaining['user_attempts_remaining']} intentos antes del bloqueo."
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_detail,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Login exitoso - limpiar intentos fallidos
+    brute_force_protection.clear_failed_attempts(client_ip, username)
+    logger.info(f"Successful login for {username} from {client_ip}")
 
     # 🆕 Usar propiedades de compatibilidad para obtener nombres efectivos
     effective_firstname = user.effective_firstname or ""
@@ -189,7 +229,8 @@ def logout(response: Response, user_data: tuple = Depends(get_current_user_with_
     return {"message": "Logout successful"}
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
-def refresh_token(response: Response, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def refresh_token(request: Request, response: Response, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Endpoint para refrescar el token JWT.
     Si el usuario está asociado a un rol específico (Secretary, Driver, Assistant),
@@ -314,7 +355,8 @@ def refresh_token(response: Response, current_user: UserModel = Depends(get_curr
     return response_data
 
 @router.post("/register", response_model=User)
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def register_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     """
     Endpoint para registrar un nuevo usuario.
 

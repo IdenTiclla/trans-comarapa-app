@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status, Request, Cookie
-from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Cookie
 from sqlalchemy.orm import Session
 from db.session import get_db
 from models.user import User
@@ -22,11 +21,7 @@ if not SECRET_KEY:
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
-# Configuración de OAuth2
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
-
-# Configuración de HTTPBearer
-http_bearer = HTTPBearer(auto_error=False)
+# 🔒 FASE 3: Eliminadas configuraciones OAuth2 y HTTPBearer - solo cookies httpOnly
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -97,43 +92,31 @@ def verify_token(token: str, credentials_exception):
     except JWTError:
         raise credentials_exception
 
-# Función para extraer el token de cualquiera de los esquemas de autenticación
+# 🔒 FASE 3: Función simplificada para obtener token solo desde cookies httpOnly
 async def get_token(
-    request: Request,
-    oauth2_token: str = Depends(oauth2_scheme),
-    http_auth: HTTPAuthorizationCredentials = Depends(http_bearer),
     access_token: Optional[str] = Cookie(None)
 ) -> str:
     """
-    Obtiene el token JWT de cualquiera de los esquemas de autenticación disponibles.
-    Prioriza las cookies httpOnly, luego OAuth2, luego HTTPBearer para mantener compatibilidad.
+    Obtiene el token JWT desde cookies httpOnly únicamente.
+    Se eliminó el soporte para Authorization: Bearer headers para mayor seguridad.
 
     Args:
-        request: Request object para acceso a cookies
-        oauth2_token: Token de OAuth2 (header Authorization)
-        http_auth: Credenciales de HTTPBearer (header Authorization)
         access_token: Token desde cookie httpOnly
 
     Returns:
         Token JWT
+
+    Raises:
+        HTTPException: Si no se encuentra el token
     """
-    # PRIORIDAD 1: Cookie httpOnly (nuevo método seguro)
     if access_token:
         return access_token
-    
-    # PRIORIDAD 2: OAuth2 (método actual para compatibilidad)
-    if oauth2_token:
-        return oauth2_token
 
-    # PRIORIDAD 3: HTTPBearer (método actual para compatibilidad)
-    if http_auth:
-        return http_auth.credentials
-
-    # Si no hay token en ningún lugar, lanza una excepción
+    # Si no hay token en cookies httpOnly, lanza una excepción
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authenticated",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail="Not authenticated - cookie required",
+        headers={"WWW-Authenticate": "Cookie"},
     )
 
 def get_current_user_with_token_data(token: str = Depends(get_token), db: Session = Depends(get_db)):
