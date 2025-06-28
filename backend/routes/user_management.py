@@ -6,9 +6,14 @@ from sqlalchemy import or_
 from db.session import get_db
 from models.user import User, UserRole
 from models.secretary import Secretary
+from models.administrator import Administrator
+from models.driver import Driver
+from models.assistant import Assistant
+from models.client import Client
 from schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
 from schemas.role import RoleList
-from auth.jwt import get_current_admin_user as get_current_active_admin
+from schemas.profile import UnifiedProfileResponse, ProfileUpdateRequest
+from auth.jwt import get_current_admin_user as get_current_active_admin, get_current_user
 
 router = APIRouter()
 
@@ -305,3 +310,193 @@ def get_roles(
     # Obtener los roles directamente del enum UserRole
     roles = [role.value for role in UserRole]
     return {"roles": roles}
+
+# ==== FASE 3: ENDPOINTS UNIFICADOS DE PERFIL ====
+
+@router.get("/users/me/profile", response_model=UnifiedProfileResponse)
+def get_my_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtiene el perfil completo del usuario autenticado.
+    Combina datos de User y Person en una respuesta unificada.
+    
+    Reemplaza los endpoints antiguos:
+    - /users/me/person
+    - /users/me/secretary  
+    - /users/me/driver
+    - /users/me/assistant
+    - /users/me/client
+    """
+    # Buscar la entidad Person asociada según el rol
+    person_data = None
+    person_entity = None
+    
+    if current_user.role == UserRole.ADMIN:
+        person_entity = db.query(Administrator).filter(Administrator.user_id == current_user.id).first()
+    elif current_user.role == UserRole.SECRETARY:
+        person_entity = db.query(Secretary).filter(Secretary.user_id == current_user.id).first()
+    elif current_user.role == UserRole.DRIVER:
+        person_entity = db.query(Driver).filter(Driver.user_id == current_user.id).first()
+    elif current_user.role == UserRole.ASSISTANT:
+        person_entity = db.query(Assistant).filter(Assistant.user_id == current_user.id).first()
+    elif current_user.role == UserRole.CLIENT:
+        person_entity = db.query(Client).filter(Client.user_id == current_user.id).first()
+    
+    if person_entity:
+        # Convertir la entidad person a diccionario incluyendo campos específicos del rol
+        person_data = {
+            "id": person_entity.id,
+            "firstname": person_entity.firstname,
+            "lastname": person_entity.lastname,
+            "phone": person_entity.phone,
+            "birth_date": person_entity.birth_date,
+            "bio": getattr(person_entity, 'bio', None),
+            "type": current_user.role.value.lower(),
+            "created_at": person_entity.created_at,
+            "updated_at": person_entity.updated_at
+        }
+        
+        # Agregar campos específicos según el rol
+        if current_user.role == UserRole.DRIVER:
+            person_data.update({
+                "license_number": person_entity.license_number,
+                "license_type": person_entity.license_type,
+                "license_expiry": person_entity.license_expiry,
+                "status": person_entity.status
+            })
+        elif current_user.role == UserRole.CLIENT:
+            person_data.update({
+                "document_id": person_entity.document_id,
+                "address": person_entity.address,
+                "city": person_entity.city,
+                "state": person_entity.state,
+                "is_minor": getattr(person_entity, 'is_minor', None)
+            })
+        elif current_user.role == UserRole.SECRETARY:
+            person_data.update({
+                "office_id": person_entity.office_id
+            })
+    
+    # Construir respuesta unificada
+    response_data = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+        "is_admin": current_user.is_admin,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at,
+        "person": person_data,
+        # Campos de compatibilidad
+        "firstname": person_data.get("firstname") if person_data else current_user.firstname,
+        "lastname": person_data.get("lastname") if person_data else current_user.lastname,
+        "phone": person_data.get("phone") if person_data else None,
+        "birth_date": person_data.get("birth_date") if person_data else None
+    }
+    
+    return response_data
+
+@router.put("/users/me/profile", response_model=UnifiedProfileResponse)
+def update_my_profile(
+    profile_data: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza el perfil del usuario autenticado.
+    Permite actualizar tanto datos del User como del Person asociado.
+    """
+    # Actualizar datos del usuario si se proporcionan
+    user_updated = False
+    if profile_data.email and profile_data.email != current_user.email:
+        # Verificar que el email no esté en uso
+        existing_user = db.query(User).filter(
+            User.email == profile_data.email,
+            User.id != current_user.id
+        ).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El email ya está en uso por otro usuario"
+            )
+        current_user.email = profile_data.email
+        user_updated = True
+    
+    if user_updated:
+        db.commit()
+        db.refresh(current_user)
+    
+    # Buscar y actualizar la entidad Person asociada
+    person_entity = None
+    if current_user.role == UserRole.ADMIN:
+        person_entity = db.query(Administrator).filter(Administrator.user_id == current_user.id).first()
+    elif current_user.role == UserRole.SECRETARY:
+        person_entity = db.query(Secretary).filter(Secretary.user_id == current_user.id).first()
+    elif current_user.role == UserRole.DRIVER:
+        person_entity = db.query(Driver).filter(Driver.user_id == current_user.id).first()
+    elif current_user.role == UserRole.ASSISTANT:
+        person_entity = db.query(Assistant).filter(Assistant.user_id == current_user.id).first()
+    elif current_user.role == UserRole.CLIENT:
+        person_entity = db.query(Client).filter(Client.user_id == current_user.id).first()
+    
+    if person_entity:
+        person_updated = False
+        
+        # Actualizar campos básicos de Person
+        if profile_data.firstname is not None:
+            person_entity.firstname = profile_data.firstname
+            person_updated = True
+        if profile_data.lastname is not None:
+            person_entity.lastname = profile_data.lastname
+            person_updated = True
+        if profile_data.phone is not None:
+            person_entity.phone = profile_data.phone
+            person_updated = True
+        if profile_data.birth_date is not None:
+            person_entity.birth_date = profile_data.birth_date
+            person_updated = True
+        if profile_data.bio is not None:
+            if hasattr(person_entity, 'bio'):
+                person_entity.bio = profile_data.bio
+                person_updated = True
+        
+        # Actualizar campos específicos del rol si se proporcionan
+        if profile_data.role_specific_data:
+            role_data = profile_data.role_specific_data
+            
+            if current_user.role == UserRole.DRIVER:
+                if "license_number" in role_data:
+                    person_entity.license_number = role_data["license_number"]
+                    person_updated = True
+                if "license_type" in role_data:
+                    person_entity.license_type = role_data["license_type"]
+                    person_updated = True
+                if "license_expiry" in role_data:
+                    person_entity.license_expiry = role_data["license_expiry"]
+                    person_updated = True
+                if "status" in role_data:
+                    person_entity.status = role_data["status"]
+                    person_updated = True
+            elif current_user.role == UserRole.CLIENT:
+                if "document_id" in role_data:
+                    person_entity.document_id = role_data["document_id"]
+                    person_updated = True
+                if "address" in role_data:
+                    person_entity.address = role_data["address"]
+                    person_updated = True
+                if "city" in role_data:
+                    person_entity.city = role_data["city"]
+                    person_updated = True
+                if "state" in role_data:
+                    person_entity.state = role_data["state"]
+                    person_updated = True
+        
+        if person_updated:
+            db.commit()
+            db.refresh(person_entity)
+    
+    # Retornar el perfil actualizado
+    return get_my_profile(current_user, db)

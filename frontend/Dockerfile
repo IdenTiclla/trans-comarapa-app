@@ -21,7 +21,7 @@ FROM base as development
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install
 
 # Copiar el código de la aplicación
 COPY . .
@@ -39,7 +39,7 @@ FROM base as builder
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install
 
 # Copiar el código de la aplicación
 COPY . .
@@ -59,7 +59,7 @@ ENV NUXT_PORT=3000
 
 # Instalar solo dependencias de producción
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copiar archivos construidos desde la etapa builder
 COPY --from=builder /app/.output ./.output

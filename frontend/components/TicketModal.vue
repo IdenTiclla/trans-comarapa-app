@@ -132,7 +132,7 @@
                   </div>
                   <div class="col-span-2">
                     <p class="text-gray-500">Cliente:</p>
-                    <p class="font-medium">{{ ticket.client?.firstname }} {{ ticket.client?.lastname }}</p>
+                    <p class="font-medium">{{ getClientName(ticket.client) }}</p>
                   </div>
                 </div>
               </div>
@@ -172,6 +172,7 @@
 
 <script setup>
 import TicketDisplay from './TicketDisplay.vue'
+import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
   show: {
@@ -195,6 +196,13 @@ const props = defineProps({
     default: false
   }
 })
+
+const { getEffectiveName } = usePersonData()
+
+// Función auxiliar para obtener el nombre del cliente
+const getClientName = (client) => {
+  return getEffectiveName(client)
+}
 
 defineEmits(['close', 'confirm-cancel', 'print'])
 </script>

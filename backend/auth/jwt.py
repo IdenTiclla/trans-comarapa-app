@@ -1,29 +1,27 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Cookie
 from sqlalchemy.orm import Session
 from db.session import get_db
 from models.user import User
 from schemas.auth import TokenData
 from auth.blacklist import token_blacklist
 import os
+import uuid
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
 load_dotenv()
 
 # Configuración de JWT
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")  # Debe ser reemplazado por una clave segura en producción
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required and must not be empty")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
-# Configuración de OAuth2
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
-# Configuración de HTTPBearer
-http_bearer = HTTPBearer(auto_error=False)
+# 🔒 FASE 3: Eliminadas configuraciones OAuth2 y HTTPBearer - solo cookies httpOnly
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -41,7 +39,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    
+    # Agregar JTI (JWT ID) único para poder revocar tokens específicos
+    to_encode.update({
+        "exp": expire,
+        "jti": str(uuid.uuid4())  # Identificador único del token
+    })
+    
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -56,20 +60,24 @@ def verify_token(token: str, credentials_exception):
     Returns:
         Datos del token
     """
-    # Verificar si el token está en la lista negra
-    if token_blacklist.is_token_blacklisted(token):
-        raise credentials_exception
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        jti: str = payload.get("jti")
+        
+        if email is None or jti is None:
             raise credentials_exception
+        
+        # Verificar si el token está en la lista negra usando JTI
+        if token_blacklist.is_token_blacklisted(jti):
+            raise credentials_exception
+        
         role: str = payload.get("role")
         is_admin: bool = payload.get("is_admin", False)
         is_active: bool = payload.get("is_active", True)
         firstname: str = payload.get("firstname", "")
         lastname: str = payload.get("lastname", "")
+        
         token_data = TokenData(
             email=email,
             role=role,
@@ -78,51 +86,49 @@ def verify_token(token: str, credentials_exception):
             firstname=firstname,
             lastname=lastname
         )
+        # Agregar JTI a los datos del token para uso posterior
+        token_data.jti = jti
         return token_data
     except JWTError:
         raise credentials_exception
 
-# Función para extraer el token de cualquiera de los esquemas de autenticación
+# 🔒 FASE 3: Función simplificada para obtener token solo desde cookies httpOnly
 async def get_token(
-    oauth2_token: str = Depends(oauth2_scheme),
-    http_auth: HTTPAuthorizationCredentials = Depends(http_bearer)
+    access_token: Optional[str] = Cookie(None)
 ) -> str:
     """
-    Obtiene el token JWT de cualquiera de los esquemas de autenticación disponibles.
-    Prioriza el token de OAuth2 si está disponible.
+    Obtiene el token JWT desde cookies httpOnly únicamente.
+    Se eliminó el soporte para Authorization: Bearer headers para mayor seguridad.
 
     Args:
-        oauth2_token: Token de OAuth2
-        http_auth: Credenciales de HTTPBearer
+        access_token: Token desde cookie httpOnly
 
     Returns:
         Token JWT
+
+    Raises:
+        HTTPException: Si no se encuentra el token
     """
-    # Si hay un token OAuth2, úsalo
-    if oauth2_token:
-        return oauth2_token
+    if access_token:
+        return access_token
 
-    # Si hay credenciales de HTTPBearer, usa el token
-    if http_auth:
-        return http_auth.credentials
-
-    # Si no hay token, lanza una excepción
+    # Si no hay token en cookies httpOnly, lanza una excepción
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authenticated",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail="Not authenticated - cookie required",
+        headers={"WWW-Authenticate": "Cookie"},
     )
 
-def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)):
+def get_current_user_with_token_data(token: str = Depends(get_token), db: Session = Depends(get_db)):
     """
-    Obtiene el usuario actual a partir del token JWT.
+    Obtiene el usuario actual y los datos del token JWT.
 
     Args:
         token: Token JWT
         db: Sesión de base de datos
 
     Returns:
-        Usuario actual
+        Tuple con (usuario, token_data)
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,6 +141,20 @@ def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_
         raise credentials_exception
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return user, token_data
+
+def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)):
+    """
+    Obtiene el usuario actual a partir del token JWT.
+
+    Args:
+        token: Token JWT
+        db: Sesión de base de datos
+
+    Returns:
+        Usuario actual
+    """
+    user, _ = get_current_user_with_token_data(token, db)
     return user
 
 def get_current_active_user(current_user: User = Depends(get_current_user)):

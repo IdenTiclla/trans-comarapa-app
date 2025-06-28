@@ -95,7 +95,7 @@
                     <img class="h-10 w-10 rounded-full" :src="userInfo?.profileImageUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'" alt="User profile">
                 </div>
                 <div class="ml-3">
-                    <div class="text-base font-medium text-gray-800">{{ userInfo?.firstname || 'Usuario' }}</div>
+                    <div class="text-base font-medium text-gray-800">{{ userName }}</div>
                     <div class="text-sm font-medium text-gray-500">{{ userInfo?.email || 'usuario@example.com' }}</div>
                 </div>
                 <button type="button" class="ml-auto bg-white flex-shrink-0 p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -116,14 +116,17 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { usePersonData } from '~/composables/usePersonData'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { getEffectiveName } = usePersonData()
 
 const mobileMenuOpen = ref(false)
 const isUserMenuOpen = ref(false)
 
 const userInfo = computed(() => authStore.user)
+const userName = computed(() => getEffectiveName(authStore.user))
 
 const handleLogout = async () => {
   await authStore.logout()

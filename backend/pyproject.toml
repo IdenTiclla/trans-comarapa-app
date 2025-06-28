@@ -11,6 +11,8 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.9",  # Necesario para OAuth2PasswordRequestForm
     "faker>=19.3.1",  # Necesario para el seeding de datos
+    "redis>=5.0.0",  # Cliente Redis para persistencia de blacklist
+    "slowapi>=0.1.9",  # Rate limiting for API endpoints
 ]
 
 [project.optional-dependencies]

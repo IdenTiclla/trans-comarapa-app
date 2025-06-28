@@ -27,21 +27,20 @@ const login = async (email, password) => {
       body: formData,
     })
 
+    // 🔒 FASE 2: Los tokens ahora se almacenan en cookies httpOnly por el backend
+    // Solo necesitamos guardar los datos del usuario en localStorage
     if (data && data.access_token) {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', data.access_token)
-        if (data.refresh_token) {
-          localStorage.setItem('refresh_token', data.refresh_token)
-        }
         const userInfo = {
           id: data.user_id,
           role: data.role,
           firstname: data.firstname || '',
           lastname: data.lastname || '',
-          email: email // Incluir el email en los datos del usuario
+          email: email,
+          person: data.person || null // 🆕 Incluir datos de person si existen
         }
         localStorage.setItem('user_data', JSON.stringify(userInfo))
-        localStorage.setItem('user_email', email) // Guardar email por separado para migración
+        localStorage.setItem('user_email', email)
       }
     }
     return data
@@ -49,33 +48,66 @@ const login = async (email, password) => {
     console.error('Error específico en authService.login:', error.data?.detail || error.message || error)
     // Re-throw the error so the store can catch it and set its error state
     // error.data might contain the actual error message from the server via ofetch
-    throw new Error(error.data?.detail || error.message || 'Failed to login')
+    let errorMessage = error.data?.detail || error.message || 'Error de conexión'
+    
+    // Traducir mensajes de error comunes del backend
+    if (errorMessage === 'Incorrect email or password') {
+      errorMessage = 'Email o contraseña incorrectos'
+    }
+    
+    throw new Error(errorMessage)
   }
 }
 
 // Cerrar sesión
-const logout = () => {
+const logout = async (skipServerLogout = false) => {
+  // Solo intentar logout en servidor si hay una sesión activa
+  if (!skipServerLogout && getUserData()) {
+    try {
+      // 🔒 FASE 2: Llamar al endpoint de logout para limpiar cookies httpOnly
+      await apiFetch('/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Importante: incluir cookies en la petición
+      })
+    } catch (error) {
+      // Silenciar errores 401 ya que indican que no hay sesión válida
+      if (error.status !== 401) {
+        console.warn('Error al notificar logout al servidor:', error)
+      }
+      // Continuamos con la limpieza local aunque falle la notificación al servidor
+    }
+  }
+  
   if (typeof window !== 'undefined') {
+    // Ya no manejamos tokens en localStorage, solo datos del usuario
+    localStorage.removeItem('user_data')
+    localStorage.removeItem('user_email')
+    
+    // Limpiar cualquier token legacy que pueda existir
     localStorage.removeItem('auth_token')
     localStorage.removeItem('refresh_token')
-    localStorage.removeItem('user_data')
-    // Potentially notify other tabs/windows, or make an API call to invalidate session/token if backend supports it
   }
 }
 
 // Verificar si el usuario está autenticado
+// 🔒 FASE 2: La autenticación ahora se basa en cookies httpOnly
+// Usamos la existencia de datos de usuario como indicador inicial
 const isAuthenticated = () => {
   if (typeof window !== 'undefined') {
-    return !!localStorage.getItem('auth_token')
+    // Verificar si tenemos datos de usuario (indicador de sesión activa)
+    const userData = localStorage.getItem('user_data')
+    return !!userData && userData !== 'undefined'
   }
   return false
 }
 
 // Obtener el token de autenticación
+// 🔒 FASE 2: Los tokens ahora están en cookies httpOnly
+// Esta función se mantiene para compatibilidad pero devuelve null
+// ya que los tokens se envían automáticamente en las cookies
 const getToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token')
-  }
+  // En FASE 2, los tokens se manejan vía cookies httpOnly
+  // El navegador los envía automáticamente con credentials: 'include'
   return null
 }
 
@@ -96,17 +128,11 @@ const getUserData = () => {
 }
 
 // Verificar si el token es válido en el servidor
+// 🔒 FASE 2: Los tokens se envían automáticamente vía cookies
 const verifyToken = async () => {
   try {
-    const token = getToken()
-    if (!token) {
-      throw new Error('No token available')
-    }
-
     const response = await apiFetch('/auth/verify', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include' // Incluir cookies httpOnly
     })
 
     return response
@@ -117,47 +143,37 @@ const verifyToken = async () => {
 }
 
 // Refrescar el token
+// 🔒 FASE 2: Los tokens se manejan vía cookies httpOnly
 const refreshToken = async () => {
   try {
-    const currentRefreshToken = localStorage.getItem('refresh_token')
-    if (!currentRefreshToken) {
-      // No need to proceed if there's no refresh token.
-      // The apiFetch onResponseError for 401 might have already logged out.
-      throw new Error('No refresh token available.')
-    }
-
-    // apiFetch will use its configured baseURL and add Authorization header with the current access_token if present.
-    // For refresh token, some APIs might not require Authorization header, or require the refresh token itself as Bearer.
-    // Assuming /auth/refresh expects { refresh_token: '...' } in body and no specific auth header, or apiFetch handles it.
-    const data = await apiFetch('/auth/refresh', { // Endpoint for refreshing the token
+    const data = await apiFetch('/auth/refresh', {
       method: 'POST',
-      body: {
-        refresh_token: currentRefreshToken, // FastAPI might expect this in body
-      },
-      // No specific 'Content-Type' header here, apiFetch defaults to JSON for objects usually.
-      // If server expects x-www-form-urlencoded, it needs to be set explicitly.
-      // The current apiFetch in utils/api.js doesn't automatically set Content-Type for POST like this.
-      // We should ensure this matches backend expectations. Assuming JSON for now.
+      credentials: 'include', // Incluir cookies httpOnly (refresh_token)
       headers: {
-        'Content-Type': 'application/json', // Explicitly set for safety
+        'Content-Type': 'application/json'
       }
     })
 
-    if (data && data.access_token) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', data.access_token)
-        // Backend should also return a new refresh_token if it supports refresh token rotation
-        if (data.refresh_token) {
-          localStorage.setItem('refresh_token', data.refresh_token)
+    // Las nuevas cookies se establecen automáticamente por el backend
+    // Solo necesitamos actualizar los datos del usuario si han cambiado
+    if (data && data.user_id && typeof window !== 'undefined') {
+      const currentUserData = getUserData()
+      if (currentUserData) {
+        const updatedUserInfo = {
+          ...currentUserData,
+          firstname: data.firstname || currentUserData.firstname,
+          lastname: data.lastname || currentUserData.lastname,
+          person: data.person || currentUserData.person
         }
+        localStorage.setItem('user_data', JSON.stringify(updatedUserInfo))
       }
     }
+    
     return data
   } catch (error) {
     console.error('Error específico en authService.refreshToken:', error.data?.detail || error.message || error)
-    // apiFetch's onResponseError for 401 on /auth/refresh should ideally handle logout.
-    // Re-throwing allows the store to also react if needed.
-    logout() // Ensure logout if refresh fails critically
+    // Si falla el refresh, hacer logout
+    await logout()
     throw new Error(error.data?.detail || error.message || 'Failed to refresh token')
   }
 }

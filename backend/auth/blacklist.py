@@ -1,20 +1,23 @@
 from datetime import datetime, timedelta
-import threading
+import logging
+from typing import Optional
+from core.redis import redis_client
+
+logger = logging.getLogger(__name__)
 
 class TokenBlacklist:
     """
-    Clase para manejar la lista negra de tokens JWT.
+    Clase para manejar la lista negra de tokens JWT usando Redis para persistencia.
     
-    Esta implementación simple mantiene los tokens en memoria.
-    Para una aplicación en producción, se recomienda usar Redis u otra
-    solución de almacenamiento persistente.
+    Utiliza Redis como backend de almacenamiento para mantener la blacklist
+    de tokens incluso después de reinicios del servidor.
     """
     
     def __init__(self):
-        self.blacklist = {}
-        self.lock = threading.Lock()
+        self.redis_key_prefix = "blacklist:token:"
+        self.fallback_blacklist = {}  # Fallback en memoria si Redis falla
         
-    def add_token_to_blacklist(self, token: str, expires_delta: timedelta = None):
+    def add_token_to_blacklist(self, token: str, expires_delta: Optional[timedelta] = None):
         """
         Agrega un token a la lista negra.
         
@@ -22,14 +25,22 @@ class TokenBlacklist:
             token: Token JWT a agregar a la lista negra
             expires_delta: Tiempo de expiración opcional
         """
-        with self.lock:
+        try:
             if expires_delta:
-                expire = datetime.utcnow() + expires_delta
+                expire_seconds = int(expires_delta.total_seconds())
             else:
                 # Por defecto, los tokens expirarán en 24 horas
-                expire = datetime.utcnow() + timedelta(hours=24)
+                expire_seconds = 24 * 60 * 60
             
-            self.blacklist[token] = expire
+            redis_key = f"{self.redis_key_prefix}{token}"
+            redis_client.client.setex(redis_key, expire_seconds, "blacklisted")
+            logger.info(f"Token added to blacklist with {expire_seconds}s expiration")
+            
+        except Exception as e:
+            logger.error(f"Failed to add token to Redis blacklist: {e}")
+            # Fallback a memoria
+            expire = datetime.now() + (expires_delta or timedelta(hours=24))
+            self.fallback_blacklist[token] = expire
             
     def is_token_blacklisted(self, token: str) -> bool:
         """
@@ -41,22 +52,57 @@ class TokenBlacklist:
         Returns:
             True si el token está en la lista negra, False en caso contrario
         """
-        with self.lock:
-            # Limpiar tokens expirados
-            self._clean_expired_tokens()
-            
-            # Verificar si el token está en la lista negra
-            return token in self.blacklist
+        try:
+            redis_key = f"{self.redis_key_prefix}{token}"
+            result = redis_client.client.get(redis_key)
+            if result is not None:
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to check token in Redis blacklist: {e}")
+        
+        # Fallback: verificar en memoria y limpiar expirados
+        self._clean_expired_tokens()
+        return token in self.fallback_blacklist
             
     def _clean_expired_tokens(self):
         """
-        Limpia los tokens expirados de la lista negra.
+        Limpia los tokens expirados de la lista negra en memoria (fallback).
+        Redis maneja automáticamente la expiración de claves.
         """
-        now = datetime.utcnow()
-        expired_tokens = [token for token, expire in self.blacklist.items() if expire < now]
+        now = datetime.now()
+        expired_tokens = [
+            token for token, expire in self.fallback_blacklist.items() 
+            if expire < now
+        ]
         
         for token in expired_tokens:
-            del self.blacklist[token]
+            del self.fallback_blacklist[token]
+    
+    def get_blacklist_stats(self) -> dict:
+        """
+        Obtiene estadísticas de la blacklist para monitoreo.
+        
+        Returns:
+            Diccionario con estadísticas de la blacklist
+        """
+        stats = {
+            "fallback_tokens_count": len(self.fallback_blacklist),
+            "redis_connected": False,
+            "redis_tokens_count": 0
+        }
+        
+        try:
+            if redis_client.is_connected():
+                stats["redis_connected"] = True
+                # Contar tokens en Redis (aproximado)
+                pattern = f"{self.redis_key_prefix}*"
+                keys = redis_client.client.keys(pattern)
+                stats["redis_tokens_count"] = len(keys)
+        except Exception as e:
+            logger.error(f"Failed to get Redis stats: {e}")
+        
+        return stats
 
 # Instancia global de la lista negra de tokens
 token_blacklist = TokenBlacklist()

@@ -8,10 +8,13 @@ BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.openapi.models import SecurityScheme
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
@@ -42,6 +45,9 @@ from models.ticket_state_history import TicketStateHistory
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")
 
+# Rate limiter configuration
+limiter = Limiter(key_func=get_remote_address)
+
 # Create all tables
 Base.metadata.create_all(bind=engine)
 
@@ -54,6 +60,10 @@ app = FastAPI(
     openapi_url="/openapi.json",
     debug=DEBUG
 )
+
+# Add rate limiter to the app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(
@@ -87,6 +97,12 @@ def custom_openapi():
         description=app.description,
         routes=app.routes,
     )
+
+    # Asegurar que la estructura de components existe
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+    if "securitySchemes" not in openapi_schema["components"]:
+        openapi_schema["components"]["securitySchemes"] = {}
 
     # Añadir el esquema de seguridad HTTPBearer
     openapi_schema["components"]["securitySchemes"]["HTTPBearer"] = {

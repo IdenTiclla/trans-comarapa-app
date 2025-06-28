@@ -119,6 +119,47 @@
           <span>{{ authStore.error }}</span>
         </div>
 
+        <!-- Security Info Panel -->
+        <div v-if="showSecurityInfo" class="security-info" role="status" aria-live="polite">
+          <div class="security-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div class="security-content">
+            <div class="security-title">Información de Seguridad</div>
+            <div class="security-details">
+              <div v-if="failedAttempts > 0" class="attempt-warning">
+                <span class="warning-text">
+                  Intentos fallidos: {{ failedAttempts }}/5
+                </span>
+                <div class="attempt-bar">
+                  <div 
+                    class="attempt-progress" 
+                    :style="{ width: `${(failedAttempts / 5) * 100}%` }"
+                    :class="{
+                      'progress-low': failedAttempts <= 2,
+                      'progress-medium': failedAttempts === 3 || failedAttempts === 4,
+                      'progress-high': failedAttempts >= 5
+                    }"
+                  ></div>
+                </div>
+              </div>
+              <div v-if="remainingAttempts !== null && remainingAttempts <= 3" class="attempts-remaining">
+                <span v-if="remainingAttempts > 0">
+                  Te quedan <strong>{{ remainingAttempts }}</strong> {{ remainingAttempts === 1 ? 'intento' : 'intentos' }} antes del bloqueo
+                </span>
+                <span v-else class="blocked-message">
+                  Cuenta temporalmente bloqueada. Intenta nuevamente en unos minutos.
+                </span>
+              </div>
+              <div class="security-tips">
+                <span>💡 Verifica que tu email y contraseña sean correctos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <button
           type="submit"
@@ -162,6 +203,12 @@ const showPassword = ref(false)
 const authStore = useAuthStore()
 const router = useRouter()
 
+// Variables para información de seguridad
+const failedAttempts = ref(0)
+const remainingAttempts = ref(null)
+const showSecurityInfo = ref(false)
+
+
 // Expresiones regulares para validación
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -177,22 +224,63 @@ const isFormValid = computed(() => {
 
 // Funciones de validación
 const validateEmail = () => {
-  if (!email.value) {
-    emailError.value = 'El email es requerido'
-  } else if (!emailRegex.test(email.value)) {
-    emailError.value = 'Por favor ingresa un email válido'
-  } else {
-    emailError.value = ''
+  // Solo validar si el usuario ha empezado a escribir algo
+  if (email.value.length > 0) {
+    if (!emailRegex.test(email.value)) {
+      emailError.value = 'Por favor ingresa un email válido'
+    } else {
+      emailError.value = ''
+    }
   }
 }
 
 const validatePassword = () => {
-  if (!password.value) {
-    passwordError.value = 'La contraseña es requerida'
-  } else if (password.value.length < 6) {
-    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+  // Solo validar si el usuario ha empezado a escribir algo
+  if (password.value.length > 0) {
+    if (password.value.length < 6) {
+      passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+    } else {
+      passwordError.value = ''
+    }
+  }
+}
+
+// Función para analizar mensajes de error y extraer información de seguridad
+const parseSecurityInfo = (errorMessage) => {
+  if (!errorMessage) {
+    showSecurityInfo.value = false
+    return
+  }
+
+  // Buscar información sobre intentos restantes
+  const remainingMatch = errorMessage.match(/Te quedan (\d+) intentos?/)
+  if (remainingMatch) {
+    remainingAttempts.value = parseInt(remainingMatch[1])
+    failedAttempts.value = 5 - remainingAttempts.value
+    showSecurityInfo.value = true
+    return
+  }
+
+  // Buscar información sobre bloqueo
+  if (errorMessage.includes('bloqueada') || errorMessage.includes('Demasiados intentos')) {
+    failedAttempts.value = 5
+    remainingAttempts.value = 0
+    showSecurityInfo.value = true
+    return
+  }
+
+  // Si es un error de credenciales incorrectas sin información específica
+  if (errorMessage.includes('Incorrect email or password') || 
+      errorMessage.includes('Credenciales incorrectas') ||
+      errorMessage.includes('Email o contraseña incorrectos')) {
+    failedAttempts.value = Math.min(failedAttempts.value + 1, 5)
+    remainingAttempts.value = Math.max(5 - failedAttempts.value, 0)
+    showSecurityInfo.value = true
   } else {
-    passwordError.value = ''
+    // Show security info for any login error
+    failedAttempts.value = Math.min(failedAttempts.value + 1, 5)
+    remainingAttempts.value = Math.max(5 - failedAttempts.value, 0)
+    showSecurityInfo.value = true
   }
 }
 
@@ -201,18 +289,45 @@ const clearEmailError = () => {
   if (emailError.value) {
     emailError.value = ''
   }
+  // También limpiar errores del servidor cuando el usuario empiece a escribir
+  if (authStore.error) {
+    authStore.clearError()
+    // Reset security info when user starts typing again
+    showSecurityInfo.value = false
+  }
 }
 
 const clearPasswordError = () => {
   if (passwordError.value) {
     passwordError.value = ''
   }
+  // También limpiar errores del servidor cuando el usuario empiece a escribir  
+  if (authStore.error) {
+    authStore.clearError()
+    // Reset security info when user starts typing again
+    showSecurityInfo.value = false
+  }
 }
 
 // Validar todo el formulario
 const validateForm = () => {
-  validateEmail()
-  validatePassword()
+  // Validación completa al enviar el formulario
+  if (!email.value) {
+    emailError.value = 'El email es requerido'
+  } else if (!emailRegex.test(email.value)) {
+    emailError.value = 'Por favor ingresa un email válido'
+  } else {
+    emailError.value = ''
+  }
+
+  if (!password.value) {
+    passwordError.value = 'La contraseña es requerida'
+  } else if (password.value.length < 6) {
+    passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
+  } else {
+    passwordError.value = ''
+  }
+
   return !emailError.value && !passwordError.value
 }
 
@@ -247,6 +362,7 @@ const redirectToDashboard = (role) => {
   }
 }
 
+
 // Función para manejar el inicio de sesión
 const handleLogin = async () => {
   // Validar el formulario antes de enviar
@@ -257,10 +373,20 @@ const handleLogin = async () => {
   try {
     const response = await authStore.login(email.value, password.value)
 
+    // Login exitoso - limpiar información de seguridad
+    failedAttempts.value = 0
+    remainingAttempts.value = null
+    showSecurityInfo.value = false
+
     // Redireccionar al dashboard correspondiente según el rol del usuario
     redirectToDashboard(response.role)
   } catch (error) {
     console.error('Error en el inicio de sesión:', error)
+    
+    // Analizar el mensaje de error para extraer información de seguridad
+    setTimeout(() => {
+      parseSecurityInfo(authStore.error)
+    }, 100) // Small delay to ensure authStore.error is updated
   }
 }
 
@@ -502,6 +628,107 @@ definePageMeta({
   height: 20px;
 }
 
+/* Security Info Panel */
+.security-info {
+  background: linear-gradient(135deg, #fef7cd, #fef3c7);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #92400e;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.security-icon {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.security-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.security-content {
+  flex: 1;
+}
+
+.security-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #92400e;
+}
+
+.security-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.attempt-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.warning-text {
+  font-weight: 500;
+  color: #b45309;
+}
+
+.attempt-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #fde68a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.attempt-progress {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progress-low {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.progress-medium {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.progress-high {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.attempts-remaining {
+  padding: 0.5rem;
+  background-color: rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+}
+
+.attempts-remaining strong {
+  color: #92400e;
+  font-weight: 700;
+}
+
+.blocked-message {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.security-tips {
+  font-size: 0.8rem;
+  color: #a16207;
+  font-style: italic;
+}
+
+
 /* Submit Button */
 .submit-button {
   width: 100%;
@@ -688,6 +915,21 @@ definePageMeta({
     font-weight: 700;
     letter-spacing: 0.025em;
   }
+
+  .security-info {
+    padding: 0.875rem;
+    font-size: 0.8rem;
+    gap: 0.5rem;
+  }
+
+  .security-icon .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .attempt-bar {
+    height: 5px;
+  }
   
   .login-footer {
     margin-top: auto;
@@ -725,6 +967,15 @@ definePageMeta({
   .submit-button {
     padding: 1rem;
     font-size: 1rem;
+  }
+
+  .security-info {
+    padding: 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .security-details {
+    gap: 0.5rem;
   }
 }
 
@@ -784,6 +1035,25 @@ definePageMeta({
     height: 52px;
     padding: 0.875rem;
     font-size: 0.875rem;
+  }
+
+  .security-info {
+    padding: 0.625rem;
+    font-size: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .security-icon .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .attempt-bar {
+    height: 4px;
+  }
+
+  .attempts-remaining {
+    padding: 0.375rem;
   }
 }
 
