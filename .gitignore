@@ -16,3 +16,6 @@ cookies_after_logout.txt
 
 # Documentation drafts
 docs/auth_consolidated_plan.md
+
+# Claude files
+.claude
