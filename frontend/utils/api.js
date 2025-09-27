@@ -2,8 +2,20 @@ import { $fetch } from 'ofetch'
 import { useRuntimeConfig } from '#app' // Nuxt 3 auto-import
 import { useAuthStore } from '~/stores/auth'
 
+// Flag global para prevenir múltiples intentos de refresh simultáneos
+let isRefreshing = false
+let refreshPromise = null
+
+// Flag para detectar cuando estamos en proceso de logout
+let isLoggingOut = false
+
 // The helper functions getApiBaseUrl, getAuthToken, and handleApiError previously here are removed.
 // All API call logic should now go through the apiFetch instance below.
+
+// Función para marcar cuando estamos en proceso de logout
+export const setLoggingOut = (value) => {
+  isLoggingOut = value
+}
 
 export const apiFetch = $fetch.create({
   onRequest({ options }) {
@@ -21,19 +33,36 @@ export const apiFetch = $fetch.create({
     // console.error('[apiFetch] onResponseError:', response.status, response._data, error)
     if (response.status === 401) {
       const authStore = useAuthStore()
-      console.warn('API request returned 401. Attempting to handle...')
+      console.warn('API request returned 401. Attempting to handle...', options.url)
 
-      // NO intentar refresh automático para el endpoint de login
-      // Permitir que el error 401 se propague naturalmente para mostrar "credenciales incorrectas"
+      // NO intentar refresh automático para endpoints específicos
+      // Permitir que el error 401 se propague naturalmente
       if (options.url === '/auth/login') {
         console.log('Login failed with 401, allowing error to propagate')
         // No hacer nada, dejar que el error se propague
         return
       }
 
+      // NO intentar refresh durante logout - simplemente permitir que falle silenciosamente
+      if (options.url === '/auth/logout' || isLoggingOut) {
+        console.log('Logout failed with 401 (expected), ignoring error')
+        // El logout ya limpiará el estado local, no importa si falla en servidor
+        return
+      }
+
       if (options.url === '/auth/refresh') {
-        console.error('Refresh token request failed with 401. Logging out.')
-        authStore.logout(true) // Skip server logout to avoid additional 401 errors
+        console.error('Refresh token request failed with 401. Clearing auth state and redirecting to login.')
+        // Resetear flags de refresh
+        isRefreshing = false
+        refreshPromise = null
+        // Limpiar estado inmediatamente sin intentar logout en servidor
+        authStore.user = null
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('user_data')
+          localStorage.removeItem('user_email')
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('refresh_token')
+        }
         await navigateTo('/login')
         return
       }
@@ -53,6 +82,34 @@ export const apiFetch = $fetch.create({
         return
       }
 
+      // 🔒 NUEVO: Si la verificación de token específicamente falla con 401,
+      // las cookies httpOnly probablemente expiraron. Limpiar estado inmediatamente.
+      if (options.url === '/auth/verify') {
+        console.warn('Token verification failed with 401. Auth cookies expired. Cleaning state.')
+        authStore.logout(true) // Skip server logout to avoid additional 401 errors
+        await navigateTo('/login')
+        return
+      }
+
+      // Prevenir múltiples intentos de refresh simultáneos
+      if (isRefreshing) {
+        console.log('Refresh already in progress, waiting...')
+        if (refreshPromise) {
+          try {
+            await refreshPromise
+            // Retry the original request after refresh completes
+            const retryOptions = { ...options, _retryCount: (options._retryCount || 0) + 1 };
+            return apiFetch(options.url, retryOptions);
+          } catch (error) {
+            console.error('Refresh failed, redirecting to login')
+            await navigateTo('/login')
+            return
+          }
+        }
+        await navigateTo('/login')
+        return
+      }
+
       // Marcar que se está intentando un refresh para evitar múltiples intentos simultáneos
       if (options._retryCount >= 1) {
         console.error('Too many retry attempts, logging out')
@@ -64,8 +121,18 @@ export const apiFetch = $fetch.create({
       try {
         if (authStore.refreshToken && typeof authStore.refreshToken === 'function') {
           console.log('Attempting to refresh token...');
-          await authStore.refreshToken();
+
+          // Marcar que estamos refrescando y crear promise compartida
+          isRefreshing = true
+          refreshPromise = authStore.refreshToken()
+
+          await refreshPromise;
           console.log('Token refreshed, retrying original request to:', options.url);
+
+          // Resetear flags
+          isRefreshing = false
+          refreshPromise = null
+
           // Retry the original request with new cookies
           const retryOptions = { ...options, _retryCount: (options._retryCount || 0) + 1 };
           return apiFetch(options.url, retryOptions);
@@ -76,6 +143,9 @@ export const apiFetch = $fetch.create({
         }
       } catch (refreshError) {
         console.error('Error during token refresh or retrying request:', refreshError);
+        // Resetear flags en caso de error
+        isRefreshing = false
+        refreshPromise = null
         authStore.logout(true); // Skip server logout to avoid additional 401 errors
         await navigateTo('/login');
       } 

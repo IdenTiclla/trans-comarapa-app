@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status, Cookie
+from fastapi import Depends, HTTPException, status, Cookie, Header
 from sqlalchemy.orm import Session
 from db.session import get_db
 from models.user import User
@@ -92,16 +92,18 @@ def verify_token(token: str, credentials_exception):
     except JWTError:
         raise credentials_exception
 
-# 🔒 FASE 3: Función simplificada para obtener token solo desde cookies httpOnly
+# 🔒 FASE 3: Función para obtener token desde cookies httpOnly o Authorization header (para testing)
 async def get_token(
-    access_token: Optional[str] = Cookie(None)
+    access_token: Optional[str] = Cookie(None),
+    authorization: Optional[str] = Header(None)
 ) -> str:
     """
-    Obtiene el token JWT desde cookies httpOnly únicamente.
-    Se eliminó el soporte para Authorization: Bearer headers para mayor seguridad.
+    Obtiene el token JWT desde cookies httpOnly o Authorization header.
+    En producción se prioriza cookies httpOnly, pero se permite Authorization header para testing.
 
     Args:
         access_token: Token desde cookie httpOnly
+        authorization: Token desde Authorization header
 
     Returns:
         Token JWT
@@ -109,14 +111,25 @@ async def get_token(
     Raises:
         HTTPException: Si no se encuentra el token
     """
+    # Primero intentar obtener desde cookies httpOnly (producción)
     if access_token:
         return access_token
 
-    # Si no hay token en cookies httpOnly, lanza una excepción
+    # Para testing y compatibilidad, permitir Authorization header
+    if authorization:
+        # Extraer token del header "Bearer <token>"
+        try:
+            scheme, token = authorization.split()
+            if scheme.lower() == "bearer":
+                return token
+        except ValueError:
+            pass
+
+    # Si no hay token en ningún lado, lanza una excepción
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authenticated - cookie required",
-        headers={"WWW-Authenticate": "Cookie"},
+        detail="Not authenticated - cookie or Authorization header required",
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
 def get_current_user_with_token_data(token: str = Depends(get_token), db: Session = Depends(get_db)):

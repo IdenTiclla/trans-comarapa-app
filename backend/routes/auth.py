@@ -20,7 +20,14 @@ import logging
 # Configurar logging
 logger = logging.getLogger(__name__)
 
-# Rate limiter configuration
+# Rate limiter configuration - más permisivo en testing
+def get_rate_limit_for_testing():
+    """Retorna límites de rate más permisivos para testing"""
+    is_testing = os.getenv("TESTING", "false").lower() == "true"
+    if is_testing:
+        return "100/minute"  # Muy permisivo en testing
+    return "5/minute"  # Original en producción
+
 limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(
@@ -30,7 +37,7 @@ router = APIRouter(
 )
 
 @router.post("/login", response_model=TokenWithRoleInfo)
-@limiter.limit("5/minute")
+@limiter.limit(get_rate_limit_for_testing())
 def login_for_access_token(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
     Endpoint para autenticar a un usuario y obtener un token JWT.
@@ -50,30 +57,43 @@ def login_for_access_token(request: Request, response: Response, form_data: OAut
     client_ip = get_remote_address(request)
     username = form_data.username
     
-    # Verificar si está bloqueado por intentos fallidos
-    is_locked, lockout_reason = brute_force_protection.is_locked_out(client_ip, username)
-    if is_locked:
-        logger.warning(f"Login attempt blocked for {username} from {client_ip}: {lockout_reason}")
+    # Verificar si está bloqueado por intentos fallidos (solo en producción)
+    is_testing = os.getenv("TESTING", "false").lower() == "true"
+    if not is_testing:
+        is_locked, lockout_reason = brute_force_protection.is_locked_out(client_ip, username)
+        if is_locked:
+            logger.warning(f"Login attempt blocked for {username} from {client_ip}: {lockout_reason}")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Demasiados intentos fallidos. {lockout_reason}",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+    # Validar que las credenciales no estén vacías antes de autenticar
+    if not form_data.username or not form_data.password:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Demasiados intentos fallidos. {lockout_reason}",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Username and password are required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
-        # Registrar intento fallido
-        attempt_info = brute_force_protection.record_failed_attempt(client_ip, username)
-        logger.warning(f"Failed login attempt for {username} from {client_ip}. Attempts: IP={attempt_info['ip_attempts']}, User={attempt_info['user_attempts']}")
-        
-        # Preparar mensaje de error informativo
-        error_detail = "Incorrect email or password"
-        remaining = brute_force_protection.get_remaining_attempts(client_ip, username)
-        
-        if attempt_info['ip_locked'] or attempt_info['user_locked']:
-            error_detail = f"Demasiados intentos fallidos. Cuenta bloqueada por {attempt_info['lockout_duration_minutes']} minutos."
-        elif remaining['user_attempts_remaining'] <= 2:
-            error_detail = f"Credenciales incorrectas. Te quedan {remaining['user_attempts_remaining']} intentos antes del bloqueo."
+        # Registrar intento fallido (solo en producción)
+        if not is_testing:
+            attempt_info = brute_force_protection.record_failed_attempt(client_ip, username)
+            logger.warning(f"Failed login attempt for {username} from {client_ip}. Attempts: IP={attempt_info['ip_attempts']}, User={attempt_info['user_attempts']}")
+            
+            # Preparar mensaje de error informativo
+            error_detail = "Incorrect email or password"
+            remaining = brute_force_protection.get_remaining_attempts(client_ip, username)
+            
+            if attempt_info['ip_locked'] or attempt_info['user_locked']:
+                error_detail = f"Demasiados intentos fallidos. Cuenta bloqueada por {attempt_info['lockout_duration_minutes']} minutos."
+            elif remaining['user_attempts_remaining'] <= 2:
+                error_detail = f"Credenciales incorrectas. Te quedan {remaining['user_attempts_remaining']} intentos antes del bloqueo."
+        else:
+            error_detail = "Incorrect email or password"
         
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,8 +101,9 @@ def login_for_access_token(request: Request, response: Response, form_data: OAut
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Login exitoso - limpiar intentos fallidos
-    brute_force_protection.clear_failed_attempts(client_ip, username)
+    # Login exitoso - limpiar intentos fallidos (solo en producción)
+    if not is_testing:
+        brute_force_protection.clear_failed_attempts(client_ip, username)
     logger.info(f"Successful login for {username} from {client_ip}")
 
     # 🆕 Usar propiedades de compatibilidad para obtener nombres efectivos
@@ -229,7 +250,7 @@ def logout(response: Response, user_data: tuple = Depends(get_current_user_with_
     return {"message": "Logout successful"}
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
-@limiter.limit("10/minute")
+@limiter.limit("100/minute" if os.getenv("TESTING", "false").lower() == "true" else "10/minute")
 def refresh_token(request: Request, response: Response, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Endpoint para refrescar el token JWT.
@@ -355,7 +376,7 @@ def refresh_token(request: Request, response: Response, current_user: UserModel 
     return response_data
 
 @router.post("/register", response_model=User)
-@limiter.limit("3/minute")
+@limiter.limit("100/minute" if os.getenv("TESTING", "false").lower() == "true" else "3/minute")
 def register_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     """
     Endpoint para registrar un nuevo usuario.

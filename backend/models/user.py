@@ -45,8 +45,14 @@ class User(Base):
     administrator = relationship("Administrator", uselist=False, back_populates="user", overlaps="person")
     client = relationship("Client", uselist=False, back_populates="user", overlaps="person")
 
-    # Definir el contexto de contraseña una sola vez para evitar problemas con bcrypt
-    _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    # Definir el contexto de contraseña - temporarily using sha256_crypt for compatibility
+    _pwd_context = CryptContext(
+        schemes=["sha256_crypt"],
+        deprecated="auto",
+        sha256_crypt__min_rounds=29000,
+        sha256_crypt__max_rounds=200000,
+        sha256_crypt__default_rounds=80000
+    )
 
     @staticmethod
     def verify_password(plain_password, hashed_password):
@@ -59,6 +65,12 @@ class User(Base):
     @staticmethod
     def get_password_hash(password):
         try:
+            # Ensure password doesn't exceed bcrypt's 72-byte limit
+            if isinstance(password, str):
+                password_bytes = password.encode('utf-8')
+                if len(password_bytes) > 72:
+                    # Truncate password to 72 bytes for bcrypt compatibility
+                    password = password_bytes[:72].decode('utf-8', errors='ignore')
             return User._pwd_context.hash(password)
         except Exception as e:
             print(f"Error generando hash de contraseña: {e}")

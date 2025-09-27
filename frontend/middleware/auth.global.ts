@@ -20,11 +20,35 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         return navigateTo('/login')
       }
 
-      // Si el usuario está autenticado y está intentando acceder a la página de login, redirigir al dashboard
-      // Consider making '/dashboard' a configurable redirect path
+      // Si el usuario está autenticado y está intentando acceder a la página de login, redirigir al dashboard apropiado
       if (authStore.isAuthenticated && to.path === '/login') {
-        // console.log('[Auth Middleware] Authenticated, redirecting from /login to /dashboard.');
-        return navigateTo('/dashboard') // Ensure '/dashboard' is a valid route
+        // Redirigir al dashboard según el rol del usuario
+        const user = authStore.user
+        if (user && user.role) {
+          let dashboardPath = ''
+          switch (user.role) {
+            case 'secretary':
+              dashboardPath = '/dashboards/dashboard-secretary'
+              break
+            case 'admin':
+              dashboardPath = '/dashboards/dashboard-admin'
+              break
+            case 'driver':
+              dashboardPath = '/dashboards/dashboard-driver'
+              break
+            case 'assistant':
+              dashboardPath = '/dashboards/dashboard-assistant'
+              break
+            case 'client':
+              dashboardPath = '/dashboards/dashboard-client'
+              break
+            default:
+              dashboardPath = '/dashboards/dashboard-secretary' // fallback
+          }
+          return navigateTo(dashboardPath)
+        }
+        // Fallback si no hay rol definido
+        return navigateTo('/dashboards/dashboard-secretary')
       }
     } catch (error) {
       console.error('Error en middleware de autenticación:', error)

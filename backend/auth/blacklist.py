@@ -79,6 +79,24 @@ class TokenBlacklist:
         for token in expired_tokens:
             del self.fallback_blacklist[token]
     
+    def clear_blacklist(self):
+        """
+        Limpia toda la blacklist. Usado principalmente para testing.
+        """
+        try:
+            # Limpiar tokens en Redis
+            pattern = f"{self.redis_key_prefix}*"
+            keys = redis_client.client.keys(pattern)
+            if keys:
+                redis_client.client.delete(*keys)
+            logger.info(f"Cleared {len(keys)} tokens from Redis blacklist")
+        except Exception as e:
+            logger.error(f"Failed to clear Redis blacklist: {e}")
+        
+        # Limpiar fallback en memoria
+        self.fallback_blacklist.clear()
+        logger.info("Cleared fallback blacklist")
+    
     def get_blacklist_stats(self) -> dict:
         """
         Obtiene estadísticas de la blacklist para monitoreo.

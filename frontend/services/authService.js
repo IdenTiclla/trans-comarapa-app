@@ -1,6 +1,6 @@
 // Servicio para gestionar la autenticación
 import { useRuntimeConfig } from 'nuxt/app'
-import apiFetch from '~/utils/api'
+import apiFetch, { setLoggingOut } from '~/utils/api'
 
 // Obtener la URL base de la API
 const getApiBaseUrl = () => {
@@ -59,23 +59,40 @@ const login = async (email, password) => {
   }
 }
 
+// Flag para evitar múltiples llamadas de logout simultáneas
+let isLoggingOut = false
+
 // Cerrar sesión
 const logout = async (skipServerLogout = false) => {
-  // Solo intentar logout en servidor si hay una sesión activa
-  if (!skipServerLogout && getUserData()) {
-    try {
-      // 🔒 FASE 2: Llamar al endpoint de logout para limpiar cookies httpOnly
-      await apiFetch('/auth/logout', {
-        method: 'POST',
-        credentials: 'include' // Importante: incluir cookies en la petición
-      })
-    } catch (error) {
-      // Silenciar errores 401 ya que indican que no hay sesión válida
-      if (error.status !== 401) {
-        console.warn('Error al notificar logout al servidor:', error)
+  // Prevenir múltiples logout simultáneos
+  if (isLoggingOut) {
+    console.log('Logout already in progress, skipping...')
+    return
+  }
+
+  isLoggingOut = true
+  setLoggingOut(true) // Marcar en el interceptor API también
+
+  try {
+    // Solo intentar logout en servidor si hay una sesión activa y no se solicita omitir
+    if (!skipServerLogout && getUserData()) {
+      try {
+        // 🔒 FASE 2: Llamar al endpoint de logout para limpiar cookies httpOnly
+        await apiFetch('/auth/logout', {
+          method: 'POST',
+          credentials: 'include' // Importante: incluir cookies en la petición
+        })
+      } catch (error) {
+        // Silenciar errores 401 ya que indican que no hay sesión válida
+        if (error.status !== 401) {
+          console.warn('Error al notificar logout al servidor:', error)
+        }
+        // Continuamos con la limpieza local aunque falle la notificación al servidor
       }
-      // Continuamos con la limpieza local aunque falle la notificación al servidor
     }
+  } finally {
+    isLoggingOut = false
+    setLoggingOut(false) // Limpiar flag en el interceptor API
   }
   
   if (typeof window !== 'undefined') {

@@ -5,6 +5,9 @@ por todos los tests.
 """
 import os
 import pytest
+
+# Establecer que estamos en modo testing
+os.environ["TESTING"] = "true"
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -46,6 +49,10 @@ def db_session(test_engine):
 @pytest.fixture(scope="function")
 def client(db_session):
     """Crea un cliente de prueba para la API."""
+    # Limpiar blacklist de tokens antes de cada test
+    from auth.blacklist import token_blacklist
+    token_blacklist.clear_blacklist()
+    
     def override_get_db():
         try:
             yield db_session
@@ -56,6 +63,9 @@ def client(db_session):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+    
+    # Limpiar blacklist después de cada test
+    token_blacklist.clear_blacklist()
 
 @pytest.fixture(scope="function")
 def test_user(db_session):

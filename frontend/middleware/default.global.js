@@ -57,37 +57,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo('/login')
   }
   
-  // VALIDACIÓN ADICIONAL: Verificar que el token sea válido en el servidor
-  // Solo para rutas protegidas (no públicas)
-  try {
-    // Importar authService dinámicamente para evitar problemas de SSR
-    const { default: authService } = await import('~/services/authService')
-    
-    // Intentar verificar el token en el servidor
-    const tokenVerification = await authService.verifyToken()
-    
-    // Si llegamos aquí, el token es válido
-    console.log('✅ Token válido - acceso permitido a', to.path)
-    
-    // Actualizar datos del usuario si es necesario
-    if (tokenVerification && tokenVerification.user_id !== authStore.user?.id) {
-      console.log('🔄 Actualizando datos del usuario desde servidor')
-      authStore.user = {
-        id: tokenVerification.user_id,
-        email: tokenVerification.email,
-        role: tokenVerification.role,
-        firstname: tokenVerification.firstname,
-        lastname: tokenVerification.lastname
-      }
-    }
-    
-  } catch (error) {
-    console.warn('🔒 Token inválido o expirado, cerrando sesión automáticamente')
-    
-    // Token inválido o expirado - hacer logout automático
-    await authStore.logout()
-    
-    // Redirigir al login
-    return navigateTo('/login')
-  }
+  // NOTA: Verificación de token deshabilitada para evitar bucles infinitos
+  // La verificación de token ocurre cuando las API calls individuales lo necesitan
+  // Los otros middleware (auth.global.ts) manejan la autenticación básica
+
+  // Si llegamos aquí, permitir acceso basado en estado local del store
+  // Las verificaciones de token en servidor ocurrirán cuando sean necesarias
+  console.log('✅ Acceso permitido a', to.path, 'basado en estado local')
 })

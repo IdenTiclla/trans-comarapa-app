@@ -8,10 +8,16 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest"
+    "test": "vitest",
+    "test:unit": "vitest tests/unit",
+    "test:integration": "vitest tests/integration",
+    "test:regression": "vitest tests/regression",
+    "test:all": "vitest tests/",
+    "test:coverage": "vitest tests/ --coverage"
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
+    "@nuxt/kit": "^4.1.2",
     "chart.js": "^4.4.9",
     "lodash-es": "^4.17.21",
     "nuxt": "^3.13.0",
@@ -23,6 +29,7 @@
     "@nuxt/test-utils": "^3.19.1",
     "@nuxtjs/tailwindcss": "^6.13.2",
     "@pinia/nuxt": "^0.10.1",
+    "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^17.6.3",
     "vitest": "^3.2.4"

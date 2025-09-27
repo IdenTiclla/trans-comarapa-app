@@ -326,31 +326,19 @@ def seed_db():
             db.flush()  # Flush to get IDs
             locations[location_info["name"]] = location
 
-        # Crear oficinas principales de Trans Comarapa con números reales
+        # Crear oficinas principales de Trans Comarapa - Solo Santa Cruz y Comarapa
         office_data = [
             {
-                "name": "Oficina Santa Cruz",
+                "name": "Oficina Central Santa Cruz",
                 "phone": "78175576",
                 "email": "santacruz@transcomarapa.com",
                 "location_id": locations["Santa Cruz"].id
             },
             {
-                "name": "Oficina Comarapa",
+                "name": "Terminal Comarapa",
                 "phone": "78175578",
                 "email": "comarapa@transcomarapa.com",
                 "location_id": locations["Comarapa"].id
-            },
-            {
-                "name": "Oficina San Isidro",
-                "phone": "78515650",
-                "email": "sanisidro@transcomarapa.com",
-                "location_id": locations["San Isidro"].id
-            },
-            {
-                "name": "Oficina Los Negros",
-                "phone": "69029690",
-                "email": "losnegros@transcomarapa.com",
-                "location_id": locations["Los Negros"].id
             }
         ]
 
@@ -385,9 +373,9 @@ def seed_db():
             db.add(route)
             routes.append(route)
 
-        # Crear usuarios para clientes primero
+        # Crear usuarios para clientes primero - Base de datos actualizada 2025
         client_user_data = []
-        num_clients_to_create = 40 # Increased from 10
+        num_clients_to_create = 50 # Incrementado para mayor diversidad
         for i in range(num_clients_to_create):
             full_name = fake.name()
             name_parts = full_name.split()
@@ -402,7 +390,7 @@ def seed_db():
             timestamp = int(datetime.now().timestamp()) + i
             client_user = {
                 "username": f"cliente{i+1}_{timestamp}",
-                "email": fake.email(),
+                "email": f"cliente{i+1}_{timestamp}@transcomarapa.com",
                 "firstname": firstname,
                 "lastname": lastname,
                 "role": "client",
@@ -423,7 +411,7 @@ def seed_db():
 
         # Crear clientes con datos realistas bolivianos - Nuevo enfoque con Person
         clients = []
-        bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija"]
+        bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija", "Montero", "Warnes", "Vallegrande"]
         bolivian_states = ["Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija", "Oruro", "Potosí", "Beni", "Pando"]
 
         # Generar nombres completos para los clientes
@@ -455,9 +443,9 @@ def seed_db():
             db.add(client)
             clients.append(client)
 
-        # Crear usuarios para conductores primero
+        # Crear usuarios para conductores primero - Equipo 2025
         driver_user_data = []
-        num_drivers_to_create = 10 # Increased from 5
+        num_drivers_to_create = 12 # Equipo ampliado para 2025
         for i in range(num_drivers_to_create):
             full_name = fake.name()
             name_parts = full_name.split()
@@ -472,7 +460,7 @@ def seed_db():
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2) # Adjust timestamp offset
             driver_user = {
                 "username": f"conductor{i+1}_{timestamp}",
-                "email": fake.email(),
+                "email": f"conductor{i+1}_{timestamp}@transcomarapa.com",
                 "firstname": firstname,
                 "lastname": lastname,
                 "role": "driver",
@@ -500,7 +488,7 @@ def seed_db():
         driver_full_names = [fake.name() for _ in range(len(driver_users))]
 
         for i, user in enumerate(driver_users):
-            # Fecha de vencimiento de licencia entre 1 y 5 años en el futuro
+            # Fecha de vencimiento de licencia entre 1 y 5 años en el futuro (2026-2030)
             expiry_years = random.randint(1, 5)
             license_expiry = date.today().replace(year=date.today().year + expiry_years)
 
@@ -525,14 +513,14 @@ def seed_db():
             db.add(driver)
             drivers.append(driver)
 
-        # Create sample buses with realistic models, brands, and colors
-        bus_models = ["O-500", "9800", "K410", "O-400", "B420R"]
-        bus_brands = ["Mercedes Benz", "Volvo", "Scania", "Mercedes Benz", "Volvo"]
-        bus_colors = ["Azul", "Blanco", "Rojo", "Verde", "Amarillo"]
-        bus_capacities = [45, 50, 42, 48, 46]
+        # Create sample buses with realistic 2025 models and Trans Comarapa fleet
+        bus_models = ["O-500RS", "9900", "K450", "O-400RSD", "B450R", "Marcopolo Paradiso", "Irizar Century"]
+        bus_brands = ["Mercedes Benz", "Volvo", "Scania", "Mercedes Benz", "Volvo", "Marcopolo", "Irizar"]
+        bus_colors = ["Azul Trans Comarapa", "Blanco", "Rojo", "Verde", "Amarillo", "Azul Marino", "Plata"]
+        bus_capacities = [45, 50, 42, 48, 46, 52, 44]
         bus_data = []
 
-        for i in range(5):
+        for i in range(7):  # Incrementado a 7 buses
             # Generar placas únicas con timestamp
             timestamp = str(int(datetime.now().timestamp()) + i)[-4:]
             license_plate = f"{timestamp}ABC{i}"
@@ -583,14 +571,14 @@ def seed_db():
             firstname="Administrador",
             lastname="Sistema",
             phone="77000000",
-            birth_date=date(1980, 1, 1)
+            birth_date=date(1975, 3, 15)
         )
         db.add(administrator)
         db.commit()
 
-        # Crear usuarios para secretarios
+        # Crear usuarios para secretarios - Personal administrativo 2025
         secretary_user_data = []
-        num_secretaries_to_create = 7 # Increased from 5
+        num_secretaries_to_create = 8 # Personal ampliado para mayor cobertura
         for i in range(num_secretaries_to_create):
             full_name = fake.name()
             name_parts = full_name.split()
@@ -605,7 +593,7 @@ def seed_db():
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2) # Adjust timestamp offset
             secretary_user = {
                 "username": f"secretario{i+1}_{timestamp}",
-                "email": fake.email(),
+                "email": f"secretario{i+1}_{timestamp}@transcomarapa.com",
                 "firstname": firstname,
                 "lastname": lastname,
                 "role": "secretary",
@@ -653,9 +641,9 @@ def seed_db():
             db.add(secretary)
             secretaries.append(secretary)
 
-        # Crear usuarios para asistentes primero
+        # Crear usuarios para asistentes primero - Equipo de apoyo 2025
         assistant_user_data = []
-        num_assistants_to_create = 10 # Increased from 5
+        num_assistants_to_create = 12 # Equipo de asistentes ampliado
         for i in range(num_assistants_to_create):
             full_name = fake.name()
             name_parts = full_name.split()
@@ -670,7 +658,7 @@ def seed_db():
             timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2 + num_secretaries_to_create * 2) # Adjust timestamp offset
             assistant_user = {
                 "username": f"asistente{i+1}_{timestamp}",
-                "email": fake.email(),
+                "email": f"asistente{i+1}_{timestamp}@transcomarapa.com",
                 "firstname": firstname,
                 "lastname": lastname,
                 "role": "assistant",
@@ -739,11 +727,11 @@ def seed_db():
         # Weighted towards 'scheduled' for future dates, others for variety
         possible_trip_statuses = ['scheduled', 'scheduled', 'scheduled', 'scheduled', 'in_progress', 'completed', 'cancelled']
 
-        # Crear 20 viajes con combinaciones aleatorias
-        # Increased to 60 trips
-        num_trips_to_create = 60
+        # Crear viajes realistas para operaciones Trans Comarapa 2025
+        # Incrementado a 80 viajes para mayor variedad
+        num_trips_to_create = 80
         
-        # Define the 6-month date range for trips, tickets, and packages
+        # Define the 6-month date range for trips, tickets, and packages (September 2024 to March 2025)
         now = datetime.now()
         six_months_ago = now - timedelta(days=6*30) # Approximate
         date_range_for_creation = [six_months_ago + timedelta(days=x) for x in range((now - six_months_ago).days + 1)]
@@ -1000,9 +988,10 @@ def seed_db():
         all_packages = [] 
         package_statuses_options = ["registered", "in_transit", "delivered", "cancelled", "lost"] # Renamed
         item_descriptions = [
-            "Documentos importantes", "Ropa de temporada", "Equipos electrónicos", "Productos alimenticios",
-            "Medicamentos", "Libros y material educativo", "Herramientas de trabajo", "Artículos de hogar",
-            "Productos de belleza", "Juguetes", "Artículos deportivos", "Electrodomésticos pequeños"
+            "Documentos importantes", "Ropa de temporada 2025", "Equipos electrónicos nuevos", "Productos alimenticios locales",
+            "Medicamentos esenciales", "Libros y material educativo", "Herramientas de trabajo especializadas", "Artículos de hogar modernos",
+            "Productos de belleza y cuidado personal", "Juguetes educativos", "Artículos deportivos premium", "Electrodomésticos pequeños inteligentes",
+            "Repuestos automotrices", "Instrumentos musicales", "Material de construcción", "Productos artesanales bolivianos"
         ]
         package_counter = 1
         for trip_item in trips:
@@ -1028,7 +1017,7 @@ def seed_db():
                 package = Package(
                     tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
                     total_declared_value=round(random.uniform(50.0, 500.0), 2),
-                    notes=f"Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
+                    notes=f"Envío 2025: Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname} - Servicio premium",
                     status=current_initial_package_state, sender_id=sender.id, recipient_id=recipient.id,
                     trip_id=trip_item.id, secretary_id=selected_secretary.id, created_at=package_created_at,
                     updated_at=package_created_at # Init updated_at
@@ -1151,13 +1140,13 @@ def seed_db():
         client_user_for_activity = db.query(User).filter(User.role == UserRole.CLIENT).first()
 
         # Actividades del sistema
-        activities_to_seed.append(ActivityModel(activity_type="Sistema Reiniciado", details="El sistema de seeding completó la carga inicial de datos."))
-        activities_to_seed.append(ActivityModel(activity_type="Mantenimiento Programado", details="Próximo mantenimiento el 2024-08-15 03:00 AM"))
+        activities_to_seed.append(ActivityModel(activity_type="Sistema Reiniciado", details="El sistema de seeding completó la carga inicial de datos de 2025."))
+        activities_to_seed.append(ActivityModel(activity_type="Mantenimiento Programado", details="Próximo mantenimiento el 2025-10-15 03:00 AM"))
 
         # Actividades asociadas a usuarios (si existen)
         if admin_user_for_activity:
-            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Login Exitoso", details=f"Admin {admin_user_for_activity.username} inició sesión desde IP 192.168.1.100"))
-            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Configuración Actualizada", details="Se actualizó el parámetro MAX_LOGIN_ATTEMPTS a 5."))
+            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Login Exitoso", details=f"Admin {admin_user_for_activity.username} inició sesión desde terminal principal - Septiembre 2025"))
+            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Configuración Actualizada", details="Sistema de seguridad actualizado para temporada alta 2025 - Nuevas políticas implementadas."))
         
         if secretary_user_for_activity:
             # Buscar un ticket y paquete para los detalles
@@ -1166,22 +1155,22 @@ def seed_db():
 
             if first_ticket:
                 activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Nueva Reserva Creada", details=f"Ticket ID: {first_ticket.id} para el viaje ID: {first_ticket.trip_id}"))
-            activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Venta Confirmada", details="Venta de mostrador procesada correctamente."))
+            activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Venta Confirmada", details="Venta de mostrador procesada correctamente - Sistema POS actualizado 2025."))
             if first_package:
                  activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Paquete Registrado", details=f"Paquete con tracking: {first_package.tracking_number}"))
 
         if client_user_for_activity:
-            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Perfil Actualizado", details="El cliente actualizó su número de teléfono."))
-            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Consulta de Viaje", details="Cliente consultó viajes disponibles para la ruta Santa Cruz - Cochabamba."))
+            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Perfil Actualizado", details="Cliente actualizó información de contacto vía aplicación móvil - Septiembre 2025."))
+            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Consulta de Viaje", details="Cliente consultó viajes disponibles para la ruta Santa Cruz - Comarapa."))
 
-        # Crear algunas actividades más genéricas con fechas variadas
+        # Crear algunas actividades más genéricas con fechas variadas para 2025
         activity_types_general = ["Actualización de Ruta", "Nuevo Conductor Contratado", "Mantenimiento de Bus", "Promoción Lanzada", "Reporte Generado"]
         sample_details = [
-            "Ruta SCZ-CBBA actualizada con nuevo precio.", 
-            "Juan Pérez se unió al equipo de conductores.", 
-            "Bus con placa 1234ABC completó mantenimiento preventivo.",
-            "Descuento del 10% en pasajes para el mes de Agosto.",
-            "Reporte de ventas mensual generado exitosamente."
+            "Ruta SCZ-Comarapa actualizada con nuevo precio para 2025.",
+            "Nuevo conductor certificado se unió al equipo.",
+            "Bus completó mantenimiento preventivo de inicio de año.",
+            "Promoción de temporada alta implementada para enero-marzo 2025.",
+            "Reporte de ventas de septiembre 2025 generado exitosamente."
         ]
 
         all_user_ids = [u.id for u in db.query(User.id).all()] # Obtener todos los user_ids para variedad
@@ -1190,13 +1179,13 @@ def seed_db():
             user_id_for_activity = random.choice(all_user_ids) if all_user_ids and random.choice([True, False]) else None
             activity_type_selected = random.choice(activity_types_general)
             detail_selected = random.choice(sample_details) # Podrías hacer esto más específico al tipo
-            # Simular fechas pasadas para las actividades
-            past_date = datetime.now() - timedelta(days=random.randint(0, 30), hours=random.randint(0,23), minutes=random.randint(0,59))
+            # Simular fechas pasadas para las actividades (marzo 2025 - septiembre 2025)
+            past_date = datetime.now() - timedelta(days=random.randint(0, 180), hours=random.randint(0,23), minutes=random.randint(0,59))
             
             activities_to_seed.append(ActivityModel(
                 user_id=user_id_for_activity,
                 activity_type=activity_type_selected,
-                details=f"{detail_selected} (ejemplo {i+1})",
+                details=f"{detail_selected} - Registro del sistema Trans Comarapa {i+1}",
                 created_at=past_date
             ))
 
@@ -1223,17 +1212,17 @@ def create_test_users():
         print("Limpiando datos de usuarios de prueba existentes...")
         # Obtener IDs de usuarios de prueba
         test_emails = [
-            "admin1@comarapa.com",
-            "secretary1@comarapa.com",
-            "secretary2@comarapa.com",
-            "secretary3@comarapa.com",
-            "driver1@comarapa.com",
-            "assistant1@comarapa.com",
-            "client1@comarapa.com",
-            "client2@comarapa.com",
-            "client3@comarapa.com",
-            "client4@comarapa.com",
-            "client5@comarapa.com"
+            "admin1@transcomarapa.com",
+            "secretary1@transcomarapa.com",
+            "secretary2@transcomarapa.com",
+            "secretary3@transcomarapa.com",
+            "driver1@transcomarapa.com",
+            "assistant1@transcomarapa.com",
+            "client1@transcomarapa.com",
+            "client2@transcomarapa.com",
+            "client3@transcomarapa.com",
+            "client4@transcomarapa.com",
+            "client5@transcomarapa.com"
         ]
 
         # Disable foreign key checks temporarily for MySQL
@@ -1286,9 +1275,9 @@ def create_test_users():
 
             # Crear una oficina
             office = Office(
-                name="Oficina Predeterminada",
-                phone="33445566",
-                email="default@transcomarapa.com",
+                name="Oficina Central Santa Cruz",
+                phone="78175576",
+                email="santacruz@transcomarapa.com",
                 location_id=location.id
             )
             db.add(office)
@@ -1301,17 +1290,17 @@ def create_test_users():
         test_users = [
             {
                 "username": "admin1",
-                "email": "admin1@comarapa.com",
+                "email": "admin1@transcomarapa.com",
                 "role": "admin",
                 "password": "123456",
                 "firstname": "Admin",
                 "lastname": "Principal",
                 "phone": "77123456",
-                "birth_date": date(1985, 5, 15)
+                "birth_date": date(1980, 5, 15)
             },
             {
                 "username": "secretary1",
-                "email": "secretary1@comarapa.com",
+                "email": "secretary1@transcomarapa.com",
                 "role": "secretary",
                 "password": "123456",
                 "firstname": "Secretaria",
@@ -1322,7 +1311,7 @@ def create_test_users():
             },
             {
                 "username": "secretary2",
-                "email": "secretary2@comarapa.com",
+                "email": "secretary2@transcomarapa.com",
                 "role": "secretary",
                 "password": "123456",
                 "firstname": "Ana",
@@ -1333,7 +1322,7 @@ def create_test_users():
             },
             {
                 "username": "secretary3",
-                "email": "secretary3@comarapa.com",
+                "email": "secretary3@transcomarapa.com",
                 "role": "secretary",
                 "password": "123456",
                 "firstname": "Carlos",
@@ -1344,7 +1333,7 @@ def create_test_users():
             },
             {
                 "username": "driver1",
-                "email": "driver1@comarapa.com",
+                "email": "driver1@transcomarapa.com",
                 "role": "driver",
                 "password": "123456",
                 "firstname": "Conductor",
@@ -1353,12 +1342,12 @@ def create_test_users():
                 "birth_date": date(1982, 3, 10),
                 "license_number": "LC123456",
                 "license_type": "A",
-                "license_expiry": date(2025, 12, 31),
+                "license_expiry": date(2026, 12, 31),
                 "status": "active"
             },
             {
                 "username": "assistant1",
-                "email": "assistant1@comarapa.com",
+                "email": "assistant1@transcomarapa.com",
                 "role": "assistant",
                 "password": "123456",
                 "firstname": "Asistente",
@@ -1368,7 +1357,7 @@ def create_test_users():
             },
             {
                 "username": "client1",
-                "email": "client1@comarapa.com",
+                "email": "client1@transcomarapa.com",
                 "role": "client",
                 "password": "123456",
                 "firstname": "Cliente",
@@ -1382,7 +1371,7 @@ def create_test_users():
             },
             {
                 "username": "client2",
-                "email": "client2@comarapa.com",
+                "email": "client2@transcomarapa.com",
                 "role": "client",
                 "password": "123456",
                 "firstname": "María",
@@ -1396,7 +1385,7 @@ def create_test_users():
             },
             {
                 "username": "client3",
-                "email": "client3@comarapa.com",
+                "email": "client3@transcomarapa.com",
                 "role": "client",
                 "password": "123456",
                 "firstname": "Pedro",
@@ -1410,7 +1399,7 @@ def create_test_users():
             },
             {
                 "username": "client4",
-                "email": "client4@comarapa.com",
+                "email": "client4@transcomarapa.com",
                 "role": "client",
                 "password": "123456",
                 "firstname": "Luisa",
@@ -1424,7 +1413,7 @@ def create_test_users():
             },
             {
                 "username": "client5",
-                "email": "client5@comarapa.com",
+                "email": "client5@transcomarapa.com",
                 "role": "client",
                 "password": "123456",
                 "firstname": "Roberto",
@@ -1540,9 +1529,9 @@ def create_test_users():
         print("• Roberto Silva (CI: 9753228) - Usado en pruebas de paquetes")
         print("\nSecretarios de prueba:")
         print("======================")
-        print("• secretary1@comarapa.com (Secretaria Principal)")
-        print("• secretary2@comarapa.com (Ana García)")
-        print("• secretary3@comarapa.com (Carlos López)")
+        print("• secretary1@transcomarapa.com (Secretaria Principal)")
+        print("• secretary2@transcomarapa.com (Ana García)")
+        print("• secretary3@transcomarapa.com (Carlos López)")
         print("Contraseña para todos: 123456")
         print("\nPuedes buscar por nombre, apellido o CI en el frontend")
         print("\nPara registrar paquetes, usa cualquiera de los secretarios de arriba.")

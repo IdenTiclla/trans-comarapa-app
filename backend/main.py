@@ -45,8 +45,22 @@ from models.ticket_state_history import TicketStateHistory
 load_dotenv()
 DEBUG = os.getenv("DEBUG", "True")
 
-# Rate limiter configuration
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiter configuration - deshabilitar en testing
+def get_rate_limiter():
+    """Configura el rate limiter según el ambiente"""
+    is_testing = os.getenv("TESTING", "false").lower() == "true"
+    if is_testing:
+        # Rate limiter deshabilitado para testing
+        def disabled_limiter(*args, **kwargs):
+            return lambda func: func
+        return type('DisabledLimiter', (), {
+            'limit': disabled_limiter,
+            'key_func': get_remote_address
+        })()
+    else:
+        return Limiter(key_func=get_remote_address)
+
+limiter = get_rate_limiter()
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -61,9 +75,11 @@ app = FastAPI(
     debug=DEBUG
 )
 
-# Add rate limiter to the app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Add rate limiter to the app (solo en producción)
+is_testing = os.getenv("TESTING", "false").lower() == "true"
+if not is_testing:
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(

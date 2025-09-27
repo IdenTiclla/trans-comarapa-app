@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Replace YOUR_TOKEN with a valid JWT token from an admin user
+# Replace YOUR_ADMIN_JWT_TOKEN_HERE with a valid JWT token from an admin user
 # You can get a token by logging in first
 
 curl -X POST http://localhost:8000/api/v1/drivers \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbjFAY29tYXJhcGEuY29tIiwicm9sZSI6ImFkbWluIiwiaXNfYWRtaW4iOnRydWUsImlzX2FjdGl2ZSI6dHJ1ZSwianRpIjoiMjAxYjVlMTc4YTAyYjJjMzZhNjFhY2JjMWJkODRmNDUiLCJleHAiOjE3NDUyNTQ1MDYsImlhdCI6MTc0NTI1MjcwNn0.O44d4rDPSIwfM9IxuzUI593nGSHiv246x9-zvLwI6Tc" \
+-H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE" \
 -d '{
   "user": {
-    "email": "driver100@comarapa.com",
+    "email": "driver100@transcomarapa.com",
     "password": "123456",
     "username": "driver100",
     "role": "driver",

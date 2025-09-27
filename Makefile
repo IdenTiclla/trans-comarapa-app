@@ -131,9 +131,9 @@ setup: ## Configuración inicial del proyecto
 	@echo "  📊 Base de datos: localhost:3308"
 	@echo ""
 	@echo "👥 Usuarios de prueba creados:"
-	@echo "  📧 Admin: admin1@comarapa.com (contraseña: 123456)"
-	@echo "  📧 Secretario: secretary1@comarapa.com (contraseña: 123456)"
-	@echo "  📧 Cliente: client1@comarapa.com (contraseña: 123456)"
+	@echo "  📧 Admin: admin1@transcomarapa.com (contraseña: 123456)"
+	@echo "  📧 Secretario: secretary1@transcomarapa.com (contraseña: 123456)"
+	@echo "  📧 Cliente: client1@transcomarapa.com (contraseña: 123456)"
 	@echo ""
 	@echo "🔍 Para ver todos los usuarios de prueba: make seed-test-users"
 
