@@ -1,13 +1,17 @@
+# Environment files
 .env
 .env.local
 .env.*.local
 
+# Node modules
 node_modules
 
+# Nuxt files
 .nuxt
 .output
 dist
 
+# System files
 .DS_Store
 
 # Temporary test files
@@ -18,4 +22,13 @@ cookies_after_logout.txt
 docs/auth_consolidated_plan.md
 
 # Claude files
-.claude
+.claude/
+
+# Cursor files
+.cursor/
+
+# gemini files
+.gemini/
+
+# vscode files
+.vscode/
