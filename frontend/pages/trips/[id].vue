@@ -41,21 +41,12 @@
             :departure-time="displayedTrip.departure_time"
           />
 
-          <!-- Detalles del viaje -->
-          <TripDetailsCard
-            :trip="displayedTrip"
-            :format-date="formatDate"
-            :format-time="formatTime"
-            :get-status-class="getStatusClass"
-            :get-status-text="getStatusText"
-          />
-
         </div>
       </div>
     </div>
 
     <!-- Panel de ayuda flotante para modo de cambio de asiento -->
-    <div v-if="seatChangeMode" class="fixed bottom-4 right-4 z-40 max-w-sm">
+    <div v-if="seatChangeMode" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-40 w-auto sm:w-full sm:max-w-sm">
       <div class="bg-white rounded-xl shadow-2xl border border-orange-200 p-4 transform transition-all duration-300">
         <div class="flex items-start space-x-3">
           <div class="flex-shrink-0">
@@ -119,6 +110,19 @@
               <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.total_seats }} totales</span>
               <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
             </div>
+            
+            <!-- Botón Ver Planilla -->
+            <a
+              :href="`/trips/${tripId}-sheet`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-underline ml-4"
+            >
+              <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Planilla
+            </a>
           </div>
         </div>
       </div>
@@ -231,113 +235,12 @@
       />
       
       <!-- Panel de acciones rápidas para selección de asientos -->
-      <div v-if="selectedSeatsForSale.length > 0 && !seatChangeMode" class="mt-4 px-4 sm:px-6 lg:px-8">
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <h4 class="text-sm font-medium text-blue-900">
-                  {{ selectedSeatsForSale.length }} asiento{{ selectedSeatsForSale.length !== 1 ? 's' : '' }} seleccionado{{ selectedSeatsForSale.length !== 1 ? 's' : '' }}
-                </h4>
-                <p class="text-xs text-blue-700">
-                  Asientos: {{ selectedSeatsForSale.map(seat => seat.number).join(', ') }}
-                </p>
-              </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-              <!-- Botones de acción rápida -->
-              <button
-                @click="handleSellTicket()"
-                class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
-              >
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Vender <span class="keyboard-shortcut ml-1">V</span>
-              </button>
-              
-              <button
-                @click="handleReserveSeat()"
-                class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-yellow-600 border border-transparent rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200"
-              >
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Reservar <span class="keyboard-shortcut ml-1">R</span>
-              </button>
-              
-              <button
-                @click="selectedSeatsForSale = []"
-                class="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
-              >
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Limpiar <span class="keyboard-shortcut ml-1">C</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
 
-    <!-- Resto del contenido -->
+    <!-- Resto del contenido eliminado (Gestión de boletos y encomiendas) -->
     <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div v-if="displayedTrip">
-        <!-- Sección de boletos vendidos -->
-          <SoldTicketsSection
-            :sold-tickets="soldTickets"
-            :is-loading-sold-tickets="isLoadingSoldTickets"
-            :sold-tickets-error="soldTicketsError"
-            :show-sold-tickets="showSoldTickets"
-            :grouped-sold-tickets="groupedSoldTickets"
-            :show-tickets-by-state="showTicketsByState"
-            @toggle-sold-tickets="toggleSoldTickets"
-            @toggle-tickets-by-state="toggleTicketsByState"
-            @cancel-ticket="openCancelModal"
-            @view-ticket-details="openDetailsModal"
-          />
-
-          <!-- Botón Ver Planilla de Pasajeros -->
-          <div v-if="displayedTrip" class="mt-6 flex justify-center">
-            <a
-              :href="`/trips/${tripId}-sheet`"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-underline"
-            >
-              <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Ver Planilla de Pasajeros
-              <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          </div>
-
-          <!-- Sección de paquetes -->
-          <PackagesSection
-            :packages="packages"
-            :is-loading-packages="isLoadingPackages"
-            :packages-error="packagesError"
-            :show-packages="showPackages"
-            :grouped-packages="groupedPackages"
-            :show-packages-by-status="showPackagesByStatus"
-            :trip="displayedTrip"
-            @toggle-packages="togglePackages"
-            @toggle-packages-by-status="togglePackagesByStatus"
-            @open-package-modal="openPackageModal"
-          />
-
       </div>
     </div>
   </div>
@@ -355,13 +258,7 @@
     @print="printTicket"
   />
 
-  <!-- Modal para registro de paquete -->
-  <PackageRegistrationModal
-    :showModal="showPackageModal"
-    :trip="displayedTrip"
-    @close="closePackageModal"
-    @package-registered="handlePackageRegistered"
-  />
+
 
   <!-- Modal de notificación general -->
   <NotificationModal
@@ -613,12 +510,8 @@ import { changeSeat } from '@/services/ticketService'
 import AppButton from '@/components/AppButton.vue'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
 import TripCountdown from '@/components/TripCountdown.vue'
-import TripDetailsCard from '@/components/TripDetailsCard.vue'
-import SoldTicketsSection from '@/components/SoldTicketsSection.vue'
-import PackagesSection from '@/components/PackagesSection.vue'
 import TicketModal from '@/components/TicketModal.vue'
 import TicketSaleModal from '@/components/TicketSaleModal.vue'
-import PackageRegistrationModal from '@/components/PackageRegistrationModal.vue'
 import NotificationModal from '@/components/NotificationModal.vue'
 
 const route = useRoute()
@@ -632,26 +525,9 @@ const displayedTrip = computed(() => tripStore.currentTrip)
 // Usar el composable para manejar los detalles del viaje
 const {
   soldTickets,
-  isLoadingSoldTickets,
-  soldTicketsError,
-  showSoldTickets,
-  showTicketsByState,
-  packages,
-  isLoadingPackages,
-  packagesError,
-  showPackages,
-  showPackagesByStatus,
-  groupedSoldTickets,
-  groupedPackages,
   reservedSeatNumbers,
   fetchSoldTickets,
-  fetchPackages,
-  toggleSoldTickets,
-  toggleTicketsByState,
-  togglePackages,
-  togglePackagesByStatus,
   clearState,
-  initializeAllSections,
   formatDate,
   formatTime,
   getStatusClass,
@@ -667,7 +543,6 @@ const saleActionType = ref('sell')
 const modalType = ref('details')
 const cancellingReservation = ref(false)
 const selectedSeatsForSale = ref([])
-const showPackageModal = ref(false)
 
 // Estado para cambio de asiento
 const seatChangeMode = ref(false)
@@ -766,8 +641,7 @@ onMounted(async () => {
     if (displayedTrip.value && displayedTrip.value.id) {
       console.log('Cargando datos para el viaje:', displayedTrip.value.id)
       await Promise.all([
-        fetchSoldTickets(displayedTrip.value.id),
-        fetchPackages(displayedTrip.value.id)
+        fetchSoldTickets(displayedTrip.value.id)
       ])
     } else {
       console.error('Trip not loaded properly after fetchTripById')
@@ -787,12 +661,7 @@ onBeforeUnmount(() => {
 // Watchers para recargar datos cuando cambie el trip
 watch(() => displayedTrip.value?.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    if (showSoldTickets.value) {
-      fetchSoldTickets(newId)
-    }
-    if (showPackages.value) {
-      fetchPackages(newId)
-    }
+    fetchSoldTickets(newId)
   }
 }, { immediate: false })
 
@@ -970,8 +839,7 @@ const confirmSeatChange = async () => {
     if (displayedTrip.value?.id) {
       await Promise.all([
         tripStore.fetchTripById(displayedTrip.value.id), // Actualizar datos del viaje
-        fetchSoldTickets(displayedTrip.value.id),        // Actualizar tickets vendidos
-        fetchPackages(displayedTrip.value.id)            // Actualizar paquetes por si acaso
+        fetchSoldTickets(displayedTrip.value.id)         // Actualizar tickets vendidos
       ])
       
       // Forzar re-renderizado del mapa de asientos
@@ -1130,24 +998,7 @@ const printTicket = () => {
   window.print()
 }
 
-// Funciones para paquetes
-const openPackageModal = () => {
-  showPackageModal.value = true
-}
 
-const closePackageModal = () => {
-  showPackageModal.value = false
-}
-
-const handlePackageRegistered = async (newPackage) => {
-  console.log('Paquete registrado exitosamente:', newPackage)
-  
-  await fetchPackages(displayedTrip.value.id)
-  
-  if (!showPackages.value) {
-    showPackages.value = true
-  }
-}
 
 // Funciones para notificaciones
 const closeNotificationModal = () => {

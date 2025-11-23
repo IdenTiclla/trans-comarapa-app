@@ -8,28 +8,16 @@
         <span>Leyenda de Estados</span>
       </h4>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-        <div class="flex flex-col items-center space-y-3 p-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span class="text-white font-bold text-sm">✓</span>
-          </div>
+        <div class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg border-2 bg-gradient-to-br from-emerald-50 to-green-100 border-emerald-300">
           <span class="text-sm font-bold text-gray-700">Disponible</span>
         </div>
-        <div class="flex flex-col items-center space-y-3 p-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span class="text-white font-bold text-sm">👆</span>
-          </div>
+        <div class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg border-2 bg-gradient-to-br from-blue-100 to-indigo-200 border-blue-400">
           <span class="text-sm font-bold text-gray-700">Seleccionado</span>
         </div>
-        <div class="flex flex-col items-center space-y-3 p-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span class="text-white font-bold text-sm">⏳</span>
-          </div>
+        <div class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg border-2 bg-gradient-to-br from-amber-100 to-orange-200 border-orange-300">
           <span class="text-sm font-bold text-gray-700">Reservado</span>
         </div>
-        <div class="flex flex-col items-center space-y-3 p-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span class="text-white font-bold text-sm">🚫</span>
-          </div>
+        <div class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg border-2 bg-gradient-to-br from-red-100 to-red-200 border-red-300">
           <span class="text-sm font-bold text-gray-700">Ocupado</span>
         </div>
       </div>

@@ -7,7 +7,7 @@
     </div>
 
     <!-- Main Countdown Container -->
-    <div v-if="!isPast && !isTimeToTravel" class="grid grid-cols-4 gap-4 sm:gap-6">
+    <div v-if="!isPast && !isTimeToTravel" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
       <!-- Days -->
       <div class="flex flex-col items-center">
         <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">

@@ -23,7 +23,7 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-between text-center h-32 sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
@@ -84,7 +84,7 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-3 sm:p-4 flex flex-col justify-between text-center h-32 sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
