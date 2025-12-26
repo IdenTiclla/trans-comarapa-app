@@ -1,18 +1,61 @@
 <template>
-  <div>
-    <!-- Esta página ya no debería ser accesible directamente -->
-    <!-- El middleware redirigirá automáticamente -->
-    <div class="text-center py-10">
-      <p>Redirigiendo...</p>
-    </div>
+  <div data-landing-layout class="min-h-screen bg-white font-inter">
+    <!-- Navbar -->
+    <LandingNavbar />
+    
+    <!-- Hero Section -->
+    <LandingHero />
+    
+    <!-- Horarios Section -->
+    <LandingSchedule />
+    
+    <!-- Rutas Section -->
+    <LandingRouteMap />
+    
+    <!-- Servicios Section -->
+    <LandingServices />
+    
+    <!-- Testimonios Section -->
+    <LandingTestimonials />
+    
+    <!-- Oficinas Section -->
+    <LandingOffices />
+    
+    <!-- Contacto Section -->
+    <LandingContact />
+    
+    <!-- Footer -->
+    <LandingFooter />
   </div>
 </template>
 
 <script setup>
-definePageMeta({
-  title: 'Redirigiendo...',
-});
+// Importar componentes de landing
+import LandingNavbar from '~/components/landing/LandingNavbar.vue'
+import LandingHero from '~/components/landing/LandingHero.vue'
+import LandingSchedule from '~/components/landing/LandingSchedule.vue'
+import LandingRouteMap from '~/components/landing/LandingRouteMap.vue'
+import LandingServices from '~/components/landing/LandingServices.vue'
+import LandingTestimonials from '~/components/landing/LandingTestimonials.vue'
+import LandingOffices from '~/components/landing/LandingOffices.vue'
+import LandingContact from '~/components/landing/LandingContact.vue'
+import LandingFooter from '~/components/landing/LandingFooter.vue'
 
-// Esta página ahora solo sirve como fallback
-// El middleware global se encarga de todas las redirecciones
+// Definir metadata de la página - usa layout de landing
+definePageMeta({
+  layout: 'landing',
+  title: 'Trans Comarapa - Transporte Regional',
+})
 </script>
+
+<style>
+/* Estilos específicos para la landing page */
+.font-inter {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Smooth scrolling para anchor links */
+html {
+  scroll-behavior: smooth;
+}
+</style>

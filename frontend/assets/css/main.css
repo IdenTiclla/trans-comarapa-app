@@ -1,6 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colores regionales de Comarapa */
+    --comarapa-dark: #0D47A1;
+    --comarapa-medium: #2196F3;
+    --comarapa-light: #64B5F6;
+    --comarapa-white: #FFFFFF;
+    --comarapa-gray: #E3F2FD;
+  }
+}
 
 /* Estilos personalizados */
 html, body {
@@ -39,4 +52,69 @@ h1, h2, h3, h4, h5, h6 {
 
 .container {
   @apply px-4;
+}
+
+@layer components {
+  /* Componentes personalizados para Trans Comarapa Landing */
+  .comarapa-gradient {
+    background: linear-gradient(135deg, var(--comarapa-dark) 0%, var(--comarapa-medium) 50%, var(--comarapa-light) 100%);
+  }
+  
+  .comarapa-card {
+    @apply bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 transition-all duration-300;
+  }
+  
+  .comarapa-card:hover {
+    @apply shadow-xl;
+    box-shadow: 0 25px 50px -12px rgba(33, 150, 243, 0.25);
+  }
+  
+  .comarapa-button-primary {
+    @apply bg-comarapa-dark text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base;
+  }
+  
+  .comarapa-button-primary:hover {
+    @apply bg-comarapa-medium shadow-lg;
+    transform: translateY(-2px);
+  }
+  
+  .comarapa-button-secondary {
+    @apply bg-white text-comarapa-dark border-2 border-comarapa-dark px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base;
+  }
+  
+  .comarapa-button-secondary:hover {
+    @apply bg-comarapa-dark text-white shadow-lg;
+    transform: translateY(-2px);
+  }
+
+  /* Responsive utilities para landing */
+  .touch-safe {
+    @apply touch-manipulation;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .responsive-text-hero {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
+  }
+
+  .responsive-text-title {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  .responsive-text-subtitle {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+
+  .responsive-text-body {
+    @apply text-sm sm:text-base;
+  }
+
+  .responsive-spacing-section {
+    @apply py-12 sm:py-16 md:py-20 lg:py-24;
+  }
+
+  .responsive-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
 }

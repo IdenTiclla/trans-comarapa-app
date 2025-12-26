@@ -1,4 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
+  // Rutas públicas que no requieren autenticación
+  const publicRoutes = ['/', '/login']
+  
   // Si estamos en el lado del cliente
   if (process.client) {
     try {
@@ -14,8 +17,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         authStore.init();
       }
 
-      // Si el usuario no está autenticado y no está en la página de login, redirigir a login
-      if (!authStore.isAuthenticated && to.path !== '/login') {
+      // Si el usuario no está autenticado y no está en una ruta pública, redirigir a login
+      if (!authStore.isAuthenticated && !publicRoutes.includes(to.path)) {
         // console.log('[Auth Middleware] Not authenticated, redirecting to /login. Current path:', to.path);
         return navigateTo('/login')
       }
@@ -52,8 +55,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
     } catch (error) {
       console.error('Error en middleware de autenticación:', error)
-      // En caso de error, redirigir a login por seguridad
-      if (to.path !== '/login') {
+      // En caso de error, redirigir a login por seguridad (excepto rutas públicas)
+      if (!publicRoutes.includes(to.path)) {
         return navigateTo('/login')
       }
     }

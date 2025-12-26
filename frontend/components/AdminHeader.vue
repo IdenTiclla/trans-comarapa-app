@@ -132,7 +132,7 @@ const handleLogout = async () => {
   await authStore.logout()
   isUserMenuOpen.value = false // Cierra el dropdown
   mobileMenuOpen.value = false // Cierra el menu mobil si estuviera abierto
-  router.push('/login')
+  router.push('/') // Redirigir a la landing page
 }
 
 // Lógica para cerrar el dropdown si se hace clic fuera
