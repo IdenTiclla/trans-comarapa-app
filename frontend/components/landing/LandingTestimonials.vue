@@ -1,17 +1,17 @@
 <template>
-  <section id="testimonios" class="py-24 bg-comarapa-dark text-white">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-16">
-        <div class="inline-flex items-center gap-2 bg-comarapa-light/20 px-4 py-2 rounded-full mb-4">
-          <svg class="h-5 w-5 text-comarapa-light" fill="currentColor" viewBox="0 0 24 24">
+  <section id="testimonios" class="py-16 sm:py-20 md:py-24 bg-comarapa-dark text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-10 sm:mb-12 md:mb-16">
+        <div class="inline-flex items-center gap-2 bg-comarapa-light/20 px-3 sm:px-4 py-2 rounded-full mb-4">
+          <svg class="h-4 w-4 sm:h-5 sm:w-5 text-comarapa-light" fill="currentColor" viewBox="0 0 24 24">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
           </svg>
-          <span class="text-comarapa-light font-medium">Testimonios</span>
+          <span class="text-comarapa-light font-medium text-sm sm:text-base">Testimonios</span>
         </div>
-        <h2 class="text-4xl md:text-5xl font-bold mb-6">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
           Lo que dicen nuestros <span class="text-comarapa-light">clientes</span>
         </h2>
-        <p class="text-xl text-white/80 max-w-2xl mx-auto">
+        <p class="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto px-4">
           Más de 20 años construyendo confianza con nuestros pasajeros
         </p>
       </div>
@@ -59,18 +59,21 @@
             </div>
 
             <!-- Dot indicators -->
-            <div class="flex justify-center mt-6 sm:mt-8 space-x-2 sm:space-x-3">
+            <div class="flex justify-center mt-6 sm:mt-8 gap-1 sm:gap-2">
               <button
                 v-for="(_, index) in testimonials"
                 :key="index"
                 @click="goToSlide(index)"
-                class="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 hover:scale-110 touch-manipulation"
-                :class="index === currentIndex 
-                  ? 'bg-comarapa-medium scale-110 shadow-lg' 
-                  : 'bg-gray-500 hover:bg-gray-400'"
-                style="min-width: 44px; min-height: 44px;"
+                class="p-2 sm:p-2.5 touch-manipulation"
                 :aria-label="`Ir a reseña ${index + 1}`"
-              />
+              >
+                <span
+                  class="block w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300"
+                  :class="index === currentIndex
+                    ? 'bg-comarapa-medium scale-125 shadow-lg'
+                    : 'bg-gray-500 hover:bg-gray-400'"
+                />
+              </button>
             </div>
           </div>
 

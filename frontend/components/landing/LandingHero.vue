@@ -137,7 +137,7 @@ const GlobeIcon = {
 
 const stats = [
   { number: "23", label: "Localidades", icon: MapPinIcon },
-  { number: "20+", label: "Años de experiencia", icon: AwardIcon },
+  { number: "10+", label: "Años de experiencia", icon: AwardIcon },
   { number: "4", label: "Oficinas", icon: GlobeIcon }
 ]
 
