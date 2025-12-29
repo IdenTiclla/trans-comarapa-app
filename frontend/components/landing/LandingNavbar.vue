@@ -111,7 +111,7 @@ const isMenuOpen = ref(false)
 
 const navItems = [
   { href: "#inicio", text: "Inicio" },
-  { href: "#horarios", text: "Horarios" },
+  { href: "#horarios-titulo", text: "Horarios" },
   { href: "#servicios", text: "Servicios" },
   { href: "#rutas", text: "Rutas" },
   { href: "#oficinas", text: "Oficinas" },

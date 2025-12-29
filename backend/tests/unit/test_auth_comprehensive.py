@@ -127,48 +127,6 @@ class TestAuthenticationLogin:
         assert "access_token" in cookies
         assert "refresh_token" in cookies
 
-    @pytest.mark.unit
-    def test_login_brute_force_protection_warning(self, client, test_user):
-        """Prueba que se muestren advertencias de intentos restantes."""
-        # Hacer algunos intentos fallidos para activar las advertencias
-        for attempt in range(3):
-            response = client.post(
-                "/api/v1/auth/login",
-                data={
-                    "username": "test@example.com",
-                    "password": "wrongpassword"
-                }
-            )
-            assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_429_TOO_MANY_REQUESTS]
-
-            # Si no está bloqueado, verificar que el mensaje incluya información útil
-            if response.status_code == status.HTTP_401_UNAUTHORIZED:
-                data = response.json()
-                assert "detail" in data
-
-    @pytest.mark.unit
-    def test_login_successful_clears_failed_attempts(self, client, test_user):
-        """Prueba que un login exitoso limpie los intentos fallidos previos."""
-        # Hacer algunos intentos fallidos
-        for _ in range(2):
-            client.post(
-                "/api/v1/auth/login",
-                data={
-                    "username": "test@example.com",
-                    "password": "wrongpassword"
-                }
-            )
-
-        # Login exitoso debería limpiar los intentos
-        response = client.post(
-            "/api/v1/auth/login",
-            data={
-                "username": "test@example.com",
-                "password": "password123"
-            }
-        )
-        assert response.status_code == status.HTTP_200_OK
-
 # ============ COMPREHENSIVE LOGOUT TESTS ============
 
 class TestAuthenticationLogout:

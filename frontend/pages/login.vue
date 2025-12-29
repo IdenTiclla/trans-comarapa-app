@@ -1,36 +1,36 @@
 <template>
-  <div class="login-container" role="main" aria-labelledby="login-title">
-    <div class="login-card">
-      <!-- Header with brand -->
-      <header class="login-header">
-        <div class="brand-section">
-          <div class="brand-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <h1 id="login-title" class="brand-title">Trans Comarapa</h1>
-            <p class="brand-subtitle">Sistema de Gestión de Transporte</p>
-          </div>
-        </div>
-        <div class="welcome-text">
-          <h2 class="welcome-title">Bienvenido de vuelta</h2>
-          <p class="welcome-subtitle">Ingresa tus credenciales para continuar</p>
-        </div>
+  <div class="w-full" role="main" aria-labelledby="login-title">
+    <!-- Mobile Header (visible only on mobile) -->
+    <div class="lg:hidden text-center mb-8">
+      <div class="inline-flex items-center justify-center bg-gradient-to-br from-comarapa-dark to-comarapa-medium p-4 rounded-2xl shadow-lg mb-4">
+        <svg class="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 6v6m8-6v6m-10 0h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"/>
+          <circle cx="6" cy="18" r="2"/>
+          <circle cx="18" cy="18" r="2"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-comarapa-dark">Trans Comarapa</h1>
+      <p class="text-comarapa-medium text-sm">Sistema de Gestión de Transporte</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-comarapa-gray">
+      <!-- Header -->
+      <header class="mb-6 text-center lg:text-left">
+        <h2 id="login-title" class="text-2xl font-bold text-comarapa-dark mb-2">Bienvenido de vuelta</h2>
+        <p class="text-gray-500">Ingresa tus credenciales para continuar</p>
       </header>
 
       <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="login-form" aria-labelledby="login-title" novalidate>
+      <form @submit.prevent="handleLogin" class="space-y-5" aria-labelledby="login-title" novalidate>
         <!-- Email Field -->
-        <div class="form-group">
-          <label for="email" class="form-label">Correo Electrónico</label>
-          <div class="input-wrapper">
-            <div class="input-icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="space-y-2">
+          <label for="email" class="block text-sm font-semibold text-gray-700">
+            Correo Electrónico
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
               </svg>
             </div>
@@ -40,11 +40,14 @@
               type="email"
               required
               autocomplete="email"
-              class="form-input"
-              :class="{
-                'input-error': emailError,
-                'input-success': email && !emailError && emailRegex.test(email)
-              }"
+              class="w-full pl-12 pr-4 py-3 border-2 rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none"
+              :class="[
+                emailError
+                  ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                  : email && emailRegex.test(email)
+                    ? 'border-green-400 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                    : 'border-gray-200 bg-gray-50 focus:border-comarapa-medium focus:ring-2 focus:ring-comarapa-light/30 focus:bg-white'
+              ]"
               placeholder="usuario@transcomarapa.com"
               autofocus
               @blur="validateEmail"
@@ -52,23 +55,29 @@
               :aria-invalid="!!emailError"
               :aria-describedby="emailError ? 'email-error' : undefined"
             />
-            <div v-if="email && !emailError && emailRegex.test(email)" class="input-success-icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Success icon -->
+            <div v-if="email && !emailError && emailRegex.test(email)" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+              <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
           </div>
-          <div v-if="emailError" id="email-error" class="error-message" role="alert" aria-live="polite">
+          <p v-if="emailError" id="email-error" class="text-sm text-red-500 flex items-center gap-1" role="alert">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             {{ emailError }}
-          </div>
+          </p>
         </div>
 
         <!-- Password Field -->
-        <div class="form-group">
-          <label for="password" class="form-label">Contraseña</label>
-          <div class="input-wrapper">
-            <div class="input-icon" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="space-y-2">
+          <label for="password" class="block text-sm font-semibold text-gray-700">
+            Contraseña
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -78,11 +87,14 @@
               :type="showPassword ? 'text' : 'password'"
               required
               autocomplete="current-password"
-              class="form-input"
-              :class="{
-                'input-error': passwordError,
-                'input-success': password && !passwordError && password.length >= 6
-              }"
+              class="w-full pl-12 pr-12 py-3 border-2 rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none"
+              :class="[
+                passwordError
+                  ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200'
+                  : password && password.length >= 6
+                    ? 'border-green-400 bg-green-50 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                    : 'border-gray-200 bg-gray-50 focus:border-comarapa-medium focus:ring-2 focus:ring-comarapa-light/30 focus:bg-white'
+              ]"
               placeholder="Ingresa tu contraseña"
               @blur="validatePassword"
               @input="clearPasswordError"
@@ -91,99 +103,75 @@
             />
             <button
               type="button"
-              class="password-toggle"
+              class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
               @click="showPassword = !showPassword"
               :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             >
-              <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-if="showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 11-4.243-4.243m4.242 4.242L9.88 9.88" />
               </svg>
             </button>
           </div>
-          <div v-if="passwordError" id="password-error" class="error-message" role="alert" aria-live="polite">
+          <p v-if="passwordError" id="password-error" class="text-sm text-red-500 flex items-center gap-1" role="alert">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             {{ passwordError }}
-          </div>
+          </p>
         </div>
 
         <!-- Server Error Message -->
-        <div v-if="authStore.error" class="server-error" role="alert" aria-live="assertive">
-          <div class="error-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.865-.833-2.635 0L4.179 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <span>{{ authStore.error }}</span>
-        </div>
-
-        <!-- Security Info Panel -->
-        <div v-if="showSecurityInfo" class="security-info" role="status" aria-live="polite">
-          <div class="security-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <div class="security-content">
-            <div class="security-title">Información de Seguridad</div>
-            <div class="security-details">
-              <div v-if="failedAttempts > 0" class="attempt-warning">
-                <span class="warning-text">
-                  Intentos fallidos: {{ failedAttempts }}/5
-                </span>
-                <div class="attempt-bar">
-                  <div 
-                    class="attempt-progress" 
-                    :style="{ width: `${(failedAttempts / 5) * 100}%` }"
-                    :class="{
-                      'progress-low': failedAttempts <= 2,
-                      'progress-medium': failedAttempts === 3 || failedAttempts === 4,
-                      'progress-high': failedAttempts >= 5
-                    }"
-                  ></div>
-                </div>
-              </div>
-              <div v-if="remainingAttempts !== null && remainingAttempts <= 3" class="attempts-remaining">
-                <span v-if="remainingAttempts > 0">
-                  Te quedan <strong>{{ remainingAttempts }}</strong> {{ remainingAttempts === 1 ? 'intento' : 'intentos' }} antes del bloqueo
-                </span>
-                <span v-else class="blocked-message">
-                  Cuenta temporalmente bloqueada. Intenta nuevamente en unos minutos.
-                </span>
-              </div>
-              <div class="security-tips">
-                <span>💡 Verifica que tu email y contraseña sean correctos</span>
-              </div>
-            </div>
-          </div>
+        <div v-if="authStore.error" class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3" role="alert" aria-live="assertive">
+          <svg class="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.865-.833-2.635 0L4.179 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <span class="text-red-700 text-sm">{{ authStore.error }}</span>
         </div>
 
         <!-- Submit Button -->
         <button
           type="submit"
-          class="submit-button"
-          :class="{
-            'button-disabled': !isFormValid || authStore.loading,
-            'button-enabled': isFormValid && !authStore.loading
-          }"
+          class="w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 min-h-[48px]"
+          :class="[
+            isFormValid && !authStore.loading
+              ? 'bg-gradient-to-r from-comarapa-dark to-comarapa-medium hover:from-comarapa-medium hover:to-comarapa-dark shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+              : 'bg-gray-300 cursor-not-allowed'
+          ]"
           :disabled="!isFormValid || authStore.loading"
-          :aria-describedby="!isFormValid ? 'form-validation-help' : undefined"
         >
-          <div v-if="authStore.loading" class="loading-spinner" aria-hidden="true"></div>
+          <svg v-if="authStore.loading" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
           <span>{{ authStore.loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
         </button>
 
-        <!-- Form validation help text -->
-        <div v-if="!isFormValid" id="form-validation-help" class="form-help" aria-live="polite">
+        <!-- Form validation help -->
+        <p v-if="!isFormValid" class="text-center text-sm text-gray-500">
           Complete todos los campos correctamente para continuar
-        </div>
+        </p>
       </form>
 
+      <!-- Back to Home Link -->
+      <div class="mt-6 text-center">
+        <NuxtLink
+          to="/"
+          class="inline-flex items-center gap-2 text-comarapa-medium hover:text-comarapa-dark transition-colors text-sm font-medium"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver al inicio
+        </NuxtLink>
+      </div>
+
       <!-- Footer -->
-      <footer class="login-footer">
-        <p>&copy; {{ new Date().getFullYear() }} Trans Comarapa. Todos los derechos reservados.</p>
+      <footer class="mt-8 pt-6 border-t border-gray-100 text-center">
+        <p class="text-xs text-gray-400">&copy; {{ new Date().getFullYear() }} Trans Comarapa. Todos los derechos reservados.</p>
       </footer>
     </div>
   </div>
@@ -194,7 +182,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
 
-// Definir variables reactivas
+// Reactive variables
 const email = ref('')
 const password = ref('')
 const emailError = ref('')
@@ -203,28 +191,21 @@ const showPassword = ref(false)
 const authStore = useAuthStore()
 const router = useRouter()
 
-// Variables para información de seguridad
-const failedAttempts = ref(0)
-const remainingAttempts = ref(null)
-const showSecurityInfo = ref(false)
-
-
-// Expresiones regulares para validación
+// Regex for validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// Computed property para verificar si el formulario es válido
+// Computed property to check if form is valid
 const isFormValid = computed(() => {
-  return email.value && 
-         password.value && 
-         !emailError.value && 
+  return email.value &&
+         password.value &&
+         !emailError.value &&
          !passwordError.value &&
          emailRegex.test(email.value) &&
          password.value.length >= 6
 })
 
-// Funciones de validación
+// Validation functions
 const validateEmail = () => {
-  // Solo validar si el usuario ha empezado a escribir algo
   if (email.value.length > 0) {
     if (!emailRegex.test(email.value)) {
       emailError.value = 'Por favor ingresa un email válido'
@@ -235,7 +216,6 @@ const validateEmail = () => {
 }
 
 const validatePassword = () => {
-  // Solo validar si el usuario ha empezado a escribir algo
   if (password.value.length > 0) {
     if (password.value.length < 6) {
       passwordError.value = 'La contraseña debe tener al menos 6 caracteres'
@@ -245,55 +225,13 @@ const validatePassword = () => {
   }
 }
 
-// Función para analizar mensajes de error y extraer información de seguridad
-const parseSecurityInfo = (errorMessage) => {
-  if (!errorMessage) {
-    showSecurityInfo.value = false
-    return
-  }
-
-  // Buscar información sobre intentos restantes
-  const remainingMatch = errorMessage.match(/Te quedan (\d+) intentos?/)
-  if (remainingMatch) {
-    remainingAttempts.value = parseInt(remainingMatch[1])
-    failedAttempts.value = 5 - remainingAttempts.value
-    showSecurityInfo.value = true
-    return
-  }
-
-  // Buscar información sobre bloqueo
-  if (errorMessage.includes('bloqueada') || errorMessage.includes('Demasiados intentos')) {
-    failedAttempts.value = 5
-    remainingAttempts.value = 0
-    showSecurityInfo.value = true
-    return
-  }
-
-  // Si es un error de credenciales incorrectas sin información específica
-  if (errorMessage.includes('Incorrect email or password') || 
-      errorMessage.includes('Credenciales incorrectas') ||
-      errorMessage.includes('Email o contraseña incorrectos')) {
-    failedAttempts.value = Math.min(failedAttempts.value + 1, 5)
-    remainingAttempts.value = Math.max(5 - failedAttempts.value, 0)
-    showSecurityInfo.value = true
-  } else {
-    // Show security info for any login error
-    failedAttempts.value = Math.min(failedAttempts.value + 1, 5)
-    remainingAttempts.value = Math.max(5 - failedAttempts.value, 0)
-    showSecurityInfo.value = true
-  }
-}
-
-// Funciones para limpiar errores mientras el usuario escribe
+// Clear error functions
 const clearEmailError = () => {
   if (emailError.value) {
     emailError.value = ''
   }
-  // También limpiar errores del servidor cuando el usuario empiece a escribir
   if (authStore.error) {
     authStore.clearError()
-    // Reset security info when user starts typing again
-    showSecurityInfo.value = false
   }
 }
 
@@ -301,17 +239,13 @@ const clearPasswordError = () => {
   if (passwordError.value) {
     passwordError.value = ''
   }
-  // También limpiar errores del servidor cuando el usuario empiece a escribir  
   if (authStore.error) {
     authStore.clearError()
-    // Reset security info when user starts typing again
-    showSecurityInfo.value = false
   }
 }
 
-// Validar todo el formulario
+// Validate entire form
 const validateForm = () => {
-  // Validación completa al enviar el formulario
   if (!email.value) {
     emailError.value = 'El email es requerido'
   } else if (!emailRegex.test(email.value)) {
@@ -331,15 +265,14 @@ const validateForm = () => {
   return !emailError.value && !passwordError.value
 }
 
-// Comprobar autenticación al montar el componente
+// Check authentication on mount
 onMounted(() => {
-  // Si el usuario ya está autenticado, redirigir al dashboard correspondiente
   if (authStore.isAuthenticated) {
     redirectToDashboard(authStore.userRole)
   }
 })
 
-// Función para redirigir al usuario al dashboard correspondiente según su rol
+// Redirect function based on role
 const redirectToDashboard = (role) => {
   switch (role) {
     case 'admin':
@@ -362,772 +295,22 @@ const redirectToDashboard = (role) => {
   }
 }
 
-
-// Función para manejar el inicio de sesión
+// Handle login
 const handleLogin = async () => {
-  // Validar el formulario antes de enviar
   if (!validateForm()) {
     return
   }
 
   try {
     const response = await authStore.login(email.value, password.value)
-
-    // Login exitoso - limpiar información de seguridad
-    failedAttempts.value = 0
-    remainingAttempts.value = null
-    showSecurityInfo.value = false
-
-    // Redireccionar al dashboard correspondiente según el rol del usuario
     redirectToDashboard(response.role)
   } catch (error) {
     console.error('Error en el inicio de sesión:', error)
-    
-    // Analizar el mensaje de error para extraer información de seguridad
-    setTimeout(() => {
-      parseSecurityInfo(authStore.error)
-    }, 100) // Small delay to ensure authStore.error is updated
   }
 }
 
-// Definir la metadata de la página
+// Page metadata
 definePageMeta({
-  // Usar el layout de login para esta página
   layout: 'login',
-  // No aplicamos el middleware aquí porque queremos que la página de login sea accesible
 })
 </script>
-
-<style scoped>
-/* Modern Login Container */
-.login-container {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0;
-  box-sizing: border-box;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-card {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 2rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.login-card:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-}
-
-/* Header Styles */
-.login-header {
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.brand-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.brand-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-}
-
-.brand-icon .icon {
-  width: 32px;
-  height: 32px;
-  color: white;
-}
-
-.brand-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 0.25rem 0;
-  letter-spacing: -0.025em;
-}
-
-.brand-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-  font-weight: 500;
-}
-
-.welcome-text {
-  margin-top: 1rem;
-}
-
-.welcome-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-}
-
-.welcome-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* Form Styles */
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 1rem;
-  z-index: 1;
-  color: #9ca3af;
-  transition: color 0.2s ease;
-}
-
-.input-icon .icon {
-  width: 20px;
-  height: 20px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #111827;
-  background-color: #f9fafb;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #667eea;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-input:focus + .input-icon {
-  color: #667eea;
-}
-
-.form-input.input-error {
-  border-color: #ef4444;
-  background-color: #fef2f2;
-}
-
-.form-input.input-success {
-  border-color: #10b981;
-  background-color: #ecfdf5;
-}
-
-.input-success-icon {
-  position: absolute;
-  right: 1rem;
-  color: #10b981;
-}
-
-.input-success-icon .icon {
-  width: 20px;
-  height: 20px;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 1rem;
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
-}
-
-.password-toggle:hover {
-  color: #374151;
-}
-
-.password-toggle .icon {
-  width: 20px;
-  height: 20px;
-}
-
-.error-message {
-  font-size: 0.875rem;
-  color: #ef4444;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.server-error {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #dc2626;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-.error-icon {
-  flex-shrink: 0;
-}
-
-.error-icon .icon {
-  width: 20px;
-  height: 20px;
-}
-
-/* Security Info Panel */
-.security-info {
-  background: linear-gradient(135deg, #fef7cd, #fef3c7);
-  border: 1px solid #f59e0b;
-  border-radius: 12px;
-  padding: 1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  color: #92400e;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.security-icon {
-  flex-shrink: 0;
-  color: #d97706;
-}
-
-.security-icon .icon {
-  width: 20px;
-  height: 20px;
-}
-
-.security-content {
-  flex: 1;
-}
-
-.security-title {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #92400e;
-}
-
-.security-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.attempt-warning {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.warning-text {
-  font-weight: 500;
-  color: #b45309;
-}
-
-.attempt-bar {
-  width: 100%;
-  height: 6px;
-  background-color: #fde68a;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.attempt-progress {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.progress-low {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-
-.progress-medium {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-}
-
-.progress-high {
-  background: linear-gradient(90deg, #ef4444, #f87171);
-}
-
-.attempts-remaining {
-  padding: 0.5rem;
-  background-color: rgba(251, 191, 36, 0.2);
-  border-radius: 8px;
-  border-left: 3px solid #f59e0b;
-}
-
-.attempts-remaining strong {
-  color: #92400e;
-  font-weight: 700;
-}
-
-.blocked-message {
-  font-weight: 600;
-  color: #dc2626;
-}
-
-.security-tips {
-  font-size: 0.8rem;
-  color: #a16207;
-  font-style: italic;
-}
-
-
-/* Submit Button */
-.submit-button {
-  width: 100%;
-  padding: 1rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.button-enabled {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
-}
-
-.button-enabled:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(102, 126, 234, 0.5);
-}
-
-.button-enabled:active {
-  transform: translateY(0);
-}
-
-.button-disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.form-help {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-align: center;
-  margin-top: -0.5rem;
-}
-
-/* Footer */
-.login-footer {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  text-align: center;
-}
-
-.login-footer p {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin: 0;
-}
-
-/* Responsive Design - Mobile First */
-@media (max-width: 768px) {
-  .login-container {
-    width: 100vw;
-    max-width: none;
-    height: 100vh;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  .login-card {
-    width: 100%;
-    height: 100vh;
-    max-height: none;
-    border-radius: 0;
-    box-shadow: none;
-    border: none;
-    padding: 2rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    position: relative;
-    overflow-y: auto;
-  }
-  
-  .login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .login-header {
-    margin-bottom: 2.5rem;
-  }
-  
-  .brand-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 20px;
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
-  }
-  
-  .brand-icon .icon {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .brand-title {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .brand-subtitle {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .welcome-title {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .welcome-subtitle {
-    font-size: 1rem;
-    color: #64748b;
-  }
-  
-  .login-form {
-    gap: 2rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  .form-input {
-    padding: 1rem 1rem 1rem 3.5rem;
-    font-size: 1rem;
-    border-radius: 16px;
-    height: 56px;
-    background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-  }
-  
-  .input-icon {
-    left: 1.25rem;
-  }
-  
-  .input-icon .icon {
-    width: 22px;
-    height: 22px;
-  }
-  
-  .password-toggle .icon {
-    width: 22px;
-    height: 22px;
-  }
-  
-  .submit-button {
-    padding: 1.25rem;
-    font-size: 1.125rem;
-    height: 56px;
-    border-radius: 16px;
-    font-weight: 700;
-    letter-spacing: 0.025em;
-  }
-
-  .security-info {
-    padding: 0.875rem;
-    font-size: 0.8rem;
-    gap: 0.5rem;
-  }
-
-  .security-icon .icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .attempt-bar {
-    height: 5px;
-  }
-  
-  .login-footer {
-    margin-top: auto;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(148, 163, 184, 0.3);
-  }
-  
-  .login-footer p {
-    font-size: 0.875rem;
-    color: #64748b;
-  }
-}
-
-@media (max-width: 640px) {
-  .login-card {
-    padding: 1.5rem 1rem;
-  }
-  
-  .brand-title {
-    font-size: 1.75rem;
-  }
-  
-  .welcome-title {
-    font-size: 1.375rem;
-  }
-  
-  .form-input {
-    padding: 0.875rem 0.875rem 0.875rem 3rem;
-  }
-  
-  .input-icon {
-    left: 1rem;
-  }
-  
-  .submit-button {
-    padding: 1rem;
-    font-size: 1rem;
-  }
-
-  .security-info {
-    padding: 0.75rem;
-    font-size: 0.75rem;
-  }
-
-  .security-details {
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-card {
-    padding: 1rem 0.75rem;
-  }
-  
-  .brand-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-  }
-  
-  .brand-icon .icon {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .brand-title {
-    font-size: 1.5rem;
-  }
-  
-  .brand-subtitle {
-    font-size: 0.875rem;
-  }
-  
-  .welcome-title {
-    font-size: 1.25rem;
-  }
-  
-  .welcome-subtitle {
-    font-size: 0.875rem;
-  }
-  
-  .login-form {
-    gap: 1.5rem;
-  }
-  
-  .form-input {
-    height: 52px;
-    padding: 0.75rem 0.75rem 0.75rem 2.75rem;
-    font-size: 0.875rem;
-  }
-  
-  .input-icon {
-    left: 0.875rem;
-  }
-  
-  .input-icon .icon,
-  .password-toggle .icon {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .submit-button {
-    height: 52px;
-    padding: 0.875rem;
-    font-size: 0.875rem;
-  }
-
-  .security-info {
-    padding: 0.625rem;
-    font-size: 0.7rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .security-icon .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .attempt-bar {
-    height: 4px;
-  }
-
-  .attempts-remaining {
-    padding: 0.375rem;
-  }
-}
-
-/* Landscape orientation on mobile */
-@media (max-height: 600px) and (orientation: landscape) {
-  .login-card {
-    padding: 1rem;
-    justify-content: flex-start;
-  }
-  
-  .login-header {
-    margin-bottom: 1.5rem;
-  }
-  
-  .brand-section {
-    margin-bottom: 1rem;
-  }
-  
-  .welcome-text {
-    margin-top: 0.5rem;
-  }
-  
-  .login-form {
-    gap: 1.25rem;
-  }
-  
-  .login-footer {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .login-card {
-    border: 2px solid #000;
-  }
-  
-  .form-input {
-    border-width: 2px;
-  }
-  
-  .form-input:focus {
-    border-width: 3px;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .login-card,
-  .form-input,
-  .submit-button,
-  .password-toggle {
-    transition: none;
-  }
-  
-  .login-card:hover {
-    transform: none;
-  }
-  
-  .button-enabled:hover {
-    transform: none;
-  }
-  
-  .loading-spinner {
-    animation: none;
-  }
-}
-
-/* Focus visible for better keyboard navigation */
-.form-input:focus-visible,
-.submit-button:focus-visible,
-.password-toggle:focus-visible {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-</style>

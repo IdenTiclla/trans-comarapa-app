@@ -53,7 +53,7 @@
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center max-w-lg sm:max-w-none mx-auto">
           <a
             href="#horarios"
-            @click.prevent="scrollToSection('#horarios')"
+            @click.prevent="scrollToSection('#horarios-titulo')"
             class="bg-white text-comarapa-dark border-2 border-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 hover:bg-comarapa-light hover:border-comarapa-light hover:shadow-lg transform hover:-translate-y-1 flex items-center gap-2 w-full sm:w-auto justify-center text-sm sm:text-base cursor-pointer"
             style="min-height: 44px;"
           >

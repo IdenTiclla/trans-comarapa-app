@@ -144,7 +144,7 @@ const offices = ref([
     phone: '71651781',
     hours: '6AM - 10PM',
     whatsappUrl: 'https://wa.me/59171651781',
-    mapsUrl: 'https://maps.google.com/?q=-17.8500,-64.2000', // URL dummy - reemplazar con la real
+    mapsUrl: 'https://maps.app.goo.gl/kzV1dYUpkcwmLMrN8', // URL dummy - reemplazar con la real
     gradientClass: 'bg-gradient-to-br from-comarapa-light to-green-400',
     iconType: 'location',
     iconFill: 'currentColor',

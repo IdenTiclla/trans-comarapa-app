@@ -2,7 +2,7 @@
   <section id="horarios" class="py-16 sm:py-20 md:py-24 bg-comarapa-gray">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12 sm:mb-16">
-        <div class="inline-flex items-center gap-2 bg-comarapa-light/20 px-3 sm:px-4 py-2 rounded-full mb-4">
+        <div id="horarios-titulo" class="inline-flex items-center gap-2 bg-comarapa-light/20 px-3 sm:px-4 py-2 rounded-full mb-4">
           <svg class="h-4 w-4 sm:h-5 sm:w-5 text-comarapa-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
