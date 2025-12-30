@@ -1,177 +1,268 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> Guidance for Claude Code when working with this repository
 
 ## Project Overview
 
-Trans Comarapa is a comprehensive transportation management system with:
-- **Backend**: FastAPI-based REST API with JWT authentication and MySQL database
-- **Frontend**: Nuxt.js application with Vue 3, Tailwind CSS, and Pinia state management
-- **Architecture**: Layered architecture with role-based access control (5 roles: Admin, Secretary, Driver, Assistant, Client)
+**Trans Comarapa** - Transportation management system with layered architecture and RBAC
 
-## Development Commands
+**Stack:**
+- Backend: FastAPI + MySQL 8.0 + Redis 7 + JWT Auth
+- Frontend: Nuxt 3 + Vue 3 + Tailwind + Pinia
+- Roles: Admin, Secretary, Driver, Assistant, Client
 
-### Quick Setup (Docker - Recommended)
+**Services (Docker Compose):**
+- `db` (MySQL) → `:3308`
+- `redis` → `:6379`
+- `backend` (FastAPI) → `:8000`
+- `frontend` (Nuxt) → `:3000`
+
+---
+
+## Quick Start
+
 ```bash
-make setup          # Complete project setup with database seeding
-make up             # Start all services in development mode
-make down           # Stop all services
-make logs-f         # View real-time logs
+make setup          # Complete setup + seed DB
 ```
 
-### Backend Development
+**Test Users:** `[role]1@transcomarapa.com` / `123456` (admin, secretary, client)
+
+---
+
+## Essential Commands
+
+### Development Workflow
+```bash
+# Docker services
+make up/down/restart/status
+
+# Logs
+make logs-f                    # All services
+make logs-backend/frontend/db  # Specific service
+
+# Shell access
+make shell-backend/frontend/db
+```
+
+### Database Operations
+```bash
+make seed           # Development data
+make seed-minimal   # Fast minimal seed
+make clear-db       # ⚠️ Delete all data
+```
+
+### Local Development
+```bash
+# Backend
+cd backend && uv sync && source .venv/bin/activate
+python run.py       # localhost:8000
+pytest -v --cov=.   # Run tests
+
+# Frontend
+cd frontend && npm install
+npm run dev         # localhost:3000
+```
+
+---
+
+## Architecture
+
+### Data Model Relationships
+```
+Users → [Admin, Secretary, Driver, Assistant, Client]
+Buses → Seats (1:N)
+Routes ↔ Locations (N:M)
+Trips → Bus + Route + Driver + Assistant
+Tickets → Trip + Client + Seat + Secretary
+Packages → Trip + Sender + Recipient + Secretary
+```
+
+### Request Flow
+```
+UI → Store (Pinia) → Service (HTTP) → Route (API) → Schema (Validation) → Model (DB)
+```
+
+### Project Structure
+```
+backend/
+├── models/      # SQLAlchemy entities (15 models)
+├── schemas/     # Pydantic validation
+├── routes/      # API endpoints (/api/v1/*)
+└── tests/       # Unit & integration tests
+
+frontend/
+├── pages/       # Role-based dashboards
+├── components/  # 22+ reusable components
+├── stores/      # 12 Pinia stores
+└── services/    # 14 API modules
+```
+
+---
+
+## Development Patterns
+
+### Authentication
+- Login: `/api/v1/auth/login` → JWT tokens
+- Store: `frontend/stores/auth.js`
+- Middleware: Auto token refresh
+
+### Naming Conventions
+| Type | Pattern | Example |
+|------|---------|---------|
+| Service | `[entity]Service.js` | `ticketService.js` |
+| Store | `[entity]Store.js` | `ticketStore.js` |
+| Model | `class [Entity](Base)` | `class Ticket(Base)` |
+| Schema | `[Entity]Create/Update` | `TicketCreate` |
+
+### Code Standards
+- **Backend:** SQLAlchemy 2.0+, all models inherit `Base`
+- **Frontend:** Vue 3 Composition API, Tailwind CSS
+- **API:** REST conventions, proper HTTP status codes
+- **All endpoints:** `/api/v1/` prefix
+
+---
+
+## Adding New Features
+
+### Complete Checklist
+
+**1. Backend Model** (`backend/models/[entity].py`)
+```python
+from models.base import Base
+
+class Entity(Base):
+    __tablename__ = "entities"
+    # Define columns, relationships
+```
+
+**2. Backend Schema** (`backend/schemas/[entity].py`)
+```python
+from pydantic import BaseModel
+
+class EntityBase(BaseModel): ...
+class EntityCreate(EntityBase): ...
+class EntityUpdate(EntityBase): ...
+class Entity(EntityBase): ...
+```
+
+**3. Backend Route** (`backend/routes/[entity].py`)
+```python
+from fastapi import APIRouter, Depends
+router = APIRouter(prefix="/entities", tags=["entities"])
+
+@router.get("/")
+async def get_all(...): ...
+```
+
+**4. Migration**
 ```bash
 cd backend
-uv sync             # Install dependencies with exact versions
-source .venv/bin/activate  # Activate virtual environment
-python run.py       # Start FastAPI server (localhost:8000)
-
-# Testing
-pytest              # Run all tests
-pytest -v           # Verbose test output
-pytest --cov=.      # Run with coverage
-pytest tests/unit/test_auth.py  # Run specific test file
-
-# Database operations
-python db/seed.py   # Populate database with development data
+alembic revision --autogenerate -m "Add [entity]"
+alembic upgrade head
 ```
 
-### Frontend Development
+**5. Frontend Service** (`frontend/services/[entity]Service.js`)
+```javascript
+export const getAll = () => apiFetch('/entities')
+export const create = (data) => apiFetch('/entities', { method: 'POST', body: data })
+```
+
+**6. Frontend Store** (`frontend/stores/[entity]Store.js`)
+```javascript
+export const useEntityStore = defineStore('entity', () => {
+  const items = ref([])
+  const fetchAll = async () => { items.value = await getAll() }
+  return { items, fetchAll }
+})
+```
+
+**7. Frontend UI** (`frontend/pages/*/entities.vue`)
+```vue
+<script setup>
+const store = useEntityStore()
+await store.fetchAll()
+</script>
+```
+
+**8. Testing** (`backend/tests/unit/test_[entity].py`)
 ```bash
-cd frontend
-npm install         # Install dependencies
-npm run dev         # Start Nuxt dev server (localhost:3000)
-npm run build       # Build for production
-npm run preview     # Preview production build
+pytest tests/unit/test_entity.py -v
 ```
 
-## Project Architecture
-
-### Backend Structure (FastAPI)
-- **API Versioning**: All endpoints prefixed with `/api/v1/`
-- **Models**: 15 SQLAlchemy entities with complete relationships
-- **Routes**: Organized by domain (auth, users, trips, tickets, etc.)
-- **Schemas**: Pydantic validation for all entities
-- **Authentication**: JWT with refresh tokens and role-based access control
-
-### Frontend Structure (Nuxt.js)
-- **Pages**: Role-specific dashboards and feature pages
-- **Components**: 22+ reusable components
-- **Stores**: 12 Pinia stores for state management
-- **Services**: 14 API service modules
-- **Layouts**: Dynamic layouts based on authentication state
-
-### Key Entities and Relationships
+### File Locations Reference
 ```
-Users (base authentication)
-├── Administrators, Secretaries, Drivers, Assistants, Clients
-
-Transportation Operations
-├── Buses → Seats (one-to-many)
-├── Routes → Locations (many-to-many)
-├── Trips → (Bus, Route, Driver, Assistant)
-├── Tickets → (Trip, Client, Seat, Secretary)
-└── Packages → (Trip, Sender, Recipient, Secretary)
+New entity "Reservation":
+├── backend/models/reservation.py
+├── backend/schemas/reservation.py
+├── backend/routes/reservation.py
+├── backend/tests/unit/test_reservation.py
+├── frontend/services/reservationService.js
+├── frontend/stores/reservationStore.js
+└── frontend/pages/secretary/reservations.vue
 ```
 
-## Role-Based Features
-
-### Secretaries (100% implemented)
-- Complete dashboard with real-time statistics
-- Trip management (CRUD with filters)
-- Ticket sales with visual seat selection
-- Modernized ticket management page with advanced filters
-
-### Administrators (70% implemented)
-- Basic dashboard with quick actions
-- User management access
-- Full ticket management capabilities
-
-### Other Roles (25% implemented)
-- Basic dashboard structures exist
-- Role-specific features in development
-
-## Important Patterns and Conventions
-
-### Authentication Flow
-1. Login via `/api/v1/auth/login` returns access + refresh tokens
-2. Frontend stores tokens in Pinia auth store
-3. All protected routes use auth middleware
-4. Token refresh handled automatically
-
-### API Integration
-- Base URL configured via `NUXT_PUBLIC_API_BASE_URL` environment variable
-- All API calls use consistent error handling
-- Services follow naming convention: `[entity]Service.js`
-
-### Database Migrations
-- Alembic handles schema migrations
-- Models use SQLAlchemy 2.0+ syntax
-- All entities inherit from `Base` class
-
-### Component Architecture
-- Composition API used throughout Vue components
-- Props validation using TypeScript-style definitions
-- Reusable form components in `components/forms/`
+---
 
 ## Environment Configuration
 
-### Required Environment Variables
-**Backend (.env)**:
+### Docker (Auto-configured)
+No manual setup needed. `make setup` creates all configs.
+
+### Local Development
+
+**Backend `.env`:**
 ```env
-DATABASE_URL=sqlite:///./trans_comarapa.db  # or MySQL connection string
+DATABASE_URL=mysql+pymysql://root:password@localhost:3308/trans_comarapa
 SECRET_KEY=your-secret-key
+REDIS_URL=redis://localhost:6379
 DEBUG=True
 ```
 
-**Frontend (.env)**:
+**Frontend `.env`:**
 ```env
 NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
-## Testing Strategy
+---
 
-### Backend Tests
-- Located in `backend/tests/`
-- Markers: `@pytest.mark.unit`, `@pytest.mark.integration`
-- Configuration in `pytest.ini`
-- Test database uses separate connection string
+## Troubleshooting
 
-### Frontend Testing
-- Currently basic structure in place
-- Plans for component and integration tests
+### Quick Fixes
+```bash
+# Services won't start
+make status && make logs-f
 
-## Development Workflow
+# DB connection errors
+docker-compose ps  # Wait for health check (10-15s)
 
-### Adding New Features
-1. Backend: Create model → schema → route → test
-2. Frontend: Create service → store → component → page
-3. Always update both ends for complete features
+# Port conflicts
+lsof -i :3000  # Find & kill process
 
-### Database Changes
-1. Modify models in `backend/models/`
-2. Generate migration: `alembic revision --autogenerate -m "description"`
-3. Apply: `alembic upgrade head`
+# Fresh restart
+make clean && make setup
+```
 
-### API Development
-- Follow REST conventions
-- Use proper HTTP status codes
-- Include comprehensive error handling
-- Update OpenAPI documentation automatically
+### Direct Docker Commands
+```bash
+docker-compose ps                    # Status
+docker-compose logs -f backend       # Follow logs
+docker-compose exec backend bash     # Shell access
+docker-compose restart backend       # Restart service
+docker-compose down -v               # Nuclear option
+```
 
-## Performance Considerations
+---
 
-- Backend responses average < 200ms
-- Frontend bundle size ~1.2MB
-- Database queries optimized to avoid N+1 problems
-- Pagination implemented for large datasets
+## Current Implementation Status
 
-## Project Status
+- ✅ **Secretaries** (100%): Full dashboard, trip management, ticket sales
+- 🟡 **Administrators** (70%): Dashboard, user management, ticket access
+- 🟡 **Other Roles** (25%): Basic dashboards only
 
-- **Overall Completion**: 75%
-- **Backend API**: 85% complete (85+ endpoints)
-- **Frontend Core**: 65% complete (secretary workflow fully functional)
-- **Testing Coverage**: 70%
-- **Documentation**: Architecture and API docs complete
+---
 
-The system is production-ready for secretary operations and has a solid foundation for expanding other user roles.
+## Key Resources
+
+- **API Docs:** http://localhost:8000/docs (Swagger UI)
+- **Test Coverage:** `pytest --cov=.` in backend
+- **Database:** MySQL at `:3308` (root/Passw0rd!)

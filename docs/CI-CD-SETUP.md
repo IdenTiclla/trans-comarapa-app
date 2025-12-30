@@ -8,7 +8,7 @@ Este documento describe cómo está configurado el pipeline de CI/CD para la apl
 - **87/87 tests pasando** (100% éxito)
 - Rate limiting deshabilitado para tests
 - Tests de integración funcionando
-- Base de datos SQLite en memoria para tests
+- Base de datos MySQL para tests
 - Pipeline backend completamente estable
 
 ### ⚠️ Frontend (Estrategia Pragmática)
@@ -126,7 +126,7 @@ make ci-deploy-prod
 ```bash
 TESTING=true
 SECRET_KEY=ci-cd-secret-key
-DATABASE_URL=sqlite:///./test.db
+TEST_DATABASE_URL=mysql+pymysql://root:password@localhost:3306/trans_comarapa_test
 REDIS_URL=redis://redis:6379
 ```
 

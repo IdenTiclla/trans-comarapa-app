@@ -33,15 +33,15 @@ dev:
 # Testing commands
 test:
 	@echo "Running all tests..."
-	DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" uv run pytest tests/ -v
+	SECRET_KEY="test-secret-key" uv run pytest tests/ -v
 
 test-unit:
 	@echo "Running unit tests..."
-	DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" uv run pytest tests/unit/ -v -m unit
+	SECRET_KEY="test-secret-key" uv run pytest tests/unit/ -v -m unit
 
 test-integration:
 	@echo "Running integration tests..."
-	DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" uv run pytest tests/integration/ -v -m integration
+	SECRET_KEY="test-secret-key" uv run pytest tests/integration/ -v -m integration
 
 test-regression:
 	@echo "Running regression tests..."
@@ -53,7 +53,7 @@ test-auth:
 
 test-backend:
 	@echo "Running backend test suite..."
-	DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" uv run pytest tests/ -v --tb=short
+	SECRET_KEY="test-secret-key" uv run pytest tests/ -v --tb=short
 
 # Maintenance
 clean:
@@ -84,7 +84,7 @@ format:
 # CI/CD support
 ci-test:
 	@echo "Running CI test suite..."
-	DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" uv run pytest tests/ -v --tb=short --durations=10
+	SECRET_KEY="test-secret-key" uv run pytest tests/ -v --tb=short --durations=10
 
 ci-regression:
 	@echo "Running CI regression tests..."

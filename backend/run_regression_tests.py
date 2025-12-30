@@ -17,7 +17,8 @@ def run_regression_tests():
     print()
 
     # Set environment variables for testing
-    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+    if "DATABASE_URL" not in os.environ:
+        os.environ["DATABASE_URL"] = "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test"
     os.environ["SECRET_KEY"] = "test-secret-key"
 
     # Run regression tests
@@ -59,7 +60,8 @@ def run_comprehensive_auth_tests():
     print("=" * 60)
 
     # Set environment variables for testing
-    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+    if "DATABASE_URL" not in os.environ:
+        os.environ["DATABASE_URL"] = "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test"
     os.environ["SECRET_KEY"] = "test-secret-key"
 
     cmd = [

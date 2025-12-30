@@ -7,7 +7,7 @@ Este documento proporciona instrucciones para desarrolladores que deseen contrib
 ### Requisitos Previos
 - Python 3.12+
 - uv (gestor de paquetes moderno para Python)
-- Base de datos compatible con SQLAlchemy (por defecto SQLite)
+- MySQL 8.0+ (base de datos principal)
 
 ### Pasos para Configurar el Entorno
 

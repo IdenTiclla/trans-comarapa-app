@@ -75,13 +75,13 @@ uv sync
 source .venv/bin/activate
 
 # Run all tests
-DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" pytest tests/ -v
+SECRET_KEY="test-secret-key" pytest tests/ -v
 
 # Run regression tests
-DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" python run_regression_tests.py
+SECRET_KEY="test-secret-key" python run_regression_tests.py
 
 # Run comprehensive auth tests
-DATABASE_URL="sqlite:///:memory:" SECRET_KEY="test-secret-key" python run_regression_tests.py --auth-only
+SECRET_KEY="test-secret-key" python run_regression_tests.py --auth-only
 
 # Run tests with specific markers
 pytest -m "regression" -v
@@ -96,7 +96,7 @@ pytest -m "security" -v
 Required for testing:
 
 ```bash
-DATABASE_URL="sqlite:///:memory:"    # In-memory database for tests
+TEST_DATABASE_URL="mysql+pymysql://root:password@localhost:3306/trans_comarapa_test"  # Test database
 SECRET_KEY="test-secret-key"        # Test JWT secret
 TESTING=true                        # Testing mode flag
 ```
@@ -166,7 +166,7 @@ backend-tests → regression-tests → build-and-security-check → deployment
 
 ### Database
 
-Tests use SQLite in-memory database for speed and isolation. Each test gets a fresh database instance.
+Tests use MySQL test database for consistency with production. Configure `TEST_DATABASE_URL` environment variable or the tests will use the default MySQL connection. Each test gets a fresh database instance.
 
 ## Debugging Tests
 

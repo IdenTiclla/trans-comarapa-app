@@ -27,7 +27,7 @@ jobs:
         cp env.example .env
         echo "TESTING=true" >> .env
         echo "SECRET_KEY=test-secret-key-for-ci" >> .env
-        echo "DATABASE_URL=sqlite:///./test.db" >> .env
+        echo "TEST_DATABASE_URL=mysql+pymysql://root:password@mysql:3306/trans_comarapa_test" >> .env
         echo "REDIS_URL=redis://redis:6379" >> .env
 
     - name: Build and run backend tests
@@ -86,7 +86,6 @@ jobs:
     - name: Run critical regression tests
       run: |
         cd backend
-        export DATABASE_URL="sqlite:///:memory:"
         export SECRET_KEY="test-secret-key-for-ci"
         uv run python run_regression_tests.py
       continue-on-error: false
@@ -94,7 +93,6 @@ jobs:
     - name: Run comprehensive auth tests
       run: |
         cd backend
-        export DATABASE_URL="sqlite:///:memory:"
         export SECRET_KEY="test-secret-key-for-ci"
         uv run python run_regression_tests.py --auth-only
       continue-on-error: false

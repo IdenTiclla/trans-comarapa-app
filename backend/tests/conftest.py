@@ -21,14 +21,13 @@ from auth.jwt import create_access_token
 from models.user import User, UserRole
 
 # Configuración de la base de datos de prueba
-TEST_DATABASE_URL = "sqlite:///:memory:"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", os.getenv("DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test"))
 
 @pytest.fixture(scope="session")
 def test_engine():
     """Crea un motor de base de datos para pruebas."""
     engine = create_engine(
         TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
     Base.metadata.create_all(bind=engine)
