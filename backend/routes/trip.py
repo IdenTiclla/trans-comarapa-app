@@ -389,8 +389,8 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
                     "seat_number": seat_model.seat_number,
                     "status": status,
                     "deck": seat_model.deck,
-                    # "position": seat_model.position, # Assuming SeatModel has position (window/aisle)
-                    # "type": seat_model.type # Assuming SeatModel has type (normal, vip)
+                    "row": seat_model.row,
+                    "column": seat_model.column,
                 })
                 if status == "occupied":
                     occupied_seat_numbers_for_trip.append(seat_model.seat_number)
@@ -429,7 +429,8 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
                 "capacity": trip.bus.capacity,
                 "model": trip.bus.model,
                 "brand": trip.bus.brand,
-                "color": trip.bus.color
+                "color": trip.bus.color,
+                "floors": trip.bus.floors
             } if trip.bus else None,
             "secretary": {
                 "id": trip.secretary.id,

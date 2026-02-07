@@ -1,13 +1,13 @@
 <template>
-  <div v-if="busType === 'double-deck' || busType === 'double_deck'" class="deck-selector bg-white border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm">
+  <div v-if="isDoubleDeck" class="deck-selector bg-white border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <!-- Deck selector tabs -->
       <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-0">
         <button
-          @click="$emit('deck-changed', 'lower')"
+          @click="$emit('deck-changed', firstDeckValue)"
           :class="[
             'flex-1 flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-            selectedDeck === 'lower'
+            isFirstDeckSelected
               ? 'bg-blue-600 text-white shadow-md transform scale-105'
               : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
           ]"
@@ -16,16 +16,16 @@
           <span class="hidden sm:inline">Planta</span>
           <span class="sm:hidden">P.</span>
           <span class="ml-1">Baja</span>
-          <span v-if="lowerSeatsCount !== null" class="ml-2 text-xs opacity-75">
-            ({{ lowerSeatsCount }})
+          <span v-if="firstDeckSeatsCount !== null" class="ml-2 text-xs opacity-75">
+            ({{ firstDeckSeatsCount }})
           </span>
         </button>
         
         <button
-          @click="$emit('deck-changed', 'upper')"
+          @click="$emit('deck-changed', secondDeckValue)"
           :class="[
             'flex-1 flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-            selectedDeck === 'upper'
+            isSecondDeckSelected
               ? 'bg-blue-600 text-white shadow-md transform scale-105'
               : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
           ]"
@@ -34,8 +34,8 @@
           <span class="hidden sm:inline">Planta</span>
           <span class="sm:hidden">P.</span>
           <span class="ml-1">Alta</span>
-          <span v-if="upperSeatsCount !== null" class="ml-2 text-xs opacity-75">
-            ({{ upperSeatsCount }})
+          <span v-if="secondDeckSeatsCount !== null" class="ml-2 text-xs opacity-75">
+            ({{ secondDeckSeatsCount }})
           </span>
         </button>
       </div>
@@ -63,11 +63,11 @@
         <div class="flex flex-col items-center space-y-1">
           <div :class="[
             'w-6 h-3 rounded-sm border-2 transition-all duration-200',
-            selectedDeck === 'upper' ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
+            isSecondDeckSelected ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
           ]"></div>
           <div :class="[
             'w-6 h-3 rounded-sm border-2 transition-all duration-200',
-            selectedDeck === 'lower' ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
+            isFirstDeckSelected ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
           ]"></div>
         </div>
         <div class="text-xs text-gray-600 ml-2">
@@ -85,13 +85,17 @@ import { computed } from 'vue'
 const props = defineProps({
   busType: {
     type: String,
-    required: true,
-    validator: (value) => ['single-deck', 'double-deck', 'single_deck', 'double_deck'].includes(value)
+    default: null,
+    validator: (value) => value === null || ['single-deck', 'double-deck', 'single_deck', 'double_deck'].includes(value)
+  },
+  floors: {
+    type: Number,
+    default: null
   },
   selectedDeck: {
     type: String,
     required: true,
-    validator: (value) => ['main', 'lower', 'upper'].includes(value)
+    validator: (value) => ['main', 'lower', 'upper', 'FIRST', 'SECOND'].includes(value)
   },
   seats: {
     type: Array,
@@ -101,26 +105,49 @@ const props = defineProps({
 
 const emit = defineEmits(['deck-changed'])
 
-// Count seats by deck
-const lowerSeatsCount = computed(() => {
-  if (props.busType !== 'double-deck' && props.busType !== 'double_deck') return null
-  return props.seats.filter(seat => seat.deck === 'lower').length
+// Determine if this is a double deck bus
+const isDoubleDeck = computed(() => {
+  if (props.floors !== null) return props.floors >= 2
+  if (props.busType) return props.busType === 'double-deck' || props.busType === 'double_deck'
+  return false
 })
 
-const upperSeatsCount = computed(() => {
-  if (props.busType !== 'double-deck' && props.busType !== 'double_deck') return null
-  return props.seats.filter(seat => seat.deck === 'upper').length
+// Determine which naming convention is in use
+const usesFirstSecond = computed(() => {
+  return props.selectedDeck === 'FIRST' || props.selectedDeck === 'SECOND'
+})
+
+const firstDeckValue = computed(() => usesFirstSecond.value ? 'FIRST' : 'lower')
+const secondDeckValue = computed(() => usesFirstSecond.value ? 'SECOND' : 'upper')
+
+const isFirstDeckSelected = computed(() => {
+  return props.selectedDeck === 'FIRST' || props.selectedDeck === 'lower'
+})
+
+const isSecondDeckSelected = computed(() => {
+  return props.selectedDeck === 'SECOND' || props.selectedDeck === 'upper'
+})
+
+// Count seats by deck - supports both naming conventions
+const firstDeckSeatsCount = computed(() => {
+  if (!isDoubleDeck.value) return null
+  return props.seats.filter(seat => seat.deck === 'FIRST' || seat.deck === 'lower').length
+})
+
+const secondDeckSeatsCount = computed(() => {
+  if (!isDoubleDeck.value) return null
+  return props.seats.filter(seat => seat.deck === 'SECOND' || seat.deck === 'upper').length
 })
 
 const currentDeckSeatsCount = computed(() => {
-  if (props.busType === 'single-deck' || props.busType === 'single_deck') {
-    return props.seats.filter(seat => seat.deck === 'main' || !seat.deck).length
+  if (!isDoubleDeck.value) {
+    return props.seats.filter(seat => seat.deck === 'main' || seat.deck === 'FIRST' || !seat.deck).length
   }
   
-  if (props.selectedDeck === 'lower') {
-    return lowerSeatsCount.value
-  } else if (props.selectedDeck === 'upper') {
-    return upperSeatsCount.value
+  if (isFirstDeckSelected.value) {
+    return firstDeckSeatsCount.value
+  } else if (isSecondDeckSelected.value) {
+    return secondDeckSeatsCount.value
   }
   
   return 0
@@ -128,15 +155,9 @@ const currentDeckSeatsCount = computed(() => {
 
 // Get display name for current deck
 const getDeckDisplayName = () => {
-  switch (props.selectedDeck) {
-    case 'lower':
-      return 'Planta Baja'
-    case 'upper':
-      return 'Planta Alta'
-    case 'main':
-    default:
-      return 'Planta Única'
-  }
+  if (isFirstDeckSelected.value) return 'Planta Baja'
+  if (isSecondDeckSelected.value) return 'Planta Alta'
+  return 'Planta Unica'
 }
 </script>
 

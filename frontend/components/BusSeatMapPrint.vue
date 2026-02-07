@@ -15,11 +15,23 @@
         :occupied-seats-count="occupiedSeatsCount"
         :reserved-seats-count="reservedSeatsCount"
         :available-seats-count="availableSeatsCount"
+        :total-seats-count="filteredSeats.length"
       />
+
+      <!-- Deck Selector (solo para buses de 2 pisos) -->
+      <div class="px-4 sm:px-6 md:px-8">
+        <DeckSelector
+          v-if="isDoubleDeck"
+          :floors="busFloors"
+          :selected-deck="selectedDeck"
+          :seats="seats"
+          @deck-changed="handleDeckChanged"
+        />
+      </div>
 
       <!-- Seat Grid Component -->
       <BusSeatGrid 
-        :seats="seats"
+        :seats="filteredSeats"
         :selected-seat-ids="selectedSeatIds"
         :disabled="disabled"
         :max-selections="maxSelections"
@@ -68,6 +80,7 @@ import BusSeatGrid from './BusSeatGrid.vue'
 import BusSeatLegend from './BusSeatLegend.vue'
 import SelectedSeatsPanel from './SelectedSeatsPanel.vue'
 import SeatContextMenu from './SeatContextMenu.vue'
+import DeckSelector from './DeckSelector.vue'
 import { usePersonData } from '~/composables/usePersonData'
 
 const props = defineProps({
@@ -137,35 +150,58 @@ const loading = ref(true)
 const error = ref(null)
 const seats = ref([])
 const selectedSeatIds = ref([])
+const selectedDeck = ref('FIRST')
 
 // Estado para el menú contextual
 const showContextMenu = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const selectedSeatForContext = ref(null)
 
-// Asientos seleccionados
-const selectedSeats = computed(() => {
-  return seats.value.filter(seat => selectedSeatIds.value.includes(seat.id))
+// Detectar si el bus tiene 2 pisos
+const busFloors = computed(() => {
+  return props.trip?.bus?.floors || 1
 })
 
+const isDoubleDeck = computed(() => {
+  return busFloors.value >= 2
+})
 
-// Computed properties for seat statistics
+// Filtrar asientos por el piso seleccionado
+const filteredSeats = computed(() => {
+  if (!isDoubleDeck.value) {
+    return seats.value
+  }
+  return seats.value.filter(seat => seat.deck === selectedDeck.value)
+})
+
+// Asientos seleccionados (basado en asientos filtrados del piso actual)
+const selectedSeats = computed(() => {
+  return filteredSeats.value.filter(seat => selectedSeatIds.value.includes(seat.id))
+})
+
+// Computed properties for seat statistics (basado en asientos del piso actual)
 const occupiedSeatsCount = computed(() => {
-  if (!seats.value) return 0;
-  return seats.value.filter(seat => seat.occupied).length;
+  if (!filteredSeats.value) return 0;
+  return filteredSeats.value.filter(seat => seat.occupied).length;
 })
 
 const reservedSeatsCount = computed(() => {
-  if (!seats.value) return 0;
-  return seats.value.filter(seat => seat.status === 'reserved').length;
+  if (!filteredSeats.value) return 0;
+  return filteredSeats.value.filter(seat => seat.status === 'reserved').length;
 })
 
 const availableSeatsCount = computed(() => {
-  if (!props.trip || typeof props.trip.total_seats !== 'number') return 0;
+  if (!filteredSeats.value) return 0;
+  const total = filteredSeats.value.length;
   const occupiedCount = occupiedSeatsCount.value;
   const reservedCount = reservedSeatsCount.value;
-  return props.trip.total_seats - occupiedCount - reservedCount;
+  return total - occupiedCount - reservedCount;
 })
+
+// Handler para cambio de piso
+const handleDeckChanged = (newDeck) => {
+  selectedDeck.value = newDeck
+}
 
 
 // Alternar selección de asiento (usado principalmente desde SelectedSeatsPanel)
@@ -233,14 +269,9 @@ const loadSeats = async () => {
     // o simplificarla si el backend no provee 'deck' o 'position' de forma consistente.
 
     for (const backendSeat of backendSeats) {
-      // Determinar columna y posición basado en el número de asiento
-      let column = 'unknown';
-      let position = 'unknown'; // 'window' o 'aisle'
       const seatNumber = backendSeat.seat_number;
       
       // Verificar si el asiento está reservado (tiene un ticket en estado "pending")
-      // En el backend actual, ambos pending y confirmed se marcan como 'occupied'
-      // Así que usamos una lista de asientos reservados que pasamos como prop
       const isReserved = reservedSeatNumbers.includes(seatNumber);
       let status = backendSeat.status;
       
@@ -260,49 +291,39 @@ const loadSeats = async () => {
         };
       }
 
-      // Define typicalSeatsPerRow. This value might eventually come from bus configuration data.
-      // For common 2x2 layouts, this is 4.
-      // For 2+1 layouts, this would be 3.
-      // The logic below should adapt if this value changes.
-      const typicalSeatsPerRow = 4; // Assuming 2 seats on left, 2 seats on right separated by aisle
+      // Determinar columna y posición usando datos del backend si están disponibles
+      let column = 'unknown';
+      let position = 'unknown';
 
-      if (typicalSeatsPerRow > 0) {
+      if (backendSeat.column != null) {
+        // Usar row/column del backend: columnas 1,2 = left; columnas 3,4 = right
+        column = backendSeat.column <= 2 ? 'left' : 'right';
+        // Posición: columnas 1,4 = ventana; columnas 2,3 = pasillo
+        position = (backendSeat.column === 1 || backendSeat.column === 4) ? 'window' : 'aisle';
+      } else {
+        // Fallback: inferir por seat_number (layout 2x2)
+        const typicalSeatsPerRow = 4;
         const idxInRowGroup = (seatNumber - 1) % typicalSeatsPerRow;
 
-        // Determine column and position based on typical bus layout (2x2)
-        if (idxInRowGroup < typicalSeatsPerRow / 2) { // First half of seats in a row group (e.g., 0, 1 for typicalSeatsPerRow=4)
+        if (idxInRowGroup < typicalSeatsPerRow / 2) {
           column = 'left';
-          // For left column: odd is window, even is aisle
-          if (seatNumber % 2 !== 0) { 
-            position = 'window';
-          } else { 
-            position = 'aisle';
-          }
-        } else { // Second half of seats in a row group (e.g., 2, 3 for typicalSeatsPerRow=4)
+          position = seatNumber % 2 !== 0 ? 'window' : 'aisle';
+        } else {
           column = 'right';
-          // For right column: odd is aisle, even is window
-          if (seatNumber % 2 !== 0) { 
-            position = 'aisle';
-          } else { 
-            position = 'window';
-          }
+          position = seatNumber % 2 !== 0 ? 'aisle' : 'window';
         }
-      } else {
-        console.warn(`BusSeatMapPrint: typicalSeatsPerRow is ${typicalSeatsPerRow}. Cannot determine column/position for seat ${seatNumber}.`);
-        // column and position will remain 'unknown' as initialized
       }
       
-      // Si el backendSeat tiene 'deck', usarlo. Si no, el frontend no puede determinarlo fácilmente.
-      const seatDeck = backendSeat.deck || 'main'; 
+      const seatDeck = backendSeat.deck || 'FIRST'; 
 
       generatedSeats.push({
-        id: backendSeat.id, // ID Primario del backend
-        number: backendSeat.seat_number, // Número de asiento del backend
-        status: status, // 'occupied', 'reserved', o 'available'
-        occupied: status === 'occupied', // Mantener 'occupied' para compatibilidad con getSeatClass
-        position: position, // Inferido o del backend si disponible
-        column: column,     // Inferido o del backend si disponible
-        deck: seatDeck,      // Del backend, o default
+        id: backendSeat.id,
+        number: backendSeat.seat_number,
+        status: status,
+        occupied: status === 'occupied',
+        position: position,
+        column: column,
+        deck: seatDeck,
         passenger: passenger
       });
     }

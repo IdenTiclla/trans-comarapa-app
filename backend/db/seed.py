@@ -518,6 +518,7 @@ def seed_db():
         bus_brands = ["Mercedes Benz", "Volvo", "Scania", "Mercedes Benz", "Volvo", "Marcopolo", "Irizar"]
         bus_colors = ["Azul Trans Comarapa", "Blanco", "Rojo", "Verde", "Amarillo", "Azul Marino", "Plata"]
         bus_capacities = [45, 50, 42, 48, 46, 52, 44]
+        bus_floors = [1, 2, 1, 2, 1, 2, 1]  # Pisos por bus (1 o 2)
         bus_data = []
 
         for i in range(7):  # Incrementado a 7 buses
@@ -530,7 +531,8 @@ def seed_db():
                 "capacity": bus_capacities[i],
                 "model": bus_models[i],
                 "brand": bus_brands[i],
-                "color": bus_colors[i]
+                "color": bus_colors[i],
+                "floors": bus_floors[i]
             }
             bus_data.append(bus_info)
 
@@ -800,9 +802,7 @@ def seed_db():
         # Layout: 2+2 (4 seats per row with center aisle)
         for bus in buses:
             capacity = bus.capacity
-
-            # Determine if bus has 2 floors based on bus.floors attribute or capacity
-            floors = getattr(bus, "floors", 1) if hasattr(bus, "floors") else (2 if capacity > 40 else 1)
+            floors = bus.floors or 1
 
             if floors == 2:
                 # Two-floor bus: split seats between FIRST and SECOND deck

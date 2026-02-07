@@ -87,7 +87,7 @@
 
       <div class="flex items-center space-x-4">
         <div class="text-center">
-          <span class="text-lg font-black text-indigo-600">{{ trip.total_seats }}</span>
+          <span class="text-lg font-black text-indigo-600">{{ totalSeatsCount !== null ? totalSeatsCount : trip.total_seats }}</span>
           <p class="text-xs text-gray-500">Total</p>
         </div>
         <div class="w-px h-8 bg-gray-200"></div>
@@ -127,6 +127,10 @@ const props = defineProps({
   availableSeatsCount: {
     type: Number,
     default: 0
+  },
+  totalSeatsCount: {
+    type: Number,
+    default: null
   }
 })
 
