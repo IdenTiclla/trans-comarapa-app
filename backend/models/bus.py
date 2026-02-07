@@ -11,6 +11,7 @@ class Bus(Base):
     model = Column(String(100))
     brand = Column(String(50))
     color = Column(String(30))
+    floors = Column(Integer, default=1)  # 1 o 2 pisos
 
     trips = relationship("Trip", back_populates="bus")
-    seats = relationship("Seat", back_populates="bus")
+    seats = relationship("Seat", back_populates="bus", cascade="all, delete-orphan")

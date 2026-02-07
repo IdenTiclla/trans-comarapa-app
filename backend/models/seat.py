@@ -11,8 +11,10 @@ class Seat(Base):
     bus = relationship('Bus', back_populates='seats')
     seat_number = Column(Integer, nullable=False)
     deck = Column(String(255), nullable=False)
+    row = Column(Integer, nullable=False)      # fila (1, 2, 3...)
+    column = Column(Integer, nullable=False)   # columna (1, 2, 3, 4)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-    
+
     tickets = relationship('Ticket', back_populates='seat')
 

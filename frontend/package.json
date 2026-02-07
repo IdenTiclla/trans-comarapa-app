@@ -18,6 +18,7 @@
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
     "@nuxt/kit": "^4.1.2",
+    "@vueuse/core": "^14.1.0",
     "chart.js": "^4.4.9",
     "lodash-es": "^4.17.21",
     "nuxt": "^3.13.0",

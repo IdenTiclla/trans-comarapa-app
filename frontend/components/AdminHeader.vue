@@ -14,6 +14,7 @@
             <template v-if="authStore.userRole === 'admin'">
               <NuxtLink to="/dashboards/dashboard-admin" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
               <NuxtLink to="/admin/users" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Usuarios</NuxtLink>
+              <NuxtLink to="/admin/buses" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" active-class="text-indigo-600 bg-indigo-50">Buses</NuxtLink>
             </template>
             
             <!-- Secretary Links -->
@@ -76,6 +77,7 @@
             <template v-if="authStore.userRole === 'admin'">
               <NuxtLink to="/dashboards/dashboard-admin" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Dashboard</NuxtLink>
               <NuxtLink to="/admin/users" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Usuarios</NuxtLink>
+              <NuxtLink to="/admin/buses" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium" active-class="text-indigo-600 bg-indigo-50">Buses</NuxtLink>
             </template>
 
             <!-- Secretary Links Mobile -->

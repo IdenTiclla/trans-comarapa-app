@@ -796,36 +796,57 @@ def seed_db():
 
         db.commit()
 
-        # Create seats for each bus
+        # Create seats for each bus with row/column positions
+        # Layout: 2+2 (4 seats per row with center aisle)
         for bus in buses:
             capacity = bus.capacity
-            rows = capacity // 4
-            remaining = capacity % 4
 
-            seat_count = 1
+            # Determine if bus has 2 floors based on bus.floors attribute or capacity
+            floors = getattr(bus, "floors", 1) if hasattr(bus, "floors") else (2 if capacity > 40 else 1)
 
-            # Lógica para determinar si el bus es de dos pisos
-            # Puedes ajustar esto según tu modelo real, aquí se asume que los buses con capacidad > 40 son de dos pisos
-            is_double_deck = getattr(bus, "double_deck", False) or capacity > 40
+            if floors == 2:
+                # Two-floor bus: split seats between FIRST and SECOND deck
+                half = capacity // 2
+                seat_number = 1
 
-            # Si es de dos pisos, la mitad de los asientos serán FIRST y la otra mitad SECOND
-            if is_double_deck:
-                half = (capacity // 2)
-                for i in range(1, capacity + 1):
-                    deck = "FIRST" if i <= half else "SECOND"
+                # First floor seats
+                for i in range(1, half + 1):
+                    row = ((i - 1) // 4) + 1
+                    column = ((i - 1) % 4) + 1
                     seat = Seat(
                         bus_id=bus.id,
-                        seat_number=i,
-                        deck=deck
+                        seat_number=seat_number,
+                        deck="FIRST",
+                        row=row,
+                        column=column
                     )
                     db.add(seat)
+                    seat_number += 1
+
+                # Second floor seats
+                for i in range(1, capacity - half + 1):
+                    row = ((i - 1) // 4) + 1
+                    column = ((i - 1) % 4) + 1
+                    seat = Seat(
+                        bus_id=bus.id,
+                        seat_number=seat_number,
+                        deck="SECOND",
+                        row=row,
+                        column=column
+                    )
+                    db.add(seat)
+                    seat_number += 1
             else:
-                # Todos los asientos en FIRST
+                # Single floor bus: all seats on FIRST deck
                 for i in range(1, capacity + 1):
+                    row = ((i - 1) // 4) + 1
+                    column = ((i - 1) % 4) + 1
                     seat = Seat(
                         bus_id=bus.id,
                         seat_number=i,
-                        deck="FIRST"
+                        deck="FIRST",
+                        row=row,
+                        column=column
                     )
                     db.add(seat)
 

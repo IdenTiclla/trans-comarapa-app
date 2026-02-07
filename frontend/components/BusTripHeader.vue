@@ -1,104 +1,109 @@
 <template>
-  <div class="header border-b border-gray-200 pb-4 sm:pb-6 mb-4 sm:mb-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 sm:p-6 md:p-8 overflow-hidden">
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-1.5 sm:gap-2 md:gap-3">
-      <!-- Logo y Nombre Empresa -->
-      <div class="flex items-center flex-grow min-w-0">
-        <div class="bus-icon mr-3 sm:mr-4 bg-gradient-to-br from-indigo-100 to-blue-100 p-2 sm:p-3 rounded-2xl flex-shrink-0 shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-10 md:h-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 .553-.894L9 2l6 3 6-3v13l-6 3-6-3z" />
-          </svg>
-        </div>
-        <div class="flex-shrink min-w-0">
-          <h2 class="text-sm sm:text-lg md:text-xl lg:text-2xl font-black text-gray-800 tracking-tight truncate bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">TRANS COMARAPA</h2>
-          <p class="text-xs sm:text-sm md:text-base text-gray-600 truncate font-medium">SINDICATO MIXTO DE TRANSPORTISTAS</p>
-          <p class="text-xs sm:text-sm md:text-base text-gray-600 truncate font-medium">"MANUEL MARÍA CABALLERO"</p>
+  <div class="header border-b border-gray-200 pb-3 mb-4 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 overflow-hidden">
+    <!-- Primera fila: Logo + Empresa -->
+    <div class="flex items-center mb-4">
+      <div class="bus-icon mr-3 bg-gradient-to-br from-indigo-100 to-blue-100 p-2 rounded-xl flex-shrink-0 shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 .553-.894L9 2l6 3 6-3v13l-6 3-6-3z" />
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-base md:text-lg font-black text-gray-800 tracking-tight bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">TRANS COMARAPA</h2>
+        <p class="text-xs text-gray-600 font-medium leading-tight">SINDICATO MIXTO DE TRANSPORTISTAS "MANUEL MARÍA CABALLERO"</p>
+      </div>
+    </div>
+
+    <!-- Segunda fila: Origen, Destino, Día, Fecha y Hora -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+      <!-- Origen -->
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-2 text-center rounded-lg shadow-md">
+        <span class="text-xs font-semibold text-white opacity-90 block">ORIGEN</span>
+        <p class="text-sm font-bold text-white truncate">{{ trip.route ? trip.route.origin : 'N/D' }}</p>
+      </div>
+
+      <!-- Destino -->
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-2 text-center rounded-lg shadow-md">
+        <span class="text-xs font-semibold text-white opacity-90 block">DESTINO</span>
+        <p class="text-sm font-bold text-white truncate">{{ trip.route ? trip.route.destination : 'N/D' }}</p>
+      </div>
+
+      <!-- Día -->
+      <div class="bg-gradient-to-b from-purple-500 to-purple-600 rounded-lg px-2 py-2 text-center shadow-md">
+        <div class="text-white font-bold text-xs opacity-90">DÍA</div>
+        <div class="text-white font-black text-sm capitalize">{{ getDayName(trip.trip_datetime) }}</div>
+      </div>
+
+      <!-- Fecha -->
+      <div class="bg-gradient-to-b from-pink-500 to-rose-600 rounded-lg px-2 py-2 text-center shadow-md">
+        <div class="text-white font-bold text-xs opacity-90">FECHA</div>
+        <div class="text-white font-black text-sm">{{ formatShortDate(trip.trip_datetime) }}</div>
+      </div>
+
+      <!-- Hora -->
+      <div class="bg-gradient-to-b from-orange-500 to-red-600 rounded-lg px-2 py-2 text-center shadow-md">
+        <div class="text-white font-bold text-xs opacity-90">HORA</div>
+        <div class="text-white font-black text-sm">{{ formatTimeWithAmPm(trip.departure_time) }}</div>
+      </div>
+    </div>
+
+    <!-- Tercera fila: Conductor, Placa, Asistente -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+      <!-- Conductor -->
+      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+        <div class="flex items-center">
+          <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2 flex-shrink-0"></div>
+          <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Conductor:</span>
+          <span class="text-xs font-bold text-gray-800 truncate">{{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'N/A' }}</span>
         </div>
       </div>
-      <!-- Origen/Destino -->
-      <div class="w-full md:w-auto md:max-w-[450px] lg:max-w-[500px] mt-3 md:mt-0 flex-shrink-0">
-        <div class="flex gap-3">
-          <!-- Origen -->
-          <div class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 p-3 sm:p-4 text-center rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <span class="text-xs sm:text-sm font-semibold text-white opacity-90">ORIGEN</span>
-            <p class="text-sm sm:text-base md:text-lg font-bold text-white break-words mt-1">{{ trip.route ? trip.route.origin : 'N/D' }}</p>
-          </div>
-          <!-- Destino -->
-          <div class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 p-3 sm:p-4 text-center rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <span class="text-xs sm:text-sm font-semibold text-white opacity-90">DESTINO</span>
-            <p class="text-sm sm:text-base md:text-lg font-bold text-white break-words mt-1">{{ trip.route ? trip.route.destination : 'N/D' }}</p>
-          </div>
+
+      <!-- Placa -->
+      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+        <div class="flex items-center justify-center">
+          <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
+          <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Placa:</span>
+          <span class="text-xs font-bold text-gray-800 bg-gray-100 px-1.5 py-0.5 rounded">{{ trip.bus ? trip.bus.license_plate : 'N/A' }}</span>
+        </div>
+      </div>
+
+      <!-- Asistente -->
+      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+        <div class="flex items-center">
+          <div class="w-1.5 h-1.5 bg-teal-500 rounded-full mr-2 flex-shrink-0"></div>
+          <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Asistente:</span>
+          <span class="text-xs font-bold text-gray-800 truncate">{{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'N/A' }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Info Conductor/Placa y Fecha/Hora -->
-    <div class="mt-4 sm:mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-      <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 text-sm sm:text-base">
-        <div class="space-y-3">
-          <div class="flex items-center space-x-2">
-            <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
-            <span class="font-medium text-gray-600">Conductor:</span> 
-            <span class="font-bold text-gray-800">{{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'N/A' }}</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span class="font-medium text-gray-600">Placa:</span> 
-            <span class="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg">{{ trip.bus ? trip.bus.license_plate : 'N/A' }}</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="w-2 h-2 bg-teal-500 rounded-full"></div>
-            <span class="font-medium text-gray-600">Asistente:</span> 
-            <span class="font-bold text-gray-800">{{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'N/A' }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-3 gap-3 text-sm">
-        <div class="bg-gradient-to-b from-purple-500 to-purple-600 rounded-2xl p-4 text-center shadow-xl">
-          <div class="text-white font-bold opacity-90 text-xs mb-2">DÍA</div>
-          <div class="text-white font-black text-lg">{{ getDayName(trip.trip_datetime) }}</div>
-        </div>
-        <div class="bg-gradient-to-b from-pink-500 to-rose-600 rounded-2xl p-4 text-center shadow-xl">
-          <div class="text-white font-bold opacity-90 text-xs mb-2">FECHA</div>
-          <div class="text-white font-black text-lg">{{ formatShortDate(trip.trip_datetime) }}</div>
-        </div>
-        <div class="bg-gradient-to-b from-orange-500 to-red-600 rounded-2xl p-4 text-center shadow-xl">
-          <div class="text-white font-bold opacity-90 text-xs mb-2">HORA</div>
-          <div class="text-white font-black text-lg">{{ formatTimeWithAmPm(trip.departure_time) }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Planilla de Pasajeros -->
-    <div class="mt-6 sm:mt-8 text-center">
-      <div class="inline-flex items-center space-x-3 bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-4 rounded-2xl shadow-xl">
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Cuarta fila: Estadísticas de asientos -->
+    <div v-if="trip.total_seats" class="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+      <div class="flex items-center space-x-2">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
-        <h3 class="text-base sm:text-lg md:text-xl font-black text-white tracking-wide">PLANILLA DE PASAJEROS</h3>
+        <span class="text-sm font-bold text-gray-700">PLANILLA DE PASAJEROS</span>
       </div>
-      <div v-if="trip.total_seats" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 justify-center max-w-4xl mx-auto">
-        <!-- Capacidad Total -->
-        <div class="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-200 text-center transform hover:scale-105 transition-transform duration-200">
-          <span class="text-2xl font-black text-indigo-600">{{ trip.total_seats }}</span>
-          <p class="text-sm text-gray-600 font-medium">Capacidad Total</p>
+
+      <div class="flex items-center space-x-4">
+        <div class="text-center">
+          <span class="text-lg font-black text-indigo-600">{{ trip.total_seats }}</span>
+          <p class="text-xs text-gray-500">Total</p>
         </div>
-        
-        <!-- Ocupados -->
-        <div class="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-200 text-center transform hover:scale-105 transition-transform duration-200">
-          <span class="text-2xl font-black text-red-600">{{ occupiedSeatsCount }}</span>
-          <p class="text-sm text-gray-600 font-medium">Ocupados</p>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-lg font-black text-red-600">{{ occupiedSeatsCount }}</span>
+          <p class="text-xs text-gray-500">Ocupados</p>
         </div>
-        
-        <!-- Reservados -->
-        <div class="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-200 text-center transform hover:scale-105 transition-transform duration-200">
-          <span class="text-2xl font-black text-amber-600">{{ reservedSeatsCount }}</span>
-          <p class="text-sm text-gray-600 font-medium">Reservados</p>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-lg font-black text-amber-600">{{ reservedSeatsCount }}</span>
+          <p class="text-xs text-gray-500">Reservados</p>
         </div>
-        
-        <!-- Disponibles -->
-        <div class="bg-white px-4 py-3 rounded-xl shadow-lg border border-gray-200 text-center transform hover:scale-105 transition-transform duration-200">
-          <span class="text-2xl font-black text-emerald-600">{{ availableSeatsCount }}</span>
-          <p class="text-sm text-gray-600 font-medium">Disponibles</p>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-lg font-black text-emerald-600">{{ availableSeatsCount }}</span>
+          <p class="text-xs text-gray-500">Disponibles</p>
         </div>
       </div>
     </div>

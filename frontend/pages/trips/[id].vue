@@ -97,26 +97,13 @@
       <div class="px-4 sm:px-6 lg:px-8 mb-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
-          <div class="mt-2 sm:mt-0 flex items-center space-x-4">
-            <div class="flex items-center">
-              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.available_seats }} disponibles</span>
-              <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-            </div>
-            <div class="flex items-center">
-              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.occupied_seat_numbers ? displayedTrip.occupied_seat_numbers.length : 0 }} ocupados</span>
-              <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-            </div>
-            <div class="flex items-center">
-              <span class="text-xs text-gray-500 mr-2">{{ displayedTrip.total_seats }} totales</span>
-              <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
-            </div>
-            
+          <div class="mt-2 sm:mt-0 flex items-center">
             <!-- Botón Ver Planilla -->
             <a
               :href="`/trips/${tripId}-sheet`"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-underline ml-4"
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-underline"
             >
               <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

@@ -62,4 +62,28 @@ export const getBusSeats = async (busId) => {
     console.error(`Error in busService.getBusSeats for busId ${busId}:`, error.data?.detail || error.message);
     throw error;
   }
+};
+
+export const createBusWithSeats = async (busData) => {
+  try {
+    return await apiFetch(`${resourceUrl}/with-seats`, {
+      method: 'POST',
+      body: busData,
+    });
+  } catch (error) {
+    console.error('Error in busService.createBusWithSeats:', error.data?.detail || error.message);
+    throw error;
+  }
+};
+
+export const updateBusSeats = async (busId, seats) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${busId}/seats`, {
+      method: 'PUT',
+      body: seats,
+    });
+  } catch (error) {
+    console.error(`Error in busService.updateBusSeats for busId ${busId}:`, error.data?.detail || error.message);
+    throw error;
+  }
 }; 

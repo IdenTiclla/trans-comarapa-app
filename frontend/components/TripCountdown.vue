@@ -1,76 +1,76 @@
 <template>
-  <div class="w-full max-w-4xl mx-auto mb-8">
+  <div class="w-full max-w-2xl mx-auto mb-4">
     <!-- Header/Title -->
-    <div class="text-center mb-6">
-      <h3 class="text-xl font-bold text-gray-800 uppercase tracking-wider">Tiempo Restante</h3>
-      <div class="h-1 w-20 bg-indigo-600 mx-auto mt-2 rounded-full"></div>
+    <div class="text-center mb-3">
+      <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">Tiempo Restante</h3>
+      <div class="h-0.5 w-16 bg-indigo-600 mx-auto mt-1 rounded-full"></div>
     </div>
 
     <!-- Main Countdown Container -->
-    <div v-if="!isPast && !isTimeToTravel" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+    <div v-if="!isPast && !isTimeToTravel" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
       <!-- Days -->
       <div class="flex flex-col items-center">
-        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
+        <div class="bg-white rounded-lg shadow-md p-2 sm:p-3 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
           <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="text-4xl sm:text-5xl md:text-6xl font-black text-indigo-600 relative z-10 font-mono">
+          <span class="text-2xl sm:text-3xl md:text-4xl font-black text-indigo-600 relative z-10 font-mono">
             {{ String(timeLeft.days).padStart(2, '0') }}
           </span>
         </div>
-        <span class="mt-3 text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Días</span>
+        <span class="mt-1.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Días</span>
       </div>
 
       <!-- Hours -->
       <div class="flex flex-col items-center">
-        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
+        <div class="bg-white rounded-lg shadow-md p-2 sm:p-3 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
           <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="text-4xl sm:text-5xl md:text-6xl font-black text-indigo-600 relative z-10 font-mono">
+          <span class="text-2xl sm:text-3xl md:text-4xl font-black text-indigo-600 relative z-10 font-mono">
             {{ String(timeLeft.hours).padStart(2, '0') }}
           </span>
         </div>
-        <span class="mt-3 text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Horas</span>
+        <span class="mt-1.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Horas</span>
       </div>
 
       <!-- Minutes -->
       <div class="flex flex-col items-center">
-        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
+        <div class="bg-white rounded-lg shadow-md p-2 sm:p-3 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
           <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="text-4xl sm:text-5xl md:text-6xl font-black text-indigo-600 relative z-10 font-mono">
+          <span class="text-2xl sm:text-3xl md:text-4xl font-black text-indigo-600 relative z-10 font-mono">
             {{ String(timeLeft.minutes).padStart(2, '0') }}
           </span>
         </div>
-        <span class="mt-3 text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Minutos</span>
+        <span class="mt-1.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Minutos</span>
       </div>
 
       <!-- Seconds -->
       <div class="flex flex-col items-center">
-        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
+        <div class="bg-white rounded-lg shadow-md p-2 sm:p-3 w-full aspect-square flex items-center justify-center border border-gray-100 relative overflow-hidden group">
           <div class="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <span class="text-4xl sm:text-5xl md:text-6xl font-black text-indigo-600 relative z-10 font-mono">
+          <span class="text-2xl sm:text-3xl md:text-4xl font-black text-indigo-600 relative z-10 font-mono">
             {{ String(timeLeft.seconds).padStart(2, '0') }}
           </span>
         </div>
-        <span class="mt-3 text-xs sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Segundos</span>
+        <span class="mt-1.5 text-xs font-bold text-gray-500 uppercase tracking-wide">Segundos</span>
       </div>
     </div>
 
     <!-- Time to Travel State -->
-    <div v-else-if="isTimeToTravel" class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-center text-white animate-pulse">
-      <div class="text-4xl mb-2">🚌</div>
-      <h3 class="text-2xl font-bold mb-2">¡Es Hora de Viajar!</h3>
-      <p class="opacity-90">Tu viaje está programado para salir ahora.</p>
+    <div v-else-if="isTimeToTravel" class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md p-4 text-center text-white animate-pulse">
+      <div class="text-2xl mb-1">🚌</div>
+      <h3 class="text-lg font-bold mb-1">¡Es Hora de Viajar!</h3>
+      <p class="opacity-90 text-sm">Tu viaje está programado para salir ahora.</p>
     </div>
 
     <!-- Past State -->
-    <div v-else class="bg-gray-100 rounded-xl border-2 border-gray-200 p-8 text-center text-gray-500">
-      <div class="text-4xl mb-2">🏁</div>
-      <h3 class="text-xl font-bold mb-1">Viaje Finalizado</h3>
-      <p class="text-sm">Este viaje ya ha partido.</p>
+    <div v-else class="bg-gray-100 rounded-lg border-2 border-gray-200 p-4 text-center text-gray-500">
+      <div class="text-2xl mb-1">🏁</div>
+      <h3 class="text-base font-bold mb-1">Viaje Finalizado</h3>
+      <p class="text-xs">Este viaje ya ha partido.</p>
     </div>
 
     <!-- Almost Time Warning (Overlay or specialized view could be added, but keeping simple for now) -->
-    <div v-if="isAlmostTime && !isTimeToTravel && !isPast" class="mt-4 text-center">
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-        <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-ping"></span>
+    <div v-if="isAlmostTime && !isTimeToTravel && !isPast" class="mt-2 text-center">
+      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5 animate-ping"></span>
         ¡El viaje sale pronto!
       </span>
     </div>
