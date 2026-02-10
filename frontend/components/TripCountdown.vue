@@ -1,5 +1,37 @@
 <template>
-  <div class="w-full max-w-2xl mx-auto mb-4">
+  <!-- Compact mode: single line inline countdown -->
+  <div v-if="compact" class="inline-flex items-center gap-1.5">
+    <template v-if="!isPast && !isTimeToTravel">
+      <div class="flex items-center gap-1 bg-white/80 backdrop-blur rounded-lg px-2.5 py-1.5 border border-gray-200 shadow-sm">
+        <svg class="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-xs font-bold text-gray-700 font-mono tabular-nums">
+          {{ String(timeLeft.days).padStart(2, '0') }}<span class="text-gray-400">d</span>
+          {{ String(timeLeft.hours).padStart(2, '0') }}<span class="text-gray-400">h</span>
+          {{ String(timeLeft.minutes).padStart(2, '0') }}<span class="text-gray-400">m</span>
+          <span class="text-indigo-500">{{ String(timeLeft.seconds).padStart(2, '0') }}</span><span class="text-gray-400">s</span>
+        </span>
+      </div>
+      <span v-if="isAlmostTime" class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+      </span>
+    </template>
+    <template v-else-if="isTimeToTravel">
+      <span class="inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg animate-pulse">
+        <span>🚌</span> En marcha
+      </span>
+    </template>
+    <template v-else>
+      <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-gray-200">
+        <span>🏁</span> Finalizado
+      </span>
+    </template>
+  </div>
+
+  <!-- Full mode: original grid countdown -->
+  <div v-else class="w-full max-w-2xl mx-auto mb-4">
     <!-- Header/Title -->
     <div class="text-center mb-3">
       <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">Tiempo Restante</h3>
@@ -67,7 +99,7 @@
       <p class="text-xs">Este viaje ya ha partido.</p>
     </div>
 
-    <!-- Almost Time Warning (Overlay or specialized view could be added, but keeping simple for now) -->
+    <!-- Almost Time Warning -->
     <div v-if="isAlmostTime && !isTimeToTravel && !isPast" class="mt-2 text-center">
       <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
         <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5 animate-ping"></span>
@@ -88,6 +120,10 @@ const props = defineProps({
   departureTime: {
     type: String,
     required: false
+  },
+  compact: {
+    type: Boolean,
+    default: false
   }
 })
 

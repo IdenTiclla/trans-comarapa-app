@@ -141,15 +141,11 @@ async def create_ticket(ticket: TicketCreate, db: Session = Depends(get_db)):
     if ticket.destination:
         print(f"[DEBUG] Destination provided: {ticket.destination}")
 
-    # 5. Verify that the trip hasn't already departed
-    min_departure = datetime.now() + timedelta(minutes=10)
+    # 5. Check if trip has already departed (warning only, does not block)
+    # Secretaries may need to register last-minute sales after departure
     print(f"[DEBUG] Trip datetime: {trip.trip_datetime}, Current time: {datetime.now()}")
     if trip.trip_datetime < datetime.now():
-        print(f"[DEBUG] Trip has already departed")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Trip with id {ticket.trip_id} has already departed on {trip.trip_datetime}"
-        )
+        print(f"[WARNING] Creating ticket for a trip that has already departed (trip_datetime: {trip.trip_datetime})")
 
     # 6. Verify that the seat belongs to the bus assigned to the trip
     print(f"[DEBUG] Seat bus_id: {seat.bus_id}, Trip bus_id: {trip.bus_id}")

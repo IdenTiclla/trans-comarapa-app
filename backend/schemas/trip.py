@@ -15,18 +15,73 @@ from schemas.secretary import Secretary as SecretarySchema
 # Base model with common attributes
 class TripBase(BaseModel):
     trip_datetime: datetime = Field(..., description="Trip date and time (YYYY-MM-DD HH:MM:SS)", example="2023-10-01 14:30:00")
-    driver_id: int = Field(..., description="Driver identifier", example=1, gt=0)
+    driver_id: Optional[int] = Field(None, description="Driver identifier", example=1)
     assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
     bus_id: int = Field(..., description="Bus identifier", example=3, gt=0)
     route_id: int = Field(..., description="Route identifier", example=4, gt=0)
     status: Optional[str] = Field('scheduled', description="Trip status (e.g., scheduled, in_progress, completed, cancelled)", example="scheduled")
     secretary_id: int = Field(..., description="Secretary identifier", example=5, gt=0)
     
+    @field_validator('driver_id')
+    @classmethod
+    def validate_driver_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Driver ID must be a positive integer")
+        return v
+
     @field_validator('assistant_id')
     @classmethod 
     def validate_assistant_id(cls, v):
         if v is not None and v <= 0:
             raise ValueError("Assistant ID must be a positive integer")
+        return v
+
+# Schema for partial update of a trip (all fields optional)
+class TripUpdate(BaseModel):
+    """
+    Schema for updating a Trip. All fields are optional.
+    """
+    trip_datetime: Optional[datetime] = Field(None, description="Trip date and time")
+    driver_id: Optional[int] = Field(None, description="Driver identifier")
+    assistant_id: Optional[int] = Field(None, description="Assistant identifier")
+    bus_id: Optional[int] = Field(None, description="Bus identifier")
+    route_id: Optional[int] = Field(None, description="Route identifier")
+    status: Optional[str] = Field(None, description="Trip status")
+    secretary_id: Optional[int] = Field(None, description="Secretary identifier")
+
+    @field_validator('driver_id')
+    @classmethod
+    def validate_driver_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Driver ID must be a positive integer")
+        return v
+
+    @field_validator('assistant_id')
+    @classmethod
+    def validate_assistant_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Assistant ID must be a positive integer")
+        return v
+
+    @field_validator('bus_id')
+    @classmethod
+    def validate_bus_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Bus ID must be a positive integer")
+        return v
+
+    @field_validator('route_id')
+    @classmethod
+    def validate_route_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Route ID must be a positive integer")
+        return v
+
+    @field_validator('secretary_id')
+    @classmethod
+    def validate_secretary_id(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Secretary ID must be a positive integer")
         return v
 
 # Schema for creating a new trip

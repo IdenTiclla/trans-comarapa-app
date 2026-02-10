@@ -10,7 +10,7 @@ from models.route import Route as RouteModel
 from models.ticket import Ticket as TicketModel
 from models.seat import Seat as SeatModel
 from models.location import Location as LocationModel
-from schemas.trip import TripCreate, Trip as TripSchema
+from schemas.trip import TripCreate, TripUpdate, Trip as TripSchema
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from schemas.seat import Seat as SeatSchema
@@ -223,13 +223,14 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
             detail=f"Trip datetime must be at least 30 minutes in the future. Current minimum: {min_departure}"
         )
 
-    # 2. Verify that the driver exists
-    driver = db.query(DriverModel).filter(DriverModel.id == trip.driver_id).first()
-    if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Driver with id {trip.driver_id} not found"
-        )
+    # 2. Verify that the driver exists (only if specified)
+    if trip.driver_id:
+        driver = db.query(DriverModel).filter(DriverModel.id == trip.driver_id).first()
+        if not driver:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Driver with id {trip.driver_id} not found"
+            )
 
     # 3. Verify that the bus exists
     bus = db.query(BusModel).filter(BusModel.id == trip.bus_id).first()
@@ -262,17 +263,18 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     trip_end = trip.trip_datetime + timedelta(hours=buffer_hours)
 
     # 7. Check for driver conflicts - driver shouldn't have another trip within the time buffer
-    driver_conflict = db.query(TripModel).filter(
-        TripModel.driver_id == trip.driver_id,
-        TripModel.trip_datetime.between(trip_start, trip_end)
-    ).first()
+    if trip.driver_id:
+        driver_conflict = db.query(TripModel).filter(
+            TripModel.driver_id == trip.driver_id,
+            TripModel.trip_datetime.between(trip_start, trip_end)
+        ).first()
 
-    if driver_conflict:
-        conflict_time = driver_conflict.trip_datetime
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Driver with id {trip.driver_id} is already assigned to trip id {driver_conflict.id} at {conflict_time}"
-        )
+        if driver_conflict:
+            conflict_time = driver_conflict.trip_datetime
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Driver with id {trip.driver_id} is already assigned to trip id {driver_conflict.id} at {conflict_time}"
+            )
 
     # 8. Check for bus conflicts - bus shouldn't have another trip within the time buffer
     bus_conflict = db.query(TripModel).filter(
@@ -304,10 +306,15 @@ async def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     # 10. Check for duplicate trips based on all properties
     duplicate_trip = db.query(TripModel).filter(
         TripModel.trip_datetime == trip.trip_datetime,
-        TripModel.driver_id == trip.driver_id,
         TripModel.bus_id == trip.bus_id,
         TripModel.route_id == trip.route_id
     )
+
+    # Conditionally add driver check
+    if trip.driver_id:
+        duplicate_trip = duplicate_trip.filter(TripModel.driver_id == trip.driver_id)
+    else:
+        duplicate_trip = duplicate_trip.filter(TripModel.driver_id == None)
 
     # Conditionally add assistant check if an assistant is assigned
     if trip.assistant_id:
@@ -579,6 +586,120 @@ async def get_available_seats(trip_id: int, db: Session = Depends(get_db)):
         "occupied_seats_info": occupied_seats_info,
         "available_seat_numbers": available_seat_numbers
     }
+
+@router.put("/{trip_id}", response_model=Dict[str, Any])
+async def update_trip(trip_id: int, trip_update: TripUpdate, db: Session = Depends(get_db)):
+    """
+    Update a trip by ID. Only provided fields are updated (partial update).
+    """
+    # 1. Check if trip exists
+    trip = db.query(TripModel).filter(TripModel.id == trip_id).first()
+    if not trip:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Trip with id {trip_id} not found"
+        )
+
+    # Get the fields to update (exclude unset fields)
+    update_data = trip_update.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update"
+        )
+
+    # 2. Validate driver if provided
+    if 'driver_id' in update_data:
+        new_driver_id = update_data['driver_id']
+        if new_driver_id is not None:
+            driver = db.query(DriverModel).filter(DriverModel.id == new_driver_id).first()
+            if not driver:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Driver with id {new_driver_id} not found"
+                )
+            # Check for driver scheduling conflicts
+            buffer_hours = 2
+            trip_dt = update_data.get('trip_datetime', trip.trip_datetime)
+            trip_start = trip_dt - timedelta(hours=buffer_hours)
+            trip_end = trip_dt + timedelta(hours=buffer_hours)
+            driver_conflict = db.query(TripModel).filter(
+                TripModel.driver_id == new_driver_id,
+                TripModel.id != trip_id,
+                TripModel.trip_datetime.between(trip_start, trip_end)
+            ).first()
+            if driver_conflict:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Driver with id {new_driver_id} is already assigned to trip id {driver_conflict.id} at {driver_conflict.trip_datetime}"
+                )
+
+    # 3. Validate assistant if provided
+    if 'assistant_id' in update_data:
+        new_assistant_id = update_data['assistant_id']
+        if new_assistant_id is not None:
+            assistant = db.query(AssistantModel).filter(AssistantModel.id == new_assistant_id).first()
+            if not assistant:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Assistant with id {new_assistant_id} not found"
+                )
+            # Check for assistant scheduling conflicts
+            buffer_hours = 2
+            trip_dt = update_data.get('trip_datetime', trip.trip_datetime)
+            trip_start = trip_dt - timedelta(hours=buffer_hours)
+            trip_end = trip_dt + timedelta(hours=buffer_hours)
+            assistant_conflict = db.query(TripModel).filter(
+                TripModel.assistant_id == new_assistant_id,
+                TripModel.id != trip_id,
+                TripModel.trip_datetime.between(trip_start, trip_end)
+            ).first()
+            if assistant_conflict:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Assistant with id {new_assistant_id} is already assigned to trip id {assistant_conflict.id} at {assistant_conflict.trip_datetime}"
+                )
+
+    # 4. Validate bus if provided
+    if 'bus_id' in update_data:
+        new_bus_id = update_data['bus_id']
+        if new_bus_id is not None:
+            bus = db.query(BusModel).filter(BusModel.id == new_bus_id).first()
+            if not bus:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Bus with id {new_bus_id} not found"
+                )
+
+    # 5. Validate route if provided
+    if 'route_id' in update_data:
+        new_route_id = update_data['route_id']
+        if new_route_id is not None:
+            route = db.query(RouteModel).filter(RouteModel.id == new_route_id).first()
+            if not route:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Route with id {new_route_id} not found"
+                )
+
+    # 6. Apply the updates
+    for field, value in update_data.items():
+        setattr(trip, field, value)
+
+    try:
+        db.commit()
+        db.refresh(trip)
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Foreign key constraint failed: check provided IDs"
+        ) from exc
+
+    # 7. Return the updated trip in the same format as get_trip
+    return get_trip(trip_id, db)
+
 
 @router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_trip(trip_id: int, db: Session = Depends(get_db)):

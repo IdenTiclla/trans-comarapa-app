@@ -1,233 +1,202 @@
 <template>
-  <div>
-    <div class="py-6">
-      <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Botón de volver -->
-        <div class="mb-6">
-          <button
-            @click="router.back()"
-            class="flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-            Volver
-          </button>
-        </div>
-
-        <!-- Estados de carga y error -->
-        <div v-if="tripStore.isLoading" class="flex justify-center py-12">
-          <p class="text-gray-500">Cargando información del viaje...</p>
-        </div>
-
-        <div v-else-if="tripStore.error" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+  <div class="min-h-screen bg-gray-50">
+    <!-- Barra superior compacta -->
+    <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div class="flex items-center justify-between h-14">
+          <!-- Izquierda: Volver + info de ruta -->
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <button
+              @click="router.back()"
+              class="flex-shrink-0 p-1.5 -ml-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              title="Volver"
+            >
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
               </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">{{ tripStore.error }}</h3>
+            </button>
+            
+            <!-- Info de ruta compacta -->
+            <div v-if="displayedTrip" class="flex items-center gap-1.5 min-w-0">
+              <span class="text-sm font-bold text-gray-800 truncate hidden sm:inline">{{ displayedTrip.route?.origin }}</span>
+              <span class="text-sm font-bold text-gray-800 truncate sm:hidden">{{ displayedTrip.route?.origin?.substring(0, 3) }}</span>
+              <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              <span class="text-sm font-bold text-gray-800 truncate hidden sm:inline">{{ displayedTrip.route?.destination }}</span>
+              <span class="text-sm font-bold text-gray-800 truncate sm:hidden">{{ displayedTrip.route?.destination?.substring(0, 3) }}</span>
+              <span class="hidden md:inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                {{ displayedTrip.departure_time ? formatTimeAmPm(displayedTrip.departure_time) : '' }}
+              </span>
             </div>
           </div>
-        </div>
 
-        <!-- Contenido principal -->
-        <div v-else-if="displayedTrip">
-          <!-- Countdown del viaje -->
-          <TripCountdown
-            :trip-date-time="displayedTrip.trip_datetime"
-            :departure-time="displayedTrip.departure_time"
-          />
+          <!-- Centro: Countdown compacto -->
+          <div v-if="displayedTrip" class="hidden sm:flex items-center">
+            <TripCountdown
+              :trip-date-time="displayedTrip.trip_datetime"
+              :departure-time="displayedTrip.departure_time"
+              :compact="true"
+            />
+          </div>
 
+          <!-- Derecha: Acciones -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <a
+              v-if="displayedTrip"
+              :href="`/trips/${tripId}-sheet`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors no-underline"
+            >
+              <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span class="hidden sm:inline">Planilla</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Panel de ayuda flotante para modo de cambio de asiento -->
-    <div v-if="seatChangeMode" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-40 w-auto sm:w-full sm:max-w-sm">
-      <div class="bg-white rounded-xl shadow-2xl border border-orange-200 p-4 transform transition-all duration-300">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg class="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-              </svg>
+    <!-- Countdown movil (solo visible en sm y menor) -->
+    <div v-if="displayedTrip" class="sm:hidden px-3 pt-3">
+      <TripCountdown
+        :trip-date-time="displayedTrip.trip_datetime"
+        :departure-time="displayedTrip.departure_time"
+        :compact="true"
+      />
+    </div>
+
+    <!-- Estados de carga y error -->
+    <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
+      <div v-if="tripStore.isLoading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-500 text-sm">Cargando viaje...</p>
+      </div>
+
+      <div v-else-if="tripStore.error" class="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <svg class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <p class="text-sm font-medium text-red-800">{{ tripStore.error }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido principal: Mapa de asientos -->
+    <div v-if="displayedTrip && !tripStore.isLoading" class="pt-3 pb-8">
+
+      <!-- Panel de ayuda flotante para modo de cambio de asiento -->
+      <div v-if="seatChangeMode" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-40 w-auto sm:w-full sm:max-w-sm">
+        <div class="bg-white rounded-xl shadow-2xl border border-orange-200 p-4">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
             </div>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-sm font-medium text-gray-900 mb-2">Guía rápida</h4>
-            <ul class="text-xs text-gray-600 space-y-1">
-              <li class="flex items-center">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Asientos verdes: disponibles
-              </li>
-              <li class="flex items-center">
-                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                Asientos rojos: ocupados
-              </li>
-              <li class="flex items-center">
-                <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                Asientos amarillos: reservados
-              </li>
-            </ul>
-            <div class="mt-3 pt-3 border-t border-gray-200">
-              <p class="text-xs text-gray-500 mb-2">Atajos de teclado:</p>
+            <div class="flex-1">
+              <h4 class="text-sm font-medium text-gray-900 mb-1">Cambio de asiento</h4>
+              <p class="text-xs text-gray-600 mb-2">Selecciona un asiento disponible (verde)</p>
               <div class="flex flex-wrap gap-1">
                 <span class="keyboard-shortcut">ESC</span>
                 <span class="text-xs text-gray-500">Cancelar</span>
               </div>
             </div>
-          </div>
-          <button 
-            @click="showHelpPanel = false"
-            class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mapa de asientos - Ancho completo -->
-    <div v-if="displayedTrip" class="mt-6 mb-8">
-      <div class="px-4 sm:px-6 lg:px-8 mb-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <h3 class="text-lg font-medium text-gray-900">Mapa de Asientos</h3>
-          <div class="mt-2 sm:mt-0 flex items-center">
-            <!-- Botón Ver Planilla -->
-            <a
-              :href="`/trips/${tripId}-sheet`"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-underline"
+            <button 
+              @click="showHelpPanel = false"
+              class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
-              Planilla
-            </a>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Indicador de modo cambio de asiento mejorado -->
-      <div v-if="seatChangeMode" class="px-4 sm:px-6 lg:px-8 mb-4">
-        <div class="relative p-6 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-300 rounded-xl shadow-lg">
-          <!-- Icono animado de atención -->
-          <div class="absolute -top-3 left-6">
-            <div class="bg-orange-500 text-white p-2 rounded-full shadow-lg animate-pulse">
-              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-              </svg>
-            </div>
-          </div>
-          
-          <div class="flex items-center justify-between">
-            <div class="flex items-start space-x-4">
-              <!-- Información del cambio -->
-              <div class="flex-1">
-                <div class="flex items-center mb-2">
-                  <!-- Indicador de paso -->
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white mr-3">
-                    Paso 1 de 2
-                  </span>
-                  <h3 class="text-lg font-bold text-orange-900">Cambio de Asiento en Progreso</h3>
+      <!-- Indicador de modo cambio de asiento -->
+      <div v-if="seatChangeMode" class="px-3 sm:px-4 lg:px-6 mb-3">
+        <div class="max-w-screen-2xl mx-auto">
+          <div class="relative p-4 sm:p-5 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-300 rounded-xl shadow-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <div class="flex-shrink-0 bg-orange-500 text-white p-2 rounded-full shadow-lg animate-pulse">
+                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
                 </div>
-                
-                <!-- Información del cliente y asiento actual -->
-                <div class="bg-white/60 backdrop-blur-sm rounded-lg p-4 mb-3">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p class="text-sm font-medium text-gray-900">Cliente</p>
-                        <p class="text-sm text-gray-600">{{ seatChangeTicket?.client?.firstname || 'Cliente' }} {{ seatChangeTicket?.client?.lastname || '' }}</p>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                        <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p class="text-sm font-medium text-gray-900">Asiento Actual</p>
-                        <p class="text-sm text-gray-600">Asiento {{ seatChangeTicket?.seat?.seat_number }}</p>
-                      </div>
-                    </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">Paso 1 de 2</span>
+                    <h3 class="text-sm sm:text-base font-bold text-orange-900">Cambio de Asiento</h3>
                   </div>
-                </div>
-                
-                <!-- Instrucciones con animación -->
-                <div class="flex items-center space-x-2 text-orange-800">
-                  <div class="animate-bounce">
-                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 13l3 3 7-7" />
-                    </svg>
-                  </div>
-                  <p class="text-sm font-medium">Haz clic en un asiento libre (verde) para continuar</p>
+                  <p class="text-xs sm:text-sm text-orange-700">
+                    <strong>{{ seatChangeTicket?.client?.firstname }} {{ seatChangeTicket?.client?.lastname }}</strong>
+                    - Asiento {{ seatChangeTicket?.seat?.seat_number }}
+                    <span class="hidden sm:inline">| Selecciona un asiento libre para continuar</span>
+                  </p>
                 </div>
               </div>
-            </div>
-            
-            <!-- Botón de cancelar mejorado -->
-            <div class="flex flex-col items-end space-y-2">
               <button
                 @click="cancelSeatChange"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-orange-700 bg-white border-2 border-orange-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm"
+                class="self-start sm:self-center inline-flex items-center px-3 py-1.5 text-sm font-medium text-orange-700 bg-white border-2 border-orange-300 rounded-lg hover:bg-orange-50 transition-all shadow-sm flex-shrink-0"
               >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Cancelar
               </button>
-              
-              <!-- Atajo de teclado -->
-              <span class="text-xs text-orange-600 bg-white/60 px-2 py-1 rounded">
-                ESC para cancelar
-              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <BusSeatMapPrint
-        :key="`seat-map-${displayedTrip?.id}-${soldTickets?.length || 0}-${seatMapUpdateKey}`"
-        :trip="displayedTrip" 
-        :tickets="soldTickets"
-        :selection-enabled="true"
-        :reserved_seat_numbers="reservedSeatNumbers"
-        :enable-context-menu="true"
-        :initial-selected-seats="selectedSeatsForSale"
-        :seat-change-mode="seatChangeMode"
-        :seat-change-ticket="seatChangeTicket"
-        :class="{ 'seat-change-active': seatChangeMode }"
-        @cancel-reservation="handleCancelReservation"
-        @confirm-sale="handleConfirmSale"
-        @view-details="handleViewSeatDetails"
-        @change-seat="handleChangeSeat"
-        @reschedule-trip="handleRescheduleTrip"
-        @sell-ticket="handleSellTicket"
-        @reserve-seat="handleReserveSeat"
-        @selection-change="handleSelectionChange"
-      />
-      
-      <!-- Panel de acciones rápidas para selección de asientos -->
-
-    </div>
-
-    <!-- Resto del contenido eliminado (Gestión de boletos y encomiendas) -->
-    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div v-if="displayedTrip">
+      <!-- Mapa de asientos con edicion de personal integrada -->
+      <div class="px-3 sm:px-4 lg:px-6">
+        <div class="max-w-screen-2xl mx-auto">
+          <BusSeatMapPrint
+            :key="`seat-map-${displayedTrip?.id}-${soldTickets?.length || 0}-${seatMapUpdateKey}`"
+            :trip="displayedTrip" 
+            :tickets="soldTickets"
+            :selection-enabled="true"
+            :reserved_seat_numbers="reservedSeatNumbers"
+            :enable-context-menu="true"
+            :initial-selected-seats="selectedSeatsForSale"
+            :seat-change-mode="seatChangeMode"
+            :seat-change-ticket="seatChangeTicket"
+            :class="{ 'seat-change-active': seatChangeMode }"
+            :editable="true"
+            :drivers="driverStore.drivers"
+            :assistants="assistantStore.assistants"
+            :editing-driver="editingDriver"
+            :editing-assistant="editingAssistant"
+            :selected-driver-id="selectedDriverId"
+            :selected-assistant-id="selectedAssistantId"
+            :saving-driver="savingDriver"
+            :saving-assistant="savingAssistant"
+            @start-edit-driver="startEditDriver"
+            @save-driver="saveDriver"
+            @cancel-edit-driver="cancelEditDriver"
+            @start-edit-assistant="startEditAssistant"
+            @save-assistant="saveAssistant"
+            @cancel-edit-assistant="cancelEditAssistant"
+            @update:selectedDriverId="selectedDriverId = $event"
+            @update:selectedAssistantId="selectedAssistantId = $event"
+            @cancel-reservation="handleCancelReservation"
+            @confirm-sale="handleConfirmSale"
+            @view-details="handleViewSeatDetails"
+            @change-seat="handleChangeSeat"
+            @reschedule-trip="handleRescheduleTrip"
+            @sell-ticket="handleSellTicket"
+            @reserve-seat="handleReserveSeat"
+            @selection-change="handleSelectionChange"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -492,9 +461,11 @@ import { ref, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTripStore } from '@/stores/tripStore'
 import { useAuthStore } from '@/stores/auth'
+import { useDriverStore } from '@/stores/driverStore'
+import { useAssistantStore } from '@/stores/assistantStore'
 import { useTripDetails } from '@/composables/useTripDetails'
 import { changeSeat } from '@/services/ticketService'
-import AppButton from '@/components/AppButton.vue'
+import { updateTrip, getTripById } from '@/services/tripService'
 import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
 import TripCountdown from '@/components/TripCountdown.vue'
 import TicketModal from '@/components/TicketModal.vue'
@@ -505,9 +476,25 @@ const route = useRoute()
 const router = useRouter()
 const tripStore = useTripStore()
 const authStore = useAuthStore()
+const driverStore = useDriverStore()
+const assistantStore = useAssistantStore()
 
 const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
+
+// Formatear hora con AM/PM para la barra compacta
+const formatTimeAmPm = (timeString) => {
+  if (!timeString) return ''
+  const parts = timeString.split(':')
+  if (parts.length >= 2) {
+    const hours = parseInt(parts[0], 10)
+    const minutes = parts[1]
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+    return `${displayHours}:${minutes} ${period}`
+  }
+  return timeString
+}
 
 // Usar el composable para manejar los detalles del viaje
 const {
@@ -525,7 +512,6 @@ const {
 const showTicketModal = ref(false)
 const showTicketSaleModal = ref(false)
 const selectedTicket = ref(null)
-const selectedSeatForSale = ref(null)
 const saleActionType = ref('sell')
 const modalType = ref('details')
 const cancellingReservation = ref(false)
@@ -545,6 +531,14 @@ const showConfirmSaleModal = ref(false)
 const ticketToConfirm = ref(null)
 const confirmingSale = ref(false)
 
+// Estado para edicion inline de conductor/asistente
+const editingDriver = ref(false)
+const editingAssistant = ref(false)
+const selectedDriverId = ref(null)
+const selectedAssistantId = ref(null)
+const savingDriver = ref(false)
+const savingAssistant = ref(false)
+
 // Estado para notificaciones
 const showNotificationModal = ref(false)
 const notificationData = ref({
@@ -557,6 +551,67 @@ const notificationData = ref({
 const showNotification = (type, title, message) => {
   notificationData.value = { type, title, message }
   showNotificationModal.value = true
+}
+
+// Funciones para edicion inline de conductor/asistente
+const startEditDriver = () => {
+  selectedDriverId.value = displayedTrip.value?.driver_id || null
+  editingDriver.value = true
+}
+
+const cancelEditDriver = () => {
+  editingDriver.value = false
+  selectedDriverId.value = null
+}
+
+const refreshTripSilently = async () => {
+  // Refrescar datos del viaje sin activar isLoading global
+  const updatedTrip = await getTripById(tripId.value)
+  tripStore.currentTrip = updatedTrip
+}
+
+const saveDriver = async () => {
+  savingDriver.value = true
+  try {
+    await updateTrip(tripId.value, {
+      driver_id: selectedDriverId.value || null
+    })
+    await refreshTripSilently()
+    editingDriver.value = false
+    showNotification('success', 'Conductor actualizado', 'El conductor ha sido asignado correctamente.')
+  } catch (error) {
+    console.error('Error al actualizar conductor:', error)
+    showNotification('error', 'Error', error.data?.detail || error.message || 'No se pudo actualizar el conductor.')
+  } finally {
+    savingDriver.value = false
+  }
+}
+
+const startEditAssistant = () => {
+  selectedAssistantId.value = displayedTrip.value?.assistant_id || null
+  editingAssistant.value = true
+}
+
+const cancelEditAssistant = () => {
+  editingAssistant.value = false
+  selectedAssistantId.value = null
+}
+
+const saveAssistant = async () => {
+  savingAssistant.value = true
+  try {
+    await updateTrip(tripId.value, {
+      assistant_id: selectedAssistantId.value || null
+    })
+    await refreshTripSilently()
+    editingAssistant.value = false
+    showNotification('success', 'Asistente actualizado', 'El asistente ha sido asignado correctamente.')
+  } catch (error) {
+    console.error('Error al actualizar asistente:', error)
+    showNotification('error', 'Error', error.data?.detail || error.message || 'No se pudo actualizar el asistente.')
+  } finally {
+    savingAssistant.value = false
+  }
 }
 
 // Manejo de atajos de teclado
@@ -622,7 +677,12 @@ onMounted(async () => {
   }
   
   try {
-    await tripStore.fetchTripById(tripId.value)
+    // Cargar datos del viaje y listas de personal en paralelo
+    await Promise.all([
+      tripStore.fetchTripById(tripId.value),
+      driverStore.fetchDrivers(),
+      assistantStore.fetchAssistants()
+    ])
     await nextTick()
     
     if (displayedTrip.value && displayedTrip.value.id) {
@@ -914,18 +974,6 @@ const closeConfirmSaleModal = () => {
 }
 
 // Funciones para modales
-const openCancelModal = (ticket) => {
-  selectedTicket.value = ticket
-  modalType.value = 'cancel'
-  showTicketModal.value = true
-}
-
-const openDetailsModal = (ticket) => {
-  selectedTicket.value = ticket
-  modalType.value = 'details'
-  showTicketModal.value = true
-}
-
 const closeModal = () => {
   showTicketModal.value = false
   selectedTicket.value = null
@@ -1020,12 +1068,6 @@ const handleTicketCreated = async (ticket) => {
 }
 
 
-// Función para ir a la planilla de pasajeros
-const goToPassengerSheet = () => {
-  console.log('goToPassengerSheet called, tripId:', tripId.value)
-  console.log('Navigating to:', `/trips/${tripId.value}/passenger-sheet`)
-  router.push(`/trips/${tripId.value}/passenger-sheet`)
-}
 </script>
 
 <style scoped>

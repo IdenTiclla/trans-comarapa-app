@@ -513,13 +513,14 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   if (!canSubmit.value) {
-    const hasDestination = destinationType.value === 'existing' ? hasSelectedExistingDestination.value : 
-      (newDestinationForm.value.name && newDestinationForm.value.name.trim())
-    
-    if (!hasDestination) {
-      errorMessage.value = 'Debe seleccionar o crear un destino'
+    if (!ticketForm.value.destination || !ticketForm.value.destination.trim()) {
+      errorMessage.value = 'Debe ingresar un destino'
     } else if (!ticketForm.value.payment_method) {
       errorMessage.value = 'Debe seleccionar un método de pago'
+    } else if (ticketForm.value.price <= 0) {
+      errorMessage.value = 'El precio debe ser mayor a 0'
+    } else {
+      errorMessage.value = 'Debe completar la información del cliente'
     }
     return
   }
@@ -591,19 +592,23 @@ const handleSubmit = async () => {
     console.error('Error al crear los boletos:', error)
     
     // Handle different error types (401 errors are handled globally by interceptor)
+    const errorDetail = error.data?.detail || error.response?._data?.detail || ''
+    
     if (error.message?.includes('Sesión expirada')) {
       // El interceptor ya maneja este caso, solo mostrar mensaje temporal
       errorMessage.value = 'Redirigiendo al login...'
     } else if (error.status === 403 || error.statusCode === 403) {
       errorMessage.value = 'No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.'
+    } else if (error.status === 409 || error.statusCode === 409) {
+      errorMessage.value = errorDetail || 'El asiento ya está ocupado para este viaje.'
+    } else if (error.status === 400 || error.statusCode === 400) {
+      errorMessage.value = errorDetail || 'Error en los datos del boleto. Verifique que todos los campos estén completos y correctos.'
     } else if (error.message?.includes('payment_method')) {
       errorMessage.value = 'El método de pago es requerido'
     } else if (error.message?.includes('CORS') || error.message?.includes('fetch')) {
       errorMessage.value = 'Error de conexión con el servidor. Verifique que todos los campos estén completos.'
-    } else if (error.status === 400 && error.statusText === 'Bad Request') {
-      errorMessage.value = 'Error en los datos del boleto. Verifique que todos los campos estén completos y correctos.'
     } else {
-      errorMessage.value = error.message || 'Error al crear los boletos'
+      errorMessage.value = errorDetail || error.message || 'Error al crear los boletos'
     }
   } finally {
     isSubmitting.value = false

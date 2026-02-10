@@ -46,19 +46,76 @@
       </div>
     </div>
 
-    <!-- Tercera fila: Conductor, Placa, Asistente -->
+    <!-- Tercera fila: Conductor, Placa, Asistente (con edicion integrada) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
       <!-- Conductor -->
-      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+      <div class="bg-white p-2.5 rounded-lg shadow-sm border border-gray-100 transition-all duration-200" :class="{ 'ring-2 ring-blue-300 border-blue-200': editingDriver }">
         <div class="flex items-center">
           <div class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2 flex-shrink-0"></div>
           <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Conductor:</span>
-          <span class="text-xs font-bold text-gray-800 truncate">{{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'N/A' }}</span>
+          
+          <!-- Modo visualizacion -->
+          <template v-if="!editingDriver">
+            <span class="text-xs font-bold text-gray-800 truncate flex-1">
+              {{ trip.driver ? trip.driver.firstname + ' ' + trip.driver.lastname : 'Sin asignar' }}
+            </span>
+            <button 
+              v-if="editable"
+              @click="emit('start-edit-driver')"
+              class="ml-1 p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all duration-200 flex-shrink-0"
+              title="Cambiar conductor"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </template>
+          
+          <!-- Modo edicion -->
+          <template v-else>
+            <select 
+              :value="selectedDriverId ?? ''"
+              @change="emit('update:selectedDriverId', $event.target.value ? Number($event.target.value) : null)"
+              class="flex-1 text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1 px-1.5"
+              :disabled="savingDriver"
+            >
+              <option value="">Sin asignar</option>
+              <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
+                {{ driver.firstname }} {{ driver.lastname }}
+              </option>
+            </select>
+            <div class="flex items-center ml-1 flex-shrink-0">
+              <button 
+                @click="emit('save-driver')"
+                :disabled="savingDriver"
+                class="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-50"
+                title="Guardar"
+              >
+                <svg v-if="!savingDriver" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              </button>
+              <button 
+                @click="emit('cancel-edit-driver')"
+                :disabled="savingDriver"
+                class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                title="Cancelar"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
 
       <!-- Placa -->
-      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+      <div class="bg-white p-2.5 rounded-lg shadow-sm border border-gray-100">
         <div class="flex items-center justify-center">
           <div class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
           <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Placa:</span>
@@ -67,17 +124,74 @@
       </div>
 
       <!-- Asistente -->
-      <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+      <div class="bg-white p-2.5 rounded-lg shadow-sm border border-gray-100 transition-all duration-200" :class="{ 'ring-2 ring-purple-300 border-purple-200': editingAssistant }">
         <div class="flex items-center">
           <div class="w-1.5 h-1.5 bg-teal-500 rounded-full mr-2 flex-shrink-0"></div>
           <span class="text-xs text-gray-600 mr-1 flex-shrink-0">Asistente:</span>
-          <span class="text-xs font-bold text-gray-800 truncate">{{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'N/A' }}</span>
+          
+          <!-- Modo visualizacion -->
+          <template v-if="!editingAssistant">
+            <span class="text-xs font-bold text-gray-800 truncate flex-1">
+              {{ trip.assistant ? trip.assistant.firstname + ' ' + trip.assistant.lastname : 'Sin asignar' }}
+            </span>
+            <button 
+              v-if="editable"
+              @click="emit('start-edit-assistant')"
+              class="ml-1 p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-all duration-200 flex-shrink-0"
+              title="Cambiar asistente"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </template>
+          
+          <!-- Modo edicion -->
+          <template v-else>
+            <select 
+              :value="selectedAssistantId ?? ''"
+              @change="emit('update:selectedAssistantId', $event.target.value ? Number($event.target.value) : null)"
+              class="flex-1 text-xs border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 py-1 px-1.5"
+              :disabled="savingAssistant"
+            >
+              <option value="">Sin asignar</option>
+              <option v-for="assistant in assistants" :key="assistant.id" :value="assistant.id">
+                {{ assistant.firstname }} {{ assistant.lastname }}
+              </option>
+            </select>
+            <div class="flex items-center ml-1 flex-shrink-0">
+              <button 
+                @click="emit('save-assistant')"
+                :disabled="savingAssistant"
+                class="p-1 text-green-600 hover:bg-green-50 rounded-md transition-colors disabled:opacity-50"
+                title="Guardar"
+              >
+                <svg v-if="!savingAssistant" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              </button>
+              <button 
+                @click="emit('cancel-edit-assistant')"
+                :disabled="savingAssistant"
+                class="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                title="Cancelar"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
 
     <!-- Cuarta fila: Estadísticas de asientos -->
-    <div v-if="trip.total_seats" class="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+    <div v-if="trip.total_seats && !isDoubleDeck" class="flex items-center justify-between bg-white rounded-lg shadow-sm border border-gray-100 p-3">
       <div class="flex items-center space-x-2">
         <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -131,8 +245,60 @@ const props = defineProps({
   totalSeatsCount: {
     type: Number,
     default: null
+  },
+  // Props para edicion de personal
+  editable: {
+    type: Boolean,
+    default: false
+  },
+  drivers: {
+    type: Array,
+    default: () => []
+  },
+  assistants: {
+    type: Array,
+    default: () => []
+  },
+  editingDriver: {
+    type: Boolean,
+    default: false
+  },
+  editingAssistant: {
+    type: Boolean,
+    default: false
+  },
+  selectedDriverId: {
+    type: [Number, null],
+    default: null
+  },
+  selectedAssistantId: {
+    type: [Number, null],
+    default: null
+  },
+  savingDriver: {
+    type: Boolean,
+    default: false
+  },
+  savingAssistant: {
+    type: Boolean,
+    default: false
+  },
+  isDoubleDeck: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits([
+  'start-edit-driver',
+  'save-driver',
+  'cancel-edit-driver',
+  'start-edit-assistant',
+  'save-assistant',
+  'cancel-edit-assistant',
+  'update:selectedDriverId',
+  'update:selectedAssistantId'
+])
 
 // Obtener nombre del día
 const getDayName = (dateString) => {

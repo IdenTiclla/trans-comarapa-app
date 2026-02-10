@@ -10,12 +10,30 @@
 
     <div v-else class="print-layout bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
       <!-- Header Component -->
-      <BusTripHeader 
-        :trip="trip" 
+      <BusTripHeader
+        :trip="trip"
         :occupied-seats-count="occupiedSeatsCount"
         :reserved-seats-count="reservedSeatsCount"
         :available-seats-count="availableSeatsCount"
         :total-seats-count="filteredSeats.length"
+        :is-double-deck="isDoubleDeck"
+        :editable="editable"
+        :drivers="drivers"
+        :assistants="assistants"
+        :editing-driver="editingDriver"
+        :editing-assistant="editingAssistant"
+        :selected-driver-id="selectedDriverId"
+        :selected-assistant-id="selectedAssistantId"
+        :saving-driver="savingDriver"
+        :saving-assistant="savingAssistant"
+        @start-edit-driver="emit('start-edit-driver')"
+        @save-driver="emit('save-driver')"
+        @cancel-edit-driver="emit('cancel-edit-driver')"
+        @start-edit-assistant="emit('start-edit-assistant')"
+        @save-assistant="emit('save-assistant')"
+        @cancel-edit-assistant="emit('cancel-edit-assistant')"
+        @update:selectedDriverId="emit('update:selectedDriverId', $event)"
+        @update:selectedAssistantId="emit('update:selectedAssistantId', $event)"
       />
 
       <!-- Deck Selector (solo para buses de 2 pisos) -->
@@ -25,6 +43,10 @@
           :floors="busFloors"
           :selected-deck="selectedDeck"
           :seats="seats"
+          :occupied-seats-count="occupiedSeatsCount"
+          :reserved-seats-count="reservedSeatsCount"
+          :available-seats-count="availableSeatsCount"
+          :total-filtered-seats-count="filteredSeats.length"
           @deck-changed="handleDeckChanged"
         />
       </div>
@@ -119,6 +141,43 @@ const props = defineProps({
   enableContextMenu: {
     type: Boolean,
     default: false
+  },
+  // Props para edicion de personal
+  editable: {
+    type: Boolean,
+    default: false
+  },
+  drivers: {
+    type: Array,
+    default: () => []
+  },
+  assistants: {
+    type: Array,
+    default: () => []
+  },
+  editingDriver: {
+    type: Boolean,
+    default: false
+  },
+  editingAssistant: {
+    type: Boolean,
+    default: false
+  },
+  selectedDriverId: {
+    type: [Number, null],
+    default: null
+  },
+  selectedAssistantId: {
+    type: [Number, null],
+    default: null
+  },
+  savingDriver: {
+    type: Boolean,
+    default: false
+  },
+  savingAssistant: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -132,7 +191,16 @@ const emit = defineEmits([
   'change-seat',
   'reschedule-trip',
   'sell-ticket',
-  'reserve-seat'
+  'reserve-seat',
+  // Eventos de edicion de personal
+  'start-edit-driver',
+  'save-driver',
+  'cancel-edit-driver',
+  'start-edit-assistant',
+  'save-assistant',
+  'cancel-edit-assistant',
+  'update:selectedDriverId',
+  'update:selectedAssistantId'
 ])
 
 const { getEffectiveName, getEffectivePhone } = usePersonData()

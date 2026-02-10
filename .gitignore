@@ -32,3 +32,6 @@ docs/auth_consolidated_plan.md
 
 # vscode files
 .vscode/
+
+# playwright files
+.playwright-mcp/

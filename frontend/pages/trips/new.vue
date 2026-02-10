@@ -28,7 +28,7 @@
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-gray-900">Crear Nuevo Viaje</h1>
           <p class="mt-2 text-sm text-gray-600">
-            Complete todos los campos requeridos para programar un nuevo viaje.
+            Seleccione la ruta, fecha, hora y bus para programar un nuevo viaje.
           </p>
         </div>
 
@@ -46,7 +46,7 @@
               </svg>
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-green-800">¡Viaje creado exitosamente!</h3>
+              <h3 class="text-sm font-medium text-green-800">Viaje creado exitosamente!</h3>
               <p class="text-sm text-green-700 mt-1">El viaje ha sido programado correctamente.</p>
             </div>
           </div>
@@ -69,11 +69,9 @@
               <h3 class="text-sm font-medium text-red-800">Error al procesar el formulario</h3>
               <ul class="list-disc list-inside text-sm text-red-700 mt-2 space-y-1">
                 <li v-if="tripStore.error">{{ tripStore.error }}</li>
-                <li v-if="locationStore.error">{{ locationStore.error }}</li>
                 <li v-if="busStore.error">{{ busStore.error }}</li>
                 <li v-if="driverStore.error">{{ driverStore.error }}</li>
                 <li v-if="assistantStore.error">{{ assistantStore.error }}</li>
-                <li v-if="secretaryStore.error">{{ secretaryStore.error }}</li>
                 <li v-for="error in validationErrors" :key="error">{{ error }}</li>
               </ul>
             </div>
@@ -93,15 +91,15 @@
           <div class="px-6 py-8">
             <form @submit.prevent="handleSubmit" novalidate>
               <fieldset :disabled="tripStore.isLoading || isLoadingData">
-                <legend class="sr-only">Información del viaje</legend>
+                <legend class="sr-only">Informacion del viaje</legend>
                 
                 <div class="space-y-8">
                   <!-- Route and Schedule Section -->
                   <div>
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Ruta y Horario</h2>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <!-- Ruta -->
-                      <div>
+                      <!-- Ruta (ocupa ancho completo) -->
+                      <div class="sm:col-span-2">
                         <label for="route_id" class="block text-sm font-medium text-gray-700 mb-1">
                           Ruta <span class="text-red-500" aria-label="requerido">*</span>
                         </label>
@@ -119,7 +117,7 @@
                         >
                           <option value="">Seleccione una ruta</option>
                           <option v-for="route in routeStore.routes" :key="route.id" :value="route.id">
-                            {{ route.origin_location?.name }} → {{ route.destination_location?.name }}
+                            {{ route.origin_location?.name }} -> {{ route.destination_location?.name }}
                             ({{ formatCurrency(route.price) }})
                           </option>
                         </select>
@@ -128,33 +126,10 @@
                         </p>
                         <p v-else id="route_id-help" class="mt-1 text-sm text-gray-500">
                           <span v-if="routeStore.isLoading" class="flex items-center">
-                            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1" aria-hidden="true"></div>
+                            <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
                             Cargando rutas...
                           </span>
                           <span v-else>Seleccione la ruta de origen y destino del viaje</span>
-                        </p>
-                      </div>
-
-                      <!-- Estado del Viaje -->
-                      <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
-                          Estado del Viaje
-                        </label>
-                        <select 
-                          id="status" 
-                          v-model="formData.status"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          aria-describedby="status-help"
-                        >
-                          <option value="scheduled">📅 Programado</option>
-                          <option value="on_time">✅ A Tiempo</option>
-                          <option value="delayed">⏰ Retrasado</option>
-                          <option value="departed">🚌 En Curso</option>
-                          <option value="arrived">🏁 Completado</option>
-                          <option value="cancelled">❌ Cancelado</option>
-                        </select>
-                        <p id="status-help" class="mt-1 text-sm text-gray-500">
-                          Estado inicial del viaje (generalmente "Programado")
                         </p>
                       </div>
                       
@@ -163,6 +138,21 @@
                         <label for="departure_date" class="block text-sm font-medium text-gray-700 mb-1">
                           Fecha de salida <span class="text-red-500" aria-label="requerido">*</span>
                         </label>
+                        <!-- Botones rapidos de fecha -->
+                        <div class="flex flex-wrap gap-2 mb-2">
+                          <button 
+                            v-for="opt in dateOptions" 
+                            :key="opt.value"
+                            type="button" 
+                            @click="formData.departure_date = opt.value"
+                            class="px-3 py-1 text-xs font-medium rounded-full border transition-colors"
+                            :class="formData.departure_date === opt.value 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                          >
+                            {{ opt.label }}
+                          </button>
+                        </div>
                         <input 
                           type="date" 
                           id="departure_date" 
@@ -190,6 +180,21 @@
                         <label for="departure_time" class="block text-sm font-medium text-gray-700 mb-1">
                           Hora de salida <span class="text-red-500" aria-label="requerido">*</span>
                         </label>
+                        <!-- Grilla de horarios comunes -->
+                        <div class="grid grid-cols-4 gap-1 mb-2">
+                          <button 
+                            v-for="time in commonTimes" 
+                            :key="time"
+                            type="button"
+                            @click="formData.departure_time = time"
+                            class="px-2 py-1 text-xs font-medium rounded border transition-colors"
+                            :class="formData.departure_time === time 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                          >
+                            {{ time }}
+                          </button>
+                        </div>
                         <input 
                           type="time" 
                           id="departure_time" 
@@ -207,7 +212,7 @@
                           {{ fieldErrors.departure_time }}
                         </p>
                         <p v-else id="departure_time-help" class="mt-1 text-sm text-gray-500">
-                          Formato 24 horas (ej: 14:30)
+                          Seleccione un horario o ingrese uno personalizado
                         </p>
                       </div>
                     </div>
@@ -215,10 +220,10 @@
 
                   <!-- Vehicle and Staff Section -->
                   <div>
-                    <h2 class="text-lg font-medium text-gray-900 mb-4">Vehículo y Personal</h2>
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Vehiculo y Personal</h2>
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <!-- Bus -->
-                      <div>
+                      <div class="sm:col-span-2">
                         <label for="bus_id" class="block text-sm font-medium text-gray-700 mb-1">
                           Bus <span class="text-red-500" aria-label="requerido">*</span>
                         </label>
@@ -236,7 +241,7 @@
                         >
                           <option value="">Seleccione un bus</option>
                           <option v-for="bus in busStore.buses" :key="bus.id" :value="bus.id">
-                            🚌 {{ bus.license_plate }} - {{ bus.model }} ({{ bus.capacity }} asientos)
+                            {{ bus.license_plate }} - {{ bus.model }} ({{ bus.capacity }} asientos)
                           </option>
                         </select>
                         <p v-if="fieldErrors.bus_id" id="bus_id-error" class="mt-1 text-sm text-red-600" role="alert">
@@ -244,138 +249,59 @@
                         </p>
                         <p v-else id="bus_id-help" class="mt-1 text-sm text-gray-500">
                           <span v-if="busStore.isLoading" class="flex items-center">
-                            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1" aria-hidden="true"></div>
+                            <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
                             Cargando buses...
                           </span>
-                          <span v-else>Seleccione el vehículo para este viaje</span>
+                          <span v-else>Seleccione el vehiculo para este viaje</span>
                         </p>
                       </div>
                       
-                      <!-- Conductor -->
+                      <!-- Conductor (opcional) -->
                       <div>
                         <label for="driver_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Conductor <span class="text-red-500" aria-label="requerido">*</span>
+                          Conductor <span class="text-gray-400 text-xs font-normal">(opcional)</span>
                         </label>
                         <select 
                           id="driver_id" 
                           v-model="formData.driver_id"
                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.driver_id
-                          }"
-                          required
-                          aria-required="true"
-                          :aria-invalid="fieldErrors.driver_id ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.driver_id ? 'driver_id-error' : 'driver_id-help'"
                         >
-                          <option value="">Seleccione un conductor</option>
+                          <option :value="null">Sin asignar</option>
                           <option v-for="driver in driverStore.drivers" :key="driver.id" :value="driver.id">
-                            👨‍✈️ {{ driver.firstname }} {{ driver.lastname }}
-                            <span v-if="driver.license_number">({{ driver.license_number }})</span>
+                            {{ driver.firstname }} {{ driver.lastname }}
+                            <template v-if="driver.license_number"> ({{ driver.license_number }})</template>
                           </option>
                         </select>
-                        <p v-if="fieldErrors.driver_id" id="driver_id-error" class="mt-1 text-sm text-red-600" role="alert">
-                          {{ fieldErrors.driver_id }}
-                        </p>
-                        <p v-else id="driver_id-help" class="mt-1 text-sm text-gray-500">
+                        <p class="mt-1 text-sm text-gray-500">
                           <span v-if="driverStore.isLoading" class="flex items-center">
-                            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1" aria-hidden="true"></div>
+                            <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
                             Cargando conductores...
                           </span>
-                          <span v-else>Seleccione el conductor responsable</span>
+                          <span v-else>Puede asignar el conductor luego desde el detalle del viaje</span>
                         </p>
                       </div>
                       
-                      <!-- Asistente -->
+                      <!-- Asistente (opcional) -->
                       <div>
                         <label for="assistant_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Asistente <span class="text-red-500" aria-label="requerido">*</span>
+                          Asistente <span class="text-gray-400 text-xs font-normal">(opcional)</span>
                         </label>
                         <select 
                           id="assistant_id" 
                           v-model="formData.assistant_id"
                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.assistant_id
-                          }"
-                          required
-                          aria-required="true"
-                          :aria-invalid="fieldErrors.assistant_id ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.assistant_id ? 'assistant_id-error' : 'assistant_id-help'"
                         >
-                          <option value="">Seleccione un asistente</option>
+                          <option :value="null">Sin asignar</option>
                           <option v-for="assistant in assistantStore.assistants" :key="assistant.id" :value="assistant.id">
-                            👥 {{ assistant.firstname }} {{ assistant.lastname }}
+                            {{ assistant.firstname }} {{ assistant.lastname }}
                           </option>
                         </select>
-                        <p v-if="fieldErrors.assistant_id" id="assistant_id-error" class="mt-1 text-sm text-red-600" role="alert">
-                          {{ fieldErrors.assistant_id }}
-                        </p>
-                        <p v-else id="assistant_id-help" class="mt-1 text-sm text-gray-500">
+                        <p class="mt-1 text-sm text-gray-500">
                           <span v-if="assistantStore.isLoading" class="flex items-center">
-                            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1" aria-hidden="true"></div>
+                            <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
                             Cargando asistentes...
                           </span>
-                          <span v-else>Seleccione el asistente de apoyo</span>
-                        </p>
-                      </div>
-
-                      <!-- Secretaria -->
-                      <div>
-                        <label for="secretary_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Secretaria <span class="text-red-500" aria-label="requerido">*</span>
-                        </label>
-                        <select 
-                          id="secretary_id" 
-                          v-model="formData.secretary_id"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.secretary_id
-                          }"
-                          required
-                          aria-required="true"
-                          :aria-invalid="fieldErrors.secretary_id ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.secretary_id ? 'secretary_id-error' : 'secretary_id-help'"
-                        >
-                          <option value="">Seleccione una secretaria</option>
-                          <option v-for="secretary in secretaryStore.secretaries" :key="secretary.id" :value="secretary.id">
-                            👩‍💼 {{ secretary.firstname }} {{ secretary.lastname }}
-                          </option>
-                        </select>
-                        <p v-if="fieldErrors.secretary_id" id="secretary_id-error" class="mt-1 text-sm text-red-600" role="alert">
-                          {{ fieldErrors.secretary_id }}
-                        </p>
-                        <p v-else id="secretary_id-help" class="mt-1 text-sm text-gray-500">
-                          <span v-if="secretaryStore.isLoading" class="flex items-center">
-                            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1" aria-hidden="true"></div>
-                            Cargando secretarias...
-                          </span>
-                          <span v-else>Seleccione la secretaria responsable</span>
-                        </p>
-                      </div>
-
-                      <!-- Precio del Boleto -->
-                      <div>
-                        <label for="ticket_price" class="block text-sm font-medium text-gray-700 mb-1">
-                          Precio Base del Boleto (Bs.)
-                        </label>
-                        <div class="relative">
-                          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-gray-500 sm:text-sm">Bs.</span>
-                          </div>
-                          <input 
-                            type="number" 
-                            id="ticket_price" 
-                            v-model="formData.ticket_price"
-                            min="0"
-                            step="0.50"
-                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            placeholder="0.00"
-                            :aria-describedby="'ticket_price-help'"
-                          />
-                        </div>
-                        <p id="ticket_price-help" class="mt-1 text-sm text-gray-500">
-                          Precio base que se usará para los boletos. Puede ser ajustado posteriormente.
+                          <span v-else>Puede asignar el asistente luego desde el detalle del viaje</span>
                         </p>
                       </div>
                     </div>
@@ -411,7 +337,7 @@
               </div>
               
               <p v-if="!isFormValid" id="submit-help" class="mt-2 text-sm text-gray-500">
-                Complete todos los campos requeridos para continuar
+                Complete los campos de ruta, fecha, hora y bus para continuar
               </p>
             </form>
           </div>
@@ -423,14 +349,14 @@
 
 <script setup>
 import { reactive, onMounted, computed, ref, watch } from 'vue';
-import { useRouter, navigateTo } from '#app';
+import { useRouter } from '#app';
 import { useTripStore } from '~/stores/tripStore';
-import { useLocationStore } from '~/stores/locationStore';
 import { useBusStore } from '~/stores/busStore';
 import { useDriverStore } from '~/stores/driverStore';
 import { useAssistantStore } from '~/stores/assistantStore';
 import { useRouteStore } from '~/stores/routeStore';
 import { useSecretaryStore } from '~/stores/secretaryStore';
+import { useAuthStore } from '~/stores/auth';
 
 // Set page metadata
 definePageMeta({
@@ -440,12 +366,12 @@ definePageMeta({
 
 const router = useRouter();
 const tripStore = useTripStore();
-const locationStore = useLocationStore();
 const busStore = useBusStore();
 const driverStore = useDriverStore();
 const assistantStore = useAssistantStore();
 const routeStore = useRouteStore();
 const secretaryStore = useSecretaryStore();
+const authStore = useAuthStore();
 
 // Reactive state
 const showSuccessMessage = ref(false);
@@ -461,24 +387,49 @@ const formData = reactive({
   bus_id: null,
   driver_id: null,
   assistant_id: null,
-  secretary_id: null,
-  ticket_price: null,
   status: 'scheduled',
 });
 
+// Helper: format date as YYYY-MM-DD
+const formatDateStr = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 // Computed properties
-const today = computed(() => {
-  return new Date().toISOString().split('T')[0];
+const today = computed(() => formatDateStr(new Date()));
+
+const dateOptions = computed(() => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayAfter = new Date(now);
+  dayAfter.setDate(dayAfter.getDate() + 2);
+
+  return [
+    { label: 'Hoy', value: formatDateStr(now) },
+    { label: 'Manana', value: formatDateStr(tomorrow) },
+    { label: 'Pasado manana', value: formatDateStr(dayAfter) },
+  ];
 });
+
+const commonTimes = [
+  '05:00', '06:00', '07:00', '08:00',
+  '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00',
+  '17:00', '18:00', '19:00', '20:00',
+];
 
 const isLoadingData = computed(() => {
   return routeStore.isLoading || busStore.isLoading || driverStore.isLoading || 
-         assistantStore.isLoading || secretaryStore.isLoading;
+         assistantStore.isLoading;
 });
 
 const hasErrors = computed(() => {
-  return tripStore.error || locationStore.error || busStore.error || 
-         driverStore.error || assistantStore.error || secretaryStore.error ||
+  return tripStore.error || busStore.error || 
+         driverStore.error || assistantStore.error ||
          validationErrors.value.length > 0;
 });
 
@@ -487,9 +438,6 @@ const isFormValid = computed(() => {
          formData.departure_date && 
          formData.departure_time && 
          formData.bus_id && 
-         formData.driver_id && 
-         formData.assistant_id &&
-         formData.secretary_id &&
          Object.keys(fieldErrors.value).length === 0;
 });
 
@@ -526,23 +474,6 @@ const validateForm = () => {
     errors.bus_id = 'El bus es requerido';
   }
 
-  if (!formData.driver_id) {
-    errors.driver_id = 'El conductor es requerido';
-  }
-
-  if (!formData.assistant_id) {
-    errors.assistant_id = 'El asistente es requerido';
-  }
-
-  if (!formData.secretary_id) {
-    errors.secretary_id = 'La secretaria es requerida';
-  }
-
-  // Price validation
-  if (formData.ticket_price !== null && formData.ticket_price < 0) {
-    validationErrors.value.push('El precio del boleto no puede ser negativo');
-  }
-
   fieldErrors.value = errors;
   return Object.keys(errors).length === 0 && validationErrors.value.length === 0;
 };
@@ -565,6 +496,23 @@ const handleSubmit = async () => {
   const submissionData = { ...formData };
   delete submissionData.departure_date;
   delete submissionData.departure_time;
+
+  // Auto-assign secretary_id from the logged-in user
+  const personId = authStore.user?.person?.id;
+  if (personId) {
+    submissionData.secretary_id = personId;
+  } else {
+    // Fallback: find secretary by user_id in the secretaries list
+    const currentUserId = authStore.user?.id;
+    const secretary = secretaryStore.secretaries.find(s => s.user_id === currentUserId);
+    if (secretary) {
+      submissionData.secretary_id = secretary.id;
+    }
+  }
+
+  // Send null for unselected optional fields
+  if (!submissionData.driver_id) submissionData.driver_id = null;
+  if (!submissionData.assistant_id) submissionData.assistant_id = null;
 
   try {
     await tripStore.createNewTrip(submissionData);
@@ -622,24 +570,6 @@ watch(() => formData.departure_time, () => {
 watch(() => formData.bus_id, () => {
   if (formData.bus_id) {
     delete fieldErrors.value.bus_id;
-  }
-});
-
-watch(() => formData.driver_id, () => {
-  if (formData.driver_id) {
-    delete fieldErrors.value.driver_id;
-  }
-});
-
-watch(() => formData.assistant_id, () => {
-  if (formData.assistant_id) {
-    delete fieldErrors.value.assistant_id;
-  }
-});
-
-watch(() => formData.secretary_id, () => {
-  if (formData.secretary_id) {
-    delete fieldErrors.value.secretary_id;
   }
 });
 </script>

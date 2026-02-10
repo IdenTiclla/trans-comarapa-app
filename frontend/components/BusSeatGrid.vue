@@ -23,34 +23,34 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2 overflow-hidden"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
             >
               <!-- Price Display -->
               <div v-if="getSeatPrice(seat)" class="absolute top-2 right-2">
-                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-xs font-bold">
+                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold">
                   Bs. {{ formatPrice(getSeatPrice(seat)) }}
                 </div>
               </div>
 
               <!-- Passenger info container - Always takes space to maintain consistent height -->
-              <div class="flex flex-col justify-center items-center text-center px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
-                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
+              <div class="flex flex-col justify-center items-center text-center px-1 sm:px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
+                  <div class="text-[10px] sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
                       {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.name || '') : '' }}
                   </div>
-                  <div class="text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
+                  <div class="text-[10px] sm:text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
                       {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.phone || '') : '' }}
                   </div>
-                  <div class="text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
+                  <div class="text-[10px] sm:text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
                       {{ getSeatDestination(seat) ? `→ ${getSeatDestination(seat)}` : '' }}
                   </div>
               </div>
 
               <!-- Status Tag -->
-              <div class="flex-shrink-0">
-                  <span class="text-xs font-bold px-2 py-1 rounded-full inline-block" :class="getModernStatusClass(seat)">
+              <div class="flex-shrink-0 w-full">
+                  <span class="text-[10px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded-full block truncate text-center" :class="getModernStatusClass(seat)">
                       {{ getSeatStatusText(seat) }}
                   </span>
               </div>
@@ -84,34 +84,34 @@
               </div>
             </div>
             <div
-              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2"
+              class="seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:scale-105 cursor-pointer shadow-lg border-2 overflow-hidden"
               :class="getModernSeatClass(seat)"
               @click="toggleSeatSelection(seat)"
               @contextmenu="handleContextMenu($event, seat)"
             >
               <!-- Price Display -->
               <div v-if="getSeatPrice(seat)" class="absolute top-2 right-2">
-                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-xs font-bold">
+                <div class="bg-black bg-opacity-75 text-white px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold">
                   Bs. {{ formatPrice(getSeatPrice(seat)) }}
                 </div>
               </div>
 
               <!-- Passenger info container - Always takes space to maintain consistent height -->
-              <div class="flex flex-col justify-center items-center text-center px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
-                  <div class="text-xs sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
+              <div class="flex flex-col justify-center items-center text-center px-1 sm:px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
+                  <div class="text-[10px] sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}" :title="seat.passenger?.name">
                       {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.name || '') : '' }}
                   </div>
-                  <div class="text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
+                  <div class="text-[10px] sm:text-xs text-gray-600 font-medium mt-1 h-4" :class="{'opacity-0': !seat.occupied && seat.status !== 'reserved'}">
                       {{ (seat.occupied || seat.status === 'reserved') ? (seat.passenger?.phone || '') : '' }}
                   </div>
-                  <div class="text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
+                  <div class="text-[10px] sm:text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4" :class="{'opacity-0': !getSeatDestination(seat)}" :title="getSeatDestination(seat)">
                       {{ getSeatDestination(seat) ? `→ ${getSeatDestination(seat)}` : '' }}
                   </div>
               </div>
 
               <!-- Status Tag -->
-              <div class="flex-shrink-0">
-                  <span class="text-xs font-bold px-2 py-1 rounded-full inline-block" :class="getModernStatusClass(seat)">
+              <div class="flex-shrink-0 w-full">
+                  <span class="text-[10px] sm:text-xs font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded-full block truncate text-center" :class="getModernStatusClass(seat)">
                       {{ getSeatStatusText(seat) }}
                   </span>
               </div>

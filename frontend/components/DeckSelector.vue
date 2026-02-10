@@ -1,78 +1,72 @@
 <template>
   <div v-if="isDoubleDeck" class="deck-selector bg-white border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-      <!-- Deck selector tabs -->
-      <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-0">
-        <button
-          @click="$emit('deck-changed', firstDeckValue)"
-          :class="[
-            'flex-1 flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-            isFirstDeckSelected
-              ? 'bg-blue-600 text-white shadow-md transform scale-105'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
-          ]"
-        >
-          <span class="mr-2">🔽</span>
-          <span class="hidden sm:inline">Planta</span>
-          <span class="sm:hidden">P.</span>
-          <span class="ml-1">Baja</span>
-          <span v-if="firstDeckSeatsCount !== null" class="ml-2 text-xs opacity-75">
-            ({{ firstDeckSeatsCount }})
-          </span>
-        </button>
-        
-        <button
-          @click="$emit('deck-changed', secondDeckValue)"
-          :class="[
-            'flex-1 flex items-center justify-center px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-            isSecondDeckSelected
-              ? 'bg-blue-600 text-white shadow-md transform scale-105'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
-          ]"
-        >
-          <span class="mr-2">🔼</span>
-          <span class="hidden sm:inline">Planta</span>
-          <span class="sm:hidden">P.</span>
-          <span class="ml-1">Alta</span>
-          <span v-if="secondDeckSeatsCount !== null" class="ml-2 text-xs opacity-75">
-            ({{ secondDeckSeatsCount }})
-          </span>
-        </button>
+    <!-- Deck selector tabs -->
+    <div class="flex bg-gray-100 rounded-xl p-1">
+      <button
+        @click="$emit('deck-changed', firstDeckValue)"
+        :class="[
+          'flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-medium transition-all duration-200',
+          isFirstDeckSelected
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+        ]"
+      >
+        <span class="mr-1.5">🔽</span>
+        <span class="hidden sm:inline">Planta</span>
+        <span class="sm:hidden">P.</span>
+        <span class="ml-1">Baja</span>
+        <span v-if="firstDeckSeatsCount !== null" class="ml-1.5 text-xs opacity-75">
+          ({{ firstDeckSeatsCount }})
+        </span>
+      </button>
+
+      <button
+        @click="$emit('deck-changed', secondDeckValue)"
+        :class="[
+          'flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-medium transition-all duration-200',
+          isSecondDeckSelected
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+        ]"
+      >
+        <span class="mr-1.5">🔼</span>
+        <span class="hidden sm:inline">Planta</span>
+        <span class="sm:hidden">P.</span>
+        <span class="ml-1">Alta</span>
+        <span v-if="secondDeckSeatsCount !== null" class="ml-1.5 text-xs opacity-75">
+          ({{ secondDeckSeatsCount }})
+        </span>
+      </button>
+    </div>
+
+    <!-- Seat statistics for current deck -->
+    <div class="mt-3 flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-100">
+      <div class="flex items-center space-x-2 min-w-0">
+        <div class="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse flex-shrink-0"></div>
+        <span class="text-xs sm:text-sm font-semibold text-gray-700 truncate">
+          {{ getDeckDisplayName() }}
+        </span>
       </div>
 
-      <!-- Current deck info -->
-      <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
-          <span class="text-sm font-medium text-gray-700">
-            {{ getDeckDisplayName() }}
-          </span>
+      <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        <div class="text-center">
+          <span class="text-base sm:text-lg font-black text-indigo-600">{{ totalFilteredSeatsCount }}</span>
+          <p class="text-[10px] sm:text-xs text-gray-500">Total</p>
         </div>
-        
-        <div v-if="currentDeckSeatsCount !== null" class="bg-gray-100 px-3 py-1 rounded-full">
-          <span class="text-xs font-semibold text-gray-600">
-            {{ currentDeckSeatsCount }} asientos
-          </span>
+        <div class="w-px h-6 sm:h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-base sm:text-lg font-black text-red-600">{{ occupiedSeatsCount }}</span>
+          <p class="text-[10px] sm:text-xs text-gray-500">Ocupados</p>
         </div>
-      </div>
-    </div>
-    
-    <!-- Visual deck indicator -->
-    <div class="mt-4 flex justify-center">
-      <div class="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-xl border border-blue-100">
-        <div class="flex flex-col items-center space-y-1">
-          <div :class="[
-            'w-6 h-3 rounded-sm border-2 transition-all duration-200',
-            isSecondDeckSelected ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
-          ]"></div>
-          <div :class="[
-            'w-6 h-3 rounded-sm border-2 transition-all duration-200',
-            isFirstDeckSelected ? 'bg-blue-600 border-blue-700' : 'bg-gray-200 border-gray-300'
-          ]"></div>
+        <div class="w-px h-6 sm:h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-base sm:text-lg font-black text-amber-600">{{ reservedSeatsCount }}</span>
+          <p class="text-[10px] sm:text-xs text-gray-500">Reservados</p>
         </div>
-        <div class="text-xs text-gray-600 ml-2">
-          <div class="font-medium">Vista lateral</div>
-          <div class="text-gray-500">del bus</div>
+        <div class="w-px h-6 sm:h-8 bg-gray-200"></div>
+        <div class="text-center">
+          <span class="text-base sm:text-lg font-black text-emerald-600">{{ availableSeatsCount }}</span>
+          <p class="text-[10px] sm:text-xs text-gray-500">Disponibles</p>
         </div>
       </div>
     </div>
@@ -100,6 +94,22 @@ const props = defineProps({
   seats: {
     type: Array,
     default: () => []
+  },
+  occupiedSeatsCount: {
+    type: Number,
+    default: 0
+  },
+  reservedSeatsCount: {
+    type: Number,
+    default: 0
+  },
+  availableSeatsCount: {
+    type: Number,
+    default: 0
+  },
+  totalFilteredSeatsCount: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -139,20 +149,6 @@ const secondDeckSeatsCount = computed(() => {
   return props.seats.filter(seat => seat.deck === 'SECOND' || seat.deck === 'upper').length
 })
 
-const currentDeckSeatsCount = computed(() => {
-  if (!isDoubleDeck.value) {
-    return props.seats.filter(seat => seat.deck === 'main' || seat.deck === 'FIRST' || !seat.deck).length
-  }
-  
-  if (isFirstDeckSelected.value) {
-    return firstDeckSeatsCount.value
-  } else if (isSecondDeckSelected.value) {
-    return secondDeckSeatsCount.value
-  }
-  
-  return 0
-})
-
 // Get display name for current deck
 const getDeckDisplayName = () => {
   if (isFirstDeckSelected.value) return 'Planta Baja'
@@ -187,14 +183,6 @@ const getDeckDisplayName = () => {
 
 .animate-pulse {
   animation: deck-pulse 2s infinite;
-}
-
-/* Responsive improvements */
-@media (max-width: 640px) {
-  .deck-selector {
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-  }
 }
 
 /* Accessibility improvements */
