@@ -133,7 +133,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter, navigateTo } from '#app';
 import { useTripStore } from '~/stores/tripStore';
 import { useRouteStore } from '~/stores/routeStore';
-import TripCardList from '~/components/TripCardList.vue';
+
 
 const router = useRouter();
 const tripStore = useTripStore();
@@ -203,11 +203,13 @@ const scheduleBoard = computed(() => {
       const timeParts = schedule.departure_time.split(':');
       const scheduleTimeHHMM = `${timeParts[0].padStart(2, '0')}:${timeParts[1]}`;
 
-      // Find a matching trip for this route and time on the selected date
+      // Find a matching trip for this route, date, and time
       const matchingTrip = trips.find(t => {
         if (t.route_id !== route.id) return false;
         try {
           const tripDate = new Date(t.trip_datetime);
+          const tripDateStr = `${tripDate.getFullYear()}-${String(tripDate.getMonth() + 1).padStart(2, '0')}-${String(tripDate.getDate()).padStart(2, '0')}`;
+          if (tripDateStr !== selectedDate.value) return false;
           const tripHH = String(tripDate.getHours()).padStart(2, '0');
           const tripMM = String(tripDate.getMinutes()).padStart(2, '0');
           return `${tripHH}:${tripMM}` === scheduleTimeHHMM;

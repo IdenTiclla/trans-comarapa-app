@@ -106,8 +106,6 @@ import { useRouter } from 'vue-router';
 import { usePackageStore } from '~/stores/packageStore';
 import { useClientStore } from '~/stores/clientStore';
 import { useTripStore } from '~/stores/tripStore';
-import AppButton from '~/components/AppButton.vue';
-import ClientSelector from '~/components/ClientSelector.vue'; // Assuming this component exists or will be created
 
 const router = useRouter();
 const packageStore = usePackageStore();

@@ -346,9 +346,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useClientSearch } from '@/composables/useClientSearch'
-import { useAuthStore } from '@/stores/auth'
-import TicketDisplay from '@/components/TicketDisplay.vue'
+import { useClientSearch } from '~/composables/useClientSearch'
+import { useAuthStore } from '~/stores/auth'
 
 const props = defineProps({
   show: {

@@ -352,7 +352,6 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import profileService from '~/services/profileService'
-import ProfileSkeleton from '~/components/ProfileSkeleton.vue'
 
 // Metadatos de la página
 definePageMeta({

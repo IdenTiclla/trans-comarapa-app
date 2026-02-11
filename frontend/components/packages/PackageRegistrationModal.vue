@@ -461,8 +461,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { usePackageStore } from '@/stores/packageStore'
+import { useAuthStore } from '~/stores/auth'
+import { usePackageStore } from '~/stores/packageStore'
 import apiFetch from '~/utils/api'
 import PackageReceiptModal from './PackageReceiptModal.vue'
 

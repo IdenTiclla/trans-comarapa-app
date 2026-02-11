@@ -66,7 +66,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import AppButton from '~/components/AppButton.vue';
+
 
 const props = defineProps({
   pkg: {

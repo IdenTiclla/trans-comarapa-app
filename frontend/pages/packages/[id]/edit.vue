@@ -122,8 +122,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { usePackageStore } from '~/stores/packageStore';
 import { useClientStore } from '~/stores/clientStore';
 import { useTripStore } from '~/stores/tripStore';
-import AppButton from '~/components/AppButton.vue';
-import ClientSelector from '~/components/ClientSelector.vue';
 
 const router = useRouter();
 const route = useRoute();

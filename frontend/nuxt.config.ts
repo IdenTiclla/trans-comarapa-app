@@ -6,6 +6,11 @@ export default defineNuxtConfig({
   // CSS global
   css: ['~/assets/css/main.css'],
 
+  // Componentes: auto-import sin prefijo de carpeta
+  components: [
+    { path: '~/components', pathPrefix: false }
+  ],
+
   // Módulos
   modules: [
     ['@pinia/nuxt', {

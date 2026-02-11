@@ -148,14 +148,19 @@ const syncSchedules = async (routeId, schedules, existingSchedules = []) => {
     })
   }
 
-  // Update existing schedules (check if is_active changed)
+  // Update existing schedules (check if is_active or departure_time changed)
   const toUpdate = schedules.filter(s => s.id && !s._isNew)
   for (const schedule of toUpdate) {
     const existing = existingSchedules.find(e => e.id === schedule.id)
-    if (existing && existing.is_active !== schedule.is_active) {
-      await updateRouteSchedule(routeId, schedule.id, {
-        is_active: schedule.is_active
-      })
+    if (existing) {
+      const activeChanged = existing.is_active !== schedule.is_active
+      const timeChanged = existing.departure_time !== schedule.departure_time
+      if (activeChanged || timeChanged) {
+        const updateData = {}
+        if (activeChanged) updateData.is_active = schedule.is_active
+        if (timeChanged) updateData.departure_time = schedule.departure_time
+        await updateRouteSchedule(routeId, schedule.id, updateData)
+      }
     }
   }
 }

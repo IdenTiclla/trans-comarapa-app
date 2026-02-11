@@ -459,18 +459,13 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useTripStore } from '@/stores/tripStore'
-import { useAuthStore } from '@/stores/auth'
-import { useDriverStore } from '@/stores/driverStore'
-import { useAssistantStore } from '@/stores/assistantStore'
-import { useTripDetails } from '@/composables/useTripDetails'
-import { changeSeat } from '@/services/ticketService'
-import { updateTrip, getTripById } from '@/services/tripService'
-import BusSeatMapPrint from '@/components/BusSeatMapPrint.vue'
-import TripCountdown from '@/components/TripCountdown.vue'
-import TicketModal from '@/components/TicketModal.vue'
-import TicketSaleModal from '@/components/TicketSaleModal.vue'
-import NotificationModal from '@/components/NotificationModal.vue'
+import { useTripStore } from '~/stores/tripStore'
+import { useAuthStore } from '~/stores/auth'
+import { useDriverStore } from '~/stores/driverStore'
+import { useAssistantStore } from '~/stores/assistantStore'
+import { useTripDetails } from '~/composables/useTripDetails'
+import { changeSeat } from '~/services/ticketService'
+import { updateTrip, getTripById } from '~/services/tripService'
 
 const route = useRoute()
 const router = useRouter()

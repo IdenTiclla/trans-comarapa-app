@@ -144,7 +144,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTripStore } from '@/stores/tripStore'
+import { useTripStore } from '~/stores/tripStore'
 
 definePageMeta({
   layout: 'print'

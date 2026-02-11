@@ -365,11 +365,6 @@ import { useAuthStore } from '~/stores/auth'
 import { useStatsStore } from '~/stores/statsStore'
 import { useRouter } from 'vue-router'
 import { computed, reactive, ref, onMounted, onBeforeUnmount, markRaw } from 'vue'
-import StatCard from '~/components/StatCard.vue'
-import UpcomingTrips from '~/components/UpcomingTrips.vue'
-import RecentSales from '~/components/RecentSales.vue'
-import QuickActions from '~/components/QuickActions.vue'
-import QuickSearch from '~/components/QuickSearch.vue'
 
 // Obtener información del usuario autenticado
 const authStore = useAuthStore()

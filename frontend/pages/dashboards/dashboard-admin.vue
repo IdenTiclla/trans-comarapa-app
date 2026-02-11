@@ -398,8 +398,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { activityService } from '~/services/activityService'
 import statsService from '~/services/statsService'
-import DashboardStatCard from '~/components/DashboardStatCard.vue'
-import MonthlyMetricsChart from '~/components/MonthlyMetricsChart.vue'
 
 const authStore = useAuthStore()
 const userInfo = computed(() => authStore.user || {})

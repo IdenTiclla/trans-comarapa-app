@@ -1,6 +1,6 @@
 import { ref, computed, watch, nextTick, reactive } from 'vue'
-import { useTripStore } from '@/stores/tripStore'
-import { useAuthStore } from '@/stores/auth'
+import { useTripStore } from '~/stores/tripStore'
+import { useAuthStore } from '~/stores/auth'
 
 export const useTripDetails = () => {
   const config = useRuntimeConfig()

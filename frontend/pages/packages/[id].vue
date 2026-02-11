@@ -362,7 +362,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { usePackageStore } from '~/stores/packageStore';
-import AppButton from '~/components/AppButton.vue';
+
 
 const router = useRouter();
 const route = useRoute();
