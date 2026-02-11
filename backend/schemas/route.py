@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from schemas.location import Location
+from schemas.route_schedule import RouteSchedule as RouteScheduleSchema
 
 class RouteBase(BaseModel):
     origin_location_id: int = Field(..., description="ID of the origin location")
@@ -35,3 +36,6 @@ class Route(RouteBase):
 
     class Config:
         from_attributes = True
+
+class RouteWithSchedules(Route):
+    schedules: List[RouteScheduleSchema] = []

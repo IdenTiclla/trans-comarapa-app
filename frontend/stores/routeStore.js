@@ -4,6 +4,7 @@ import * as routeService from '~/services/routeService';
 export const useRouteStore = defineStore('routes', {
   state: () => ({
     routes: [],
+    routesWithSchedules: [],
     currentRoute: null,
     searchedRoutes: [],
     isLoading: false,
@@ -83,6 +84,54 @@ export const useRouteStore = defineStore('routes', {
         throw err;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async fetchRoutesWithSchedules() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        this.routesWithSchedules = await routeService.getRoutesWithSchedules();
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to fetch routes with schedules';
+        this.routesWithSchedules = [];
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async addSchedule(routeId, data) {
+      this.error = null;
+      try {
+        const newSchedule = await routeService.createRouteSchedule(routeId, data);
+        await this.fetchRoutesWithSchedules();
+        return newSchedule;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to add schedule';
+        throw err;
+      }
+    },
+
+    async updateSchedule(routeId, scheduleId, data) {
+      this.error = null;
+      try {
+        const updated = await routeService.updateRouteSchedule(routeId, scheduleId, data);
+        await this.fetchRoutesWithSchedules();
+        return updated;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to update schedule';
+        throw err;
+      }
+    },
+
+    async removeSchedule(routeId, scheduleId) {
+      this.error = null;
+      try {
+        await routeService.deleteRouteSchedule(routeId, scheduleId);
+        await this.fetchRoutesWithSchedules();
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to remove schedule';
+        throw err;
       }
     },
 

@@ -116,7 +116,7 @@
                           :aria-describedby="fieldErrors.route_id ? 'route_id-error' : 'route_id-help'"
                         >
                           <option value="">Seleccione una ruta</option>
-                          <option v-for="route in routeStore.routes" :key="route.id" :value="route.id">
+                          <option v-for="route in routeStore.routesWithSchedules" :key="route.id" :value="route.id">
                             {{ route.origin_location?.name }} -> {{ route.destination_location?.name }}
                             ({{ formatCurrency(route.price) }})
                           </option>
@@ -131,6 +131,27 @@
                           </span>
                           <span v-else>Seleccione la ruta de origen y destino del viaje</span>
                         </p>
+
+                        <!-- Detalle de la ruta seleccionada -->
+                        <div v-if="selectedRoute" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <div class="flex items-center gap-4 text-sm text-blue-800">
+                            <span class="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                              </svg>
+                              {{ selectedRoute.distance }} km
+                            </span>
+                            <span class="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {{ selectedRoute.duration }}h
+                            </span>
+                            <span class="flex items-center gap-1 font-semibold">
+                              {{ formatCurrency(selectedRoute.price) }}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       
                       <!-- Fecha de salida -->
@@ -180,8 +201,34 @@
                         <label for="departure_time" class="block text-sm font-medium text-gray-700 mb-1">
                           Hora de salida <span class="text-red-500" aria-label="requerido">*</span>
                         </label>
-                        <!-- Grilla de horarios comunes -->
-                        <div class="grid grid-cols-4 gap-1 mb-2">
+                        <!-- Horarios de la ruta seleccionada -->
+                        <div v-if="routeScheduleTimes.length > 0" class="mb-2">
+                          <p class="text-xs text-gray-500 mb-1">Horarios programados de esta ruta:</p>
+                          <div class="flex flex-wrap gap-1">
+                            <button 
+                              v-for="time in routeScheduleTimes" 
+                              :key="time"
+                              type="button"
+                              @click="formData.departure_time = time"
+                              class="px-3 py-1.5 text-xs font-semibold rounded-full border-2 transition-colors"
+                              :class="formData.departure_time === time 
+                                ? 'bg-blue-600 text-white border-blue-600' 
+                                : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-0.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {{ time }}
+                            </button>
+                          </div>
+                        </div>
+                        <div v-else-if="formData.route_id" class="mb-2">
+                          <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                            Esta ruta no tiene horarios configurados. Ingrese la hora manualmente.
+                          </p>
+                        </div>
+                        <!-- Grilla de horarios comunes (fallback) -->
+                        <div v-if="routeScheduleTimes.length === 0" class="grid grid-cols-4 gap-1 mb-2">
                           <button 
                             v-for="time in commonTimes" 
                             :key="time"
@@ -212,7 +259,7 @@
                           {{ fieldErrors.departure_time }}
                         </p>
                         <p v-else id="departure_time-help" class="mt-1 text-sm text-gray-500">
-                          Seleccione un horario o ingrese uno personalizado
+                          {{ routeScheduleTimes.length > 0 ? 'Seleccione un horario de la ruta o ingrese uno personalizado' : 'Seleccione un horario o ingrese uno personalizado' }}
                         </p>
                       </div>
                     </div>
@@ -349,7 +396,7 @@
 
 <script setup>
 import { reactive, onMounted, computed, ref, watch } from 'vue';
-import { useRouter } from '#app';
+import { useRouter, useRoute } from '#app';
 import { useTripStore } from '~/stores/tripStore';
 import { useBusStore } from '~/stores/busStore';
 import { useDriverStore } from '~/stores/driverStore';
@@ -365,6 +412,7 @@ definePageMeta({
 });
 
 const router = useRouter();
+const route = useRoute();
 const tripStore = useTripStore();
 const busStore = useBusStore();
 const driverStore = useDriverStore();
@@ -373,17 +421,22 @@ const routeStore = useRouteStore();
 const secretaryStore = useSecretaryStore();
 const authStore = useAuthStore();
 
+// Read query params for pre-filling from schedule board
+const queryRouteId = route.query.route_id ? Number(route.query.route_id) : null;
+const queryDate = route.query.date || '';
+const queryTime = route.query.time || '';
+
 // Reactive state
 const showSuccessMessage = ref(false);
 const validationErrors = ref([]);
 const fieldErrors = ref({});
 
-// Form data
+// Form data (pre-filled from query params if available)
 const formData = reactive({
-  route_id: null,
+  route_id: queryRouteId,
   trip_datetime: '',
-  departure_date: '',
-  departure_time: '',
+  departure_date: queryDate,
+  departure_time: queryTime,
   bus_id: null,
   driver_id: null,
   assistant_id: null,
@@ -421,6 +474,24 @@ const commonTimes = [
   '13:00', '14:00', '15:00', '16:00',
   '17:00', '18:00', '19:00', '20:00',
 ];
+
+// Selected route and its schedules
+const selectedRoute = computed(() => {
+  if (!formData.route_id) return null;
+  return routeStore.routesWithSchedules.find(r => r.id === formData.route_id) || null;
+});
+
+const routeScheduleTimes = computed(() => {
+  if (!selectedRoute.value || !selectedRoute.value.schedules) return [];
+  return selectedRoute.value.schedules
+    .filter(s => s.is_active)
+    .map(s => {
+      // Convert "HH:MM:SS" or "HH:MM" to "HH:MM"
+      const parts = s.departure_time.split(':');
+      return `${parts[0].padStart(2, '0')}:${parts[1]}`;
+    })
+    .sort();
+});
 
 const isLoadingData = computed(() => {
   return routeStore.isLoading || busStore.isLoading || driverStore.isLoading || 
@@ -535,7 +606,7 @@ const handleSubmit = async () => {
 onMounted(async () => {
   try {
     await Promise.all([
-      routeStore.fetchRoutes(),
+      routeStore.fetchRoutesWithSchedules(),
       busStore.fetchBuses(),
       driverStore.fetchDrivers(),
       assistantStore.fetchAssistants(),

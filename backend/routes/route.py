@@ -1,20 +1,24 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import List, Optional
 from db.session import get_db
 from models.route import Route as RouteModel
+from models.route_schedule import RouteSchedule as RouteScheduleModel
 from models.location import Location as LocationModel
 from models.trip import Trip as TripModel
-from schemas.route import RouteCreate, Route as RouteSchema, RouteUpdate
+from models.user import User
+from schemas.route import RouteCreate, Route as RouteSchema, RouteUpdate, RouteWithSchedules
+from schemas.route_schedule import RouteScheduleCreate, RouteSchedule as RouteScheduleSchema, RouteScheduleUpdate
 from schemas.trip import Trip as TripSchema
+from auth.jwt import get_current_admin_user
 
 router = APIRouter(
     tags=["Routes"]
 )
 
 @router.post("", response_model=RouteSchema, status_code=status.HTTP_201_CREATED)
-def create_route(route: RouteCreate, db: Session = Depends(get_db)):
+def create_route(route: RouteCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
     """Create a new route between two locations"""
     # Verify that both locations exist
     origin = db.query(LocationModel).filter(LocationModel.id == route.origin_location_id).first()
@@ -93,6 +97,16 @@ def get_routes(
 
     return query.offset(skip).limit(limit).all()
 
+@router.get("/with-schedules", response_model=List[RouteWithSchedules])
+def get_routes_with_schedules(db: Session = Depends(get_db)):
+    """Get all routes with their schedules"""
+    routes = db.query(RouteModel).options(
+        joinedload(RouteModel.schedules),
+        joinedload(RouteModel.origin_location),
+        joinedload(RouteModel.destination_location)
+    ).all()
+    return routes
+
 @router.get("/{route_id}", response_model=RouteSchema)
 def get_route(route_id: int, db: Session = Depends(get_db)):
     """Get a specific route by ID"""
@@ -108,7 +122,8 @@ def get_route(route_id: int, db: Session = Depends(get_db)):
 def update_route(
     route_id: int,
     route_update: RouteUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
 ):
     """Update a route"""
     db_route = db.query(RouteModel).filter(RouteModel.id == route_id).first()
@@ -164,7 +179,7 @@ def update_route(
         )
 
 @router.delete("/{route_id}", response_model=RouteSchema)
-def delete_route(route_id: int, db: Session = Depends(get_db)):
+def delete_route(route_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
     """Delete a route"""
     route = db.query(RouteModel).filter(RouteModel.id == route_id).first()
     if not route:
@@ -182,6 +197,133 @@ def delete_route(route_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Cannot delete route as it is being referenced by other records"
+        )
+
+@router.get("/{route_id}/schedules", response_model=List[RouteScheduleSchema])
+def get_route_schedules(route_id: int, db: Session = Depends(get_db)):
+    """Get all schedules for a route"""
+    route = db.query(RouteModel).filter(RouteModel.id == route_id).first()
+    if not route:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Route not found"
+        )
+    schedules = db.query(RouteScheduleModel).filter(
+        RouteScheduleModel.route_id == route_id
+    ).order_by(RouteScheduleModel.departure_time).all()
+    return schedules
+
+@router.post("/{route_id}/schedules", response_model=RouteScheduleSchema, status_code=status.HTTP_201_CREATED)
+def create_route_schedule(
+    route_id: int,
+    schedule: RouteScheduleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Add a schedule to a route"""
+    route = db.query(RouteModel).filter(RouteModel.id == route_id).first()
+    if not route:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Route not found"
+        )
+
+    existing = db.query(RouteScheduleModel).filter(
+        RouteScheduleModel.route_id == route_id,
+        RouteScheduleModel.departure_time == schedule.departure_time
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Schedule with this departure time already exists for this route"
+        )
+
+    db_schedule = RouteScheduleModel(route_id=route_id, **schedule.model_dump())
+    try:
+        db.add(db_schedule)
+        db.commit()
+        db.refresh(db_schedule)
+        return db_schedule
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.patch("/{route_id}/schedules/{schedule_id}", response_model=RouteScheduleSchema)
+def update_route_schedule(
+    route_id: int,
+    schedule_id: int,
+    schedule_update: RouteScheduleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Update a schedule"""
+    db_schedule = db.query(RouteScheduleModel).filter(
+        RouteScheduleModel.id == schedule_id,
+        RouteScheduleModel.route_id == route_id
+    ).first()
+    if not db_schedule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule not found"
+        )
+
+    update_data = schedule_update.model_dump(exclude_unset=True)
+
+    if "departure_time" in update_data and update_data["departure_time"] is not None:
+        existing = db.query(RouteScheduleModel).filter(
+            RouteScheduleModel.route_id == route_id,
+            RouteScheduleModel.departure_time == update_data["departure_time"],
+            RouteScheduleModel.id != schedule_id
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Schedule with this departure time already exists for this route"
+            )
+
+    for field, value in update_data.items():
+        setattr(db_schedule, field, value)
+
+    try:
+        db.commit()
+        db.refresh(db_schedule)
+        return db_schedule
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.delete("/{route_id}/schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_route_schedule(
+    route_id: int,
+    schedule_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Delete a schedule"""
+    db_schedule = db.query(RouteScheduleModel).filter(
+        RouteScheduleModel.id == schedule_id,
+        RouteScheduleModel.route_id == route_id
+    ).first()
+    if not db_schedule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule not found"
+        )
+
+    try:
+        db.delete(db_schedule)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
 
 @router.get("/{route_id}/trips", response_model=List[TripSchema])

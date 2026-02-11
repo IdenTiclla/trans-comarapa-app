@@ -6,6 +6,7 @@ from models.bus import Bus
 from models.assistant import Assistant
 from models.trip import Trip
 from models.route import Route
+from models.route_schedule import RouteSchedule
 from models.location import Location
 from models.client import Client
 from models.seat import Seat
@@ -53,6 +54,7 @@ def clear_db():
         db.query(Seat).delete()
         db.query(Trip).delete()
         db.query(Client).delete()
+        db.query(RouteSchedule).delete()
         db.query(Route).delete()
         db.query(Assistant).delete()
         db.query(Driver).delete()
@@ -372,6 +374,31 @@ def seed_db():
             route = Route(**route_info)
             db.add(route)
             routes.append(route)
+
+        # Flush routes to get IDs
+        db.flush()
+
+        # Crear horarios de salida para las rutas
+        from datetime import time as time_type
+        # Santa Cruz -> Comarapa: 8:00, 10:30, 14:00, 18:30, 20:30
+        scz_com_times = [
+            time_type(8, 0), time_type(10, 30), time_type(14, 0),
+            time_type(18, 30), time_type(20, 30)
+        ]
+        # Comarapa -> Santa Cruz: 8:00, 11:00, 14:00, 20:30, 23:30
+        com_scz_times = [
+            time_type(8, 0), time_type(11, 0), time_type(14, 0),
+            time_type(20, 30), time_type(23, 30)
+        ]
+
+        for route in routes:
+            if route.origin_location_id == locations["Santa Cruz"].id:
+                schedule_times = scz_com_times
+            else:
+                schedule_times = com_scz_times
+            for t in schedule_times:
+                schedule = RouteSchedule(route_id=route.id, departure_time=t, is_active=True)
+                db.add(schedule)
 
         # Crear usuarios para clientes primero - Base de datos actualizada 2025
         client_user_data = []
