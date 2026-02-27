@@ -78,13 +78,16 @@ def verify_token(token: str, credentials_exception):
         firstname: str = payload.get("firstname", "")
         lastname: str = payload.get("lastname", "")
         
+        token_type: str = payload.get("token_type")
+
         token_data = TokenData(
             email=email,
             role=role,
             is_admin=is_admin,
             is_active=is_active,
             firstname=firstname,
-            lastname=lastname
+            lastname=lastname,
+            token_type=token_type
         )
         # Agregar JTI a los datos del token para uso posterior
         token_data.jti = jti
@@ -200,3 +203,52 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
             detail="The user doesn't have enough privileges"
         )
     return current_user
+
+async def get_refresh_token(
+    refresh_token: Optional[str] = Cookie(None),
+    authorization: Optional[str] = Header(None)
+) -> str:
+    """
+    Obtiene el refresh token desde la cookie httpOnly o Authorization header (testing).
+    """
+    if refresh_token:
+        return refresh_token
+
+    # Para testing, permitir Authorization header
+    if authorization:
+        try:
+            scheme, token = authorization.split()
+            if scheme.lower() == "bearer":
+                return token
+        except ValueError:
+            pass
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Refresh token not found",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+def get_user_from_refresh_token(token: str = Depends(get_refresh_token), db: Session = Depends(get_db)):
+    """
+    Valida el refresh token y devuelve el usuario asociado.
+    A diferencia de get_current_user, este lee la cookie 'refresh_token'
+    y verifica que el token sea de tipo refresh.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_token(token, credentials_exception)
+
+    # Verificar que sea un refresh token
+    if token_data.token_type != "refresh":
+        raise credentials_exception
+
+    user = db.query(User).filter(User.email == token_data.email).first()
+    if user is None:
+        raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return user

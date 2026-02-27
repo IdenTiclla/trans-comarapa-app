@@ -590,13 +590,13 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error al crear los boletos:', error)
     
-    // Handle different error types (401 errors are handled globally by interceptor)
+    // Session expired errors are handled globally by api.js — don't show to user
+    if (error.name === 'SessionExpiredError') return
+
+    // Handle different error types
     const errorDetail = error.data?.detail || error.response?._data?.detail || ''
-    
-    if (error.message?.includes('Sesión expirada')) {
-      // El interceptor ya maneja este caso, solo mostrar mensaje temporal
-      errorMessage.value = 'Redirigiendo al login...'
-    } else if (error.status === 403 || error.statusCode === 403) {
+
+    if (error.status === 403 || error.statusCode === 403) {
       errorMessage.value = 'No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.'
     } else if (error.status === 409 || error.statusCode === 409) {
       errorMessage.value = errorDetail || 'El asiento ya está ocupado para este viaje.'

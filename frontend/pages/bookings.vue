@@ -1244,11 +1244,10 @@ const submitTicketForm = async () => {
   } catch (error) {
     console.error('Error submitting ticket:', error)
     
-    // Handle errors (401 errors are handled globally by interceptor)
-    if (error.message?.includes('Sesión expirada')) {
-      // El interceptor ya maneja este caso
-      console.log('Redirigiendo al login...')
-    } else if (error.status === 403 || error.statusCode === 403) {
+    // Session expired errors are handled globally by api.js — don't show to user
+    if (error.name === 'SessionExpiredError') return
+
+    if (error.status === 403 || error.statusCode === 403) {
       alert('No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.')
     } else {
       alert('Error al crear el boleto: ' + (error.message || 'Error desconocido'))

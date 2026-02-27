@@ -36,6 +36,7 @@ class TokenData(BaseModel):
     firstname: str | None = None
     lastname: str | None = None
     jti: str | None = None  # JWT ID para identificar tokens únicos
+    token_type: str | None = None  # "refresh" para refresh tokens
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(..., description="Email del usuario que quiere restablecer su contraseña")

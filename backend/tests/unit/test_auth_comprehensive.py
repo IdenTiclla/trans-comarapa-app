@@ -274,11 +274,11 @@ class TestTokenOperations:
         assert data["email"] == "test@example.com"
 
     @pytest.mark.unit
-    def test_refresh_token_endpoint(self, client, test_user, user_token):
-        """Prueba del endpoint de refresh token."""
+    def test_refresh_token_endpoint(self, client, test_user, user_refresh_token):
+        """Prueba del endpoint de refresh token usando un refresh token válido."""
         response = client.post(
             "/api/v1/auth/refresh",
-            headers={"Authorization": f"Bearer {user_token}"}
+            headers={"Authorization": f"Bearer {user_refresh_token}"}
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -288,8 +288,14 @@ class TestTokenOperations:
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
 
-        # Verificar que el nuevo token es diferente al original
-        assert data["access_token"] != user_token
+    @pytest.mark.unit
+    def test_refresh_token_rejects_access_token(self, client, test_user, user_token):
+        """Prueba que el endpoint de refresh rechace access tokens (no refresh tokens)."""
+        response = client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": f"Bearer {user_token}"}
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.unit
     def test_me_endpoint_with_valid_token(self, client, user_token):

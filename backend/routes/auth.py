@@ -6,7 +6,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from db.session import get_db
 import os
-from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data
+from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data, get_user_from_refresh_token
 from auth.blacklist import token_blacklist
 from auth.utils import authenticate_user, create_user
 from schemas.auth import TokenWithRoleInfo
@@ -209,7 +209,7 @@ def logout(response: Response, user_data: tuple = Depends(get_current_user_with_
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
 @limiter.limit("100/minute" if os.getenv("TESTING", "false").lower() == "true" else "10/minute")
-def refresh_token(request: Request, response: Response, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+def refresh_token(request: Request, response: Response, current_user: UserModel = Depends(get_user_from_refresh_token), db: Session = Depends(get_db)):
     """
     Endpoint para refrescar el token JWT.
     Si el usuario está asociado a un rol específico (Secretary, Driver, Assistant),

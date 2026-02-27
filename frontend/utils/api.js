@@ -9,8 +9,14 @@ let refreshPromise = null
 // Flag para detectar cuando estamos en proceso de logout
 let isLoggingOut = false
 
-// The helper functions getApiBaseUrl, getAuthToken, and handleApiError previously here are removed.
-// All API call logic should now go through the apiFetch instance below.
+// Error especial para redirecciones por sesión expirada.
+// Los componentes no deben mostrar este error al usuario.
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Session expired, redirecting to login')
+    this.name = 'SessionExpiredError'
+  }
+}
 
 // Función para marcar cuando estamos en proceso de logout
 export const setLoggingOut = (value) => {
@@ -64,7 +70,7 @@ export const apiFetch = $fetch.create({
           localStorage.removeItem('refresh_token')
         }
         await navigateTo('/login')
-        return
+        throw new SessionExpiredError()
       }
 
       // Prevenir bucle infinito: verificar si el usuario está realmente autenticado
@@ -79,16 +85,16 @@ export const apiFetch = $fetch.create({
           localStorage.removeItem('refresh_token')
         }
         await navigateTo('/login')
-        return
+        throw new SessionExpiredError()
       }
 
-      // 🔒 NUEVO: Si la verificación de token específicamente falla con 401,
+      // Si la verificación de token específicamente falla con 401,
       // las cookies httpOnly probablemente expiraron. Limpiar estado inmediatamente.
       if (options.url === '/auth/verify') {
         console.warn('Token verification failed with 401. Auth cookies expired. Cleaning state.')
         authStore.logout(true) // Skip server logout to avoid additional 401 errors
         await navigateTo('/login')
-        return
+        throw new SessionExpiredError()
       }
 
       // Prevenir múltiples intentos de refresh simultáneos
@@ -101,13 +107,14 @@ export const apiFetch = $fetch.create({
             const retryOptions = { ...options, _retryCount: (options._retryCount || 0) + 1 };
             return apiFetch(options.url, retryOptions);
           } catch (error) {
+            if (error instanceof SessionExpiredError) throw error
             console.error('Refresh failed, redirecting to login')
             await navigateTo('/login')
-            return
+            throw new SessionExpiredError()
           }
         }
         await navigateTo('/login')
-        return
+        throw new SessionExpiredError()
       }
 
       // Marcar que se está intentando un refresh para evitar múltiples intentos simultáneos
@@ -115,7 +122,7 @@ export const apiFetch = $fetch.create({
         console.error('Too many retry attempts, logging out')
         authStore.logout(true) // Skip server logout to avoid additional 401 errors
         await navigateTo('/login')
-        return
+        throw new SessionExpiredError()
       }
 
       try {
@@ -140,15 +147,18 @@ export const apiFetch = $fetch.create({
           console.warn('No refresh token function available. Logging out.');
           authStore.logout(true); // Skip server logout to avoid additional 401 errors
           await navigateTo('/login');
+          throw new SessionExpiredError()
         }
       } catch (refreshError) {
+        if (refreshError instanceof SessionExpiredError) throw refreshError
         console.error('Error during token refresh or retrying request:', refreshError);
         // Resetear flags en caso de error
         isRefreshing = false
         refreshPromise = null
         authStore.logout(true); // Skip server logout to avoid additional 401 errors
         await navigateTo('/login');
-      } 
+        throw new SessionExpiredError()
+      }
     }
     // If not a 401 or if refresh failed, the error will be re-thrown by $fetch, 
     // allowing service/store/component to catch it.

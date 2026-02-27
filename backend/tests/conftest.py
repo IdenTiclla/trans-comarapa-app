@@ -129,6 +129,21 @@ def user_token(test_user):
     )
 
 @pytest.fixture(scope="function")
+def user_refresh_token(test_user):
+    """Crea un refresh token JWT para el usuario de prueba."""
+    from datetime import timedelta
+    return create_access_token(
+        data={
+            "sub": test_user.email,
+            "role": test_user.role.value,
+            "token_type": "refresh",
+            "firstname": test_user.firstname,
+            "lastname": test_user.lastname
+        },
+        expires_delta=timedelta(days=7)
+    )
+
+@pytest.fixture(scope="function")
 def admin_token(test_admin):
     """Crea un token JWT para el administrador de prueba."""
     return create_access_token(
