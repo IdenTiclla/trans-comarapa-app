@@ -156,11 +156,11 @@
                 </div>
               </div>
 
-              <!-- Conductor -->
+              <!-- Estado -->
               <div class="flex items-center">
-                <span class="text-blue-800 font-bold w-28 text-base">Conductor:</span>
+                <span class="text-blue-800 font-bold w-28 text-base">Estado:</span>
                 <div class="flex-1 relative">
-                  <span class="bg-white pr-2 relative z-10 font-medium">{{ packageData.driver_name }}</span>
+                  <span class="bg-white pr-2 relative z-10 font-medium">{{ getStatusLabel(packageData.status) }}</span>
                   <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
                 </div>
               </div>
@@ -310,7 +310,17 @@ const getRecipientName = (recipient) => {
   return getEffectiveName(recipient)
 }
 
-// Número de paquete
+// Status label helper
+const getStatusLabel = (status) => {
+  const labels = {
+    registered_at_office: 'Registrada en oficina',
+    assigned_to_trip: 'Asignada a viaje',
+    in_transit: 'En tránsito',
+    arrived_at_destination: 'En destino',
+    delivered: 'Entregada',
+  }
+  return labels[status] || status || 'Registrada en oficina'
+}
 const packageNumber = ref('000000')
 
 // Fecha actual

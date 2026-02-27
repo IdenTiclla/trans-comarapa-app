@@ -16,7 +16,8 @@ class Package(Base):
     notes = Column(Text, nullable=True)  # Observaciones adicionales
     
     # Estado del paquete
-    status = Column(String(50), nullable=False, default="registered")  # registered, in_transit, delivered, lost
+    # Estados: registered_at_office, assigned_to_trip, in_transit, arrived_at_destination, delivered
+    status = Column(String(50), nullable=False, default="registered_at_office")
     
     # Fechas y horarios
     created_at = Column(DateTime, default=func.now())
@@ -29,7 +30,7 @@ class Package(Base):
     recipient_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
     recipient = relationship("Client", foreign_keys=[recipient_id], backref="received_packages")
     
-    trip_id = Column(Integer, ForeignKey('trips.id'), nullable=False)
+    trip_id = Column(Integer, ForeignKey('trips.id'), nullable=True)  # Nullable: encomienda puede no estar asignada a un viaje
     trip = relationship("Trip", back_populates="packages")
     
     secretary_id = Column(Integer, ForeignKey('secretaries.id'), nullable=False)

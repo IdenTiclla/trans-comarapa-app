@@ -142,10 +142,11 @@
                 class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm"
               >
                 <option value="all">Todos</option>
-                <option value="pending">Pendiente</option>
-                <option value="in_transit">En Tránsito</option>
-                <option value="delivered">Entregado</option>
-                <option value="cancelled">Cancelado</option>
+                <option value="registered_at_office">En oficina</option>
+                <option value="assigned_to_trip">Asignada a viaje</option>
+                <option value="in_transit">En tránsito</option>
+                <option value="arrived_at_destination">En destino</option>
+                <option value="delivered">Entregada</option>
               </select>
             </div>
             <div>
@@ -278,6 +279,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de registro de encomienda -->
+    <PackageRegistrationModal
+      :show-modal="showRegistrationModal"
+      @close="showRegistrationModal = false"
+      @package-registered="handlePackageRegistered"
+    />
   </div>
 </template>
 
@@ -286,6 +294,7 @@ import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePackageStore } from '~/stores/packageStore'
 import { debounce } from 'lodash-es'
+import PackageRegistrationModal from '~/components/packages/PackageRegistrationModal.vue'
 
 // Meta
 definePageMeta({
@@ -305,6 +314,7 @@ const dateTo = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(12)
 const viewMode = ref('grid')
+const showRegistrationModal = ref(false)
 
 // Get packages from store
 const packages = computed(() => {
@@ -315,13 +325,13 @@ const packages = computed(() => {
 
 // Computed properties for stats
 const totalPackages = computed(() => packages.value.length)
-const pendingPackages = computed(() => packages.value.filter(p => p.status === 'pending').length)
+const pendingPackages = computed(() => packages.value.filter(p => p.status === 'registered_at_office').length)
 const inTransitPackages = computed(() => packages.value.filter(p => p.status === 'in_transit').length)
 const deliveredToday = computed(() => {
   const today = new Date().toDateString()
   return packages.value.filter(p => 
     p.status === 'delivered' && 
-    new Date(p.delivery_date || p.updated_at).toDateString() === today
+    new Date(p.updated_at || p.created_at).toDateString() === today
   ).length
 })
 
@@ -422,7 +432,16 @@ const handleQuickAction = (action) => {
 
 // Navigation methods
 const goToNewPackage = () => {
-  router.push('/packages/new')
+  showRegistrationModal.value = true
+}
+
+const handlePackageRegistered = async (pkg) => {
+  // Refetch packages after a new one is registered
+  try {
+    await packageStore.fetchPackages({ limit: 100 })
+  } catch (error) {
+    console.error('Error refetching packages:', error)
+  }
 }
 
 const viewPackage = (id) => {

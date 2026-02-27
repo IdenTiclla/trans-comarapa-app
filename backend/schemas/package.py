@@ -6,20 +6,30 @@ from schemas.trip import Trip
 from schemas.secretary import Secretary
 from schemas.package_item import PackageItemCreate, PackageItemResponse
 
+# Valid package statuses
+VALID_STATUSES = [
+    "registered_at_office",
+    "assigned_to_trip", 
+    "in_transit",
+    "arrived_at_destination",
+    "delivered"
+]
+
 class PackageBase(BaseModel):
     tracking_number: str = Field(..., description="Número de encomienda único", example="003589")
     total_weight: Optional[float] = Field(None, description="Peso total del paquete en kg", example=5.2)
     total_declared_value: Optional[float] = Field(None, description="Valor declarado total", example=500.0)
     notes: Optional[str] = Field(None, description="Observaciones adicionales", example="Frágil - manejar con cuidado")
-    status: str = Field(default="registered", description="Estado del paquete", example="registered")
+    status: str = Field(default="registered_at_office", description="Estado del paquete", example="registered_at_office")
     
     sender_id: int = Field(..., description="ID del remitente", example=1)
     recipient_id: int = Field(..., description="ID del destinatario", example=2)
-    trip_id: int = Field(..., description="ID del viaje", example=3)
+    trip_id: Optional[int] = Field(None, description="ID del viaje (opcional, se asigna después)", example=3)
 
 class PackageCreate(PackageBase):
     items: List[PackageItemCreate] = Field(..., description="Lista de items del paquete", min_items=1)
     secretary_id: int = Field(..., description="ID de la secretaria que registra", example=1, gt=0)
+    trip_id: Optional[int] = Field(None, description="ID del viaje (opcional)")
     
     @validator('tracking_number')
     def validate_tracking_number(cls, v):
@@ -34,6 +44,21 @@ class PackageUpdate(BaseModel):
     total_declared_value: Optional[float] = Field(None, ge=0)
     notes: Optional[str] = None
     status: Optional[str] = None
+
+class PackageAssignTrip(BaseModel):
+    """Schema para asignar una encomienda a un viaje"""
+    trip_id: int = Field(..., description="ID del viaje a asignar", gt=0)
+
+class PackageStatusUpdate(BaseModel):
+    """Schema para actualizar el estado de una encomienda"""
+    new_status: str = Field(..., description="Nuevo estado del paquete")
+    changed_by_user_id: Optional[int] = Field(None, description="ID del usuario que realiza el cambio")
+    
+    @validator('new_status')
+    def validate_status(cls, v):
+        if v not in VALID_STATUSES:
+            raise ValueError(f'Estado inválido. Estados válidos: {", ".join(VALID_STATUSES)}')
+        return v
 
 class PackageResponse(PackageBase):
     id: int = Field(..., description="ID del paquete", example=1)
@@ -67,6 +92,7 @@ class PackageSummary(BaseModel):
     total_items_count: int
     sender_name: Optional[str] = None
     recipient_name: Optional[str] = None
+    trip_id: Optional[int] = None
     created_at: datetime
     
     class Config:

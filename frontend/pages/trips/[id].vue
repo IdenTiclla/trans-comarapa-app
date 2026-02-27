@@ -198,6 +198,18 @@
           />
         </div>
       </div>
+
+      <!-- Sección de Encomiendas -->
+      <div class="px-3 sm:px-4 lg:px-6 mt-6">
+        <div class="max-w-screen-2xl mx-auto">
+          <TripPackagesSection
+            :trip-packages="tripPackages"
+            :is-loading="loadingTripPackages"
+            @open-assign-modal="showPackageAssignModal = true"
+            @unassign-package="handleUnassignPackage"
+          />
+        </div>
+      </div>
     </div>
   </div>
   
@@ -235,6 +247,15 @@
     :trip="displayedTrip"
     @close="closeTicketSaleModal"
     @ticket-created="handleTicketCreated"
+  />
+
+  <!-- Modal de asignación de encomiendas -->
+  <PackageAssignModal
+    v-if="displayedTrip"
+    :show-modal="showPackageAssignModal"
+    :trip-id="displayedTrip.id"
+    @close="showPackageAssignModal = false"
+    @packages-assigned="handlePackagesAssigned"
   />
 
   <!-- Modal de confirmación para cambio de asiento mejorado -->
@@ -466,6 +487,10 @@ import { useAssistantStore } from '~/stores/assistantStore'
 import { useTripDetails } from '~/composables/useTripDetails'
 import { changeSeat } from '~/services/ticketService'
 import { updateTrip, getTripById } from '~/services/tripService'
+import { getPackagesByTrip } from '~/services/packageService'
+import { usePackageStore } from '~/stores/packageStore'
+import TripPackagesSection from '~/components/trips/TripPackagesSection.vue'
+import PackageAssignModal from '~/components/packages/PackageAssignModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -473,6 +498,7 @@ const tripStore = useTripStore()
 const authStore = useAuthStore()
 const driverStore = useDriverStore()
 const assistantStore = useAssistantStore()
+const packageStore = usePackageStore()
 
 const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
@@ -541,6 +567,47 @@ const notificationData = ref({
   title: 'Éxito',
   message: 'La operación se ha completado exitosamente.'
 })
+
+// Estado para encomiendas del viaje
+const tripPackages = ref([])
+const loadingTripPackages = ref(false)
+const showPackageAssignModal = ref(false)
+
+// Funciones para encomiendas del viaje
+const fetchTripPackages = async (tripIdValue) => {
+  loadingTripPackages.value = true
+  try {
+    const packages = await getPackagesByTrip(tripIdValue)
+    tripPackages.value = Array.isArray(packages) ? packages : []
+  } catch (error) {
+    console.error('Error fetching trip packages:', error)
+    tripPackages.value = []
+  } finally {
+    loadingTripPackages.value = false
+  }
+}
+
+const handleUnassignPackage = async (packageId) => {
+  try {
+    await packageStore.unassignFromTrip(packageId)
+    showNotification('success', 'Encomienda removida', 'La encomienda fue removida del viaje correctamente.')
+    // Refetch packages for this trip
+    if (displayedTrip.value?.id) {
+      await fetchTripPackages(displayedTrip.value.id)
+    }
+  } catch (error) {
+    console.error('Error unassigning package:', error)
+    showNotification('error', 'Error', error.data?.detail || error.message || 'No se pudo remover la encomienda del viaje.')
+  }
+}
+
+const handlePackagesAssigned = async () => {
+  showNotification('success', 'Encomiendas asignadas', 'Las encomiendas fueron asignadas al viaje correctamente.')
+  // Refetch packages for this trip
+  if (displayedTrip.value?.id) {
+    await fetchTripPackages(displayedTrip.value.id)
+  }
+}
 
 // Función para mostrar notificaciones
 const showNotification = (type, title, message) => {
@@ -683,7 +750,8 @@ onMounted(async () => {
     if (displayedTrip.value && displayedTrip.value.id) {
       console.log('Cargando datos para el viaje:', displayedTrip.value.id)
       await Promise.all([
-        fetchSoldTickets(displayedTrip.value.id)
+        fetchSoldTickets(displayedTrip.value.id),
+        fetchTripPackages(displayedTrip.value.id)
       ])
     } else {
       console.error('Trip not loaded properly after fetchTripById')

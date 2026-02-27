@@ -79,22 +79,22 @@ defineEmits(['viewPackage', 'editPackage', 'deletePackage']);
 
 const statusClass = computed(() => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    in_transit: 'bg-blue-100 text-blue-800',
+    registered_at_office: 'bg-yellow-100 text-yellow-800',
+    assigned_to_trip: 'bg-blue-100 text-blue-800',
+    in_transit: 'bg-orange-100 text-orange-800',
+    arrived_at_destination: 'bg-emerald-100 text-emerald-800',
     delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
-    // Add more statuses as needed
   };
   return classes[props.pkg.status] || 'bg-gray-100 text-gray-800';
 });
 
 const statusText = computed(() => {
   const texts = {
-    pending: 'Pendiente',
-    in_transit: 'En Tránsito',
-    delivered: 'Entregado',
-    cancelled: 'Cancelado',
-    // Add more statuses as needed
+    registered_at_office: '🟡 En oficina',
+    assigned_to_trip: '🔵 Asignada a viaje',
+    in_transit: '🟠 En tránsito',
+    arrived_at_destination: '🟢 En destino',
+    delivered: '✅ Entregada',
   };
   return texts[props.pkg.status] || props.pkg.status || 'Desconocido';
 });

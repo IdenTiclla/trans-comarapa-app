@@ -1033,8 +1033,8 @@ def seed_db():
         db.commit()
 
         # --- Package Seeding and Initial State History ---
+        # Nuevos estados: registered_at_office, assigned_to_trip, in_transit, arrived_at_destination, delivered
         all_packages = [] 
-        package_statuses_options = ["registered", "in_transit", "delivered", "cancelled", "lost"] # Renamed
         item_descriptions = [
             "Documentos importantes", "Ropa de temporada 2025", "Equipos electrónicos nuevos", "Productos alimenticios locales",
             "Medicamentos esenciales", "Libros y material educativo", "Herramientas de trabajo especializadas", "Artículos de hogar modernos",
@@ -1042,6 +1042,22 @@ def seed_db():
             "Repuestos automotrices", "Instrumentos musicales", "Material de construcción", "Productos artesanales bolivianos"
         ]
         package_counter = 1
+
+        # Helper para crear items de un paquete
+        def create_package_items(db, package_id, item_descriptions):
+            num_items = random.randint(1, 4)
+            for _ in range(num_items):
+                quantity = random.randint(1, 5)
+                description = random.choice(item_descriptions)
+                unit_price = round(random.uniform(10.0, 100.0), 2)
+                total_price = quantity * unit_price
+                package_item = PackageItem(
+                    quantity=quantity, description=description, unit_price=unit_price,
+                    total_price=total_price, package_id=package_id
+                )
+                db.add(package_item)
+
+        # 1) Paquetes asignados a viajes (como antes, pero con nuevos estados)
         for trip_item in trips:
             num_packages = random.randint(3, 8)
             for _ in range(num_packages):
@@ -1054,11 +1070,12 @@ def seed_db():
                 if package_created_at < six_months_ago: package_created_at = six_months_ago + timedelta(days=random.randint(0,5))
                 if package_created_at > now: package_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
 
-                current_initial_package_state = "registered"
+                # Estado inicial según contexto del viaje
+                current_initial_package_state = "assigned_to_trip"
                 if trip_item.trip_datetime < now - timedelta(days=2) and package_created_at < trip_item.trip_datetime:
-                    current_initial_package_state = random.choice(["delivered", "in_transit"])
-                elif trip_item.status == 'cancelled': 
-                    if random.random() < 0.5: current_initial_package_state = "cancelled"
+                    current_initial_package_state = random.choice(["delivered", "in_transit", "arrived_at_destination"])
+                elif trip_item.status == 'in_progress':
+                    current_initial_package_state = "in_transit"
 
                 selected_secretary = random.choice(secretaries)
 
@@ -1068,36 +1085,68 @@ def seed_db():
                     notes=f"Envío 2025: Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname} - Servicio premium",
                     status=current_initial_package_state, sender_id=sender.id, recipient_id=recipient.id,
                     trip_id=trip_item.id, secretary_id=selected_secretary.id, created_at=package_created_at,
-                    updated_at=package_created_at # Init updated_at
+                    updated_at=package_created_at
                 )
                 db.add(package)
                 db.flush()
-                all_packages.append(package) 
+                all_packages.append(package)
 
                 initial_pkg_history_entry = PackageStateHistory(
-                    package_id=package.id, old_state=None, new_state=package.status,
+                    package_id=package.id, old_state=None, new_state="registered_at_office",
                     changed_at=package.created_at, changed_by_user_id=selected_secretary.user_id
                 )
                 db.add(initial_pkg_history_entry)
 
-                num_items = random.randint(1, 4)
-                for item_index in range(num_items):
-                    quantity = random.randint(1, 5)
-                    description = random.choice(item_descriptions)
-                    unit_price = round(random.uniform(10.0, 100.0), 2)
-                    total_price = quantity * unit_price
-                    package_item = PackageItem(
-                        quantity=quantity, description=description, unit_price=unit_price,
-                        total_price=total_price, package_id=package.id
+                # Si tiene viaje, agregar historial de asignación
+                if current_initial_package_state != "registered_at_office":
+                    assign_history = PackageStateHistory(
+                        package_id=package.id, old_state="registered_at_office", new_state="assigned_to_trip",
+                        changed_at=package.created_at + timedelta(hours=random.randint(1, 12)),
+                        changed_by_user_id=selected_secretary.user_id
                     )
-                    db.add(package_item)
+                    db.add(assign_history)
+
+                create_package_items(db, package.id, item_descriptions)
+
+        # 2) Paquetes SIN viaje asignado (registered_at_office)
+        num_unassigned_packages = 15
+        print(f"Creating {num_unassigned_packages} unassigned packages (registered_at_office)...")
+        for _ in range(num_unassigned_packages):
+            sender = random.choice(clients)
+            recipient = random.choice([c for c in clients if c.id != sender.id])
+            tracking_number = f"PKG{package_counter:06d}"
+            package_counter += 1
+
+            package_created_at = now - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23))
+            selected_secretary = random.choice(secretaries)
+
+            package = Package(
+                tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
+                total_declared_value=round(random.uniform(50.0, 500.0), 2),
+                notes=f"Encomienda pendiente de asignación - {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
+                status="registered_at_office", sender_id=sender.id, recipient_id=recipient.id,
+                trip_id=None, secretary_id=selected_secretary.id, created_at=package_created_at,
+                updated_at=package_created_at
+            )
+            db.add(package)
+            db.flush()
+            all_packages.append(package)
+
+            initial_pkg_history_entry = PackageStateHistory(
+                package_id=package.id, old_state=None, new_state="registered_at_office",
+                changed_at=package.created_at, changed_by_user_id=selected_secretary.user_id
+            )
+            db.add(initial_pkg_history_entry)
+            create_package_items(db, package.id, item_descriptions)
 
         db.commit() # Commit all packages and their initial history
 
-        # --- Simulate Further Package State Changes (Simplified) ---
-        print("Simulating further package state changes (simplified)...")
-        num_packages_to_simulate_changes_for = len(all_packages) // 2
-        packages_for_simulation = random.sample(all_packages, num_packages_to_simulate_changes_for)
+        # --- Simulate Further Package State Changes (New Status System) ---
+        print("Simulating further package state changes (new status system)...")
+        # Only simulate packages that have a trip assigned
+        assigned_packages = [p for p in all_packages if p.trip_id is not None]
+        num_packages_to_simulate = len(assigned_packages) // 2
+        packages_for_simulation = random.sample(assigned_packages, num_packages_to_simulate)
 
         for package_to_simulate in packages_for_simulation:
             package_trip = package_to_simulate.trip
@@ -1108,33 +1157,28 @@ def seed_db():
             last_changed_at_pkg = package_to_simulate.updated_at
             current_sim_state_pkg = package_to_simulate.status
             simulating_secretary_pkg = random.choice(secretaries)
-            change_made_pkg = False
 
-            # Path 1: Registered -> In Transit
-            if current_sim_state_pkg == "registered" and package_trip.trip_datetime > now - timedelta(days=10): # If trip is not too far in past
+            # Path 1: assigned_to_trip -> in_transit (trip has departed)
+            if current_sim_state_pkg == "assigned_to_trip" and package_trip.trip_datetime < now:
                 old_state_pkg_sim = current_sim_state_pkg
                 new_state_pkg_sim = "in_transit"
-                # Change to in_transit around trip departure time
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_to_simulate.created_at + timedelta(hours=1))
-                changed_at_pkg_sim = min(changed_at_pkg_sim, package_trip.trip_datetime + timedelta(hours=1), now - timedelta(minutes=10))
-                # Ensure it's after creation and close to trip time, but before now if possible
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime)
+                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=10))
 
-                if changed_at_pkg_sim > last_changed_at_pkg and changed_at_pkg_sim < (package_trip.trip_datetime + timedelta(days=1)): # Allow it to be slightly after trip_datetime
+                if changed_at_pkg_sim > last_changed_at_pkg:
                     package_to_simulate.status = new_state_pkg_sim
                     package_to_simulate.updated_at = changed_at_pkg_sim
                     db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
                     db.add(package_to_simulate)
                     current_sim_state_pkg = new_state_pkg_sim
                     last_changed_at_pkg = changed_at_pkg_sim
-                    change_made_pkg = True
 
-            # Path 2: In Transit -> Delivered (for past trips)
-            elif current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now:
+            # Path 2: in_transit -> arrived_at_destination
+            if current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now - timedelta(hours=3):
                 old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "delivered"
+                new_state_pkg_sim = "arrived_at_destination"
                 route_duration_hours_pkg = float(package_route.duration if package_route else 3.0)
-                # Deliver after trip + duration, before now
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime + timedelta(hours=route_duration_hours_pkg + 1))
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime + timedelta(hours=route_duration_hours_pkg))
                 changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=5))
 
                 if changed_at_pkg_sim > last_changed_at_pkg:
@@ -1144,37 +1188,19 @@ def seed_db():
                     db.add(package_to_simulate)
                     current_sim_state_pkg = new_state_pkg_sim
                     last_changed_at_pkg = changed_at_pkg_sim
-                    change_made_pkg = True
 
-            # Path 3: In Transit -> Lost (small chance, for past trips)
-            if not change_made_pkg and random.random() < 0.02 and current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now:
+            # Path 3: arrived_at_destination -> delivered (60% chance)
+            if current_sim_state_pkg == "arrived_at_destination" and random.random() < 0.6:
                 old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "lost"
-                 # Lost sometime after going in transit, before now
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(days=1), package_trip.trip_datetime + timedelta(days=1))
-                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(hours=1))
+                new_state_pkg_sim = "delivered"
+                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), last_changed_at_pkg + timedelta(hours=random.randint(1, 48)))
+                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=5))
 
                 if changed_at_pkg_sim > last_changed_at_pkg:
                     package_to_simulate.status = new_state_pkg_sim
                     package_to_simulate.updated_at = changed_at_pkg_sim
                     db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
                     db.add(package_to_simulate)
-                    change_made_pkg = True # No further changes for lost packages
-
-            # Path 4: Registered -> Cancelled (small chance, before trip starts)
-            elif not change_made_pkg and random.random() < 0.03 and current_sim_state_pkg == "registered" and package_trip.trip_datetime > now:
-                old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "cancelled"
-                # Cancel after registration, before trip, and before now
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(minutes=30), package_to_simulate.created_at + timedelta(minutes=30))
-                changed_at_pkg_sim = min(changed_at_pkg_sim, package_trip.trip_datetime - timedelta(hours=1), now - timedelta(minutes=5))
-                
-                if changed_at_pkg_sim > last_changed_at_pkg and changed_at_pkg_sim < package_trip.trip_datetime:
-                    package_to_simulate.status = new_state_pkg_sim
-                    package_to_simulate.updated_at = changed_at_pkg_sim
-                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
-                    db.add(package_to_simulate)
-                    # No further changes for cancelled packages
 
         db.commit() # Commit simulated package state changes
 

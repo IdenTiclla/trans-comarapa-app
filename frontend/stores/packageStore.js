@@ -4,98 +4,113 @@ import packageService from '~/services/packageService';
 export const usePackageStore = defineStore('packages', {
   state: () => ({
     packages: [],
+    unassignedPackages: [],
     currentPackage: null,
-    currentPackageItems: [],
+    searchResults: [],
     isLoading: false,
-    isItemsLoading: false,
     error: null,
     pagination: {
       totalItems: 0,
       totalPages: 1,
       currentPage: 1,
-      itemsPerPage: 10,
-    },
-    searchTerm: '',
-    searchResults: [],
+      itemsPerPage: 10
+    }
   }),
 
   getters: {
-    getPackageCount: (state) => state.pagination.totalItems,
+    getPackageCount: (state) => state.packages.length,
     getAllPackages: (state) => state.packages,
+    getUnassignedPackages: (state) => state.unassignedPackages,
     getSearchedPackages: (state) => state.searchResults,
-    getCurrentPackageItems: (state) => state.currentPackageItems,
+    getCurrentPackageItems: (state) => state.currentPackage?.items || [],
     getCurrentPackageTotal: (state) => {
-      return state.currentPackageItems.reduce((total, item) => {
+      if (!state.currentPackage?.items) return 0;
+      return state.currentPackage.items.reduce((total, item) => {
         return total + (item.quantity * item.unit_price);
       }, 0);
     },
     getCurrentPackageItemsCount: (state) => {
-      return state.currentPackageItems.reduce((total, item) => total + item.quantity, 0);
+      if (!state.currentPackage?.items) return 0;
+      return state.currentPackage.items.reduce((total, item) => total + item.quantity, 0);
     },
   },
 
   actions: {
     _handleApiResponse(response) {
-      console.log('Handling API response:', response);
-      
-      // Handle new PackageSummary array response
-      if (Array.isArray(response)) {
-        this.packages = response;
-        this.pagination = {
-          totalItems: response.length,
-          totalPages: 1,
-          currentPage: 1,
-          itemsPerPage: response.length > 0 ? response.length : 10,
-        };
-        console.log('Set packages array:', this.packages.length, 'packages');
-      } else if (response && typeof response === 'object' && response.packages) {
-        // Handle paginated response with packages property
-        this.packages = response.packages;
-        this.pagination = {
-          totalItems: response.pagination?.totalItems || 0,
-          totalPages: response.pagination?.totalPages || 1,
-          currentPage: response.pagination?.currentPage || 1,
-          itemsPerPage: response.pagination?.itemsPerPage || this.pagination.itemsPerPage,
-        };
-        console.log('Set packages from paginated response:', this.packages.length, 'packages');
-      } else {
-        // Handle unexpected response structure
-        this.packages = [];
-        console.warn('Unexpected API response structure for packages:', response);
+      if (!response) {
+        throw new Error('Empty response from API');
       }
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Handle paginated response
+      if (response.packages && response.pagination) {
+        return {
+          data: response.packages,
+          pagination: response.pagination
+        };
+      }
+
+      // Handle array response
+      if (Array.isArray(response)) {
+        return {
+          data: response,
+          pagination: {
+            totalItems: response.length,
+            totalPages: 1,
+            currentPage: 1,
+            itemsPerPage: response.length
+          }
+        };
+      }
+
+      // Handle single object
+      return { data: response };
     },
 
     async fetchPackages(params = {}) {
       this.isLoading = true;
       this.error = null;
+
       try {
-        const queryParams = { 
-          skip: ((params.page || this.pagination.currentPage) - 1) * (params.limit || this.pagination.itemsPerPage),
-          limit: params.limit || this.pagination.itemsPerPage,
-        };
-        
-        // Only add filters if they have valid values
-        if (params.status && params.status !== 'all' && params.status !== 'undefined') {
-          queryParams.status = params.status;
-        }
-        
-        if (params.filters) {
-          Object.keys(params.filters).forEach(key => {
-            const value = params.filters[key];
-            if (value !== undefined && value !== null && value !== 'all' && value !== '') {
-              queryParams[key] = value;
-            }
-          });
-        }
-        
-        console.log('Fetching packages with params:', queryParams);
+        const queryParams = {};
+        if (params.limit) queryParams.limit = params.limit;
+        if (params.skip) queryParams.skip = params.skip;
+        if (params.status && params.status !== 'all') queryParams.status = params.status;
+
         const response = await packageService.getAllPackages(queryParams);
-        console.log('Package API response:', response);
-        this._handleApiResponse(response);
-      } catch (err) {
-        console.error('Error fetching packages:', err);
-        this.error = err.data?.detail || err.message || 'Failed to fetch packages';
-        this.packages = [];
+        const processed = this._handleApiResponse(response);
+
+        this.packages = processed.data || [];
+        if (processed.pagination) {
+          this.pagination = { ...this.pagination, ...processed.pagination };
+        }
+
+        return this.packages;
+      } catch (error) {
+        this.error = error.message || 'Error al cargar encomiendas';
+        console.error('Error fetching packages:', error);
+        return [];
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async fetchUnassignedPackages(params = {}) {
+      this.isLoading = true;
+      this.error = null;
+
+      try {
+        const response = await packageService.getUnassignedPackages(params);
+        const processed = this._handleApiResponse(response);
+        this.unassignedPackages = processed.data || [];
+        return this.unassignedPackages;
+      } catch (error) {
+        this.error = error.message || 'Error al cargar encomiendas sin asignar';
+        console.error('Error fetching unassigned packages:', error);
+        return [];
       } finally {
         this.isLoading = false;
       }
@@ -104,35 +119,15 @@ export const usePackageStore = defineStore('packages', {
     async fetchPackageById(id) {
       this.isLoading = true;
       this.error = null;
-      this.currentPackage = null;
-      console.log(`[Package Store] Fetching package with ID: ${id}`);
+
       try {
-        const data = await packageService.getPackageById(id);
-        console.log(`[Package Store] Received package data:`, data);
-        
-        // Normalize the data to ensure all expected fields are present
-        this.currentPackage = {
-          ...data,
-          // Ensure sender details are properly mapped
-          sender_details: data.sender || null,
-          receiver_details: data.recipient || null,
-          // Map backend fields to frontend expected names if needed
-          description: data.description || data.notes || null,
-          package_type: data.package_type || 'General',
-          weight: data.total_weight || null,
-          declared_value: data.total_declared_value || null,
-          price: data.total_amount || null,
-        };
-        
-        console.log(`[Package Store] Normalized package data:`, this.currentPackage);
-        
-        // Set current package items
-        if (data.items) {
-          this.currentPackageItems = data.items;
-        }
-      } catch (err) {
-        console.error(`[Package Store] Error fetching package ${id}:`, err);
-        this.error = err.data?.detail || err.message || 'Failed to fetch package details';
+        const response = await packageService.getPackageById(id);
+        this.currentPackage = response;
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al obtener la encomienda';
+        console.error('Error fetching package:', error);
+        return null;
       } finally {
         this.isLoading = false;
       }
@@ -141,17 +136,15 @@ export const usePackageStore = defineStore('packages', {
     async fetchPackageByTrackingNumber(trackingNumber) {
       this.isLoading = true;
       this.error = null;
-      this.currentPackage = null;
+
       try {
-        const data = await packageService.getPackageByTrackingNumber(trackingNumber);
-        this.currentPackage = data;
-        if (data.items) {
-          this.currentPackageItems = data.items;
-        }
-        return data;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Package not found';
-        throw err;
+        const response = await packageService.getPackageByTrackingNumber(trackingNumber);
+        this.currentPackage = response;
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al buscar por número de tracking';
+        console.error('Error fetching package by tracking:', error);
+        return null;
       } finally {
         this.isLoading = false;
       }
@@ -160,29 +153,18 @@ export const usePackageStore = defineStore('packages', {
     async createNewPackage(packageData) {
       this.isLoading = true;
       this.error = null;
-      try {
-        // Validate package data
-        const validation = packageService.validatePackageData(packageData);
-        if (!validation.isValid) {
-          throw new Error(validation.errors.join(', '));
-        }
 
-        const newPackage = await packageService.createPackage(packageData);
-        await this.fetchPackages(); // Refetch to get the latest list with new package
-        
-        // Actualizar estadísticas del dashboard después de crear el paquete
-        try {
-          const { useStatsStore } = await import('~/stores/statsStore');
-          const statsStore = useStatsStore();
-          await statsStore.refreshStats('today');
-        } catch (statsError) {
-          console.warn('No se pudieron actualizar las estadísticas después de crear el paquete:', statsError);
+      try {
+        const response = await packageService.createPackage(packageData);
+        // Add to local list
+        if (response && response.id) {
+          this.packages.unshift(response);
         }
-        
-        return newPackage;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to create package';
-        throw err;
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al crear la encomienda';
+        console.error('Error creating package:', error);
+        throw error;
       } finally {
         this.isLoading = false;
       }
@@ -191,20 +173,19 @@ export const usePackageStore = defineStore('packages', {
     async updateExistingPackage(id, packageData) {
       this.isLoading = true;
       this.error = null;
+
       try {
-        const updatedPackage = await packageService.updatePackage(id, packageData);
-        // Update in local list if present
+        const response = await packageService.updatePackage(id, packageData);
+        // Update in local list
         const index = this.packages.findIndex(p => p.id === id);
         if (index !== -1) {
-          this.packages[index] = { ...this.packages[index], ...updatedPackage };
+          this.packages[index] = { ...this.packages[index], ...response };
         }
-        if (this.currentPackage && this.currentPackage.id === id) {
-          this.currentPackage = { ...this.currentPackage, ...updatedPackage };
-        }
-        return updatedPackage;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to update package';
-        throw err;
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al actualizar la encomienda';
+        console.error('Error updating package:', error);
+        return null;
       } finally {
         this.isLoading = false;
       }
@@ -213,184 +194,251 @@ export const usePackageStore = defineStore('packages', {
     async deleteExistingPackage(id) {
       this.isLoading = true;
       this.error = null;
+
       try {
         await packageService.deletePackage(id);
         this.packages = this.packages.filter(p => p.id !== id);
-        if (this.currentPackage && this.currentPackage.id === id) {
-          this.currentPackage = null;
-          this.currentPackageItems = [];
-        }
-        await this.fetchPackages({ page: this.pagination.currentPage });
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to delete package';
-        throw err;
+        return true;
+      } catch (error) {
+        this.error = error.message || 'Error al eliminar la encomienda';
+        console.error('Error deleting package:', error);
+        return false;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    // === TRIP ASSIGNMENT ===
+
+    async assignToTrip(packageId, tripId) {
+      this.error = null;
+
+      try {
+        const response = await packageService.assignPackageToTrip(packageId, tripId);
+
+        // Update in local lists
+        const index = this.packages.findIndex(p => p.id === packageId);
+        if (index !== -1) {
+          this.packages[index] = { ...this.packages[index], status: 'assigned_to_trip', trip_id: tripId };
+        }
+
+        // Remove from unassigned list
+        this.unassignedPackages = this.unassignedPackages.filter(p => p.id !== packageId);
+
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al asignar encomienda al viaje';
+        console.error('Error assigning package to trip:', error);
+        throw error;
+      }
+    },
+
+    async unassignFromTrip(packageId) {
+      this.error = null;
+
+      try {
+        const response = await packageService.unassignPackageFromTrip(packageId);
+
+        // Update in local lists
+        const index = this.packages.findIndex(p => p.id === packageId);
+        if (index !== -1) {
+          this.packages[index] = { ...this.packages[index], status: 'registered_at_office', trip_id: null };
+        }
+
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al desasignar encomienda del viaje';
+        console.error('Error unassigning package from trip:', error);
+        throw error;
+      }
+    },
+
+    async updateStatus(packageId, newStatus, changedByUserId = null) {
+      this.error = null;
+
+      try {
+        const response = await packageService.updatePackageStatus(packageId, newStatus, changedByUserId);
+
+        // Update in local list
+        const index = this.packages.findIndex(p => p.id === packageId);
+        if (index !== -1) {
+          this.packages[index] = { ...this.packages[index], status: newStatus };
+        }
+
+        return response;
+      } catch (error) {
+        this.error = error.message || 'Error al actualizar estado de la encomienda';
+        console.error('Error updating package status:', error);
+        throw error;
       }
     },
 
     // === PACKAGE ITEMS MANAGEMENT ===
 
     async fetchPackageItems(packageId) {
-      this.isItemsLoading = true;
-      this.error = null;
       try {
         const items = await packageService.getPackageItems(packageId);
-        this.currentPackageItems = items;
+        if (this.currentPackage && this.currentPackage.id === packageId) {
+          this.currentPackage.items = items;
+        }
         return items;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to fetch package items';
-        this.currentPackageItems = [];
-      } finally {
-        this.isItemsLoading = false;
+      } catch (error) {
+        console.error('Error fetching package items:', error);
+        return [];
       }
     },
 
     async addPackageItem(packageId, itemData) {
-      this.isItemsLoading = true;
-      this.error = null;
       try {
         const newItem = await packageService.addPackageItem(packageId, itemData);
-        this.currentPackageItems.push(newItem);
-        
-        // Update current package totals if available
         if (this.currentPackage && this.currentPackage.id === packageId) {
-          this.currentPackage.total_amount = this.getCurrentPackageTotal;
-          this.currentPackage.total_items_count = this.getCurrentPackageItemsCount;
+          if (!this.currentPackage.items) this.currentPackage.items = [];
+          this.currentPackage.items.push(newItem);
         }
-        
         return newItem;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to add package item';
-        throw err;
-      } finally {
-        this.isItemsLoading = false;
+      } catch (error) {
+        console.error('Error adding package item:', error);
+        throw error;
       }
     },
 
     async updatePackageItem(itemId, itemData) {
-      this.isItemsLoading = true;
-      this.error = null;
       try {
         const updatedItem = await packageService.updatePackageItem(itemId, itemData);
-        
-        // Update in current items list
-        const index = this.currentPackageItems.findIndex(item => item.id === itemId);
-        if (index !== -1) {
-          this.currentPackageItems[index] = updatedItem;
+        if (this.currentPackage && this.currentPackage.items) {
+          const index = this.currentPackage.items.findIndex(i => i.id === itemId);
+          if (index !== -1) {
+            this.currentPackage.items[index] = updatedItem;
+          }
         }
-        
-        // Update current package totals if available
-        if (this.currentPackage) {
-          this.currentPackage.total_amount = this.getCurrentPackageTotal;
-          this.currentPackage.total_items_count = this.getCurrentPackageItemsCount;
-        }
-        
         return updatedItem;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to update package item';
-        throw err;
-      } finally {
-        this.isItemsLoading = false;
+      } catch (error) {
+        console.error('Error updating package item:', error);
+        throw error;
       }
     },
 
     async deletePackageItem(itemId) {
-      this.isItemsLoading = true;
-      this.error = null;
       try {
         await packageService.deletePackageItem(itemId);
-        
-        // Remove from current items list
-        this.currentPackageItems = this.currentPackageItems.filter(item => item.id !== itemId);
-        
-        // Update current package totals if available
-        if (this.currentPackage) {
-          this.currentPackage.total_amount = this.getCurrentPackageTotal;
-          this.currentPackage.total_items_count = this.getCurrentPackageItemsCount;
+        if (this.currentPackage && this.currentPackage.items) {
+          this.currentPackage.items = this.currentPackage.items.filter(i => i.id !== itemId);
         }
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to delete package item';
-        throw err;
-      } finally {
-        this.isItemsLoading = false;
+        return true;
+      } catch (error) {
+        console.error('Error deleting package item:', error);
+        throw error;
       }
     },
 
     // === FILTERING AND SEARCH ===
 
-    async fetchPackagesByClient(clientId, type = 'sender') {
-      this.isLoading = true;
-      this.error = null;
+    async fetchPackagesByTrip(tripId) {
       try {
-        let packages;
-        if (type === 'sender') {
-          packages = await packageService.getPackagesBySender(clientId);
-        } else {
-          packages = await packageService.getPackagesByRecipient(clientId);
-        }
-        this.packages = packages;
-        return packages;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || `Failed to fetch packages by ${type}`;
-        this.packages = [];
-      } finally {
-        this.isLoading = false;
+        const response = await packageService.getPackagesByTrip(tripId);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching packages by trip:', error);
+        return [];
       }
     },
 
-    async fetchPackagesByTrip(tripId) {
-      this.isLoading = true;
-      this.error = null;
+    async fetchPackagesByClient(clientId, type = 'sender') {
       try {
-        const packages = await packageService.getPackagesByTrip(tripId);
-        this.packages = packages;
-        return packages;
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to fetch packages by trip';
-        this.packages = [];
-      } finally {
-        this.isLoading = false;
+        const response = type === 'sender'
+          ? await packageService.getPackagesBySender(clientId)
+          : await packageService.getPackagesByRecipient(clientId);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching packages by client:', error);
+        return [];
       }
     },
 
     async searchPackagesByTerm(term) {
       this.isLoading = true;
       this.error = null;
-      this.searchTerm = term;
       try {
-        if (!term || term.length < 2) {
-          this.searchResults = [];
-          return;
-        }
-        
-        // Try to search by tracking number
-        try {
-          const pkg = await packageService.getPackageByTrackingNumber(term);
-          this.searchResults = [pkg];
-        } catch {
-          // If not found by tracking number, return empty results
-          this.searchResults = [];
-        }
-      } catch (err) {
-        this.error = err.data?.detail || err.message || 'Failed to search packages';
-        this.searchResults = [];
+        const results = await packageService.searchPackages(term);
+        this.searchResults = results;
+        return results;
+      } catch (error) {
+        this.error = error.message || 'Error en la búsqueda';
+        return [];
       } finally {
         this.isLoading = false;
+      }
+    },
+    // === ASSIGNMENT & STATUS ACTIONS ===
+
+    async fetchUnassignedPackages() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const packages = await packageService.getUnassignedPackages();
+        this.unassignedPackages = Array.isArray(packages) ? packages : [];
+        return this.unassignedPackages;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to fetch unassigned packages';
+        this.unassignedPackages = [];
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async assignToTrip(packageId, tripId) {
+      this.error = null;
+      try {
+        const result = await packageService.assignPackageToTrip(packageId, tripId);
+        // Remove from unassigned list
+        this.unassignedPackages = this.unassignedPackages.filter(p => p.id !== packageId);
+        return result;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to assign package to trip';
+        throw err;
+      }
+    },
+
+    async unassignFromTrip(packageId) {
+      this.error = null;
+      try {
+        const result = await packageService.unassignPackageFromTrip(packageId);
+        return result;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to unassign package from trip';
+        throw err;
+      }
+    },
+
+    async updateStatus(packageId, newStatus, changedByUserId = null) {
+      this.error = null;
+      try {
+        const result = await packageService.updatePackageStatus(packageId, newStatus, changedByUserId);
+        // Update in local list if present
+        const index = this.packages.findIndex(p => p.id === packageId);
+        if (index !== -1) {
+          this.packages[index] = { ...this.packages[index], status: newStatus };
+        }
+        if (this.currentPackage && this.currentPackage.id === packageId) {
+          this.currentPackage.status = newStatus;
+        }
+        return result;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Failed to update package status';
+        throw err;
       }
     },
 
     // === UTILITY ACTIONS ===
 
     calculateItemTotal(item) {
-      return item.quantity * item.unit_price;
+      return (item.quantity || 0) * (item.unit_price || 0);
     },
 
     generateTrackingNumber() {
-      // Generate a tracking number (this could be improved with server-side generation)
       const timestamp = Date.now().toString().slice(-6);
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `PKG${timestamp}${random}`;
+      return `${timestamp}${random}`;
     },
 
     createEmptyItem() {
@@ -398,17 +446,16 @@ export const usePackageStore = defineStore('packages', {
         quantity: 1,
         description: '',
         unit_price: 0,
+        total_price: 0
       };
     },
 
     clearCurrentPackage() {
       this.currentPackage = null;
-      this.currentPackageItems = [];
     },
 
     clearSearchResults() {
       this.searchResults = [];
-      this.searchTerm = '';
     },
 
     clearError() {
@@ -418,19 +465,17 @@ export const usePackageStore = defineStore('packages', {
     // Reset store state
     $reset() {
       this.packages = [];
+      this.unassignedPackages = [];
       this.currentPackage = null;
-      this.currentPackageItems = [];
+      this.searchResults = [];
       this.isLoading = false;
-      this.isItemsLoading = false;
       this.error = null;
       this.pagination = {
         totalItems: 0,
         totalPages: 1,
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: 10
       };
-      this.searchTerm = '';
-      this.searchResults = [];
     }
   },
 }); 

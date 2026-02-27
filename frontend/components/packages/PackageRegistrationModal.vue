@@ -43,45 +43,36 @@
         </div>
 
         <!-- Contenido del modal -->
-        <div class="bg-white px-6 py-6">
+        <div class="bg-white px-6 py-6 max-h-[80vh] overflow-y-auto">
           <form @submit.prevent="submitPackage">
             <!-- Información de fecha -->
-            <div class="mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div>
                 <label class="block text-sm font-medium text-blue-800 mb-1">Lugar</label>
                 <input
                   type="text"
                   v-model="packageData.origin"
                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  readonly
+                  placeholder="Oficina de origen"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Día</label>
+                <label class="block text-sm font-medium text-blue-800 mb-1">Fecha</label>
                 <input
                   type="text"
-                  v-model="currentDay"
+                  :value="`${currentDay}/${currentMonth}/${currentYear}`"
                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   readonly
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Mes</label>
-                <input
-                  type="text"
-                  v-model="currentMonth"
-                  class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  readonly
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Año</label>
-                <input
-                  type="text"
-                  v-model="currentYear"
-                  class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  readonly
-                />
+                <label class="block text-sm font-medium text-blue-800 mb-1">Estado</label>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                    En oficina
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -286,23 +277,6 @@
                     required
                   />
                 </div>
-
-                <!-- Conductor -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-orange-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Conductor
-                  </h4>
-                  <input
-                    type="text"
-                    v-model="packageData.driver_name"
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    :placeholder="driverPlaceholder"
-                    readonly
-                  />
-                </div>
               </div>
 
               <!-- Columna derecha: Detalles del paquete -->
@@ -335,7 +309,6 @@
                               v-model.number="item.quantity"
                               min="1"
                               class="block w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              @input="updateTotal"
                             />
                           </td>
                           <td class="px-4 py-4">
@@ -355,7 +328,6 @@
                                 min="0"
                                 step="0.01"
                                 class="block w-24 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                @input="updateTotal"
                               />
                             </div>
                           </td>
@@ -470,10 +442,6 @@ const props = defineProps({
   showModal: {
     type: Boolean,
     default: false
-  },
-  trip: {
-    type: Object,
-    default: () => ({})
   }
 })
 
@@ -501,12 +469,11 @@ const currentDay = ref(now.getDate().toString().padStart(2, '0'))
 const currentMonth = ref((now.getMonth() + 1).toString().padStart(2, '0'))
 const currentYear = ref(now.getFullYear().toString())
 
-// Datos del paquete con nueva estructura
+// Datos del paquete — SIN trip_id ni driver
 const packageData = ref({
   tracking_number: '',
   origin: '',
   destination: '',
-  driver_name: '',
   total_weight: 0,
   total_declared_value: 0,
   notes: '',
@@ -533,13 +500,6 @@ const packageData = ref({
 })
 
 // Computed properties
-const driverPlaceholder = computed(() => {
-  if (props.trip?.driver) {
-    return `${props.trip.driver.firstname} ${props.trip.driver.lastname}`
-  }
-  return 'Conductor no asignado'
-})
-
 const totalAmount = computed(() => {
   return packageData.value.items.reduce((total, item) => {
     return total + (item.quantity * item.unit_price)
@@ -551,9 +511,7 @@ const totalItemsCount = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  // Validaciones básicas
-  const basicValidation = packageData.value.tracking_number.trim() !== '' &&
-         packageData.value.sender.firstname.trim() !== '' &&
+  const basicValidation = packageData.value.sender.firstname.trim() !== '' &&
          packageData.value.sender.lastname.trim() !== '' &&
          packageData.value.sender.document_id.trim() !== '' &&
          packageData.value.recipient.firstname.trim() !== '' &&
@@ -568,7 +526,8 @@ const isFormValid = computed(() => {
          ) &&
          packageData.value.received_confirmation
 
-  // Validación de que remitente y destinatario no sean la misma persona
+  // No se requiere trip_id
+
   const samePersonValidation = packageData.value.sender.document_id.trim() === '' ||
                                packageData.value.recipient.document_id.trim() === '' ||
                                packageData.value.sender.document_id.trim() !== packageData.value.recipient.document_id.trim()
@@ -576,22 +535,11 @@ const isFormValid = computed(() => {
   return basicValidation && samePersonValidation
 })
 
-// Computed para mostrar error cuando son la misma persona
 const isSamePerson = computed(() => {
   return packageData.value.sender.document_id.trim() !== '' &&
          packageData.value.recipient.document_id.trim() !== '' &&
          packageData.value.sender.document_id.trim() === packageData.value.recipient.document_id.trim()
 })
-
-// Watchers para inicializar datos cuando cambia el trip
-watch(() => props.trip, (newTrip) => {
-  if (newTrip) {
-    packageData.value.origin = newTrip.route?.origin || ''
-    packageData.value.destination = newTrip.route?.destination || ''
-    packageData.value.driver_name = newTrip.driver ? 
-      `${newTrip.driver.firstname} ${newTrip.driver.lastname}` : ''
-  }
-}, { immediate: true })
 
 // Estados para el recibo
 const showReceiptModal = ref(false)
@@ -613,12 +561,7 @@ const addItem = () => {
 const removeItem = (index) => {
   if (packageData.value.items.length > 1) {
     packageData.value.items.splice(index, 1)
-    updateTotal()
   }
-}
-
-const updateTotal = () => {
-  // El total se calcula automáticamente a través del computed
 }
 
 // Funciones de búsqueda
@@ -672,14 +615,8 @@ const selectSender = (sender) => {
   senderSearchQuery.value = `${sender.firstname} ${sender.lastname} (${sender.document_id})`
   foundSenders.value = []
   
-  // Si el remitente es igual al destinatario, limpiar el destinatario
   if (packageData.value.recipient.document_id === sender.document_id) {
-    packageData.value.recipient = {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: ''
-    }
+    packageData.value.recipient = { firstname: '', lastname: '', document_id: '', phone: '' }
     recipientSearchQuery.value = ''
   }
 }
@@ -694,14 +631,8 @@ const selectRecipient = (recipient) => {
   recipientSearchQuery.value = `${recipient.firstname} ${recipient.lastname} (${recipient.document_id})`
   foundRecipients.value = []
   
-  // Si el destinatario es igual al remitente, limpiar el remitente
   if (packageData.value.sender.document_id === recipient.document_id) {
-    packageData.value.sender = {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: ''
-    }
+    packageData.value.sender = { firstname: '', lastname: '', document_id: '', phone: '' }
     senderSearchQuery.value = ''
   }
 }
@@ -715,19 +646,16 @@ const submitPackage = async () => {
     const senderData = await createOrGetClient(packageData.value.sender)
     const recipientData = await createOrGetClient(packageData.value.recipient)
 
-    // Validar que remitente y destinatario no sean la misma persona
     if (senderData.id === recipientData.id) {
       throw new Error('El remitente y el destinatario no pueden ser la misma persona.')
     }
 
-    // Obtener el usuario autenticado del store
+    // Obtener el usuario autenticado
     if (!authStore.user || !authStore.user.id) {
       throw new Error('Debe iniciar sesión para registrar paquetes.')
     }
-
-    console.log('Usuario autenticado:', authStore.user)
     
-    // Obtener el secretary_id basado en el user_id
+    // Obtener el secretary_id
     let secretaryId = null
     try {
       const secretaryResponse = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, {
@@ -738,20 +666,18 @@ const submitPackage = async () => {
       console.error('Error obteniendo secretary_id:', error)
       throw new Error('No se pudo obtener la información del secretario. Verifique que tenga permisos.')
     }
-    
-    console.log('Secretary ID a usar:', secretaryId)
 
-    // Preparar datos del paquete en el nuevo formato con items
+    // Preparar datos del paquete SIN trip_id
     const packagePayload = {
       tracking_number: packageData.value.tracking_number,
       total_weight: packageData.value.total_weight || null,
       total_declared_value: packageData.value.total_declared_value || null,
       notes: packageData.value.notes || null,
-      status: 'registered',
+      status: 'registered_at_office',
       sender_id: senderData.id,
       recipient_id: recipientData.id,
-      trip_id: props.trip.id,
       secretary_id: secretaryId,
+      // trip_id no se envía — la encomienda se registra sin viaje
       items: packageData.value.items.map(item => ({
         quantity: item.quantity,
         description: item.description,
@@ -759,19 +685,14 @@ const submitPackage = async () => {
       }))
     }
 
-    console.log('Payload del paquete:', packagePayload)
-
-    // Usar el store para crear el paquete
     const response = await packageStore.createNewPackage(packagePayload)
 
     if (response) {
-      // Preparar datos para el recibo con nueva estructura
       registeredPackageData.value = {
         id: response.id,
         tracking_number: response.tracking_number,
         origin: packageData.value.origin,
         destination: packageData.value.destination,
-        driver_name: packageData.value.driver_name,
         sender: {
           firstname: senderData.firstname,
           lastname: senderData.lastname,
@@ -790,7 +711,6 @@ const submitPackage = async () => {
         created_at: response.created_at || new Date().toISOString()
       }
 
-      // Mostrar el recibo
       showReceiptModal.value = true
       emit('package-registered', response)
       closeModal()
@@ -798,7 +718,6 @@ const submitPackage = async () => {
     }
   } catch (error) {
     console.error('Error registering package:', error)
-    // El store maneja los errores, así que podemos usar packageStore.error para mostrar mensajes
   } finally {
     isSubmitting.value = false
   }
@@ -806,7 +725,6 @@ const submitPackage = async () => {
 
 const createOrGetClient = async (clientData) => {
   try {
-    // Primero buscar si el cliente ya existe, pero solo si el CI tiene al menos 2 caracteres
     if (clientData.document_id && clientData.document_id.trim().length >= 2) {
       const searchResponse = await apiFetch(`/clients/search?q=${encodeURIComponent(clientData.document_id)}`, {
         method: 'GET'
@@ -820,7 +738,6 @@ const createOrGetClient = async (clientData) => {
       }
     }
 
-    // Si no existe, crear nuevo cliente
     const newClient = await apiFetch('/clients', {
       method: 'POST',
       body: {
@@ -842,32 +759,14 @@ const resetForm = () => {
   const trackingNumber = generateTrackingNumber()
   packageData.value = {
     tracking_number: trackingNumber,
-    origin: props.trip?.route?.origin || '',
-    destination: props.trip?.route?.destination || '',
-    driver_name: props.trip?.driver ? 
-      `${props.trip.driver.firstname} ${props.trip.driver.lastname}` : '',
+    origin: '',
+    destination: '',
     total_weight: 0,
     total_declared_value: 0,
     notes: '',
-    sender: {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: ''
-    },
-    recipient: {
-      firstname: '',
-      lastname: '',
-      document_id: '',
-      phone: ''
-    },
-    items: [
-      {
-        quantity: 1,
-        description: '',
-        unit_price: 0
-      }
-    ],
+    sender: { firstname: '', lastname: '', document_id: '', phone: '' },
+    recipient: { firstname: '', lastname: '', document_id: '', phone: '' },
+    items: [{ quantity: 1, description: '', unit_price: 0 }],
     received_confirmation: false
   }
   packageNumber.value = trackingNumber
@@ -878,7 +777,6 @@ const resetForm = () => {
 }
 
 const generateTrackingNumber = () => {
-  // Generar número de tracking único
   const timestamp = Date.now().toString().slice(-6)
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
   return `${timestamp}${random}`
@@ -895,4 +793,4 @@ onMounted(() => {
   packageNumber.value = trackingNumber
   packageData.value.tracking_number = trackingNumber
 })
-</script> 
+</script>
