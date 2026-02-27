@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, Any, Literal
+from core.enums import TicketState
 from schemas.client import Client as ClientSchema
 from schemas.secretary import Secretary as SecretarySchema
 from schemas.seat import Seat as SeatSchema
@@ -18,7 +19,7 @@ class TicketBase(BaseModel):
     @field_validator('state')
     @classmethod
     def validate_state(cls, v):
-        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        valid_states = [s.value for s in TicketState]
         if v.lower() not in valid_states:
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()
@@ -45,7 +46,7 @@ class ClientTicketCreate(BaseModel):
     @field_validator('state')
     @classmethod
     def validate_state(cls, v):
-        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        valid_states = [s.value for s in TicketState]
         if v.lower() not in valid_states:
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()
@@ -68,7 +69,7 @@ class TicketUpdate(BaseModel):
     def validate_state(cls, v):
         if v is None:
             return v
-        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        valid_states = [s.value for s in TicketState]
         if v.lower() not in valid_states:
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()

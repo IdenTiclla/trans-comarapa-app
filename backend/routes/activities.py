@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -12,9 +13,11 @@ from schemas.activity import Activity as ActivitySchema, ActivityCreate, Activit
 from auth.jwt import get_current_admin_user # Importar la dependencia correcta
 
 router = APIRouter(
-    prefix="/activities", # Todas las rutas aquí comenzarán con /activities
+    prefix="/activities",
     tags=["Activities"]
 )
+
+logger = logging.getLogger(__name__)
 
 # Helper function to log an activity (puedes llamarla desde otros servicios/rutas)
 async def log_activity(
@@ -59,7 +62,7 @@ async def get_recent_activities(
         return ActivityListResponse(activities=[ActivitySchema.from_orm(act) for act in activities], total=total_activities_in_query)
     except Exception as e:
         # Log el error e
-        print(f"Error fetching recent activities: {e}") # Reemplaza con un logger real
+        logger.error("Error fetching recent activities: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Ocurrió un error al obtener las actividades recientes."

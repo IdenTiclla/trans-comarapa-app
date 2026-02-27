@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -21,6 +22,8 @@ from typing import List, Optional, Dict, Any
 router = APIRouter(
     tags=["trips"]
 )
+
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=Dict[str, Any])
 async def get_trips(
@@ -449,7 +452,7 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
         return processed_trip
     except Exception as e:
         # Log the error for debugging
-        print(f"Error in get_trip for id {trip_id}: {str(e)}")
+        logger.error("Error in get_trip for id %d: %s", trip_id, str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing trip data: {str(e)}"

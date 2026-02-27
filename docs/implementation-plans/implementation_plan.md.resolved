@@ -1,0 +1,148 @@
+# Rediseño del Módulo de Encomiendas — Plan de Implementación
+
+Rediseñar el flujo de encomiendas para que: (1) se registren desde [/packages](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages) sin asignar a un viaje, (2) la secretaria asigne encomiendas a viajes desde la página de trip, y (3) cada encomienda sea rastreable a través de estados claros.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Nuevos estados propuestos para las encomiendas:**
+> - `registered_at_office` → Registrada en la oficina de origen (estado inicial)
+> - `assigned_to_trip` → Asignada a un viaje/bus (aún no partió)
+> - `in_transit` → En camino al destino (el viaje partió)
+> - `arrived_at_destination` → Llegó a la oficina de destino (la secretaria del destino confirma)
+> - `delivered` → Entregada al destinatario final
+>
+> ¿Estos estados cubren tu flujo de trabajo? ¿Necesitas algún estado adicional como `returned` o `lost`?
+
+> [!WARNING]
+> **Cambio en base de datos:** `trip_id` en la tabla [packages](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages) pasará de NOT NULL a NULLABLE. Esto es necesario para que las encomiendas puedan existir sin un viaje asignado. Las encomiendas existentes no se verán afectadas.
+
+---
+
+## Proposed Changes
+
+### Backend — Modelo y Schema de Package
+
+#### [MODIFY] [package.py](file:///home/iden/Desktop/trans-comarapa-app/backend/models/package.py)
+- Hacer `trip_id` nullable: `Column(Integer, ForeignKey('trips.id'), nullable=True)`
+- Cambiar `status` default de `"registered"` a `"registered_at_office"`
+
+#### [MODIFY] [package.py](file:///home/iden/Desktop/trans-comarapa-app/backend/schemas/package.py)
+- `PackageBase.trip_id` → `Optional[int] = Field(None, ...)`
+- `PackageCreate.trip_id` → ya no será obligatorio
+- Agregar `PackageAssignTrip` schema: `trip_id: int`
+- Agregar `PackageStatusUpdate` schema: `new_status: str, changed_by_user_id: Optional[int]`
+- [PackageSummary](file:///home/iden/Desktop/trans-comarapa-app/backend/schemas/package.py#62-74) → agregar campo `trip_id: Optional[int]` para filtrado en frontend
+
+---
+
+### Backend — Nuevos Endpoints
+
+#### [MODIFY] [package.py](file:///home/iden/Desktop/trans-comarapa-app/backend/routes/package.py)
+
+**Nuevos endpoints:**
+
+| Endpoint | Método | Descripción |
+|---|---|---|
+| `/packages/unassigned` | GET | Lista encomiendas con `trip_id = NULL` (estado `registered_at_office`) |
+| `/packages/{id}/assign-trip` | PUT | Asigna `trip_id` y cambia estado a `assigned_to_trip` |
+| `/packages/{id}/unassign-trip` | PUT | Quita `trip_id` y vuelve a `registered_at_office` |
+| `/packages/{id}/update-status` | PUT | Cambia estado con registro en [PackageStateHistory](file:///home/iden/Desktop/trans-comarapa-app/backend/schemas/package_state_history.py#17-24) |
+
+**Modificaciones a endpoints existentes:**
+- `POST /packages` → ya no requiere `trip_id`, estado inicial = `registered_at_office`
+
+---
+
+### Frontend — Servicio y Store
+
+#### [MODIFY] [packageService.js](file:///home/iden/Desktop/trans-comarapa-app/frontend/services/packageService.js)
+- Agregar `getUnassignedPackages()`
+- Agregar `assignPackageToTrip(packageId, tripId)`
+- Agregar `unassignPackageFromTrip(packageId)`
+- Agregar `updatePackageStatus(packageId, newStatus)`
+- Remover validación de `trip_id` en [validatePackageData()](file:///home/iden/Desktop/trans-comarapa-app/frontend/services/packageService.js#349-396)
+
+#### [MODIFY] [packageStore.js](file:///home/iden/Desktop/trans-comarapa-app/frontend/stores/packageStore.js)
+- Agregar acciones: `fetchUnassignedPackages`, `assignToTrip`, `unassignFromTrip`, `updateStatus`
+- Agregar getter `getUnassignedPackages`
+
+---
+
+### Frontend — Página de Packages (Registro)
+
+#### [MODIFY] [index.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/pages/packages/index.vue)
+- Botón "Nueva Encomienda" → abre `PackageRegistrationModal` en vez de navegar a `/packages/new`
+- Importar y usar `PackageRegistrationModal`
+- Agregar filtro visual por estado con badges de colores
+
+#### [MODIFY] [PackageRegistrationModal.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages/PackageRegistrationModal.vue)
+- Remover prop [trip](file:///home/iden/Desktop/trans-comarapa-app/backend/routes/package.py#279-302) y su dependencia → ya no se necesita viaje al registrar
+- Remover campo "Conductor" del formulario
+- `trip_id` y `driver_name` ya no se envían al crear
+- El estado inicial será `registered_at_office`
+- Ajustar validación de `isFormValid` (no requiere trip)
+
+#### [MODIFY] [PackageReceiptModal.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages/PackageReceiptModal.vue)
+- Remover campos de conductor del recibo (se llenará cuando se asigne al viaje)
+- Adaptar para mostrar estado actual
+
+---
+
+### Frontend — Sección de Encomiendas en Trip
+
+#### [MODIFY] [trips/[id].vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/pages/trips/[id].vue)
+- Agregar sección "Encomiendas" debajo del mapa de asientos
+- Mostrar lista de encomiendas asignadas al viaje con detalle
+- Botón "Cargar Encomienda" → abre selector de encomiendas pendientes (`registered_at_office`)
+- Botón para quitar encomienda del viaje (devuelve a `registered_at_office`)
+
+#### [NEW] [TripPackagesSection.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/trips/TripPackagesSection.vue)
+- Componente que muestra las encomiendas asignadas al viaje
+- Lista con: tracking, remitente, destinatario, destino, monto, estado
+- Botón para agregar encomiendas desde las no asignadas
+- Botón para quitar del viaje
+
+#### [NEW] [PackageAssignModal.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages/PackageAssignModal.vue)
+- Modal que muestra encomiendas `registered_at_office` disponibles
+- Filtros por destino, remitente, tracking
+- Checkbox para seleccionar múltiples y asignar al viaje de una vez
+
+---
+
+### Frontend — Tracking Visual
+
+#### [MODIFY] [PackageCard.vue](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages/PackageCard.vue)
+- Agregar badge de estado con colores:
+  - 🟡 `registered_at_office` → Amarillo "En oficina"
+  - 🔵 `assigned_to_trip` → Azul "Asignada a viaje"
+  - 🟠 `in_transit` → Naranja "En tránsito"
+  - 🟢 `arrived_at_destination` → Verde claro "En destino"
+  - ✅ `delivered` → Verde "Entregada"
+
+---
+
+## Verification Plan
+
+### Manual Verification
+
+**Flujo completo a probar por el usuario:**
+
+1. **Registrar encomienda** → Ir a [/packages](file:///home/iden/Desktop/trans-comarapa-app/frontend/components/packages), click "Nueva Encomienda", llenar formulario sin viaje, verificar que se crea con estado `registered_at_office`
+2. **Ver en lista** → La encomienda aparece en la lista con badge amarillo "En oficina"
+3. **Asignar a viaje** → Ir a un trip existente en `/trips/{id}`, en la sección de encomiendas click "Cargar Encomienda", seleccionar la encomienda, verificar que cambia a `assigned_to_trip`
+4. **Quitar del viaje** → Desde el trip, quitar la encomienda, verificar que vuelve a `registered_at_office`
+5. **Cambiar estados** → Verificar que se puede marcar como `arrived_at_destination` y `delivered`
+
+### Automated Tests (Backend)
+
+Ejecutar desde [/home/iden/Desktop/trans-comarapa-app/backend](file:///home/iden/Desktop/trans-comarapa-app/backend):
+
+```bash
+# Tests existentes para verificar que no se rompió nada
+cd /home/iden/Desktop/trans-comarapa-app/backend
+python -m pytest tests/ -v
+```
+
+> [!NOTE]
+> No existen tests unitarios para packages actualmente. Después de implementar, sería ideal agregar tests para los nuevos endpoints, pero lo dejamos como tarea futura para no bloquear esta implementación.

@@ -5,15 +5,10 @@ from schemas.client import Client
 from schemas.trip import Trip
 from schemas.secretary import Secretary
 from schemas.package_item import PackageItemCreate, PackageItemResponse
+from core.enums import PackageStatus
 
-# Valid package statuses
-VALID_STATUSES = [
-    "registered_at_office",
-    "assigned_to_trip", 
-    "in_transit",
-    "arrived_at_destination",
-    "delivered"
-]
+# Valid package statuses (derived from enum)
+VALID_STATUSES = [s.value for s in PackageStatus]
 
 class PackageBase(BaseModel):
     tracking_number: str = Field(..., description="Número de encomienda único", example="003589")

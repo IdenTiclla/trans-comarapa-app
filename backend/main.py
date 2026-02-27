@@ -8,6 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+# Configure logging before anything else
+from core.logging_config import setup_logging
+setup_logging()
+
 from fastapi import FastAPI, Request
 from fastapi.openapi.models import SecurityScheme
 from fastapi.openapi.utils import get_openapi
@@ -19,6 +23,7 @@ from db.base import Base
 from db.session import engine
 from dotenv import load_dotenv
 from api.v1.api import api_router as api_router_v1
+from core.exception_handlers import register_exception_handlers
 
 # Import all models to ensure they are registered with SQLAlchemy
 # Estas importaciones son necesarias para que SQLAlchemy cree las tablas
@@ -63,8 +68,8 @@ def get_rate_limiter():
 
 limiter = get_rate_limiter()
 
-# Create all tables
-Base.metadata.create_all(bind=engine)
+# Table creation is now handled by Alembic migrations.
+# Run: alembic upgrade head (or make db-upgrade)
 
 app = FastAPI(
     title="Trans Comarapa API",
@@ -81,6 +86,9 @@ is_testing = os.getenv("TESTING", "false").lower() == "true"
 if not is_testing:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Register domain exception handlers
+register_exception_handlers(app)
 
 # Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(
@@ -151,4 +159,23 @@ def index():
             "swagger": "/docs",
             "redoc": "/redoc"
         }
+    }
+
+
+@app.get('/health')
+def health_check():
+    """Health check endpoint for monitoring and load balancers."""
+    from sqlalchemy import text
+    from db.session import SessionLocal
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        db_status = "healthy"
+    except Exception:
+        db_status = "unhealthy"
+    return {
+        "status": "ok",
+        "database": db_status,
+        "version": "1.0.0"
     }

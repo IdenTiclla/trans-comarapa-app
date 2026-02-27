@@ -1,0 +1,140 @@
+# Plan: Corregir manejo de sesión expirada en toda la aplicación
+
+## Contexto
+
+Cuando la sesión del usuario expira (access token de 30 min), en lugar de redirigir automáticamente al login, la aplicación muestra mensajes de error como "sesión expirada" en los componentes (ej: al vender boletos o registrar encomiendas). El comportamiento correcto es redirigir al login automáticamente.
+
+### Causa raíz identificada
+
+Se encontraron **3 problemas** que causan este comportamiento:
+
+1. **Bug crítico en backend**: El endpoint `POST /auth/refresh` usa `Depends(get_current_user)` que valida el `access_token` cookie. Cuando el access token expira (30 min), el refresh **siempre falla con 401** porque requiere un access token válido para refrescar — el mecanismo de refresh está roto por diseño. Debería usar la cookie `refresh_token` (válida por 7 días).
+
+2. **Componentes frontend atrapan errores 401**: `TicketSaleModal.vue` y `bookings.vue` capturan errores y muestran mensajes propios ("Sesión expirada", "Redirigiendo al login...") en lugar de dejar que el handler global en `api.js` maneje la redirección.
+
+3. **Plugin interceptor deshabilitado**: `http-interceptor.client.js` está deshabilitado con `return` en línea 15, contiene lógica duplicada con `api.js` y usa `alert()` nativo — genera confusión y código muerto.
+
+---
+
+## Cambios a implementar
+
+### 1. Backend: Arreglar endpoint `/auth/refresh` para usar refresh_token cookie
+
+**Archivo:** `backend/auth/jwt.py`
+
+Crear nueva dependencia `get_refresh_token()` que lea la cookie `refresh_token` en lugar de `access_token`:
+
+```python
+async def get_refresh_token(
+    refresh_token: Optional[str] = Cookie(None),
+) -> str:
+    """Obtiene el refresh token desde la cookie httpOnly."""
+    if refresh_token:
+        return refresh_token
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Refresh token not found",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+```
+
+Crear `get_user_from_refresh_token()` que valide el refresh token y cargue el usuario desde la BD:
+
+```python
+def get_user_from_refresh_token(
+    token: str = Depends(get_refresh_token),
+    db: Session = Depends(get_db)
+):
+    """Valida el refresh token y retorna el usuario asociado."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_token(token, credentials_exception)
+    user = db.query(UserModel).filter(UserModel.email == token_data.email).first()
+    if not user:
+        raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return user
+```
+
+**Archivo:** `backend/routes/auth.py` (línea 212)
+
+Cambiar la dependencia del endpoint refresh:
+```python
+# ANTES:
+def refresh_token(..., current_user = Depends(get_current_user), ...):
+
+# DESPUÉS:
+def refresh_token(..., current_user = Depends(get_user_from_refresh_token), ...):
+```
+
+**Archivo:** `backend/schemas/auth.py`
+
+Verificar que `TokenData` tenga campo `token_type` para distinguir refresh tokens de access tokens (si no existe, agregarlo).
+
+---
+
+### 2. Frontend: Mejorar manejo de errores 401 en `api.js`
+
+**Archivo:** `frontend/utils/api.js`
+
+- Cuando el refresh falla y se redirige a login, evitar que el error se propague a los componentes que lo invocaronthat
+- Considerar no re-lanzar el error después de `navigateTo('/login')` para que los componentes no muestren mensajes innecesarios
+- El flujo debe ser: 401 → intento de refresh → si falla → redirect a login (sin que el componente vea nada)
+
+---
+
+### 3. Frontend: Corregir componentes que manejan 401 incorrectamente
+
+**Archivos a modificar:**
+- `frontend/components/tickets/TicketSaleModal.vue` (~línea 590-615)
+- `frontend/pages/secretary/bookings.vue` (~línea 1244-1258)
+
+Eliminar el manejo especial de "Sesión expirada" en los catch blocks. Ejemplo actual:
+
+```javascript
+// ELIMINAR este tipo de manejo:
+if (error.message?.includes('Sesión expirada')) {
+    errorMessage.value = 'Redirigiendo al login...'
+}
+```
+
+El `api.js` ya se encarga de redirigir al login automáticamente; los componentes no deben interceptar este flujo de sesión expirada.
+
+---
+
+### 4. Frontend: Eliminar plugin duplicado
+
+**Archivo a eliminar:** `frontend/plugins/http-interceptor.client.js`
+
+Este plugin está deshabilitado (tiene `return` en línea 15), contiene código muerto con `alert()` nativo, y su lógica ya está implementada (y mejorada) en `utils/api.js`. Eliminarlo para evitar confusión.
+
+---
+
+## Archivos afectados (resumen)
+
+| Archivo | Acción |
+|---------|--------|
+| `backend/auth/jwt.py` | Agregar `get_refresh_token()` y `get_user_from_refresh_token()` |
+| `backend/routes/auth.py` | Cambiar dependencia del endpoint refresh |
+| `backend/schemas/auth.py` | Verificar/agregar `token_type` en `TokenData` |
+| `frontend/utils/api.js` | Mejorar flujo para no propagar error post-redirect |
+| `frontend/components/tickets/TicketSaleModal.vue` | Eliminar manejo de "Sesión expirada" |
+| `frontend/pages/secretary/bookings.vue` | Eliminar manejo de "Sesión expirada" |
+| `frontend/plugins/http-interceptor.client.js` | Eliminar archivo |
+
+---
+
+## Plan de verificación
+
+1. Iniciar sesión como secretaria (`secretary1@transcomarapa.com` / `123456`)
+2. Reducir temporalmente `JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1` en backend `.env` para probar
+3. Esperar 1 minuto a que expire el access token
+4. Intentar crear un boleto o registrar una encomienda
+5. **Resultado esperado**: El refresh token (7 días) renueva la sesión automáticamente y la operación se completa sin interrupción
+6. Cerrar sesión manualmente, esperar a que ambos tokens expiren, y verificar que al hacer cualquier acción se redirige a `/login` sin mensajes de error
+7. Verificar que login/logout normales siguen funcionando
+8. Restaurar `JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30` después de las pruebas

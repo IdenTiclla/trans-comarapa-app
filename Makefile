@@ -183,4 +183,21 @@ test-watch: ## Ejecutar pruebas en modo observador
 
 test-coverage: ## Generar reporte de cobertura de pruebas
 	@echo "📊  Generando reporte de cobertura..."
-	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage 
+	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage
+
+# ── Database Migrations ──────────────────────────────────────────────
+db-migrate: ## Generar nueva migración Alembic (autogenerate)
+	@echo "🔄  Generando migración..."
+	docker-compose -f $(COMPOSE_FILE) exec backend alembic revision --autogenerate -m "$(msg)"
+
+db-upgrade: ## Aplicar migraciones pendientes
+	@echo "⬆️  Aplicando migraciones..."
+	docker-compose -f $(COMPOSE_FILE) exec backend alembic upgrade head
+
+db-downgrade: ## Revertir última migración
+	@echo "⬇️  Revirtiendo migración..."
+	docker-compose -f $(COMPOSE_FILE) exec backend alembic downgrade -1
+
+db-history: ## Ver historial de migraciones
+	@echo "📜  Historial de migraciones:"
+	docker-compose -f $(COMPOSE_FILE) exec backend alembic history --verbose 

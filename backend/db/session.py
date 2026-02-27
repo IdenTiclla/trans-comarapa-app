@@ -28,8 +28,14 @@ if "localhost" not in DATABASE_URL and "your-database-url" in DATABASE_URL.lower
     sys.exit(1)
 
 try:
-    # Crear el motor de base de datos
-    engine = create_engine(DATABASE_URL)
+    # Crear el motor de base de datos con pool config
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+        pool_recycle=1800,
+    )
     
     # Probar la conexión inmediatamente
     with engine.connect() as connection:
