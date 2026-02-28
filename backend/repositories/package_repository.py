@@ -24,6 +24,7 @@ class PackageRepository(BaseRepository[Package]):
             joinedload(Package.recipient),
             joinedload(Package.trip),
             joinedload(Package.secretary),
+            joinedload(Package.state_history),
         )
 
     def get_by_id_eager(self, package_id: int) -> Optional[Package]:

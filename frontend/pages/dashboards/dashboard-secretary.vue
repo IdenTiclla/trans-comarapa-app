@@ -26,19 +26,6 @@
                 <span class="font-medium">{{ getCurrentDate() }}</span>
               </client-only>
             </div>
-            <div class="flex items-center space-x-2">
-              <button class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 01.75 0z" />
-                </svg>
-              </button>
-              <button class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -271,52 +258,6 @@
             </div>
           </div>
 
-          <!-- User Information -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-              <h2 class="text-xl font-bold text-gray-900">Información del Usuario</h2>
-            </div>
-            <div class="p-6">
-              <client-only>
-                <div class="space-y-4">
-                  <div class="flex items-center space-x-3">
-                    <div class="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm text-gray-600 font-medium">Nombre</p>
-                      <p class="font-semibold text-gray-900 truncate">{{ userInfo.firstname }} {{ userInfo.lastname }}</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <div class="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                      </svg>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm text-gray-600 font-medium">Rol</p>
-                      <p class="font-semibold text-gray-900 capitalize truncate">{{ userInfo.role }}</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <div class="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm text-gray-600 font-medium">Email</p>
-                      <p class="font-semibold text-gray-900 text-sm truncate">{{ userInfo.email }}</p>
-                    </div>
-                  </div>
-                </div>
-              </client-only>
-            </div>
-          </div>
-
           <!-- Recent Activity -->
           <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
             <div class="bg-orange-50 px-6 py-4 border-b border-gray-200">
@@ -353,18 +294,26 @@
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
+
+    <!-- Modals -->
+    <PackageRegistrationModal
+      :show-modal="showRegistrationModal"
+      @close="closeRegistrationModal"
+      @package-registered="onPackageRegistered"
+    />
   </div>
+</div>
 </template>
 
 <script setup>
 import { useAuthStore } from '~/stores/auth'
 import { useStatsStore } from '~/stores/statsStore'
 import { useRouter } from 'vue-router'
-import { computed, reactive, ref, onMounted, onBeforeUnmount, markRaw } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import PackageRegistrationModal from '~/components/packages/PackageRegistrationModal.vue'
 
 // Obtener información del usuario autenticado
 const authStore = useAuthStore()
@@ -372,65 +321,24 @@ const statsStore = useStatsStore()
 const router = useRouter()
 const userInfo = computed(() => authStore.user || {})
 
+// Modals state
+const showRegistrationModal = ref(false)
+
+const closeRegistrationModal = () => {
+  showRegistrationModal.value = false
+}
+
+const onPackageRegistered = (_pkg) => {
+  // Recargar estadísticas después de registrar
+  loadStats()
+}
+
 // Computed properties for stats display
 const ticketStatsDisplay = computed(() => statsStore.getTicketStatsData)
 const packageStatsDisplay = computed(() => statsStore.getPackageStatsData)
 const tripStatsDisplay = computed(() => statsStore.getTripStatsData)
 const salesSummaryDisplay = computed(() => statsStore.getSalesSummaryData)
 
-// Iconos para las tarjetas de estadísticas
-const icons = reactive({
-  ticketIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-      </svg>
-    `)
-  },
-  moneyIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    `)
-  },
-  packageIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-      </svg>
-    `)
-  },
-  busIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path d="M8 11V6.5m0 4.5v4.5m0-4.5h8m-8 0a4 4 0 110-8h8a4 4 0 110 8m-8 0a4 4 0 100 8h8a4 4 0 100-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-      </svg>
-    `)
-  },
-  searchIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    `)
-  },
-  reportIcon: {
-    template: markRaw(`
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    `)
-  }
-})
-
-// Acciones rápidas para secretarias
-const quickActions = [
-  { id: 'new-ticket', label: 'Vender Boletos', icon: icons.ticketIcon },
-  { id: 'new-package', label: 'Nuevo Paquete', icon: icons.packageIcon },
-  { id: 'search-client', label: 'Buscar Cliente', icon: icons.searchIcon },
-  { id: 'daily-report', label: 'Reporte Diario', icon: icons.reportIcon }
-]
 
 // Manejar acciones rápidas
 const handleQuickAction = (actionId) => {
@@ -439,7 +347,7 @@ const handleQuickAction = (actionId) => {
       router.push('/trips')
       break
     case 'new-package':
-      router.push('/packages/new')
+      showRegistrationModal.value = true
       break
     case 'search-client':
       router.push('/clients')
@@ -465,19 +373,21 @@ const loadStats = async () => {
   await statsStore.fetchDashboardStats()
 }
 
+let statsInterval = null
+
 // Cargar estadísticas al montar el componente
 onMounted(() => {
   loadStats()
 
   // Actualizar estadísticas cada 5 minutos
-  const statsInterval = setInterval(() => {
+  statsInterval = setInterval(() => {
     loadStats()
   }, 5 * 60 * 1000)
+})
 
-  // Limpiar intervalo al desmontar
-  onBeforeUnmount(() => {
-    clearInterval(statsInterval)
-  })
+// Limpiar intervalo al desmontar
+onBeforeUnmount(() => {
+  if (statsInterval) clearInterval(statsInterval)
 })
 
 // Definir la metadata de la página

@@ -3,7 +3,7 @@ This module defines Pydantic schemas for Trip.
 Includes examples and field descriptions.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 from datetime import datetime, timedelta
 from schemas.driver import Driver as DriverSchema
@@ -14,13 +14,13 @@ from schemas.secretary import Secretary as SecretarySchema
 
 # Base model with common attributes
 class TripBase(BaseModel):
-    trip_datetime: datetime = Field(..., description="Trip date and time (YYYY-MM-DD HH:MM:SS)", example="2023-10-01 14:30:00")
-    driver_id: Optional[int] = Field(None, description="Driver identifier", example=1)
-    assistant_id: Optional[int] = Field(None, description="Assistant identifier", example=2)
-    bus_id: int = Field(..., description="Bus identifier", example=3, gt=0)
-    route_id: int = Field(..., description="Route identifier", example=4, gt=0)
-    status: Optional[str] = Field('scheduled', description="Trip status (e.g., scheduled, in_progress, completed, cancelled)", example="scheduled")
-    secretary_id: int = Field(..., description="Secretary identifier", example=5, gt=0)
+    trip_datetime: datetime = Field(..., description="Trip date and time (YYYY-MM-DD HH:MM:SS)", json_schema_extra={"example": "2023-10-01 14:30:00"})
+    driver_id: Optional[int] = Field(None, description="Driver identifier", json_schema_extra={"example": 1})
+    assistant_id: Optional[int] = Field(None, description="Assistant identifier", json_schema_extra={"example": 2})
+    bus_id: int = Field(..., description="Bus identifier", json_schema_extra={"example": 3}, gt=0)
+    route_id: int = Field(..., description="Route identifier", json_schema_extra={"example": 4}, gt=0)
+    status: Optional[str] = Field('scheduled', description="Trip status (e.g., scheduled, in_progress, completed, cancelled)", json_schema_extra={"example": "scheduled"})
+    secretary_id: int = Field(..., description="Secretary identifier", json_schema_extra={"example": 5}, gt=0)
     
     @field_validator('driver_id')
     @classmethod
@@ -100,13 +100,11 @@ class TripCreate(TripBase):
 
 # Schema for reading trip details; includes id and ORM mode
 class Trip(TripBase):
-    id: int = Field(..., description="Trip identifier", example=1)
+    id: int = Field(..., description="Trip identifier", json_schema_extra={"example": 1})
     driver: Optional[DriverSchema] = Field(None, description="Driver details")
     assistant: Optional[AssistantSchema] = Field(None, description="Assistant details")
     bus: Optional[BusSchema] = Field(None, description="Bus details")
     route: Optional[RouteSchema] = Field(default=..., description="Route details")
     secretary: Optional[SecretarySchema] = Field(default=..., description="Secretary details")
 
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

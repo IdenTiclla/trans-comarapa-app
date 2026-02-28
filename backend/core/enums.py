@@ -25,6 +25,12 @@ class PackageStatus(str, Enum):
     DELIVERED = "delivered"
 
 
+class PackagePaymentStatus(str, Enum):
+    """Status of package payment."""
+    PAID_ON_SEND = "paid_on_send"
+    COLLECT_ON_DELIVERY = "collect_on_delivery"
+
+
 class TripStatus(str, Enum):
     """Possible statuses for a bus trip."""
     SCHEDULED = "scheduled"

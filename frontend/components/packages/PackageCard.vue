@@ -1,10 +1,10 @@
 <template>
   <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out">
     <div class="p-5">
-      <div class="flex justify-between items-start mb-3">
-        <h3 class="text-lg font-semibold text-gray-800">Encomienda #{{ pkg.id }}</h3>
-        <span :class="statusClass" class="px-3 py-1 text-xs font-semibold rounded-full">
-          {{ statusText }}
+      <div class="flex justify-between items-start mb-3 cursor-pointer group" @click="$emit('viewPackage', pkg.id)">
+        <h3 class="text-lg font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">Encomienda #{{ pkg.tracking_number || pkg.id }}</h3>
+        <span :class="[getStatusBg(pkg.status), getStatusText(pkg.status)]" class="px-3 py-1 text-xs font-semibold rounded-full border border-opacity-20 border-gray-400">
+          {{ getStatusLabel(pkg.status) }}
         </span>
       </div>
 
@@ -37,9 +37,21 @@
           <strong class="font-medium text-gray-700">Monto Total:</strong>
           <p>Bs. {{ pkg.total_amount || '0.00' }}</p>
         </div>
+        <div>
+          <strong class="font-medium text-gray-700">Pago:</strong>
+          <p :class="[getPaymentStatusTextClass(pkg.payment_status), 'font-semibold']">
+            {{ getPaymentStatusLabel(pkg.payment_status) }}
+          </p>
+        </div>
       </div>
 
       <div class="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end sm:space-x-3 space-y-2 sm:space-y-0">
+        <AppButton v-if="pkg.status === 'arrived_at_destination'" size="sm" class="bg-indigo-600 text-white hover:bg-indigo-700 font-medium" @click="$emit('deliverPackage', pkg.id)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          Entregar
+        </AppButton>
         <AppButton size="sm" variant="outline" @click="$emit('viewPackage', pkg.id)">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -66,7 +78,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { usePackageStatus } from '~/composables/usePackageStatus'
 
+const { getStatusLabel, getStatusBg, getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass } = usePackageStatus()
 
 const props = defineProps({
   pkg: {
@@ -75,29 +89,9 @@ const props = defineProps({
   },
 });
 
-defineEmits(['viewPackage', 'editPackage', 'deletePackage']);
+defineEmits(['viewPackage', 'editPackage', 'deletePackage', 'deliverPackage']);
 
-const statusClass = computed(() => {
-  const classes = {
-    registered_at_office: 'bg-yellow-100 text-yellow-800',
-    assigned_to_trip: 'bg-blue-100 text-blue-800',
-    in_transit: 'bg-orange-100 text-orange-800',
-    arrived_at_destination: 'bg-emerald-100 text-emerald-800',
-    delivered: 'bg-green-100 text-green-800',
-  };
-  return classes[props.pkg.status] || 'bg-gray-100 text-gray-800';
-});
 
-const statusText = computed(() => {
-  const texts = {
-    registered_at_office: '🟡 En oficina',
-    assigned_to_trip: '🔵 Asignada a viaje',
-    in_transit: '🟠 En tránsito',
-    arrived_at_destination: '🟢 En destino',
-    delivered: '✅ Entregada',
-  };
-  return texts[props.pkg.status] || props.pkg.status || 'Desconocido';
-});
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';

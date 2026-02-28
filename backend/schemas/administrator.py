@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from typing import Optional
 from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
@@ -21,8 +21,4 @@ class Administrator(PersonSchema, AdministratorBase):
     """
     # Campos específicos de Administrator en la respuesta (si los hubiera)
 
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
-        # Excluir el campo user para evitar la recursión
-        exclude = {"user"}
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

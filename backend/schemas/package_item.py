@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 
 class PackageItemBase(BaseModel):
@@ -29,5 +29,4 @@ class PackageItemResponse(PackageItemBase):
     id: int
     package_id: int
 
-    class Config:
-        from_attributes = True 
+    model_config = ConfigDict(from_attributes=True) 

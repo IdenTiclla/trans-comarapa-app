@@ -21,7 +21,7 @@ from auth.jwt import create_access_token
 from models.user import User, UserRole
 
 # Configuración de la base de datos de prueba
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", os.getenv("DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test"))
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test")
 
 @pytest.fixture(scope="session")
 def test_engine():
@@ -72,6 +72,10 @@ def test_user(db_session):
     # Eliminar usuario existente con el mismo email si existe
     existing_user = db_session.query(User).filter(User.email == "test@example.com").first()
     if existing_user:
+        from models.person import Person
+        for p in db_session.query(Person).filter(Person.user_id == existing_user.id).all():
+            db_session.delete(p)
+        db_session.flush()
         db_session.delete(existing_user)
         db_session.commit()
 
@@ -96,6 +100,10 @@ def test_admin(db_session):
     # Eliminar usuario existente con el mismo email si existe
     existing_admin = db_session.query(User).filter(User.email == "admin@example.com").first()
     if existing_admin:
+        from models.person import Person
+        for p in db_session.query(Person).filter(Person.user_id == existing_admin.id).all():
+            db_session.delete(p)
+        db_session.flush()
         db_session.delete(existing_admin)
         db_session.commit()
 

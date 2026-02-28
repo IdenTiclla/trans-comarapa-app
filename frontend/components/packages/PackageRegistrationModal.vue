@@ -277,6 +277,32 @@
                     required
                   />
                 </div>
+
+                <!-- Pago -->
+                <div class="bg-blue-50 p-4 rounded-lg mt-6">
+                  <h4 class="text-lg font-medium text-blue-800 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                    </svg>
+                    Información de Pago
+                  </h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-blue-800 mb-1">Estado de Pago</label>
+                      <select v-model="packageData.payment_status" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="paid_on_send">Pagado al enviar</option>
+                        <option value="collect_on_delivery">Por cobrar</option>
+                      </select>
+                    </div>
+                    <div v-if="packageData.payment_status === 'paid_on_send'">
+                      <label class="block text-sm font-medium text-blue-800 mb-1">Método de Pago</label>
+                      <select v-model="packageData.payment_method" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="cash">Efectivo</option>
+                        <option value="qr">QR</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Columna derecha: Detalles del paquete -->
@@ -442,6 +468,10 @@ const props = defineProps({
   showModal: {
     type: Boolean,
     default: false
+  },
+  tripId: {
+    type: [Number, String],
+    default: null
   }
 })
 
@@ -496,6 +526,8 @@ const packageData = ref({
       unit_price: 0
     }
   ],
+  payment_status: 'paid_on_send',
+  payment_method: 'cash',
   received_confirmation: false
 })
 
@@ -667,17 +699,19 @@ const submitPackage = async () => {
       throw new Error('No se pudo obtener la información del secretario. Verifique que tenga permisos.')
     }
 
-    // Preparar datos del paquete SIN trip_id
+    // Preparar datos del paquete
     const packagePayload = {
       tracking_number: packageData.value.tracking_number,
       total_weight: packageData.value.total_weight || null,
       total_declared_value: packageData.value.total_declared_value || null,
       notes: packageData.value.notes || null,
-      status: 'registered_at_office',
+      status: props.tripId ? 'assigned_to_trip' : 'registered_at_office',
       sender_id: senderData.id,
       recipient_id: recipientData.id,
       secretary_id: secretaryId,
-      // trip_id no se envía — la encomienda se registra sin viaje
+      trip_id: props.tripId ? Number(props.tripId) : null,
+      payment_status: packageData.value.payment_status,
+      payment_method: packageData.value.payment_status === 'paid_on_send' ? packageData.value.payment_method : null,
       items: packageData.value.items.map(item => ({
         quantity: item.quantity,
         description: item.description,
@@ -767,6 +801,8 @@ const resetForm = () => {
     sender: { firstname: '', lastname: '', document_id: '', phone: '' },
     recipient: { firstname: '', lastname: '', document_id: '', phone: '' },
     items: [{ quantity: 1, description: '', unit_price: 0 }],
+    payment_status: 'paid_on_send',
+    payment_method: 'cash',
     received_confirmation: false
   }
   packageNumber.value = trackingNumber

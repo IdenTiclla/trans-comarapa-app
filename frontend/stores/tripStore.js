@@ -26,25 +26,25 @@ export const useTripStore = defineStore('trips', {
           sort_by: params.sortBy,
           sort_direction: params.sortDirection,
         };
-        
+
         const response = await tripService.getTrips(apiParams);
-        
+
         if (response && response.pagination &&
-            typeof response.pagination.total === 'number' &&
-            typeof response.pagination.limit === 'number' &&
-            typeof response.pagination.skip === 'number' &&
-            typeof response.pagination.pages === 'number' &&
-            Array.isArray(response.trips)) {
-          
+          typeof response.pagination.total === 'number' &&
+          typeof response.pagination.limit === 'number' &&
+          typeof response.pagination.skip === 'number' &&
+          typeof response.pagination.pages === 'number' &&
+          Array.isArray(response.trips)) {
+
           this.trips = response.trips;
           this.pagination.totalItems = response.pagination.total;
           this.pagination.itemsPerPage = response.pagination.limit;
-          
+
           if (response.pagination.limit > 0) {
             this.pagination.currentPage = Math.floor(response.pagination.skip / response.pagination.limit) + 1;
           } else {
             // Fallback if limit is 0 or undefined, though API sends it.
-            this.pagination.currentPage = params.page || 1; 
+            this.pagination.currentPage = params.page || 1;
           }
           this.pagination.totalPages = response.pagination.pages;
           this.error = null; // Explicitly clear any previous error
@@ -62,11 +62,11 @@ export const useTripStore = defineStore('trips', {
           console.warn('Unexpected response structure from getTrips. Expected format like {trips: [...], pagination: {total: N, limit: N, skip: N, pages: N}} or an array of trips.', response);
           this.trips = [];
           // Reset pagination if response is not as expected
-          this.pagination = { 
-            totalItems: 0, 
-            totalPages: 1, 
-            currentPage: 1, 
-            itemsPerPage: params.itemsPerPage 
+          this.pagination = {
+            totalItems: 0,
+            totalPages: 1,
+            currentPage: 1,
+            itemsPerPage: params.itemsPerPage
           };
           // Only set error if we actually got a response but it's malformed
           if (response !== null && response !== undefined) {
@@ -77,11 +77,11 @@ export const useTripStore = defineStore('trips', {
         console.error('Error fetching trips:', err);
         this.error = err.data?.detail || err.message || 'Error al cargar los viajes';
         this.trips = [];
-        this.pagination = { 
-          totalItems: 0, 
-          totalPages: 1, 
-          currentPage: 1, 
-          itemsPerPage: params.itemsPerPage 
+        this.pagination = {
+          totalItems: 0,
+          totalPages: 1,
+          currentPage: 1,
+          itemsPerPage: params.itemsPerPage
         };
       } finally {
         this.isLoading = false;
@@ -133,10 +133,10 @@ export const useTripStore = defineStore('trips', {
           itemsPerPage: this.pagination.itemsPerPage,
           sortBy: this.pagination.sortBy,
           sortDirection: this.pagination.sortDirection
-        }); 
+        });
         if (this.currentTrip && this.currentTrip.id === id) {
           // Refetch currentTrip to get the most up-to-date version if viewing detail page
-          await this.fetchTripById(id); 
+          await this.fetchTripById(id);
         }
         return updatedTrip;
       } catch (err) {
@@ -171,6 +171,57 @@ export const useTripStore = defineStore('trips', {
 
     clearCurrentTrip() {
       this.currentTrip = null;
+    },
+
+    async dispatchTrip(id) {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const updatedTrip = await tripService.dispatchTrip(id);
+        if (this.currentTrip && this.currentTrip.id === id) {
+          this.currentTrip = updatedTrip;
+        }
+        return updatedTrip;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Error al despachar el viaje';
+        throw err;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async finishTrip(id) {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const updatedTrip = await tripService.finishTrip(id);
+        if (this.currentTrip && this.currentTrip.id === id) {
+          this.currentTrip = updatedTrip;
+        }
+        return updatedTrip;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Error al terminar el viaje';
+        throw err;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async cancelTrip(id) {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const updatedTrip = await tripService.cancelTrip(id);
+        if (this.currentTrip && this.currentTrip.id === id) {
+          this.currentTrip = updatedTrip;
+        }
+        return updatedTrip;
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Error al cancelar el viaje';
+        throw err;
+      } finally {
+        this.isLoading = false;
+      }
     }
   },
   getters: {

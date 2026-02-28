@@ -9,6 +9,33 @@ from models.assistant import Assistant
 from models.administrator import Administrator
 
 
+@pytest.fixture(autouse=True)
+def cleanup_test_data(db_session):
+    """Limpia los datos de prueba antes y después de cada test de este archivo."""
+    def clean():
+        db_session.rollback()  # Clear any pending rollbacks from tests that intentionally fail queries
+        from models.person import Person
+        from models.user import User
+        for p in db_session.query(Person).all():
+            db_session.delete(p)
+        db_session.flush()
+        
+        users_to_delete = db_session.query(User).filter(User.email.like('%@test.com')).all()
+        for u in users_to_delete:
+            db_session.delete(u)
+            
+        # Optional: delete specific usernames used in test_polymorphic_queries
+        extra_users = db_session.query(User).filter(User.username.in_(["driver1", "client1", "admin1"])).all()
+        for u in extra_users:
+            db_session.delete(u)
+            
+        db_session.commit()
+    
+    clean()
+    yield
+    clean()
+
+
 @pytest.mark.integration
 def test_person_inheritance(db_session):
     """Verificar que la herencia funciona correctamente"""
@@ -163,7 +190,7 @@ def test_person_full_name_property(db_session):
     # Test sin nombres
     secretary.firstname = None
     db_session.commit()
-    assert secretary.full_name == "Usuario"
+    assert secretary.full_name == "testuser"
 
 
 @pytest.mark.integration

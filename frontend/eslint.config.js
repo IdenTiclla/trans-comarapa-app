@@ -1,6 +1,8 @@
 import { defineConfig } from 'eslint/config'
+import pluginVue from 'eslint-plugin-vue'
 
 export default defineConfig([
+    ...pluginVue.configs['flat/recommended'],
     {
         files: ['**/*.{js,ts,vue}'],
         rules: {
@@ -10,6 +12,7 @@ export default defineConfig([
             'no-undef': 'off', // Nuxt auto-imports
             'prefer-const': 'warn',
             'no-var': 'error',
+            'vue/multi-word-component-names': 'off',
         },
     },
 ])

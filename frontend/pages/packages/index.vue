@@ -246,6 +246,7 @@
           @view-package="viewPackage"
           @edit-package="editPackage"
           @delete-package="confirmDeletePackage"
+          @deliver-package="handleDeliverPackage"
         />
       </div>
 
@@ -286,6 +287,14 @@
       @close="showRegistrationModal = false"
       @package-registered="handlePackageRegistered"
     />
+
+    <!-- Modal de entrega de encomienda -->
+    <PackageDeliveryModal
+      :show-modal="showDeliveryModal"
+      :package-data="selectedPackageForDelivery"
+      @close="closeDeliveryModal"
+      @confirm="onDeliverPackageConfirm"
+    />
   </div>
 </template>
 
@@ -295,6 +304,7 @@ import { useRouter } from 'vue-router'
 import { usePackageStore } from '~/stores/packageStore'
 import { debounce } from 'lodash-es'
 import PackageRegistrationModal from '~/components/packages/PackageRegistrationModal.vue'
+import PackageDeliveryModal from '~/components/packages/PackageDeliveryModal.vue'
 
 // Meta
 definePageMeta({
@@ -315,10 +325,12 @@ const currentPage = ref(1)
 const itemsPerPage = ref(12)
 const viewMode = ref('grid')
 const showRegistrationModal = ref(false)
+const showDeliveryModal = ref(false)
+const selectedPackageForDelivery = ref(null)
 
 // Get packages from store
 const packages = computed(() => {
-  const pkgs = packageStore.getAllPackages
+  const pkgs = packageStore.packages || []
   console.log('Computed packages:', pkgs.length, 'packages available')
   return pkgs
 })
@@ -419,7 +431,7 @@ const handleQuickAction = (action) => {
       document.querySelector('input[placeholder*="código"]')?.focus()
       break
     case 'pending-deliveries':
-      statusFilter.value = 'pending'
+      statusFilter.value = 'arrived_at_destination'
       applyFilters()
       break
     case 'reports':
@@ -457,6 +469,26 @@ const confirmDeletePackage = async (id) => {
     await packageStore.deleteExistingPackage(id)
     // The store action should refetch or update the list
   }
+}
+
+// Delivery actions
+const handleDeliverPackage = (id) => {
+  const pkg = packages.value.find(p => p.id === id)
+  if (pkg) {
+    selectedPackageForDelivery.value = pkg
+    showDeliveryModal.value = true
+  }
+}
+
+const closeDeliveryModal = () => {
+  showDeliveryModal.value = false
+  selectedPackageForDelivery.value = null
+}
+
+const onDeliverPackageConfirm = async ({ packageId }) => {
+  closeDeliveryModal()
+  // Refresh packages
+  await packageStore.fetchPackages({ limit: 100 })
 }
 
 // Lifecycle

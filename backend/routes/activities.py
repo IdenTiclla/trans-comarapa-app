@@ -55,11 +55,11 @@ async def get_recent_activities(
         # for act in activities:
         #     activity_dict = act.__dict__ # o usa el esquema para convertir
         #     if act.user:
-        #         activity_dict['user'] = UserSchema.from_orm(act.user)
-        #     activities_response.append(ActivitySchema.from_orm(act))
+        #         activity_dict['user'] = UserSchema.model_validate(act.user)
+        #     activities_response.append(ActivitySchema.model_validate(act))
         # activities = activities_response
 
-        return ActivityListResponse(activities=[ActivitySchema.from_orm(act) for act in activities], total=total_activities_in_query)
+        return ActivityListResponse(activities=[ActivitySchema.model_validate(act) for act in activities], total=total_activities_in_query)
     except Exception as e:
         # Log el error e
         logger.error("Error fetching recent activities: %s", e)
@@ -87,4 +87,4 @@ async def create_activity_endpoint(
     user_id_to_log = current_admin.id if current_admin else activity_in.user_id
     
     db_activity = await log_activity(db, activity_type=activity_in.activity_type, details=activity_in.details, user_id=user_id_to_log)
-    return ActivitySchema.from_orm(db_activity) 
+    return ActivitySchema.model_validate(db_activity) 

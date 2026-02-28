@@ -1,7 +1,8 @@
 <template>
   <button 
     :class="[
-      'px-4 py-2 rounded transition-colors flex items-center justify-center',
+      'rounded transition-colors flex items-center justify-center font-medium focus:outline-none focus:ring-2 focus:ring-offset-2',
+      sizeClasses,
       variantClasses,
       { 'opacity-50 cursor-not-allowed': disabled || loading }
     ]"
@@ -23,7 +24,12 @@ const props = defineProps({
   variant: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary', 'success', 'danger', 'default'].includes(value)
+    validator: (value) => ['primary', 'secondary', 'success', 'danger', 'default', 'outline', 'danger-outline', 'warning'].includes(value)
+  },
+  size: {
+    type: String,
+    default: 'md',
+    validator: (value) => ['sm', 'md', 'lg'].includes(value)
   },
   disabled: {
     type: Boolean,
@@ -37,18 +43,25 @@ const props = defineProps({
 
 defineEmits(['click'])
 
+const sizeClasses = computed(() => {
+  switch (props.size) {
+    case 'sm': return 'px-3 py-1.5 text-sm';
+    case 'lg': return 'px-6 py-3 text-lg';
+    case 'md':
+    default: return 'px-4 py-2 text-base';
+  }
+});
+
 const variantClasses = computed(() => {
   switch (props.variant) {
-    case 'primary':
-      return 'bg-blue-600 hover:bg-blue-700 text-white';
-    case 'secondary':
-      return 'bg-gray-600 hover:bg-gray-700 text-white';
-    case 'success':
-      return 'bg-green-600 hover:bg-green-700 text-white';
-    case 'danger':
-      return 'bg-red-600 hover:bg-red-700 text-white';
-    default:
-      return 'bg-gray-200 hover:bg-gray-300 text-gray-800';
+    case 'primary': return 'bg-blue-600 hover:bg-blue-700 text-white border border-transparent focus:ring-blue-500';
+    case 'secondary': return 'bg-gray-600 hover:bg-gray-700 text-white border border-transparent focus:ring-gray-500';
+    case 'success': return 'bg-green-600 hover:bg-green-700 text-white border border-transparent focus:ring-green-500';
+    case 'danger': return 'bg-red-600 hover:bg-red-700 text-white border border-transparent focus:ring-red-500';
+    case 'warning': return 'bg-yellow-500 hover:bg-yellow-600 text-white border border-transparent focus:ring-yellow-500';
+    case 'outline': return 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 focus:ring-indigo-500';
+    case 'danger-outline': return 'bg-white hover:bg-red-50 text-red-600 border border-red-300 focus:ring-red-500';
+    default: return 'bg-gray-200 hover:bg-gray-300 text-gray-800 border border-transparent focus:ring-gray-500';
   }
 });
 </script>

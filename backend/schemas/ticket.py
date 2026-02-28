@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional, Any, Literal
 from core.enums import TicketState
@@ -8,13 +8,13 @@ from schemas.seat import Seat as SeatSchema
 from schemas.location import Location as LocationSchema
 
 class TicketBase(BaseModel):
-    state: str = Field(..., description="State of the ticket", example="pending")
-    seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
-    client_id: int = Field(..., description="ID of the client", example=1, gt=0)
-    trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
-    destination: Optional[str] = Field(None, description="Name of the destination", example="Terminal Cochabamba")
-    price: float = Field(..., description="Price of the ticket", example=30.0, gt=0)
-    payment_method: str = Field(..., description="Payment method used", example="cash")
+    state: str = Field(..., description="State of the ticket", json_schema_extra={"example": "pending"})
+    seat_id: int = Field(..., description="ID of the seat", json_schema_extra={"example": 1}, gt=0)
+    client_id: int = Field(..., description="ID of the client", json_schema_extra={"example": 1}, gt=0)
+    trip_id: int = Field(..., description="ID of the trip", json_schema_extra={"example": 1}, gt=0)
+    destination: Optional[str] = Field(None, description="Name of the destination", json_schema_extra={"example": "Terminal Cochabamba"})
+    price: float = Field(..., description="Price of the ticket", json_schema_extra={"example": 30.0}, gt=0)
+    payment_method: str = Field(..., description="Payment method used", json_schema_extra={"example": "cash"})
 
     @field_validator('state')
     @classmethod
@@ -24,14 +24,13 @@ class TicketBase(BaseModel):
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TicketCreate(TicketBase):
     """
     Schema for creating a new ticket
     """ 
-    operator_user_id: int = Field(..., description="User ID of the operator (secretary/admin) creating the ticket", example=1, gt=0)
+    operator_user_id: int = Field(..., description="User ID of the operator (secretary/admin) creating the ticket", json_schema_extra={"example": 1}, gt=0)
     pass
 
 class ClientTicketCreate(BaseModel):
@@ -39,9 +38,9 @@ class ClientTicketCreate(BaseModel):
     Simplified schema for creating a ticket through the client endpoint.
     Does not include client_id as it's derived from the path parameter.
     """
-    state: str = Field(..., description="State of the ticket", example="pending")
-    seat_id: int = Field(..., description="ID of the seat", example=1, gt=0)
-    trip_id: int = Field(..., description="ID of the trip", example=1, gt=0)
+    state: str = Field(..., description="State of the ticket", json_schema_extra={"example": "pending"})
+    seat_id: int = Field(..., description="ID of the seat", json_schema_extra={"example": 1}, gt=0)
+    trip_id: int = Field(..., description="ID of the trip", json_schema_extra={"example": 1}, gt=0)
     
     @field_validator('state')
     @classmethod
@@ -59,10 +58,10 @@ class TicketUpdate(BaseModel):
     seat_id: Optional[int] = None
     client_id: Optional[int] = None
     trip_id: Optional[int] = None
-    destination: Optional[str] = Field(None, description="Name of the destination", example="Terminal Cochabamba")
-    price: Optional[float] = Field(default=None, description="Price of the ticket", example=30.0, gt=0)
-    payment_method: Optional[str] = Field(default=None, description="Payment method used", example="cash")
-    secretary_id: Optional[int] = Field(default=None, description="ID of the secretary associated with the ticket", example=1, gt=0)
+    destination: Optional[str] = Field(None, description="Name of the destination", json_schema_extra={"example": "Terminal Cochabamba"})
+    price: Optional[float] = Field(default=None, description="Price of the ticket", json_schema_extra={"example": 30.0}, gt=0)
+    payment_method: Optional[str] = Field(default=None, description="Payment method used", json_schema_extra={"example": "cash"})
+    secretary_id: Optional[int] = Field(default=None, description="ID of the secretary associated with the ticket", json_schema_extra={"example": 1}, gt=0)
 
     @field_validator('state', check_fields=False)
     @classmethod
@@ -74,8 +73,7 @@ class TicketUpdate(BaseModel):
             raise ValueError(f"Invalid ticket state: {v}. Valid states are: {', '.join(valid_states)}")
         return v.lower()
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Ticket(TicketBase):
     """
@@ -89,6 +87,4 @@ class Ticket(TicketBase):
     secretary: SecretarySchema
     seat: SeatSchema
 
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

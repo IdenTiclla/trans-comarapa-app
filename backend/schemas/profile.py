@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 
@@ -8,12 +8,12 @@ class UnifiedProfileResponse(BaseModel):
     Este esquema reemplaza los múltiples endpoints de perfil existentes.
     """
     # Datos básicos del usuario
-    id: int = Field(..., description="User ID", example=1)
-    username: str = Field(..., description="Username", example="johndoe")
-    email: EmailStr = Field(..., description="User's email", example="user@example.com")
-    role: str = Field(..., description="User role", example="client")
-    is_active: bool = Field(..., description="Is user active", example=True)
-    is_admin: bool = Field(..., description="Is user admin", example=False)
+    id: int = Field(..., description="User ID", json_schema_extra={"example": 1})
+    username: str = Field(..., description="Username", json_schema_extra={"example": "johndoe"})
+    email: EmailStr = Field(..., description="User's email", json_schema_extra={"example": "user@example.com"})
+    role: str = Field(..., description="User role", json_schema_extra={"example": "client"})
+    is_active: bool = Field(..., description="Is user active", json_schema_extra={"example": True})
+    is_admin: bool = Field(..., description="Is user admin", json_schema_extra={"example": False})
     created_at: datetime = Field(..., description="Account creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last account update timestamp")
     
@@ -21,13 +21,12 @@ class UnifiedProfileResponse(BaseModel):
     person: Optional[Dict[str, Any]] = Field(None, description="Person data including role-specific fields")
     
     # Campos computados para compatibilidad
-    firstname: Optional[str] = Field(None, description="Person's first name", example="John")
-    lastname: Optional[str] = Field(None, description="Person's last name", example="Doe")
-    phone: Optional[str] = Field(None, description="Person's phone number", example="12345678")
-    birth_date: Optional[date] = Field(None, description="Person's birth date", example="1990-01-01")
+    firstname: Optional[str] = Field(None, description="Person's first name", json_schema_extra={"example": "John"})
+    lastname: Optional[str] = Field(None, description="Person's last name", json_schema_extra={"example": "Doe"})
+    phone: Optional[str] = Field(None, description="Person's phone number", json_schema_extra={"example": "12345678"})
+    birth_date: Optional[date] = Field(None, description="Person's birth date", json_schema_extra={"example": "1990-01-01"})
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProfileUpdateRequest(BaseModel):
     """

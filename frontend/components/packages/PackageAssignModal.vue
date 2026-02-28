@@ -19,11 +19,19 @@
               <h3 class="text-lg font-medium text-white">Cargar Encomiendas al Viaje</h3>
               <p class="text-sm text-indigo-200">Seleccione las encomiendas para cargar al bus</p>
             </div>
-            <button @click="$emit('close')" class="text-white hover:text-gray-200">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div class="flex items-center space-x-4">
+              <button @click="$emit('open-registration')" class="text-xs font-medium bg-white text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded flex items-center shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Registrar Nueva
+              </button>
+              <button @click="$emit('close')" class="text-white hover:text-gray-200">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -139,7 +147,7 @@ const props = defineProps({
   tripId: { type: [Number, String], required: true }
 })
 
-const emit = defineEmits(['close', 'packages-assigned'])
+const emit = defineEmits(['close', 'packages-assigned', 'open-registration'])
 
 const packageStore = usePackageStore()
 const searchQuery = ref('')
@@ -163,7 +171,7 @@ watch(() => props.showModal, async (newVal) => {
 })
 
 const filteredPackages = computed(() => {
-  const packages = packageStore.getUnassignedPackages || []
+  const packages = packageStore.unassignedPackages || []
   if (!searchQuery.value.trim()) return packages
   const term = searchQuery.value.toLowerCase()
   return packages.filter(pkg =>

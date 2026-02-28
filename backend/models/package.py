@@ -19,6 +19,11 @@ class Package(Base):
     # Estados: registered_at_office, assigned_to_trip, in_transit, arrived_at_destination, delivered
     status = Column(String(50), nullable=False, default="registered_at_office")
     
+    # Pago
+    payment_status = Column(String(50), nullable=False, default="paid_on_send")
+    payment_method = Column(String(50), nullable=True)
+
+    
     # Fechas y horarios
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

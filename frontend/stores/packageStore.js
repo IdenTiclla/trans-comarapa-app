@@ -221,6 +221,28 @@ export const usePackageStore = defineStore('packages', () => {
     }
   }
 
+  async function deliverPackage(packageId, paymentMethod, changedByUserId = null) {
+    error.value = null
+    isLoading.value = true
+    try {
+      const result = await packageService.deliverPackage(packageId, paymentMethod, changedByUserId)
+      const idx = packages.value.findIndex(p => p.id === packageId)
+      if (idx !== -1) {
+        packages.value[idx] = { ...packages.value[idx], status: 'delivered', payment_method: result.payment_method || paymentMethod }
+      }
+      if (currentPackage.value?.id === packageId) {
+        currentPackage.value.status = 'delivered'
+        currentPackage.value.payment_method = result.payment_method || paymentMethod
+      }
+      return result
+    } catch (err) {
+      error.value = err.data?.detail || err.message || 'Error al entregar encomienda'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // ── Package items ────────────────────────────────────────
   async function fetchPackageItems(packageId) {
     try {
@@ -349,7 +371,7 @@ export const usePackageStore = defineStore('packages', () => {
     fetchPackages, fetchUnassignedPackages, fetchPackageById, fetchPackageByTrackingNumber,
     createNewPackage, updateExistingPackage, deleteExistingPackage,
     // Trip assignment
-    assignToTrip, unassignFromTrip, updateStatus,
+    assignToTrip, unassignFromTrip, updateStatus, deliverPackage,
     // Items
     fetchPackageItems, addPackageItem, updatePackageItem, deletePackageItem,
     // Filtering

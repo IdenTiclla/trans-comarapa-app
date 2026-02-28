@@ -18,6 +18,7 @@
         @view-package="$emit('viewPackage', $event)"
         @edit-package="$emit('editPackage', $event)"
         @delete-package="$emit('deletePackage', $event)"
+        @deliver-package="$emit('deliverPackage', $event)"
       />
     </div>
 
@@ -31,25 +32,31 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remitente</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Destinatario</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pago</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="pkg in packages" :key="pkg.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="pkg in packages" :key="pkg.id" @click="$emit('viewPackage', pkg.id)" class="hover:bg-gray-50 transition-colors cursor-pointer">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ pkg.tracking_code || `#${pkg.id}` }}
+                {{ pkg.tracking_number || pkg.tracking_code || `#${pkg.id}` }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ pkg.sender_name || 'N/A' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ pkg.receiver_name || 'N/A' }}
+                {{ pkg.recipient_name || pkg.receiver_name || 'N/A' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="getStatusClass(pkg.status)" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
-                  {{ getStatusText(pkg.status) }}
+                <span :class="[getStatusBg(pkg.status), getStatusText(pkg.status)]" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-opacity-20 border-gray-400">
+                  {{ getStatusLabel(pkg.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span :class="[getPaymentStatusBg(pkg.payment_status), getPaymentStatusTextClass(pkg.payment_status)]" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-opacity-20 border-gray-400">
+                  {{ getPaymentStatusLabel(pkg.payment_status) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -61,7 +68,17 @@
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex items-center justify-end space-x-2">
                   <button
-                    @click="$emit('viewPackage', pkg.id)"
+                    v-if="pkg.status === 'arrived_at_destination'"
+                    @click.stop="$emit('deliverPackage', pkg.id)"
+                    class="text-indigo-600 hover:text-indigo-900 p-1 rounded-md hover:bg-indigo-50 transition-colors"
+                    title="Entregar"
+                  >
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button
+                    @click.stop="$emit('viewPackage', pkg.id)"
                     class="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors"
                     title="Ver detalles"
                   >
@@ -71,7 +88,8 @@
                     </svg>
                   </button>
                   <button
-                    @click="$emit('editPackage', pkg.id)"
+                    v-if="pkg.status === 'registered_at_office'"
+                    @click.stop="$emit('editPackage', pkg.id)"
                     class="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors"
                     title="Editar"
                   >
@@ -80,7 +98,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="$emit('deletePackage', pkg.id)"
+                    @click.stop="$emit('deletePackage', pkg.id)"
                     class="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors"
                     title="Eliminar"
                   >
@@ -165,6 +183,9 @@
 
 <script setup>
 import PackageCard from './PackageCard.vue';
+import { usePackageStatus } from '~/composables/usePackageStatus'
+
+const { getStatusLabel, getStatusBg, getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } = usePackageStatus()
 
 const props = defineProps({
   packages: {
@@ -182,7 +203,7 @@ const props = defineProps({
   }
 });
 
-defineEmits(['viewPackage', 'editPackage', 'deletePackage']);
+defineEmits(['viewPackage', 'editPackage', 'deletePackage', 'deliverPackage']);
 
 // Helper functions for table view
 const formatDate = (dateString) => {
@@ -195,25 +216,7 @@ const formatDate = (dateString) => {
   })
 }
 
-const getStatusText = (status) => {
-  const statusMap = {
-    'pending': 'Pendiente',
-    'in_transit': 'En Tránsito',
-    'delivered': 'Entregado',
-    'cancelled': 'Cancelado'
-  }
-  return statusMap[status] || status
-}
 
-const getStatusClass = (status) => {
-  const statusClasses = {
-    'pending': 'bg-yellow-100 text-yellow-800',
-    'in_transit': 'bg-blue-100 text-blue-800',
-    'delivered': 'bg-green-100 text-green-800',
-    'cancelled': 'bg-red-100 text-red-800'
-  }
-  return statusClasses[status] || 'bg-gray-100 text-gray-800'
-}
 </script>
 
 <style scoped>

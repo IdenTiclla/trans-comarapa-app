@@ -11,8 +11,9 @@ from typing import List, Dict
 from db.session import get_db
 from schemas.package import (
     PackageResponse, PackageCreate, PackageUpdate, PackageSummary,
-    PackageAssignTrip, PackageStatusUpdate,
+    PackageAssignTrip, PackageStatusUpdate, PackageDeliverRequest
 )
+
 from schemas.package_item import PackageItemCreate, PackageItemResponse, PackageItemUpdate
 from services.package_service import PackageService
 
@@ -105,6 +106,15 @@ async def update_package_status(
 ):
     """Update package status."""
     return service.update_status(package_id, status_update)
+
+
+@router.put("/{package_id}/deliver", response_model=PackageResponse)
+async def deliver_package(
+    package_id: int, deliver_data: PackageDeliverRequest,
+    service: PackageService = Depends(get_service),
+):
+    """Deliver a package and handle payment method if needed."""
+    return service.deliver_package(package_id, deliver_data.payment_method, deliver_data.changed_by_user_id)
 
 
 # ── Package items ────────────────────────────────────────────────────

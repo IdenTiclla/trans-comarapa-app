@@ -14,18 +14,20 @@ from models.secretary import Secretary
 from models.client import Client
 from models.seat import Seat
 from models.ticket import Ticket
+from models.ticket_state_history import TicketStateHistory
 from models.user import User, UserRole
 
 @pytest.fixture
 def setup_ticket_data(db_session):
     """Configura datos para pruebas de boletos."""
     # Limpiar datos existentes
+    db_session.query(TicketStateHistory).delete()
     db_session.query(Ticket).delete()
     db_session.query(Trip).delete()
-    db_session.query(Driver).delete()
-    db_session.query(Assistant).delete()
-    db_session.query(Secretary).delete()
-    db_session.query(Client).delete()
+    from models.person import Person
+    for p in db_session.query(Person).all():
+        db_session.delete(p)
+    db_session.flush()
     db_session.query(Seat).delete()
     db_session.query(Bus).delete()
     db_session.query(Route).delete()
@@ -150,6 +152,7 @@ def setup_ticket_data(db_session):
     )
 
     db_session.add_all([driver, assistant, secretary, client])
+    db_session.flush()
 
     # Crear bus
     bus = Bus(
@@ -166,7 +169,9 @@ def setup_ticket_data(db_session):
         seat = Seat(
             seat_number=i,
             bus_id=bus.id,
-            deck="lower"
+            deck="FIRST",
+            row=(i-1)//4 + 1,
+            column=(i-1)%4 + 1
         )
         seats.append(seat)
 
@@ -206,11 +211,13 @@ def test_create_ticket(db_session, setup_ticket_data, admin_token, client):
             "seat_id": data["seats"][0].id,
             "client_id": data["client"].id,
             "trip_id": data["trip"].id,
-            "secretary_id": data["secretary"].id
+            "payment_method": "cash",
+            "price": 50.0,
+            "operator_user_id": data["secretary"].user_id
         }
     )
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
     ticket_data = response.json()
     assert ticket_data["state"] == "pending"
     assert ticket_data["seat_id"] == data["seats"][0].id
@@ -228,7 +235,9 @@ def test_create_duplicate_ticket(db_session, setup_ticket_data, admin_token, cli
         seat_id=data["seats"][0].id,
         client_id=data["client"].id,
         trip_id=data["trip"].id,
-        secretary_id=data["secretary"].id
+        secretary_id=data["secretary"].id,
+        price=50.0,
+        payment_method="cash"
     )
     db_session.add(ticket)
     db_session.commit()
@@ -242,11 +251,13 @@ def test_create_duplicate_ticket(db_session, setup_ticket_data, admin_token, cli
             "seat_id": data["seats"][0].id,
             "client_id": data["client"].id,
             "trip_id": data["trip"].id,
-            "secretary_id": data["secretary"].id
+            "payment_method": "cash",
+            "price": 50.0,
+            "operator_user_id": data["secretary"].user_id
         }
     )
 
-    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.status_code == status.HTTP_409_CONFLICT, response.json()
 
 @pytest.mark.unit
 def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client):
@@ -259,7 +270,9 @@ def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client)
         seat_id=data["seats"][0].id,
         client_id=data["client"].id,
         trip_id=data["trip"].id,
-        secretary_id=data["secretary"].id
+        secretary_id=data["secretary"].id,
+        price=50.0,
+        payment_method="cash"
     )
     db_session.add(ticket)
     db_session.commit()
@@ -273,7 +286,9 @@ def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client)
             "seat_id": data["seats"][0].id,
             "client_id": data["client"].id,
             "trip_id": data["trip"].id,
-            "secretary_id": data["secretary"].id
+            "payment_method": "cash",
+            "price": 50.0,
+            "operator_user_id": data["secretary"].user_id
         }
     )
 
@@ -292,7 +307,9 @@ def test_get_ticket(db_session, setup_ticket_data, admin_token, client):
         seat_id=data["seats"][0].id,
         client_id=data["client"].id,
         trip_id=data["trip"].id,
-        secretary_id=data["secretary"].id
+        secretary_id=data["secretary"].id,
+        price=50.0,
+        payment_method="cash"
     )
     db_session.add(ticket)
     db_session.commit()

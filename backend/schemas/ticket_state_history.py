@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -8,8 +8,7 @@ class TicketStateHistoryBase(BaseModel):
     new_state: str
     changed_by_user_id: Optional[int] = Field(default=None, gt=0)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TicketStateHistoryCreate(TicketStateHistoryBase):
     pass

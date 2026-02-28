@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from schemas.location import Location
 from schemas.route_schedule import RouteSchedule as RouteScheduleSchema
@@ -6,9 +6,9 @@ from schemas.route_schedule import RouteSchedule as RouteScheduleSchema
 class RouteBase(BaseModel):
     origin_location_id: int = Field(..., description="ID of the origin location")
     destination_location_id: int = Field(..., description="ID of the destination location")
-    distance: float = Field(..., gt=0, description="Distance in kilometers", example=240.5)
-    duration: float = Field(..., gt=0, description="Duration in hours", example=4.5)
-    price: float = Field(..., gt=0, description="Price in bolivianos", example=35.0)
+    distance: float = Field(..., gt=0, description="Distance in kilometers", json_schema_extra={"example": 240.5})
+    duration: float = Field(..., gt=0, description="Duration in hours", json_schema_extra={"example": 4.5})
+    price: float = Field(..., gt=0, description="Price in bolivianos", json_schema_extra={"example": 35.0})
 
 class RouteCreate(RouteBase):
     """
@@ -34,8 +34,7 @@ class Route(RouteBase):
     origin_location: Location
     destination_location: Location
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RouteWithSchedules(Route):
     schedules: List[RouteScheduleSchema] = []

@@ -156,12 +156,31 @@
                 </div>
               </div>
 
-              <!-- Estado -->
-              <div class="flex items-center">
-                <span class="text-blue-800 font-bold w-28 text-base">Estado:</span>
-                <div class="flex-1 relative">
-                  <span class="bg-white pr-2 relative z-10 font-medium">{{ getStatusLabel(packageData.status) }}</span>
-                  <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
+              <!-- Estado y Pago -->
+              <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center flex-1">
+                  <span class="text-blue-800 font-bold w-28 text-base">Estado:</span>
+                  <div class="flex-1 relative">
+                    <span class="bg-white pr-2 relative z-10 font-medium">{{ getStatusLabel(packageData.status) }}</span>
+                    <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
+                  </div>
+                </div>
+                <div class="flex items-center flex-1">
+                  <span class="text-blue-800 font-bold w-16 text-base">Pago:</span>
+                  <div class="flex-1 relative">
+                    <span class="bg-white pr-2 relative z-10 font-medium whitespace-nowrap">
+                      <template v-if="packageData.payment_status === 'paid_on_send'">
+                        Pagado al enviar ({{ packageData.payment_method === 'cash' ? 'Efectivo' : 'QR' }})
+                      </template>
+                      <template v-else-if="packageData.payment_status === 'collect_on_delivery'">
+                        Por cobrar en destino
+                      </template>
+                      <template v-else>
+                        No especificado
+                      </template>
+                    </span>
+                    <div class="absolute inset-x-0 bottom-0 border-b-2 border-dotted border-gray-400"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -285,6 +304,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { usePersonData } from '~/composables/usePersonData'
+import { usePackageStatus } from '~/composables/usePackageStatus'
 
 const props = defineProps({
   showModal: {
@@ -310,17 +330,7 @@ const getRecipientName = (recipient) => {
   return getEffectiveName(recipient)
 }
 
-// Status label helper
-const getStatusLabel = (status) => {
-  const labels = {
-    registered_at_office: 'Registrada en oficina',
-    assigned_to_trip: 'Asignada a viaje',
-    in_transit: 'En tránsito',
-    arrived_at_destination: 'En destino',
-    delivered: 'Entregada',
-  }
-  return labels[status] || status || 'Registrada en oficina'
-}
+const { getStatusLabel } = usePackageStatus()
 const packageNumber = ref('000000')
 
 // Fecha actual

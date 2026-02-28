@@ -24,8 +24,17 @@
       </span>
     </template>
     <template v-else>
-      <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-gray-200">
+      <span v-if="tripStatus === 'departed' || tripStatus === 'en_route'" class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-blue-200">
+        <span>🚌</span> En Ruta
+      </span>
+      <span v-else-if="tripStatus === 'arrived' || tripStatus === 'completed'" class="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-gray-200">
         <span>🏁</span> Finalizado
+      </span>
+      <span v-else-if="tripStatus === 'cancelled'" class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-red-200">
+        <span>❌</span> Cancelado
+      </span>
+      <span v-else class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-orange-200">
+        <span>⚠️</span> Demorado
       </span>
     </template>
   </div>
@@ -94,9 +103,26 @@
 
     <!-- Past State -->
     <div v-else class="bg-gray-100 rounded-lg border-2 border-gray-200 p-4 text-center text-gray-500">
-      <div class="text-2xl mb-1">🏁</div>
-      <h3 class="text-base font-bold mb-1">Viaje Finalizado</h3>
-      <p class="text-xs">Este viaje ya ha partido.</p>
+      <template v-if="tripStatus === 'departed' || tripStatus === 'en_route'">
+        <div class="text-2xl mb-1 text-blue-500">🚌</div>
+        <h3 class="text-base font-bold mb-1 text-blue-600">En Ruta</h3>
+        <p class="text-xs text-blue-400">Este viaje ha partido.</p>
+      </template>
+      <template v-else-if="tripStatus === 'arrived' || tripStatus === 'completed'">
+        <div class="text-2xl mb-1">🏁</div>
+        <h3 class="text-base font-bold mb-1">Viaje Finalizado</h3>
+        <p class="text-xs">Este viaje ha concluido.</p>
+      </template>
+      <template v-else-if="tripStatus === 'cancelled'">
+        <div class="text-2xl mb-1 text-red-500">❌</div>
+        <h3 class="text-base font-bold mb-1 text-red-600">Cancelado</h3>
+        <p class="text-xs text-red-400">Este viaje fue cancelado.</p>
+      </template>
+      <template v-else>
+        <div class="text-2xl mb-1 text-orange-500">⚠️</div>
+        <h3 class="text-base font-bold mb-1 text-orange-600">Demorado</h3>
+        <p class="text-xs text-orange-400">El viaje está retrasado.</p>
+      </template>
     </div>
 
     <!-- Almost Time Warning -->
@@ -124,6 +150,10 @@ const props = defineProps({
   compact: {
     type: Boolean,
     default: false
+  },
+  tripStatus: {
+    type: String,
+    default: ''
   }
 })
 

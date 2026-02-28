@@ -77,14 +77,17 @@ class TestAuthenticationRegression:
 
     def test_unauthorized_access_regression(self, client):
         """Test that unauthorized access is properly blocked - SECURITY REGRESSION"""
-        protected_endpoints = [
-            "/api/v1/auth/me",
-            "/api/v1/auth/logout",
-            "/api/v1/auth/refresh",
+        endpoints = [
+            ("GET", "/api/v1/auth/me"),
+            ("POST", "/api/v1/auth/logout"),
+            ("POST", "/api/v1/auth/refresh"),
         ]
 
-        for endpoint in protected_endpoints:
-            response = client.get(endpoint)
+        for method, endpoint in endpoints:
+            if method == "GET":
+                response = client.get(endpoint)
+            else:
+                response = client.post(endpoint)
             assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Endpoint {endpoint} not properly protected"
 
     def test_invalid_credentials_regression(self, client):

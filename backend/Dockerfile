@@ -15,13 +15,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Instalar dependencias del sistema necesarias
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        pkg-config \
-        default-libmysqlclient-dev \
-        libffi-dev \
-        libssl-dev \
-        netcat-traditional \
+    build-essential \
+    curl \
+    pkg-config \
+    default-libmysqlclient-dev \
+    libffi-dev \
+    libssl-dev \
+    netcat-traditional \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,9 +49,10 @@ EXPOSE 8000
 
 # Crear script de entrada simple
 RUN echo '#!/bin/bash\n\
-sleep 10\n\
-exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+    sleep 10\n\
+    alembic upgrade head\n\
+    exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload\n\
+    ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
@@ -72,8 +73,9 @@ EXPOSE 8000
 
 # Crear script de entrada para producción (sin reload)
 RUN echo '#!/bin/bash\n\
-sleep 10\n\
-exec uvicorn main:app --host 0.0.0.0 --port 8000\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+    sleep 10\n\
+    alembic upgrade head\n\
+    exec uvicorn main:app --host 0.0.0.0 --port 8000\n\
+    ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"] 

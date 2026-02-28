@@ -1,14 +1,14 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 from decimal import Decimal
 
 class LocationBase(BaseModel):
-    name: str = Field(..., min_length=2, max_length=100, description="Location name", example="Terminal Bimodal")
-    latitude: float = Field(..., description="Latitude coordinate", example=-17.783333)
-    longitude: float = Field(..., description="Longitude coordinate", example=-63.182222)
-    address: Optional[str] = Field(None, max_length=200, description="Full address", example="Av. Omar Chávez Ortiz")
-    city: Optional[str] = Field(None, max_length=100, description="City name", example="Santa Cruz de la Sierra")
-    state: Optional[str] = Field(None, max_length=100, description="State/Department name", example="Santa Cruz")
+    name: str = Field(..., min_length=2, max_length=100, description="Location name", json_schema_extra={"example": "Terminal Bimodal"})
+    latitude: float = Field(..., description="Latitude coordinate", json_schema_extra={"example": -17.783333})
+    longitude: float = Field(..., description="Longitude coordinate", json_schema_extra={"example": -63.182222})
+    address: Optional[str] = Field(None, max_length=200, description="Full address", json_schema_extra={"example": "Av. Omar Chávez Ortiz"})
+    city: Optional[str] = Field(None, max_length=100, description="City name", json_schema_extra={"example": "Santa Cruz de la Sierra"})
+    state: Optional[str] = Field(None, max_length=100, description="State/Department name", json_schema_extra={"example": "Santa Cruz"})
     country: str = Field(default="Bolivia", max_length=100, description="Country name")
     postal_code: Optional[str] = Field(None, max_length=10, description="Postal code")
     description: Optional[str] = Field(None, max_length=500, description="Location description")
@@ -57,5 +57,4 @@ class Location(LocationBase):
     """Schema for reading a location"""
     id: int = Field(..., description="Location identifier")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

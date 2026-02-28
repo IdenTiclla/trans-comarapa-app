@@ -43,6 +43,26 @@ export const PACKAGE_STATUS_COLORS = {
   delivered: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', dot: 'bg-green-500' }
 }
 
+export const PACKAGE_PAYMENT_STATUSES = {
+  PAID_ON_SEND: 'paid_on_send',
+  COLLECT_ON_DELIVERY: 'collect_on_delivery'
+}
+
+export const PAYMENT_METHODS = {
+  CASH: 'cash',
+  QR: 'qr'
+}
+
+export const PACKAGE_PAYMENT_STATUS_LABELS = {
+  paid_on_send: 'Pagado al enviar',
+  collect_on_delivery: 'Por cobrar'
+}
+
+export const PAYMENT_METHOD_LABELS = {
+  cash: 'Efectivo',
+  qr: 'QR'
+}
+
 /**
  * Fetches all packages with summary information, optionally with query parameters.
  */
@@ -131,6 +151,19 @@ export const updatePackageStatus = async (packageId, newStatus, changedByUserId 
     method: 'PUT',
     body: {
       new_status: newStatus,
+      changed_by_user_id: changedByUserId
+    },
+  })
+}
+
+/**
+ * Delivers a package with validation of payment method if needed.
+ */
+export const deliverPackage = async (packageId, paymentMethod, changedByUserId = null) => {
+  return apiFetch(`${BASE_PATH}/${packageId}/deliver`, {
+    method: 'PUT',
+    body: {
+      payment_method: paymentMethod,
       changed_by_user_id: changedByUserId
     },
   })
@@ -274,5 +307,11 @@ export default {
   // Constants
   PACKAGE_STATUSES,
   PACKAGE_STATUS_LABELS,
-  PACKAGE_STATUS_COLORS
+  PACKAGE_STATUS_COLORS,
+  PACKAGE_PAYMENT_STATUSES,
+  PAYMENT_METHODS,
+  PACKAGE_PAYMENT_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+
+  deliverPackage
 }

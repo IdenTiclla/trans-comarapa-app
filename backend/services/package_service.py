@@ -207,6 +207,31 @@ class PackageService:
         self.db.refresh(pkg)
         return pkg
 
+    def deliver_package(self, package_id: int, payment_method: str, changed_by_user_id: Optional[int] = None) -> Package:
+        """Deliver a package and handle payment status."""
+        pkg = self.repo.get_by_id_eager(package_id)
+        if not pkg:
+            raise NotFoundException("Encomienda no encontrada")
+
+        # Use state machine for validation
+        validate_transition("package", PACKAGE_TRANSITIONS, pkg.status, "delivered")
+
+        old_status = pkg.status
+        pkg.status = "delivered"
+
+        if pkg.payment_status == "collect_on_delivery":
+            pkg.payment_method = payment_method
+
+        self.repo.log_state_change(
+            package_id=pkg.id,
+            old_state=old_status,
+            new_state="delivered",
+            changed_by_user_id=changed_by_user_id,
+        )
+        self.db.commit()
+        self.db.refresh(pkg)
+        return pkg
+
     # ── Package items ────────────────────────────────────────────────────
 
     def get_items(self, package_id: int) -> list[PackageItem]:
@@ -263,6 +288,10 @@ class PackageService:
     @staticmethod
     def to_summary(pkg: Package) -> PackageSummary:
         """Convert a Package model to a summary schema."""
+        items_preview = []
+        if getattr(pkg, "items", None):
+            items_preview = pkg.items[:5]
+
         return PackageSummary(
             id=pkg.id,
             tracking_number=pkg.tracking_number,
@@ -272,5 +301,8 @@ class PackageService:
             sender_name=f"{pkg.sender.firstname} {pkg.sender.lastname}" if pkg.sender else None,
             recipient_name=f"{pkg.recipient.firstname} {pkg.recipient.lastname}" if pkg.recipient else None,
             trip_id=pkg.trip_id,
+            payment_status=pkg.payment_status,
+            payment_method=pkg.payment_method,
             created_at=pkg.created_at,
+            items=items_preview,
         )

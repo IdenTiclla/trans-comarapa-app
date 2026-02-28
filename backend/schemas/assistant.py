@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from typing import Optional
 from schemas.person import PersonBase, PersonCreate, Person as PersonSchema
 
@@ -7,7 +7,7 @@ class AssistantBase(PersonBase):
     Esquema base para asistentes, hereda de PersonBase.
     """
     # Campos específicos de Assistant (si los hubiera)
-    # certification: Optional[str] = Field(None, description="Assistant's certification", example="First Aid")
+    # certification: Optional[str] = Field(None, description="Assistant's certification", json_schema_extra={"example": "First Aid"})
     pass
 
 class AssistantCreate(PersonCreate, AssistantBase):
@@ -22,8 +22,4 @@ class Assistant(PersonSchema, AssistantBase):
     """
     # Campos específicos de Assistant en la respuesta (si los hubiera)
 
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
-        # Excluir el campo user para evitar la recursión
-        exclude = {"user"}
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

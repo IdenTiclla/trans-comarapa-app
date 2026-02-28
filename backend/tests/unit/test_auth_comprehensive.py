@@ -99,7 +99,7 @@ class TestAuthenticationLogin:
                 "password": ""
             }
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.unit
     def test_login_missing_fields(self, client):
@@ -108,7 +108,7 @@ class TestAuthenticationLogin:
             "/api/v1/auth/login",
             data={"username": "test@example.com"}
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.unit
     def test_login_cookies_set(self, client, test_user):
@@ -360,7 +360,7 @@ class TestAuthenticationSecurity:
                 }
             )
             # Should return 401 (not found/unauthorized) instead of 500 (server error)
-            assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_ENTITY]
+            assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_CONTENT]
 
     @pytest.mark.unit
     def test_login_case_sensitivity(self, client, test_user):
@@ -519,7 +519,7 @@ class TestEdgeCasesAndSecurity:
             headers={"Content-Type": "application/json"}
         )
         # Should handle malformed JSON gracefully
-        assert response.status_code in [status.HTTP_422_UNPROCESSABLE_ENTITY, status.HTTP_400_BAD_REQUEST]
+        assert response.status_code in [status.HTTP_422_UNPROCESSABLE_CONTENT, status.HTTP_400_BAD_REQUEST]
 
     @pytest.mark.unit
     def test_very_long_credentials(self, client):
@@ -533,7 +533,7 @@ class TestEdgeCasesAndSecurity:
             }
         )
         # Should handle gracefully without server errors
-        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_ENTITY]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_CONTENT]
 
     @pytest.mark.unit
     def test_special_characters_in_credentials(self, client):
@@ -547,7 +547,7 @@ class TestEdgeCasesAndSecurity:
             }
         )
         # Should handle special characters without server errors
-        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_ENTITY]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_CONTENT]
 
     @pytest.mark.unit
     def test_unicode_in_credentials(self, client):
@@ -561,4 +561,4 @@ class TestEdgeCasesAndSecurity:
             }
         )
         # Should handle Unicode characters without server errors
-        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_ENTITY]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_422_UNPROCESSABLE_CONTENT]

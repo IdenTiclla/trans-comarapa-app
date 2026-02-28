@@ -185,6 +185,13 @@ test-coverage: ## Generar reporte de cobertura de pruebas
 	@echo "📊  Generando reporte de cobertura..."
 	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage
 
+# ── Linting ──────────────────────────────────────────────
+lint-install: ## Instalar hooks de pre-commit
+	pip install --break-system-packages pre-commit && pre-commit install
+
+lint: ## Ejecutar linter en todos los archivos
+	pre-commit run --all-files
+
 # ── Database Migrations ──────────────────────────────────────────────
 db-migrate: ## Generar nueva migración Alembic (autogenerate)
 	@echo "🔄  Generando migración..."

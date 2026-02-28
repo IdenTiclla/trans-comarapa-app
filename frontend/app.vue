@@ -30,12 +30,6 @@ body:has(.nuxt-login-page) #__nuxt > * {
   z-index: 1 !important;
 }
 
-/* Resetear cualquier estilo de transición que pueda causar problemas */
-* {
-  transition: none !important;
-  animation: none !important;
-}
-
 .nuxt-login-page * {
   transition: none !important;
   animation: none !important;

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime, date
 from enum import Enum
@@ -14,18 +14,18 @@ class PersonBase(BaseModel):
     """
     Esquema base para el modelo Person unificado.
     """
-    firstname: Optional[str] = Field(None, max_length=100, description="Person's first name", example="John")
-    lastname: Optional[str] = Field(None, max_length=100, description="Person's last name", example="Doe")
-    phone: Optional[str] = Field(None, max_length=20, description="Person's phone number", example="12345678")
-    birth_date: Optional[date] = Field(None, description="Person's birth date", example="1990-01-01")
-    bio: Optional[str] = Field(None, max_length=500, description="Person's biography", example="A brief description")
+    firstname: Optional[str] = Field(None, max_length=100, description="Person's first name", json_schema_extra={"example": "John"})
+    lastname: Optional[str] = Field(None, max_length=100, description="Person's last name", json_schema_extra={"example": "Doe"})
+    phone: Optional[str] = Field(None, max_length=20, description="Person's phone number", json_schema_extra={"example": "12345678"})
+    birth_date: Optional[date] = Field(None, description="Person's birth date", json_schema_extra={"example": "1990-01-01"})
+    bio: Optional[str] = Field(None, max_length=500, description="Person's biography", json_schema_extra={"example": "A brief description"})
 
 class PersonCreate(PersonBase):
     """
     Esquema para crear una nueva persona.
     """
-    type: PersonType = Field(..., description="Type of person", example="client")
-    user_id: int = Field(..., description="ID of the associated user account", example=1)
+    type: PersonType = Field(..., description="Type of person", json_schema_extra={"example": "client"})
+    user_id: int = Field(..., description="ID of the associated user account", json_schema_extra={"example": 1})
 
 class PersonUpdate(BaseModel):
     """
@@ -41,15 +41,14 @@ class PersonResponse(PersonBase):
     """
     Esquema para respuesta de una persona.
     """
-    id: int = Field(..., description="Person identifier", example=1)
-    user_id: int = Field(..., description="ID of the associated user account", example=1)
-    type: PersonType = Field(..., description="Type of person", example="client")
+    id: int = Field(..., description="Person identifier", json_schema_extra={"example": 1})
+    user_id: int = Field(..., description="ID of the associated user account", json_schema_extra={"example": 1})
+    type: PersonType = Field(..., description="Type of person", json_schema_extra={"example": "client"})
     avatar_url: Optional[str] = Field(None, description="URL of person's avatar")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Esquemas específicos heredan de PersonBase
 class DriverResponse(PersonResponse):

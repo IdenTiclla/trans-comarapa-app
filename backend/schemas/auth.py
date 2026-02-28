@@ -43,7 +43,7 @@ class PasswordResetRequest(BaseModel):
 
 class PasswordReset(BaseModel):
     token: str = Field(..., description="Token de restablecimiento de contraseña")
-    new_password: str = Field(..., min_length=8, description="Nueva contraseña", example="NuevaContraseña123")
+    new_password: str = Field(..., min_length=8, description="Nueva contraseña", json_schema_extra={"example": "NuevaContraseña123"})
 
 class PasswordResetResponse(BaseModel):
     message: str

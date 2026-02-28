@@ -46,7 +46,7 @@ export const getTrips = async (params = {}) => {
     queryParams.limit = params.itemsPerPage;
   }
   // Always remove itemsPerPage as it's frontend-specific
-  delete queryParams.itemsPerPage; 
+  delete queryParams.itemsPerPage;
 
   if (params.page && typeof queryParams.limit === 'number') { // Ensure limit is a number for calculation
     // Assuming page is 1-indexed
@@ -65,22 +65,22 @@ export const getTrips = async (params = {}) => {
     queryParams.date_from = params.dateFrom;
     delete queryParams.dateFrom;
   }
-  
+
   if (params.dateTo) {
     queryParams.date_to = params.dateTo;
     delete queryParams.dateTo;
   }
-  
+
   if (params.minSeats) {
     queryParams.min_seats = params.minSeats;
     delete queryParams.minSeats;
   }
-  
+
   if (params.sortBy) {
     queryParams.sort_by = params.sortBy;
     delete queryParams.sortBy;
   }
-  
+
   if (params.sortDirection) {
     queryParams.sort_direction = params.sortDirection;
     delete queryParams.sortDirection;
@@ -96,7 +96,7 @@ export const getTrips = async (params = {}) => {
     // unless specific statuses were already provided in the params.
     queryParams.status = queryParams.status || 'scheduled,in_progress';
     // queryParams.upcoming = true; // This line is redundant as upcoming is already in queryParams if params.upcoming was true.
-                                 // And if params.upcoming was false or undefined, queryParams.upcoming would also be so.
+    // And if params.upcoming was false or undefined, queryParams.upcoming would also be so.
   } else {
     // If params.upcoming is explicitly false or not provided, remove it to avoid sending upcoming=false to backend if not intended.
     delete queryParams.upcoming;
@@ -168,6 +168,39 @@ export const deleteTrip = async (id) => {
   }
 };
 
+export const dispatchTrip = async (id) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}/dispatch`, {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.error(`Error dispatching trip ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+export const finishTrip = async (id) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}/finish`, {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.error(`Error finishing trip ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
+export const cancelTrip = async (id) => {
+  try {
+    return await apiFetch(`${resourceUrl}/${id}/cancel`, {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.error(`Error canceling trip ${id}:`, error.data?.detail || error.message, error);
+    throw error;
+  }
+};
+
 
 // Example of a more specific function if needed, e.g., for fetching seat details
 export const getTripSeats = async (tripId) => {
@@ -188,6 +221,9 @@ export default {
   createTrip,
   updateTrip,
   deleteTrip,
+  dispatchTrip,
+  finishTrip,
+  cancelTrip,
   getTripSeats,
   // ... any other exported functions
 };

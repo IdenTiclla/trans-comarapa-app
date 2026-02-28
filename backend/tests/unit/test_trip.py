@@ -11,16 +11,23 @@ from models.driver import Driver
 from models.assistant import Assistant
 from models.bus import Bus
 from models.secretary import Secretary
+from models.ticket import Ticket
+from models.ticket_state_history import TicketStateHistory
 from models.user import User, UserRole
 
 @pytest.fixture
 def setup_trip_data(db_session):
     """Configura datos para pruebas de viajes."""
     # Limpiar datos existentes
+    db_session.query(TicketStateHistory).delete()
+    db_session.query(Ticket).delete()
     db_session.query(Trip).delete()
-    db_session.query(Driver).delete()
-    db_session.query(Assistant).delete()
-    db_session.query(Secretary).delete()
+    from models.person import Person
+    for p in db_session.query(Person).all():
+        db_session.delete(p)
+    db_session.flush()
+    from models.seat import Seat
+    db_session.query(Seat).delete()
     db_session.query(Bus).delete()
     db_session.query(Route).delete()
     db_session.query(Location).delete()
@@ -189,7 +196,7 @@ def test_create_trip_past_date(db_session, setup_trip_data, admin_token, client)
         }
     )
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 @pytest.mark.unit
 def test_get_trip(db_session, setup_trip_data, admin_token, client):
