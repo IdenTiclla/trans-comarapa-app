@@ -28,14 +28,13 @@
     <!-- Buscar Cliente Existente -->
     <div v-if="clientType === 'existing'" class="space-y-2">
       <div>
-        <label :for="`${role}-client-search`" class="block text-sm font-medium text-gray-700">Buscar Cliente</label>
-        <input 
-          type="text" 
-          :id="`${role}-client-search`" 
+        <FormInput
+          :id="`${role}-client-search`"
+          label="Buscar Cliente"
           v-model="clientSearchTerm"
           @input="debouncedSearch"
+          type="text"
           placeholder="Nombre, CI o teléfono..."
-          class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
         />
       </div>
       <div v-if="clientStore.isLoading && clientSearchTerm" class="text-sm text-gray-500">Buscando...</div>
@@ -60,20 +59,37 @@
     <!-- Registrar Nuevo Cliente -->
     <div v-if="clientType === 'new'" class="space-y-3 border border-gray-200 p-3 rounded-md bg-gray-50">
       <div>
-        <label :for="`${role}-new-client-name`" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-        <input type="text" :id="`${role}-new-client-name`" v-model="newClientDetails.name" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        <FormInput
+          :id="`${role}-new-client-name`"
+          label="Nombre Completo"
+          v-model="newClientDetails.name"
+          type="text"
+          required
+        />
       </div>
       <div>
-        <label :for="`${role}-new-client-doc_id`" class="block text-sm font-medium text-gray-700">Documento de Identidad (CI)</label>
-        <input type="text" :id="`${role}-new-client-doc_id`" v-model="newClientDetails.doc_id" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        <FormInput
+          :id="`${role}-new-client-doc_id`"
+          label="Documento de Identidad (CI)"
+          v-model="newClientDetails.doc_id"
+          type="text"
+        />
       </div>
       <div>
-        <label :for="`${role}-new-client-phone`" class="block text-sm font-medium text-gray-700">Teléfono</label>
-        <input type="tel" :id="`${role}-new-client-phone`" v-model="newClientDetails.phone" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        <FormInput
+          :id="`${role}-new-client-phone`"
+          label="Teléfono"
+          v-model="newClientDetails.phone"
+          type="tel"
+        />
       </div>
       <div>
-        <label :for="`${role}-new-client-address`" class="block text-sm font-medium text-gray-700">Dirección (Opcional)</label>
-        <input type="text" :id="`${role}-new-client-address`" v-model="newClientDetails.address" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        <FormInput
+          :id="`${role}-new-client-address`"
+          label="Dirección (Opcional)"
+          v-model="newClientDetails.address"
+          type="text"
+        />
       </div>
     </div>
     <div v-if="clientStore.error && (clientType === 'existing' && clientSearchTerm || clientType === 'new')" class="text-sm text-red-600 mt-1">
@@ -85,6 +101,7 @@
 <script setup>
 import { ref, watch, reactive } from 'vue';
 import { debounce } from 'lodash-es';
+import FormInput from '~/components/forms/FormInput.vue'
 
 const props = defineProps({
   role: { type: String, required: true }, // 'sender' or 'receiver' to make IDs unique

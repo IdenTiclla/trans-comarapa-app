@@ -140,20 +140,13 @@
             <div class="flex flex-col sm:flex-row gap-4 flex-1">
               <!-- Enhanced Search -->
               <div class="relative flex-1 sm:max-w-sm">
-                <input
+                <FormInput
                   v-model="searchQuery"
                   type="text"
                   placeholder="Buscar por ID, cliente, viaje..."
-                  class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 focus:bg-white transition-colors"
+                  leftIcon="magnifying-glass"
+                  clearable
                 />
-                <svg class="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <div v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-3.5 cursor-pointer">
-                  <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                </div>
               </div>
 
               <!-- Advanced Filters Toggle -->
@@ -188,51 +181,49 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <!-- Status Filter -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                <select
+                <FormSelect
+                  label="Estado"
                   v-model="statusFilter"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="">Todos los estados</option>
-                  <option value="pending">Pendientes</option>
-                  <option value="confirmed">Confirmados</option>
-                  <option value="cancelled">Cancelados</option>
-                  <option value="completed">Completados</option>
-                </select>
+                  :options="[
+                    { value: '', label: 'Todos los estados' },
+                    { value: 'pending', label: 'Pendientes' },
+                    { value: 'confirmed', label: 'Confirmados' },
+                    { value: 'cancelled', label: 'Cancelados' },
+                    { value: 'completed', label: 'Completados' }
+                  ]"
+                />
               </div>
 
               <!-- Date Range Filter -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Desde</label>
-                <input
+                <FormInput
+                  label="Fecha Desde"
                   v-model="dateFromFilter"
                   type="date"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Hasta</label>
-                <input
+                <FormInput
+                  label="Fecha Hasta"
                   v-model="dateToFilter"
                   type="date"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <!-- Payment Method Filter -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
-                <select
+                <FormSelect
+                  label="Método de Pago"
                   v-model="paymentMethodFilter"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="">Todos los métodos</option>
-                  <option value="cash">Efectivo</option>
-                  <option value="card">Tarjeta</option>
-                  <option value="transfer">Transferencia</option>
-                  <option value="qr">QR</option>
-                </select>
+                  :options="[
+                    { value: '', label: 'Todos los métodos' },
+                    { value: 'cash', label: 'Efectivo' },
+                    { value: 'card', label: 'Tarjeta' },
+                    { value: 'transfer', label: 'Transferencia' },
+                    { value: 'qr', label: 'QR' }
+                  ]"
+                />
               </div>
             </div>
 
@@ -645,23 +636,33 @@
           
           <form @submit.prevent="submitTicketForm" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Viaje</label>
-              <select v-model="ticketForm.trip_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Seleccionar viaje</option>
-                <option v-for="trip in availableTrips" :key="trip.id" :value="trip.id">
-                  {{ trip.route.origin }} → {{ trip.route.destination }} - {{ formatDate(trip.trip_datetime) }}
-                </option>
-              </select>
+              <FormSelect
+                label="Viaje"
+                v-model="ticketForm.trip_id"
+                required
+                :options="[
+                  { value: '', label: 'Seleccionar viaje' },
+                  ...availableTrips.map(trip => ({
+                    value: trip.id,
+                    label: `${trip.route.origin} → ${trip.route.destination} - ${formatDate(trip.trip_datetime)}`
+                  }))
+                ]"
+              />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700">Cliente</label>
-              <select v-model="ticketForm.client_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Seleccionar cliente</option>
-                <option v-for="client in clients" :key="client.id" :value="client.id">
-                  {{ client.firstname }} {{ client.lastname }}
-                </option>
-              </select>
+              <FormSelect
+                label="Cliente"
+                v-model="ticketForm.client_id"
+                required
+                :options="[
+                  { value: '', label: 'Seleccionar cliente' },
+                  ...clients.map(client => ({
+                    value: client.id,
+                    label: `${client.firstname} ${client.lastname}`
+                  }))
+                ]"
+              />
             </div>
 
             <div v-if="ticketForm.trip_id">
@@ -675,35 +676,41 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700">Estado</label>
-              <select v-model="ticketForm.state" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="pending">Pendiente</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="cancelled">Cancelado</option>
-                <option value="completed">Completado</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Precio</label>
-              <input
-                v-model.number="ticketForm.price"
-                type="number"
-                step="0.01"
+              <FormSelect
+                label="Estado"
+                v-model="ticketForm.state"
                 required
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                :options="[
+                  { value: 'pending', label: 'Pendiente' },
+                  { value: 'confirmed', label: 'Confirmado' },
+                  { value: 'cancelled', label: 'Cancelado' },
+                  { value: 'completed', label: 'Completado' }
+                ]"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-              <select v-model="ticketForm.payment_method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">Seleccionar método</option>
-                <option value="cash">Efectivo</option>
-                <option value="card">Tarjeta</option>
-                <option value="transfer">Transferencia</option>
-                <option value="qr">QR</option>
-              </select>
+              <FormInput
+                label="Precio"
+                v-model.number="ticketForm.price"
+                type="number"
+                step="0.01"
+                required
+              />
+            </div>
+
+            <div>
+              <FormSelect
+                label="Método de Pago"
+                v-model="ticketForm.payment_method"
+                :options="[
+                  { value: '', label: 'Seleccionar método' },
+                  { value: 'cash', label: 'Efectivo' },
+                  { value: 'card', label: 'Tarjeta' },
+                  { value: 'transfer', label: 'Transferencia' },
+                  { value: 'qr', label: 'QR' }
+                ]"
+              />
             </div>
 
             <!-- Modal Footer -->
@@ -741,9 +748,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import { getBookingsStatsComparison } from '~/services/statsService'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 definePageMeta({
   middleware: 'auth'

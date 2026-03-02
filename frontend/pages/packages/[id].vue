@@ -11,7 +11,7 @@
               </svg>
             </button>
             <h1 class="text-lg font-bold text-gray-900 truncate">
-              Encomienda #{{ packageStore.currentPackage?.tracking_number }}
+              Encomienda {{ packageStore.currentPackage?.tracking_number }}
             </h1>
             <span v-if="packageStore.currentPackage" :class="[getStatusBg(packageStore.currentPackage.status), getStatusText(packageStore.currentPackage.status), 'px-2.5 py-1 text-xs font-semibold rounded-full hidden sm:inline-block']">
               {{ getStatusLabel(packageStore.currentPackage.status) }}

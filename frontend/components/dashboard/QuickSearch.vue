@@ -4,40 +4,38 @@
     
     <div class="space-y-4">
       <div>
-        <label for="search-type" class="block text-sm font-medium text-gray-700 mb-1">Buscar por</label>
-        <select 
-          id="search-type" 
+        <FormSelect
+          id="search-type"
+          label="Buscar por"
           v-model="searchType"
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="client">Cliente</option>
-          <option value="ticket">Boleto</option>
-          <option value="trip">Viaje</option>
-          <option value="package">Paquete</option>
-        </select>
+          :options="[
+            { value: 'client', label: 'Cliente' },
+            { value: 'ticket', label: 'Boleto' },
+            { value: 'trip', label: 'Viaje' },
+            { value: 'package', label: 'Paquete' }
+          ]"
+        />
       </div>
       
       <div>
-        <label for="search-query" class="block text-sm font-medium text-gray-700 mb-1">
-          {{ getSearchLabel() }}
-        </label>
-        <div class="relative rounded-md shadow-sm">
-          <input
-            id="search-query"
-            type="text"
-            v-model="searchQuery"
-            :placeholder="getSearchPlaceholder()"
-            class="block w-full rounded-md border-gray-300 pr-10 focus:border-blue-500 focus:ring-blue-500"
-            @keyup.enter="handleSearch"
-          />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-            <button @click="handleSearch" class="text-gray-400 hover:text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <FormInput
+          id="search-query"
+          :label="getSearchLabel()"
+          v-model="searchQuery"
+          type="text"
+          :placeholder="getSearchPlaceholder()"
+          @keyup.enter="handleSearch"
+        >
+          <template #suffix>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <button @click="handleSearch" class="text-gray-400 hover:text-gray-500 hover:bg-transparent border-none p-0 bg-transparent flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </template>
+        </FormInput>
       </div>
       
       <div class="pt-2">
@@ -55,6 +53,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 const router = useRouter()
 const searchType = ref('client')

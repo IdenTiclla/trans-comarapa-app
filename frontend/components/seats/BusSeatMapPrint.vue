@@ -242,9 +242,9 @@ const filteredSeats = computed(() => {
   return seats.value.filter(seat => seat.deck === selectedDeck.value)
 })
 
-// Asientos seleccionados (basado en asientos filtrados del piso actual)
+// Asientos seleccionados (de TODOS los pisos)
 const selectedSeats = computed(() => {
-  return filteredSeats.value.filter(seat => selectedSeatIds.value.includes(seat.id))
+  return seats.value.filter(seat => selectedSeatIds.value.includes(seat.id))
 })
 
 // Computed properties for seat statistics (basado en asientos del piso actual)
@@ -467,9 +467,9 @@ const handleSeatDeselected = (seat, newSelectedIds) => {
   emit('seat-deselected', seat)
 }
 
-const handleSelectionChange = (selectedSeatsArray) => {
-  console.log('Selection changed to:', selectedSeatsArray)
-  emit('selection-change', selectedSeatsArray)
+const handleSelectionChange = () => {
+  console.log('Selection changed to:', selectedSeats.value)
+  emit('selection-change', selectedSeats.value)
 }
 
 // Abrir menú contextual con clic derecho

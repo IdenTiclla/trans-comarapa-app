@@ -96,21 +96,14 @@
                 <!-- Búsqueda de cliente existente -->
                 <div v-if="clientType === 'existing'" class="space-y-4">
                   <div class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Cliente</label>
-                    <div class="relative">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                      </div>
-                      <input
-                        v-model="clientSearchQuery"
-                        @input="debouncedSearch"
-                        type="text"
-                        placeholder="Buscar por nombre, apellido o CI..."
-                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      >
-                    </div>
+                    <FormInput
+                      label="Buscar Cliente"
+                      v-model="clientSearchQuery"
+                      @input="debouncedSearch"
+                      type="text"
+                      placeholder="Buscar por nombre, apellido o CI..."
+                      leftIcon="magnifying-glass"
+                    />
                   </div>
 
                   <!-- Resultados de búsqueda -->
@@ -164,43 +157,39 @@
                 <!-- Formulario para cliente nuevo -->
                 <div v-if="clientType === 'new'" class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombres *</label>
-                    <input
+                    <FormInput
+                      label="Nombres *"
                       v-model="newClientForm.firstname"
                       type="text"
                       required
                       placeholder="Nombres"
-                      class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    >
+                    />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos *</label>
-                    <input
+                    <FormInput
+                      label="Apellidos *"
                       v-model="newClientForm.lastname"
                       type="text"
                       required
                       placeholder="Apellidos"
-                      class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    >
+                    />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">CI/Documento *</label>
-                    <input
+                    <FormInput
+                      label="CI/Documento *"
                       v-model="newClientForm.document_id"
                       type="text"
                       required
                       placeholder="Carnet de identidad"
-                      class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    >
+                    />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                    <input
+                    <FormInput
+                      label="Teléfono"
                       v-model="newClientForm.phone"
                       type="text"
                       placeholder="Número de teléfono"
-                      class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    >
+                    />
                   </div>
                 </div>
               </div>
@@ -216,48 +205,40 @@
                 
                 <!-- Destino -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Destino *</label>
-                  <input
+                  <FormInput
+                    label="Destino *"
                     v-model="ticketForm.destination"
                     type="text"
                     required
                     placeholder="Ej: Los Negros, Samaipata, Cochabamba..."
-                    class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  >
+                  />
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Precio (Bs.) *</label>
-                    <div class="relative">
-                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-gray-500 text-sm">Bs.</span>
-                      </div>
-                      <input
-                        v-model.number="ticketForm.price"
-                        type="number"
-                        step="0.01"
-                        required
-                        placeholder="0.00"
-                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      >
-                    </div>
+                    <FormInput
+                      label="Precio (Bs.) *"
+                      v-model.number="ticketForm.price"
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="0.00"
+                    />
                   </div>
                   
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pago *</label>
-                    <select 
-                      v-model="ticketForm.payment_method" 
+                    <FormSelect
+                      label="Método de Pago *"
+                      v-model="ticketForm.payment_method"
                       required
-                      class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      :class="{ 'border-red-500 ring-red-500': !ticketForm.payment_method && hasTriedSubmit }"
-                    >
-                      <option value="">Seleccionar método</option>
-                      <option value="cash">💵 Efectivo</option>
-                      <option value="card">💳 Tarjeta</option>
-                      <option value="transfer">🏦 Transferencia</option>
-                      <option value="qr">📱 QR</option>
-                    </select>
+                      :options="[
+                        { value: '', label: 'Seleccionar método' },
+                        { value: 'cash', label: '💵 Efectivo' },
+                        { value: 'card', label: '💳 Tarjeta' },
+                        { value: 'transfer', label: '🏦 Transferencia' },
+                        { value: 'qr', label: '📱 QR' }
+                      ]"
+                    />
                     <p v-if="!ticketForm.payment_method && hasTriedSubmit" class="mt-2 text-sm text-red-600 flex items-center">
                       <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -348,6 +329,8 @@
 import { ref, computed, watch } from 'vue'
 import { useClientSearch } from '~/composables/useClientSearch'
 import { useAuthStore } from '~/stores/auth'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 const props = defineProps({
   show: {
@@ -545,7 +528,7 @@ const handleSubmit = async () => {
     }
     
     const seats = props.trip.seats_layout.filter(s => 
-      props.selectedSeats.some(selectedSeat => s.seat_number === selectedSeat.number)
+      props.selectedSeats.some(selectedSeat => s.id === selectedSeat.id)
     )
     
     if (seats.length === 0) {

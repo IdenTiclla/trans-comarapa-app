@@ -2,7 +2,7 @@
   <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 ease-in-out">
     <div class="p-5">
       <div class="flex justify-between items-start mb-3 cursor-pointer group" @click="$emit('viewPackage', pkg.id)">
-        <h3 class="text-lg font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">Encomienda #{{ pkg.tracking_number || pkg.id }}</h3>
+        <h3 class="text-lg font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">Encomienda {{ pkg.tracking_number }}</h3>
         <span :class="[getStatusBg(pkg.status), getStatusText(pkg.status)]" class="px-3 py-1 text-xs font-semibold rounded-full border border-opacity-20 border-gray-400">
           {{ getStatusLabel(pkg.status) }}
         </span>

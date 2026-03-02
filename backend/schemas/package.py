@@ -33,7 +33,7 @@ class PackageItemPreview(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class PackageBase(BaseModel):
-    tracking_number: str = Field(..., description="Número de encomienda único", json_schema_extra={"example": "003589"})
+    tracking_number: Optional[str] = Field(None, description="Número de encomienda único", json_schema_extra={"example": "ENC-003589"})
     total_weight: Optional[float] = Field(None, description="Peso total del paquete en kg", json_schema_extra={"example": 5.2})
     total_declared_value: Optional[float] = Field(None, description="Valor declarado total", json_schema_extra={"example": 500.0})
     notes: Optional[str] = Field(None, description="Observaciones adicionales", json_schema_extra={"example": "Frágil - manejar con cuidado"})
@@ -65,14 +65,6 @@ class PackageCreate(PackageBase):
     items: List[PackageItemCreate] = Field(..., description="Lista de items del paquete", min_length=1)
     secretary_id: int = Field(..., description="ID de la secretaria que registra", json_schema_extra={"example": 1}, gt=0)
     trip_id: Optional[int] = Field(None, description="ID del viaje (opcional)")
-    
-    @field_validator('tracking_number')
-    @classmethod
-    def validate_tracking_number(cls, v):
-        """Valida el formato del número de encomienda"""
-        if not v or len(v) < 3:
-            raise ValueError('El número de encomienda debe tener al menos 3 caracteres')
-        return v.upper().strip()
 
 class PackageUpdate(BaseModel):
     tracking_number: Optional[str] = Field(None, description="Número de encomienda")

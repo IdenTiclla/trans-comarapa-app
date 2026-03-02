@@ -18,34 +18,48 @@
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-              <input v-model="form.firstname" type="text" required 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="Nombre *"
+                v-model="form.firstname"
+                type="text"
+                required
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
-              <input v-model="form.lastname" type="text" required 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="Apellido *"
+                v-model="form.lastname"
+                type="text"
+                required
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">CI</label>
-              <input v-model="form.document_id" type="text" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="CI"
+                v-model="form.document_id"
+                type="text"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-              <input v-model="form.phone" type="tel" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="Teléfono"
+                v-model="form.phone"
+                type="tel"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input v-model="form.email" type="email" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="Email"
+                v-model="form.email"
+                type="email"
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
-              <input v-model="form.city" type="text" 
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              <FormInput
+                label="Ciudad"
+                v-model="form.city"
+                type="text"
+              />
             </div>
           </div>
 
@@ -67,6 +81,7 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
+import FormInput from '~/components/forms/FormInput.vue'
 
 const props = defineProps({
   show: Boolean,

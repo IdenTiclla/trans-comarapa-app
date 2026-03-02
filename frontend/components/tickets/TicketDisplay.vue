@@ -36,11 +36,11 @@
           
           <!-- Texto principal -->
           <div>
-            <div class="flex items-baseline space-x-2 mb-1">
-              <h1 :class="previewMode ? 'text-lg font-bold' : 'text-2xl font-bold'">TRANS</h1>
-              <h2 :class="previewMode ? 'text-lg font-bold italic' : 'text-2xl font-bold italic'">Comarapa</h2>
+            <div class="flex items-baseline mb-0">
+              <h1 :class="previewMode ? 'text-base font-bold mr-1' : 'text-2xl font-bold space-x-2'">TRANS</h1>
+              <h2 :class="previewMode ? 'text-base font-bold italic' : 'text-2xl font-bold italic'">Comarapa</h2>
             </div>
-            <div class="leading-tight" :class="previewMode ? 'text-xs' : 'text-xs'">
+            <div class="leading-none" :class="previewMode ? 'text-[8px]' : 'text-xs'">
               <p class="font-medium">SINDICATO MIXTO DE TRANSPORTISTAS DE LARGA</p>
               <p class="font-medium">Y CORTA DISTANCIA "MANUEL MARIA CABALLERO"</p>
             </div>
@@ -56,7 +56,7 @@
         <div class="flex-shrink-0">
           <svg 
             class="text-white" 
-            :class="previewMode ? 'w-8 h-8' : 'w-16 h-16'" 
+            :class="previewMode ? 'w-6 h-6' : 'w-16 h-16'" 
             fill="currentColor" 
             viewBox="0 0 100 100"
           >
@@ -70,16 +70,16 @@
       
       <!-- Información de oficinas -->
       <div 
-        class="grid grid-cols-2 gap-x-8"
-        :class="previewMode ? 'mt-1 text-xs' : 'mt-2 text-xs'"
+        class="grid grid-cols-2 gap-x-4"
+        :class="previewMode ? 'mt-0 text-[8px] leading-tight pb-1' : 'mt-2 text-xs gap-x-8'"
       >
         <div>
-          <p><span class="font-medium">Of. Santa Cruz:</span> Av. Doble Vía La Guardia 4to. Anillo • <span class="font-medium">Cel.:</span> 781-75576</p>
-          <p><span class="font-medium">Of. Comarapa:</span> Av. Comarapa • <span class="font-medium">Cel.:</span> 781-75578</p>
+          <p><span class="font-medium">Of. Santa Cruz:</span> Doble Vía La Guardia 4to <span class="font-medium">Cel:</span> 781-75576</p>
+          <p><span class="font-medium">Of. Comarapa:</span> Av. Comarapa • <span class="font-medium">Cel:</span> 781-75578</p>
         </div>
         <div>
-          <p><span class="font-medium">Of. San Isidro:</span> <span class="font-medium">Cel.:</span> 785-15650</p>
-          <p><span class="font-medium">Of. Los Negros:</span> <span class="font-medium">Cel.:</span> 690-29690</p>
+          <p><span class="font-medium">Of. San Isidro:</span> <span class="font-medium">Cel:</span> 785-15650</p>
+          <p><span class="font-medium">Of. Los Negros:</span> <span class="font-medium">Cel:</span> 690-29690</p>
         </div>
       </div>
     </div>
@@ -104,24 +104,24 @@
         </div>
       </div>
 
-      <div :class="previewMode ? 'px-3 py-2 pt-8' : 'px-4 py-4 pt-16'">
+      <div :class="previewMode ? 'px-3 py-1 pt-6' : 'px-4 py-4 pt-16'">
         <!-- Fila NOMBRE y N° -->
         <div 
-          :class="previewMode ? 'border-2 border-blue-400 mb-2' : 'border-4 border-blue-500 mb-2'"
+          :class="previewMode ? 'border-2 border-blue-400 mb-1' : 'border-4 border-blue-500 mb-2'"
         >
           <div class="flex">
             <!-- NOMBRE -->
             <div 
               class="bg-blue-500 text-white font-bold"
-              :class="previewMode ? 'px-3 py-2 text-base' : 'px-4 py-3 text-lg'"
+              :class="previewMode ? 'px-2 py-1 text-xs flex items-center' : 'px-4 py-3 text-lg'"
             >
               NOMBRE:
             </div>
             <!-- Espacio para el nombre -->
             <div 
-              class="flex-grow bg-white text-gray-700"
+              class="flex-grow bg-white text-gray-700 font-bold"
               :class="previewMode 
-                ? 'border-r-2 border-blue-400 px-3 py-2 text-base' 
+                ? 'border-r-2 border-blue-400 px-2 py-1 text-xs flex items-center' 
                 : 'border-r-4 border-blue-500 px-4 py-3'"
             >
               {{ getFullName() }}
@@ -129,11 +129,11 @@
             <!-- N° -->
             <div 
               class="bg-white text-right"
-              :class="previewMode ? 'px-3 py-2' : 'px-6 py-3'"
+              :class="previewMode ? 'px-2 py-1 flex items-center' : 'px-6 py-3'"
             >
               <span 
                 class="text-red-600 font-bold"
-                :class="previewMode ? 'text-lg' : 'text-2xl'"
+                :class="previewMode ? 'text-sm' : 'text-2xl'"
               >
                 N° {{ ticket.id || '115032' }}
               </span>
@@ -144,22 +144,22 @@
         <!-- Fila Bs, Destino, N° -->
         <div 
           class="grid grid-cols-12"
-          :class="previewMode ? 'gap-2 mb-2' : 'gap-2 mb-2'"
+          :class="previewMode ? 'gap-1 mb-1' : 'gap-2 mb-2'"
         >
           <!-- Bs. -->
           <div 
             class="col-span-2"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
               class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-sm' : 'py-2'"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
               Bs.
             </div>
             <div 
-              class="bg-white text-center font-bold"
-              :class="previewMode ? 'py-2 text-base' : 'py-4 text-xl'"
+              class="bg-white text-center font-bold flex-1 flex items-center justify-center"
+              :class="previewMode ? 'py-1 text-sm' : 'py-4 text-xl'"
             >
               {{ formatPrice(ticket.price) }}
             </div>
@@ -168,17 +168,17 @@
           <!-- Destino -->
           <div 
             class="col-span-7"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
               class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-sm' : 'py-2'"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
               Destino:
             </div>
             <div 
-              class="bg-white text-center font-bold"
-              :class="previewMode ? 'py-2 text-base' : 'py-4 text-lg'"
+              class="bg-white text-center font-bold flex-1 flex items-center justify-center"
+              :class="previewMode ? 'py-1 text-sm line-clamp-1' : 'py-4 text-lg'"
             >
               {{ getDestination() }}
             </div>
@@ -187,18 +187,18 @@
           <!-- N° -->
           <div 
             class="col-span-3"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
               class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-sm' : 'py-2'"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
               N°
             </div>
             <div 
-              class="bg-white text-center font-bold"
+              class="bg-white text-center font-bold text-red-600 flex-1 flex items-center justify-center"
               :class="[
-                previewMode ? 'py-2 text-base' : 'py-4',
+                previewMode ? 'py-1 text-base' : 'py-4',
                 getSeatNumberClass()
               ]"
             >
@@ -209,36 +209,36 @@
 
         <!-- Fila Fecha y Horarios -->
         <div 
-          class="grid grid-cols-12 mb-4"
+          class="grid grid-cols-12 mb-2"
           :class="previewMode ? 'gap-1' : 'gap-2'"
         >
           <!-- Fecha -->
           <div 
             class="col-span-4"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
               class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-xs' : 'py-2'"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
               Fecha
             </div>
-            <div :class="previewMode ? 'bg-white p-1' : 'bg-white p-2'">
+            <div :class="previewMode ? 'bg-white p-1 flex-1 flex flex-col justify-center' : 'bg-white p-2'">
               <div class="grid grid-cols-3 gap-1">
                 <div 
-                  class="border-2 border-blue-300 text-center font-bold"
+                  class="border-2 border-blue-300 text-center font-bold flex items-center justify-center"
                   :class="previewMode ? 'py-1 text-xs' : 'py-2'"
                 >
                   {{ getDayFromDate() }}
                 </div>
                 <div 
-                  class="border-2 border-blue-300 text-center font-bold"
+                  class="border-2 border-blue-300 text-center font-bold flex items-center justify-center"
                   :class="previewMode ? 'py-1 text-xs' : 'py-2'"
                 >
                   {{ getMonthFromDate() }}
                 </div>
                 <div 
-                  class="border-2 border-blue-300 text-center font-bold"
+                  class="border-2 border-blue-300 text-center font-bold flex items-center justify-center"
                   :class="previewMode ? 'py-1 text-xs' : 'py-2'"
                 >
                   {{ getYearFromDate() }}
@@ -250,29 +250,29 @@
           <!-- Hora en Oficina -->
           <div 
             class="col-span-4"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
-              class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-xs' : 'py-2'"
+              class="bg-blue-500 text-white text-center font-bold leading-tight"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
-              Hora en Oficina:
+              Hora en Of.:
             </div>
-            <div :class="previewMode ? 'bg-white p-1' : 'bg-white p-2'">
+            <div :class="previewMode ? 'bg-white flex flex-row items-center justify-center space-x-2 py-2 flex-1' : 'bg-white p-2'">
               <div 
-                class="flex justify-center mb-2"
-                :class="previewMode ? 'space-x-1' : 'space-x-2'"
+                class="flex justify-center"
+                :class="previewMode ? '' : 'mb-2'"
               >
                 <span 
                   class="bg-blue-100 rounded font-bold text-blue-600"
-                  :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
+                  :class="previewMode ? 'px-1 py-0.5 text-[10px]' : 'px-3 py-1'"
                 >
                   {{ getOfficeTimeAmPm() }}
                 </span>
               </div>
               <div 
-                class="text-center font-bold"
-                :class="previewMode ? 'text-xs' : 'text-lg'"
+                class="text-center font-bold text-red-600"
+                :class="previewMode ? 'text-sm' : 'text-lg'"
               >
                 {{ getCurrentTime() }}
               </div>
@@ -282,29 +282,29 @@
           <!-- Hora Salida -->
           <div 
             class="col-span-4"
-            :class="previewMode ? 'border-2 border-blue-400' : 'border-4 border-blue-500'"
+            :class="previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'"
           >
             <div 
-              class="bg-blue-500 text-white text-center font-bold"
-              :class="previewMode ? 'py-1 text-xs' : 'py-2'"
+              class="bg-blue-500 text-white text-center font-bold leading-tight"
+              :class="previewMode ? 'py-0 text-[10px]' : 'py-2'"
             >
               Hora Salida:
             </div>
-            <div :class="previewMode ? 'bg-white p-1' : 'bg-white p-2'">
+            <div :class="previewMode ? 'bg-white flex flex-row items-center justify-center space-x-2 py-2 flex-1' : 'bg-white p-2'">
               <div 
-                class="flex justify-center mb-2"
-                :class="previewMode ? 'space-x-1' : 'space-x-2'"
+                class="flex justify-center"
+                :class="previewMode ? '' : 'mb-2'"
               >
                 <span 
                   class="bg-blue-100 rounded font-bold text-blue-600"
-                  :class="previewMode ? 'px-1 py-0.5 text-xs' : 'px-3 py-1'"
+                  :class="previewMode ? 'px-1 py-0.5 text-[10px]' : 'px-3 py-1'"
                 >
                   {{ getDepartureTimeAmPm() }}
                 </span>
               </div>
               <div 
-                class="text-center font-bold"
-                :class="previewMode ? 'text-xs' : 'text-lg'"
+                class="text-center font-bold text-red-600"
+                :class="previewMode ? 'text-sm' : 'text-lg'"
               >
                 {{ getDepartureTime() }}
               </div>
@@ -316,62 +316,69 @@
 
     <!-- Footer -->
     <div 
-      class="bg-gradient-to-r from-cyan-400 to-blue-500 text-white"
+      class="bg-gradient-to-r from-cyan-400 to-blue-500 text-white flex flex-col"
       :class="previewMode 
-        ? 'px-2 py-1 border-t-2 border-blue-500' 
+        ? 'px-2 py-1 border-t-2 border-blue-500 pb-2' 
         : 'px-4 py-3 border-t-4 border-blue-600'"
     >
-              <div :class="previewMode ? 'grid grid-cols-12 gap-1' : 'grid grid-cols-12 gap-4'">
-          <!-- NO SE ACEPTAN DEVOLUCIONES -->
-          <div class="col-span-4">
-            <div class="text-center">
-              <p 
-                class="font-bold mb-1"
-                :class="previewMode ? 'text-xs' : 'text-lg'"
-              >
-                NO SE ACEPTAN
-              </p>
-              <p 
-                class="font-bold mb-2"
-                :class="previewMode ? 'text-xs' : 'text-lg'"
-              >
-                DEVOLUCIONES
-              </p>
-              <p 
-                class="italic"
-                :class="previewMode ? 'text-xs' : 'text-sm'"
-              >
-                Gracias por su preferencia!!!
-              </p>
-            </div>
-          </div>
-
-          <!-- HORARIOS -->
-          <div class="col-span-8">
-            <div 
-              class="bg-blue-600 rounded"
-              :class="previewMode ? 'px-1 py-1' : 'px-3 py-2'"
+      <div :class="previewMode ? 'grid grid-cols-12 gap-1 items-stretch' : 'grid grid-cols-12 gap-4'">
+        <!-- NO SE ACEPTAN DEVOLUCIONES -->
+        <div class="col-span-4 flex items-center justify-center">
+          <div class="text-center">
+            <p 
+              class="font-bold mb-0 leading-tight text-white mb-0 uppercase tracking-widest text-[#FFDF00]"
+              :class="previewMode ? 'text-[9px]' : 'text-lg'"
             >
+              NO SE ACEPTAN
+              <br>DEVOLUCIONES
+            </p>
+            <p 
+              class="italic opacity-90 tracking-wide mt-1"
+              :class="previewMode ? 'text-[7px]' : 'text-sm mt-2'"
+            >
+              ¡Gracias por su preferencia!
+            </p>
+          </div>
+        </div>
+
+        <!-- HORARIOS -->
+        <div class="col-span-8 flex flex-col">
+          <div 
+            class="bg-blue-600/50 rounded flex-1 flex flex-col justify-center"
+            :class="previewMode ? 'px-2 py-1' : 'px-3 py-2'"
+          >
+            <h4 
+              class="text-center font-bold"
+              :class="previewMode ? 'text-[8px] mb-1' : 'text-sm mb-2'"
+            >
+              HORARIOS DE SALIDA STZ - COMARAPA
+            </h4>
+            <div 
+              class="leading-tight"
+              :class="previewMode ? 'text-[6.5px] space-y-0.5' : 'text-xs space-y-1'"
+            >
+              <div class="flex justify-between">
+                <span class="font-bold opacity-80">L-J:</span> 10:30, 14:00, 18:30, 20:30
+              </div>
+              <div class="flex justify-between">
+                <span class="font-bold text-yellow-300">V-S-D:</span> 10:30, 14:00, 18:30, 20:30, 22:00
+              </div>
               <h4 
-                class="text-center font-bold mb-2"
-                :class="previewMode ? 'text-xs' : 'text-sm'"
+                class="text-center font-bold border-t border-white/20 pt-1 mt-1"
+                :class="previewMode ? 'text-[8px] pb-0.5' : 'text-sm mt-2'"
               >
-                HORARIOS DE SALIDA DE SANTA CRUZ A COMARAPA
+                HORARIOS COMARAPA - STZ
               </h4>
-              <div 
-                class="leading-tight"
-                :class="previewMode ? 'text-xs' : 'text-xs'"
-              >
-                <p><span class="font-bold">De lunes a Jueves son:</span> 10:30 am., 14:00 pm., 18:30 pm., 20:30 pm.</p>
-                <p><span class="font-bold">Solo viernes sábado y domingo:</span></p>
-                <p>10:30 am., 14:00 pm., 18:30 pm., 20:30 pm., 22:00 pm.</p>
-                <p><span class="font-bold">DE COMARAPA A SANTA CRUZ</span> de Lunes a Sábado son:</p>
-                <p>8:00 am., 14:00 pm., 20:30 pm., 23:30 pm.</p>
-                <p><span class="font-bold">Solo domingo:</span> 8:30 am., 12:00 del medio día, 14:00 pm., 20:30 pm., 23:30 pm.</p>
+              <div class="flex justify-between">
+                <span class="font-bold opacity-80">L-S:</span> 08:00, 14:00, 20:30, 23:30
+              </div>
+              <div class="flex justify-between">
+                <span class="font-bold text-yellow-300">DOM:</span> 08:30, 12:00, 14:00, 20:30, 23:30
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
   </div>
 </template>

@@ -387,6 +387,12 @@ class TripService:
             # according to the TRIP_TRANSITIONS, but actually we use validate_transition
             pass
             
+        current_time = datetime.now()
+        trip_time = trip.trip_datetime.replace(tzinfo=None) if trip.trip_datetime.tzinfo else trip.trip_datetime
+        
+        if current_time < trip_time:
+            raise ValidationException("Cannot dispatch a trip before its scheduled departure time.")
+            
         validate_transition("trip", TRIP_TRANSITIONS, trip.status, TripStatus.DEPARTED)
         
         trip.status = TripStatus.DEPARTED

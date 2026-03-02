@@ -100,27 +100,16 @@
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <!-- Ruta (ocupa ancho completo) -->
                       <div class="sm:col-span-2">
-                        <label for="route_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Ruta <span class="text-red-500" aria-label="requerido">*</span>
-                        </label>
-                        <select 
+                        <FormSelect 
                           id="route_id" 
+                          label="Ruta" 
                           v-model="formData.route_id"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.route_id
-                          }"
+                          :options="routeOptions"
+                          placeholder="Seleccione una ruta"
                           required
                           aria-required="true"
-                          :aria-invalid="fieldErrors.route_id ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.route_id ? 'route_id-error' : 'route_id-help'"
-                        >
-                          <option value="">Seleccione una ruta</option>
-                          <option v-for="route in routeStore.routesWithSchedules" :key="route.id" :value="route.id">
-                            {{ route.origin_location?.name }} -> {{ route.destination_location?.name }}
-                            ({{ formatCurrency(route.price) }})
-                          </option>
-                        </select>
+                          :error="fieldErrors.route_id"
+                        />
                         <p v-if="fieldErrors.route_id" id="route_id-error" class="mt-1 text-sm text-red-600" role="alert">
                           {{ fieldErrors.route_id }}
                         </p>
@@ -174,19 +163,14 @@
                             {{ opt.label }}
                           </button>
                         </div>
-                        <input 
+                        <FormInput 
                           type="date" 
                           id="departure_date" 
                           v-model="formData.departure_date"
                           :min="today"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.departure_date
-                          }"
                           required
                           aria-required="true"
-                          :aria-invalid="fieldErrors.departure_date ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.departure_date ? 'departure_date-error' : 'departure_date-help'"
+                          :error="fieldErrors.departure_date"
                         />
                         <p v-if="fieldErrors.departure_date" id="departure_date-error" class="mt-1 text-sm text-red-600" role="alert">
                           {{ fieldErrors.departure_date }}
@@ -242,18 +226,13 @@
                             {{ time }}
                           </button>
                         </div>
-                        <input 
+                        <FormInput 
                           type="time" 
                           id="departure_time" 
                           v-model="formData.departure_time"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.departure_time
-                          }"
                           required
                           aria-required="true"
-                          :aria-invalid="fieldErrors.departure_time ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.departure_time ? 'departure_time-error' : 'departure_time-help'"
+                          :error="fieldErrors.departure_time"
                         />
                         <p v-if="fieldErrors.departure_time" id="departure_time-error" class="mt-1 text-sm text-red-600" role="alert">
                           {{ fieldErrors.departure_time }}
@@ -271,26 +250,15 @@
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <!-- Bus -->
                       <div class="sm:col-span-2">
-                        <label for="bus_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Bus <span class="text-red-500" aria-label="requerido">*</span>
-                        </label>
-                        <select 
+                        <FormSelect 
                           id="bus_id" 
                           v-model="formData.bus_id"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          :class="{
-                            'border-red-300 focus:ring-red-500 focus:border-red-500': fieldErrors.bus_id
-                          }"
+                          :options="busOptions"
+                          placeholder="Seleccione un bus"
                           required
                           aria-required="true"
-                          :aria-invalid="fieldErrors.bus_id ? 'true' : 'false'"
-                          :aria-describedby="fieldErrors.bus_id ? 'bus_id-error' : 'bus_id-help'"
-                        >
-                          <option value="">Seleccione un bus</option>
-                          <option v-for="bus in busStore.buses" :key="bus.id" :value="bus.id">
-                            {{ bus.license_plate }} - {{ bus.model }} ({{ bus.capacity }} asientos)
-                          </option>
-                        </select>
+                          :error="fieldErrors.bus_id"
+                        />
                         <p v-if="fieldErrors.bus_id" id="bus_id-error" class="mt-1 text-sm text-red-600" role="alert">
                           {{ fieldErrors.bus_id }}
                         </p>
@@ -305,20 +273,12 @@
                       
                       <!-- Conductor (opcional) -->
                       <div>
-                        <label for="driver_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Conductor <span class="text-gray-400 text-xs font-normal">(opcional)</span>
-                        </label>
-                        <select 
+                        <FormSelect 
                           id="driver_id" 
                           v-model="formData.driver_id"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                          <option :value="null">Sin asignar</option>
-                          <option v-for="driver in driverStore.drivers" :key="driver.id" :value="driver.id">
-                            {{ driver.firstname }} {{ driver.lastname }}
-                            <template v-if="driver.license_number"> ({{ driver.license_number }})</template>
-                          </option>
-                        </select>
+                          :options="driverOptions"
+                          placeholder="Sin asignar"
+                        />
                         <p class="mt-1 text-sm text-gray-500">
                           <span v-if="driverStore.isLoading" class="flex items-center">
                             <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
@@ -330,19 +290,12 @@
                       
                       <!-- Asistente (opcional) -->
                       <div>
-                        <label for="assistant_id" class="block text-sm font-medium text-gray-700 mb-1">
-                          Asistente <span class="text-gray-400 text-xs font-normal">(opcional)</span>
-                        </label>
-                        <select 
+                        <FormSelect 
                           id="assistant_id" 
                           v-model="formData.assistant_id"
-                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                          <option :value="null">Sin asignar</option>
-                          <option v-for="assistant in assistantStore.assistants" :key="assistant.id" :value="assistant.id">
-                            {{ assistant.firstname }} {{ assistant.lastname }}
-                          </option>
-                        </select>
+                          :options="assistantOptions"
+                          placeholder="Sin asignar"
+                        />
                         <p class="mt-1 text-sm text-gray-500">
                           <span v-if="assistantStore.isLoading" class="flex items-center">
                             <span class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-1"></span>
@@ -404,6 +357,8 @@ import { useAssistantStore } from '~/stores/assistantStore';
 import { useRouteStore } from '~/stores/routeStore';
 import { useSecretaryStore } from '~/stores/secretaryStore';
 import { useAuthStore } from '~/stores/auth';
+import FormInput from '~/components/forms/FormInput.vue';
+import FormSelect from '~/components/forms/FormSelect.vue';
 
 // Set page metadata
 definePageMeta({
@@ -479,6 +434,38 @@ const commonTimes = [
 const selectedRoute = computed(() => {
   if (!formData.route_id) return null;
   return routeStore.routesWithSchedules.find(r => r.id === formData.route_id) || null;
+});
+
+const routeOptions = computed(() => {
+  return (routeStore.routesWithSchedules || []).map(route => ({
+    value: route.id,
+    label: `${route.origin_location?.name} -> ${route.destination_location?.name} (${formatCurrency(route.price)})`
+  }));
+});
+
+const busOptions = computed(() => {
+  return (busStore.buses || []).map(bus => ({
+    value: bus.id,
+    label: `${bus.license_plate} - ${bus.model} (${bus.capacity} asientos)`
+  }));
+});
+
+const driverOptions = computed(() => {
+  const options = [{ value: null, label: 'Sin asignar' }];
+  const drivers = (driverStore.drivers || []).map(driver => ({
+    value: driver.id,
+    label: `${driver.firstname} ${driver.lastname}${driver.license_number ? ` (${driver.license_number})` : ''}`
+  }));
+  return [...options, ...drivers];
+});
+
+const assistantOptions = computed(() => {
+  const options = [{ value: null, label: 'Sin asignar' }];
+  const assistants = (assistantStore.assistants || []).map(assistant => ({
+    value: assistant.id,
+    label: `${assistant.firstname} ${assistant.lastname}`
+  }));
+  return [...options, ...assistants];
 });
 
 const routeScheduleTimes = computed(() => {

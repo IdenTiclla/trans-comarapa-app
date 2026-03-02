@@ -47,24 +47,19 @@
           <h2 class="text-xl font-medium text-gray-700 mb-3">Detalles de la Encomienda</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="description" class="block text-sm font-medium text-gray-700">Descripción Corta</label>
-              <input type="text" id="description" v-model="formData.description" required class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+              <FormInput id="description" label="Descripción Corta" v-model="formData.description" required />
             </div>
             <div>
-              <label for="package_type" class="block text-sm font-medium text-gray-700">Tipo de Paquete</label>
-              <input type="text" id="package_type" v-model="formData.package_type" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+              <FormInput id="package_type" label="Tipo de Paquete" v-model="formData.package_type" />
             </div>
             <div>
-              <label for="weight" class="block text-sm font-medium text-gray-700">Peso (kg)</label>
-              <input type="number" id="weight" v-model.number="formData.weight" step="0.1" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+              <FormInput type="number" id="weight" label="Peso (kg)" v-model.number="formData.weight" step="0.1" />
             </div>
             <div>
-              <label for="declared_value" class="block text-sm font-medium text-gray-700">Valor Declarado (Bs.)</label>
-              <input type="number" id="declared_value" v-model.number="formData.declared_value" step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+              <FormInput type="number" id="declared_value" label="Valor Declarado (Bs.)" v-model.number="formData.declared_value" step="0.01" />
             </div>
              <div class="md:col-span-2">
-              <label for="notes" class="block text-sm font-medium text-gray-700">Notas Adicionales</label>
-              <textarea id="notes" v-model="formData.notes" rows="3" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+              <FormTextarea id="notes" label="Notas Adicionales" v-model="formData.notes" :rows="3" />
             </div>
           </div>
         </section>
@@ -74,17 +69,16 @@
           <h2 class="text-xl font-medium text-gray-700 mb-3">Viaje Asociado (Opcional)</h2>
            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label for="trip_id" class="block text-sm font-medium text-gray-700">Seleccionar Viaje</label>
-                <select id="trip_id" v-model="formData.trip_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                <option :value="null">Ninguno</option>
-                <option v-for="trip in availableTrips" :key="trip.id" :value="trip.id">
-                    {{ trip.route.origin }} - {{ trip.route.destination }} ({{ formatDate(trip.departure_datetime || trip.departure_date) }})
-                </option>
-                </select>
+                <FormSelect 
+                  id="trip_id" 
+                  label="Seleccionar Viaje" 
+                  v-model="formData.trip_id" 
+                  :options="tripOptions"
+                  placeholder="Ninguno"
+                />
             </div>
             <div>
-                 <label for="price" class="block text-sm font-medium text-gray-700">Precio de Envío (Bs.)</label>
-                <input type="number" id="price" v-model.number="formData.price" required step="0.01" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                <FormInput type="number" id="price" label="Precio de Envío (Bs.)" v-model.number="formData.price" required step="0.01" />
             </div>
            </div>
         </section>
@@ -106,6 +100,9 @@ import { useRouter } from 'vue-router';
 import { usePackageStore } from '~/stores/packageStore';
 import { useClientStore } from '~/stores/clientStore';
 import { useTripStore } from '~/stores/tripStore';
+import FormInput from '~/components/forms/FormInput.vue';
+import FormSelect from '~/components/forms/FormSelect.vue';
+import FormTextarea from '~/components/forms/FormTextarea.vue';
 
 const router = useRouter();
 const packageStore = usePackageStore();
@@ -128,6 +125,13 @@ const formData = reactive({
 });
 
 const availableTrips = computed(() => tripStore.trips);
+
+const tripOptions = computed(() => {
+  return (availableTrips.value || []).map(trip => ({
+    value: trip.id,
+    label: `${trip.route.origin} - ${trip.route.destination} (${formatDate(trip.departure_datetime || trip.departure_date)})`
+  }));
+});
 
 onMounted(async () => {
   packageStore.clearError();

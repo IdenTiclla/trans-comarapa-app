@@ -73,17 +73,15 @@
           
           <!-- Modo edicion -->
           <template v-else>
-            <select 
-              :value="selectedDriverId ?? ''"
-              @change="emit('update:selectedDriverId', $event.target.value ? Number($event.target.value) : null)"
-              class="flex-1 text-xs border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1 px-1.5"
+            <FormSelect
+              v-model="selectedDriverModel"
+              :options="[
+                { value: '', label: 'Sin asignar' },
+                ...drivers.map(driver => ({ value: driver.id, label: `${driver.firstname} ${driver.lastname}` }))
+              ]"
               :disabled="savingDriver"
-            >
-              <option value="">Sin asignar</option>
-              <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
-                {{ driver.firstname }} {{ driver.lastname }}
-              </option>
-            </select>
+              class="flex-1 w-full"
+            />
             <div class="flex items-center ml-1 flex-shrink-0">
               <button 
                 @click="emit('save-driver')"
@@ -148,17 +146,15 @@
           
           <!-- Modo edicion -->
           <template v-else>
-            <select 
-              :value="selectedAssistantId ?? ''"
-              @change="emit('update:selectedAssistantId', $event.target.value ? Number($event.target.value) : null)"
-              class="flex-1 text-xs border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 py-1 px-1.5"
+            <FormSelect
+              v-model="selectedAssistantModel"
+              :options="[
+                { value: '', label: 'Sin asignar' },
+                ...assistants.map(assistant => ({ value: assistant.id, label: `${assistant.firstname} ${assistant.lastname}` }))
+              ]"
               :disabled="savingAssistant"
-            >
-              <option value="">Sin asignar</option>
-              <option v-for="assistant in assistants" :key="assistant.id" :value="assistant.id">
-                {{ assistant.firstname }} {{ assistant.lastname }}
-              </option>
-            </select>
+              class="flex-1 w-full"
+            />
             <div class="flex items-center ml-1 flex-shrink-0">
               <button 
                 @click="emit('save-assistant')"
@@ -225,6 +221,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
+
 const props = defineProps({
   trip: {
     type: Object,
@@ -299,6 +298,16 @@ const emit = defineEmits([
   'update:selectedDriverId',
   'update:selectedAssistantId'
 ])
+
+const selectedDriverModel = computed({
+  get: () => props.selectedDriverId ?? '',
+  set: (val) => emit('update:selectedDriverId', val ? Number(val) : null)
+})
+
+const selectedAssistantModel = computed({
+  get: () => props.selectedAssistantId ?? '',
+  set: (val) => emit('update:selectedAssistantId', val ? Number(val) : null)
+})
 
 // Obtener nombre del día
 const getDayName = (dateString) => {

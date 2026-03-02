@@ -29,46 +29,37 @@
     <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
       <div class="flex flex-wrap gap-4">
         <div class="flex-1 min-w-[200px]">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <input 
-              v-model="searchTerm" 
-              type="text" 
-              placeholder="Nombre, email, usuario..." 
-              class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-              @input="onSearchInput"
-            />
-          </div>
+          <FormInput
+            label="Buscar"
+            v-model="searchTerm"
+            type="text"
+            placeholder="Nombre, email, usuario..."
+            @input="onSearchInput"
+            leftIcon="magnifying-glass"
+          />
         </div>
         <div class="w-40">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-          <select 
-            v-model="selectedRole" 
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+          <FormSelect
+            label="Rol"
+            v-model="selectedRole"
             @change="onFilterChange"
-          >
-            <option value="">Todos</option>
-            <option v-for="role in roles" :key="role" :value="role">
-              {{ getRoleLabel(role) }}
-            </option>
-          </select>
+            :options="[
+              { value: '', label: 'Todos' },
+              ...roles.map(role => ({ value: role, label: getRoleLabel(role) }))
+            ]"
+          />
         </div>
         <div class="w-40">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-          <select 
-            v-model="selectedStatus" 
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+          <FormSelect
+            label="Estado"
+            v-model="selectedStatus"
             @change="onFilterChange"
-          >
-            <option value="">Todos</option>
-            <option value="true">Activos</option>
-            <option value="false">Inactivos</option>
-          </select>
+            :options="[
+              { value: '', label: 'Todos' },
+              { value: 'true', label: 'Activos' },
+              { value: 'false', label: 'Inactivos' }
+            ]"
+          />
         </div>
       </div>
     </div>
@@ -288,6 +279,8 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { usePersonData } from '~/composables/usePersonData'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 const props = defineProps({
   users: {

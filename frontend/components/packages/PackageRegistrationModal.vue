@@ -11,438 +11,386 @@
 
       <!-- Modal -->
       <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full"
+        v-if="!showReceiptModal"
+        class="inline-block align-bottom bg-gray-50 rounded-xl text-left shadow-2xl transform transition-all sm:my-4 sm:align-middle w-full sm:max-w-7xl"
         @click.stop
       >
         <!-- Encabezado del modal -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 border-b border-gray-200">
-          <div class="flex items-center justify-between">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between border-b rounded-t-xl">
+          <div class="flex items-center space-x-3">
+            <div class="bg-white/10 p-1.5 rounded-lg">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
             <div>
-              <h3 class="text-xl leading-6 font-medium text-white">
-                Emisión de Encomienda
-              </h3>
-              <p class="mt-1 text-sm text-blue-100">
-                Complete los datos del paquete y destinatarios
-              </p>
+              <h3 class="text-lg font-bold text-white leading-tight">Emisión de Encomienda</h3>
             </div>
-            <div class="flex items-center space-x-4">
-              <div class="text-white text-right">
-                <div class="text-xs font-medium">No.</div>
-                <div class="text-xl font-bold tracking-wider">{{ packageNumber }}</div>
-              </div>
-              <button 
-                @click="closeModal" 
-                class="text-white hover:text-gray-200 focus:outline-none"
-              >
-                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-white text-right">
+              <div class="text-[10px] font-medium text-blue-200 uppercase tracking-wider">No. Seguimiento</div>
+              <div class="text-lg font-bold tracking-wider leading-none">{{ packageNumber }}</div>
             </div>
+            <button
+              @click="closeModal"
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
         </div>
 
         <!-- Contenido del modal -->
-        <div class="bg-white px-6 py-6 max-h-[80vh] overflow-y-auto">
-          <form @submit.prevent="submitPackage">
-            <!-- Información de fecha -->
-            <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Lugar</label>
-                <input
-                  type="text"
+        <div class="px-5 py-4 max-h-[calc(100vh-8rem)] overflow-y-auto">
+          <form @submit.prevent="submitPackage" class="space-y-4">
+            
+            <!-- Información general y Distribución (Lugar, Destino, Fecha, Pago, Estado) -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+                <!-- Origen y Destino -->
+                <FormInput
+                  label="Origen *"
                   v-model="packageData.origin"
-                  class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Oficina de origen"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Fecha</label>
-                <input
                   type="text"
-                  :value="`${currentDay}/${currentMonth}/${currentYear}`"
-                  class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  readonly
+                  placeholder="Ej: Comarapa"
+                  required
                 />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-blue-800 mb-1">Estado</label>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                    <span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-                    En oficina
-                  </span>
+                <FormInput 
+                  label="Destino *" 
+                  v-model="packageData.destination" 
+                  required 
+                  placeholder="Ej: Santa Cruz" 
+                />
+                
+                <!-- Pago -->
+                <FormSelect
+                  label="Estado del Pago *"
+                  v-model="packageData.payment_status"
+                  required
+                  :options="[
+                    { value: 'paid_on_send', label: 'Pagado al enviar' },
+                    { value: 'collect_on_delivery', label: 'Por cobrar en destino' }
+                  ]"
+                />
+                <FormSelect
+                  v-if="packageData.payment_status === 'paid_on_send'"
+                  label="Método *"
+                  v-model="packageData.payment_method"
+                  required
+                  :options="[
+                    { value: 'cash', label: '💵 Físico' },
+                    { value: 'qr', label: '📱 QR/Transf.' }
+                  ]"
+                />
+                <!-- Espaciador si el método de pago está oculto -->
+                <div v-else class="hidden md:block"></div>
+                
+                <!-- Estado -->
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">Estado</label>
+                  <div class="flex items-center h-[38px]">
+                    <span v-if="tripId" class="inline-flex items-center px-2 py-1.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 w-full justify-center">
+                      <span class="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></span>
+                      Asignado
+                    </span>
+                    <span v-else class="inline-flex items-center px-2 py-1.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800 border border-yellow-200 w-full justify-center">
+                      <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
+                      En oficina
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- Columna izquierda: Información del envío -->
-              <div class="space-y-6">
-                <!-- Remitente -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <!-- Columna Izquierda: Actores (Remitente y Consignatario) -->
+              <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Tarjeta Remitente -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex flex-col">
+                  <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center uppercase tracking-wide">
+                    <svg class="w-4 h-4 text-blue-600 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     Remitente
                   </h4>
                   
-                  <!-- Buscar remitente existente -->
-                  <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por CI o Nombre</label>
-                    <div class="relative">
-                      <input
-                        type="text"
-                        v-model="senderSearchQuery"
-                        @input="searchSenders"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Ingrese CI o nombre del remitente (mín. 2 caracteres)..."
-                      />
-                      <div class="absolute right-2 top-2">
-                        <svg v-if="searchingSenders" class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                      </div>
-                    </div>
+                  <div class="grid grid-cols-2 gap-2 mb-4">
+                    <label class="flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm"
+                           :class="senderSearch.clientType.value === 'existing' ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">
+                      <input type="radio" v-model="senderSearch.clientType.value" value="existing" class="sr-only">
+                      Cliente Existente
+                    </label>
 
-                    <!-- Resultados de búsqueda de remitentes -->
-                    <div v-if="foundSenders.length > 0" class="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-white shadow-sm">
-                      <div 
-                        v-for="sender in foundSenders" 
-                        :key="sender.id"
-                        @click="selectSender(sender)"
-                        class="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      >
-                        <p class="text-sm font-medium">{{ sender.firstname }} {{ sender.lastname }}</p>
-                        <p class="text-xs text-gray-500">CI: {{ sender.document_id }}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Campos del remitente -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
-                      <input
-                        type="text"
-                        v-model="packageData.sender.firstname"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
-                      <input
-                        type="text"
-                        v-model="packageData.sender.lastname"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Documento de Identidad</label>
-                      <input
-                        type="text"
-                        v-model="packageData.sender.document_id"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                      <input
-                        type="tel"
-                        v-model="packageData.sender.phone"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Destinatario -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                    </svg>
-                    Consignatario (Destinatario)
-                  </h4>
-                  
-                  <!-- Buscar destinatario existente -->
-                  <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por CI o Nombre</label>
-                    <div class="relative">
-                      <input
-                        type="text"
-                        v-model="recipientSearchQuery"
-                        @input="searchRecipients"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        placeholder="Ingrese CI o nombre del destinatario (mín. 2 caracteres)..."
-                      />
-                      <div class="absolute right-2 top-2">
-                        <svg v-if="searchingRecipients" class="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                      </div>
-                    </div>
-
-                    <!-- Resultados de búsqueda de destinatarios -->
-                    <div v-if="foundRecipients.length > 0" class="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-white shadow-sm">
-                      <div 
-                        v-for="recipient in foundRecipients" 
-                        :key="recipient.id"
-                        @click="selectRecipient(recipient)"
-                        class="p-2 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      >
-                        <p class="text-sm font-medium">{{ recipient.firstname }} {{ recipient.lastname }}</p>
-                        <p class="text-xs text-gray-500">CI: {{ recipient.document_id }}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Campos del destinatario -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
-                      <input
-                        type="text"
-                        v-model="packageData.recipient.firstname"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
-                      <input
-                        type="text"
-                        v-model="packageData.recipient.lastname"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Documento de Identidad</label>
-                      <input
-                        type="text"
-                        v-model="packageData.recipient.document_id"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                      <input
-                        type="tel"
-                        v-model="packageData.recipient.phone"
-                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Alerta de validación: misma persona -->
-                <div v-if="isSamePerson" class="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <p class="text-sm text-red-800 font-medium">
-                      ⚠️ Error: El remitente y el destinatario no pueden ser la misma persona
-                    </p>
-                  </div>
-                </div>
-
-                <!-- Destino -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                    </svg>
-                    Destino
-                  </h4>
-                  <input
-                    type="text"
-                    v-model="packageData.destination"
-                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                    placeholder="Ciudad de destino"
-                    required
-                  />
-                </div>
-
-                <!-- Pago -->
-                <div class="bg-blue-50 p-4 rounded-lg mt-6">
-                  <h4 class="text-lg font-medium text-blue-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
-                    </svg>
-                    Información de Pago
-                  </h4>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-blue-800 mb-1">Estado de Pago</label>
-                      <select v-model="packageData.payment_status" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="paid_on_send">Pagado al enviar</option>
-                        <option value="collect_on_delivery">Por cobrar</option>
-                      </select>
-                    </div>
-                    <div v-if="packageData.payment_status === 'paid_on_send'">
-                      <label class="block text-sm font-medium text-blue-800 mb-1">Método de Pago</label>
-                      <select v-model="packageData.payment_method" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="cash">Efectivo</option>
-                        <option value="qr">QR</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Columna derecha: Detalles del paquete -->
-              <div class="space-y-6">
-                <!-- Tabla de paquetes -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                  <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v10h10V5H5z" clip-rule="evenodd" />
-                    </svg>
-                    Detalle de Encomienda
-                  </h4>
-
-                  <!-- Tabla de paquetes -->
-                  <div class="overflow-hidden border border-gray-200 rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                      <thead class="bg-gray-100">
-                        <tr>
-                          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalle</th>
-                          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="(item, index) in packageData.items" :key="index">
-                          <td class="px-4 py-4 whitespace-nowrap">
-                            <input
-                              type="number"
-                              v-model.number="item.quantity"
-                              min="1"
-                              class="block w-20 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                          </td>
-                          <td class="px-4 py-4">
-                            <input
-                              type="text"
-                              v-model="item.description"
-                              class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              placeholder="Descripción del artículo"
-                            />
-                          </td>
-                          <td class="px-4 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                              <span class="text-gray-500 mr-1">Bs.</span>
-                              <input
-                                type="number"
-                                v-model.number="item.unit_price"
-                                min="0"
-                                step="0.01"
-                                class="block w-24 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              />
-                            </div>
-                          </td>
-                          <td class="px-4 py-4 whitespace-nowrap">
-                            <button
-                              type="button"
-                              @click="removeItem(index)"
-                              class="text-red-600 hover:text-red-800"
-                              v-if="packageData.items.length > 1"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <!-- Botón para agregar ítem -->
-                  <button
-                    type="button"
-                    @click="addItem"
-                    class="mt-3 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Agregar Artículo
-                  </button>
-
-                  <!-- Total -->
-                  <div class="mt-4 bg-indigo-50 p-3 rounded-md border border-indigo-200">
-                    <div class="flex justify-between items-center">
-                      <span class="text-lg font-medium text-indigo-800">Total:</span>
-                      <span class="text-xl font-bold text-indigo-900">Bs. {{ totalAmount.toFixed(2) }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Nota legal -->
-                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <p class="text-sm text-yellow-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <strong>NOTA:</strong> Pasado los 30 días la empresa no se responsabiliza por su encomienda.
-                  </p>
-                </div>
-
-                <!-- Recibí conforme -->
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div class="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="received_confirmation"
-                      v-model="packageData.received_confirmation"
-                      class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      required
-                    />
-                    <label for="received_confirmation" class="ml-2 block text-sm font-medium text-gray-700">
-                      RECIBÍ CONFORME
+                    <label class="flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm"
+                           :class="senderSearch.clientType.value === 'new' ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">
+                      <input type="radio" v-model="senderSearch.clientType.value" value="new" class="sr-only">
+                      Cliente Nuevo
                     </label>
                   </div>
-                  <p class="mt-1 text-xs text-gray-500">
-                    Al marcar esta casilla, confirmo que he verificado los datos de la encomienda.
-                  </p>
+
+                  <!-- Remitente Existente -->
+                  <div v-if="senderSearch.clientType.value === 'existing'" class="flex-1 flex flex-col relative w-full h-full min-h-[140px]">
+                    <div class="mb-2">
+                      <input
+                        v-model="senderSearch.clientSearchQuery.value"
+                        @input="senderSearch.searchClients"
+                        type="text"
+                        class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2"
+                        placeholder="Buscar por nombre, apellido o CI..."
+                      />
+                    </div>
+                    
+                    <div v-if="senderSearch.searchingClients.value" class="flex items-center justify-center py-4">
+                      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    </div>
+
+                    <div v-else-if="senderSearch.hasSearched.value && senderSearch.foundClients.value.length > 0 && !senderSearch.hasSelectedExistingClient.value" class="absolute z-10 w-full top-[42px] bg-white shadow-lg border border-gray-200 rounded-lg">
+                      <div class="max-h-32 overflow-y-auto">
+                        <div v-for="client in senderSearch.foundClients.value" :key="client.id" @click="senderSearch.selectExistingClient(client)"
+                          class="p-2 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-all text-sm">
+                          <div class="font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</div>
+                          <div class="text-xs text-gray-500">CI: {{ client.document_id }}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-else-if="senderSearch.hasSearched.value && senderSearch.foundClients.value.length === 0 && !senderSearch.hasSelectedExistingClient.value" class="text-center py-2">
+                      <p class="text-xs text-gray-500">No se encontraron clientes.</p>
+                    </div>
+
+                    <div v-if="senderSearch.hasSelectedExistingClient.value" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-1 shadow-sm relative">
+                      <button @click="senderSearch.clearExistingClientSelection" type="button" class="absolute top-2 right-2 text-blue-400 hover:text-blue-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
+                      <h5 class="font-semibold text-sm text-blue-900 leading-tight mb-1">{{ senderSearch.selectedExistingClient.value.firstname }} {{ senderSearch.selectedExistingClient.value.lastname }}</h5>
+                      <p class="text-xs text-blue-700">CI: {{ senderSearch.selectedExistingClient.value.document_id }} <span v-if="senderSearch.selectedExistingClient.value.phone">• Cel: {{ senderSearch.selectedExistingClient.value.phone }}</span></p>
+                    </div>
+                  </div>
+
+                  <!-- Remitente Nuevo -->
+                  <div v-if="senderSearch.clientType.value === 'new'" class="grid grid-cols-2 gap-3 h-full min-h-[140px] items-start">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Nombres *</label>
+                      <input v-model="newSenderForm.firstname" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Apellidos *</label>
+                        <input v-model="newSenderForm.lastname" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">CI/Doc *</label>
+                        <input v-model="newSenderForm.document_id" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input v-model="newSenderForm.phone" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tarjeta Destinatario (Consignatario) -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex flex-col">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-bold text-gray-900 flex items-center uppercase tracking-wide">
+                      <svg class="w-4 h-4 text-green-600 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Consignatario
+                    </h4>
+                    <button v-if="hasSender && hasRecipient && getSenderDocument() !== getRecipientDocument()" type="button" @click="copySenderToRecipient" class="text-xs font-medium text-gray-500 hover:text-green-600 transition-colors uppercase tracking-wider flex items-center">
+                       <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                      </svg>
+                      MISMA PERSONA?
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 mb-4">
+                    <label class="flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm"
+                           :class="recipientSearch.clientType.value === 'existing' ? 'border-green-500 bg-green-50 text-green-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">
+                      <input type="radio" v-model="recipientSearch.clientType.value" value="existing" class="sr-only">
+                      Cliente Existente
+                    </label>
+
+                    <label class="flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm"
+                           :class="recipientSearch.clientType.value === 'new' ? 'border-green-500 bg-green-50 text-green-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'">
+                      <input type="radio" v-model="recipientSearch.clientType.value" value="new" class="sr-only">
+                      Cliente Nuevo
+                    </label>
+                  </div>
+
+                  <!-- Destinatario Existente -->
+                  <div v-if="recipientSearch.clientType.value === 'existing'" class="flex-1 flex flex-col relative w-full h-full min-h-[140px]">
+                    <div class="mb-2">
+                      <input
+                        v-model="recipientSearch.clientSearchQuery.value"
+                        @input="recipientSearch.searchClients"
+                        type="text"
+                        class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-2"
+                        placeholder="Buscar por nombre, apellido o CI..."
+                      />
+                    </div>
+                    
+                    <div v-if="recipientSearch.searchingClients.value" class="flex items-center justify-center py-4">
+                      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                    </div>
+
+                    <div v-else-if="recipientSearch.hasSearched.value && recipientSearch.foundClients.value.length > 0 && !recipientSearch.hasSelectedExistingClient.value" class="absolute z-10 w-full top-[42px] bg-white shadow-lg border border-gray-200 rounded-lg">
+                       <div class="max-h-32 overflow-y-auto">
+                        <div v-for="client in recipientSearch.foundClients.value" :key="client.id" @click="recipientSearch.selectExistingClient(client)"
+                          class="p-2 border-b border-gray-100 cursor-pointer hover:bg-green-50 transition-all text-sm">
+                          <div class="font-medium text-gray-900">{{ client.firstname }} {{ client.lastname }}</div>
+                          <div class="text-xs text-gray-500">CI: {{ client.document_id }}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-else-if="recipientSearch.hasSearched.value && recipientSearch.foundClients.value.length === 0 && !recipientSearch.hasSelectedExistingClient.value" class="text-center py-2">
+                      <p class="text-xs text-gray-500">No se encontraron clientes.</p>
+                    </div>
+
+                    <div v-if="recipientSearch.hasSelectedExistingClient.value" class="bg-green-50 border border-green-200 rounded-lg p-3 mt-1 shadow-sm relative">
+                      <button @click="recipientSearch.clearExistingClientSelection" type="button" class="absolute top-2 right-2 text-green-400 hover:text-green-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
+                      <h5 class="font-semibold text-sm text-green-900 leading-tight mb-1">{{ recipientSearch.selectedExistingClient.value.firstname }} {{ recipientSearch.selectedExistingClient.value.lastname }}</h5>
+                      <p class="text-xs text-green-700">CI: {{ recipientSearch.selectedExistingClient.value.document_id }} <span v-if="recipientSearch.selectedExistingClient.value.phone">• Cel: {{ recipientSearch.selectedExistingClient.value.phone }}</span></p>
+                    </div>
+                  </div>
+
+                  <!-- Destinatario Nuevo -->
+                   <div v-if="recipientSearch.clientType.value === 'new'" class="grid grid-cols-2 gap-3 h-full min-h-[140px] items-start">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Nombres *</label>
+                      <input v-model="newRecipientForm.firstname" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Apellidos *</label>
+                        <input v-model="newRecipientForm.lastname" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">CI/Doc *</label>
+                        <input v-model="newRecipientForm.document_id" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input v-model="newRecipientForm.phone" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="isSamePerson" class="bg-red-50 border border-red-200 rounded-lg p-3 col-span-1 md:col-span-2 flex items-center mb-2">
+                  <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                  <p class="text-xs text-red-800 font-medium">El remitente y el destinatario no pueden ser la misma persona.</p>
+                </div>
+
+                <div class="col-span-1 md:col-span-2 text-xs flex mt-auto gap-4">
+                  <div class="flex-1 bg-yellow-50 rounded-lg p-3 border border-yellow-200 text-yellow-800 flex items-start">
+                    <svg class="w-4 h-4 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                    Aviso Legal: La empresa no se responsabiliza de mercancía que no coincida con el contenido declarado. Sin reclamo pasados los 30 días.
+                  </div>
+                  <div class="flex-1 bg-white rounded-lg p-3 border border-gray-200 flex items-center">
+                    <label class="flex items-center cursor-pointer">
+                      <input type="checkbox" v-model="packageData.received_confirmation" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                      <span class="ml-2 text-xs font-medium text-gray-900 leading-tight">El cliente declara que el contenido es lícito y RECIBE CONFORME su comprobante.</span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Columna Derecha: Tabla de Artículos -->
+              <div class="lg:col-span-4 space-y-4">
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex flex-col h-full">
+                  <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center uppercase tracking-wide">
+                     <svg class="w-4 h-4 text-indigo-600 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                    Detalle Artículos
+                  </h4>
+
+                  <div class="border border-gray-200 rounded-lg overflow-hidden flex-1 flex flex-col max-h-[220px]">
+                    <div class="overflow-y-auto w-full">
+                      <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0 z-10">
+                          <tr>
+                            <th class="px-2 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Cant.</th>
+                            <th class="px-2 py-2 text-left text-[10px] font-medium text-gray-500 uppercase">Detalle</th>
+                            <th class="px-2 py-2 text-right text-[10px] font-medium text-gray-500 uppercase">Total (Bs)</th>
+                            <th class="px-2 py-2 w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white">
+                          <tr v-for="(item, index) in packageData.items" :key="index" class="group">
+                            <td class="px-2 py-1.5 align-top">
+                              <input type="number" v-model.number="item.quantity" min="1" class="w-12 px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-center">
+                            </td>
+                            <td class="px-2 py-1.5 align-top w-full">
+                              <input type="text" v-model="item.description" placeholder="Ej: Ropa" class="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            </td>
+                            <td class="px-2 py-1.5 align-top">
+                              <input type="number" v-model.number="item.unit_price" min="0" step="0.5" class="w-16 px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-right">
+                            </td>
+                            <td class="px-2 py-1.5 text-right align-middle">
+                              <button v-if="packageData.items.length > 1" @click="removeItem(index)" type="button" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded p-1 transition-colors opacity-0 group-hover:opacity-100">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <button @click="addItem" type="button" class="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors w-full text-center py-2 bg-blue-50 hover:bg-blue-100 rounded-lg">
+                    + Añadir Ítem
+                  </button>
+
+                  <div class="mt-auto pt-4 border-t border-gray-100">
+                    <div class="bg-blue-50 p-3 rounded-lg flex justify-between items-center border border-blue-100">
+                      <span class="text-sm text-gray-600 font-medium">Total a Pagar</span>
+                      <span class="text-lg font-bold text-blue-900">Bs. {{ totalAmount.toFixed(2) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Botones de acción -->
-            <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3">
-              <button
-                type="button"
-                @click="closeModal"
-                class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                :disabled="isSubmitting || !isFormValid"
-                class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ isSubmitting ? 'Registrando...' : 'Registrar Encomienda' }}
-              </button>
+            <!-- Footer con Error y Botones -->
+            <div class="pt-4 border-t border-gray-200 mt-2 flex flex-col md:flex-row md:justify-between items-center gap-4">
+              <div v-if="formErrorMessage" class="text-red-500 font-medium bg-red-50 px-4 py-2 rounded-lg border border-red-200 text-sm flex-1 text-left w-full">
+                {{ formErrorMessage }}
+              </div>
+              <div v-else class="flex-1"></div>
+              
+              <div class="flex space-x-3 w-full md:w-auto">
+                <button
+                  type="button"
+                  @click="closeModal"
+                  class="flex-1 md:flex-none px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  :disabled="isSubmitting || !isFormValid"
+                  class="flex-1 md:flex-none px-6 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  <svg v-if="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{{ isSubmitting ? 'Procesando...' : 'Confirmar Encomienda' }}</span>
+                </button>
+              </div>
             </div>
+            
           </form>
         </div>
       </div>
@@ -462,7 +410,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { usePackageStore } from '~/stores/packageStore'
 import apiFetch from '~/utils/api'
+
 import PackageReceiptModal from './PackageReceiptModal.vue'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
+import { useClientSearch } from '~/composables/useClientSearch'
 
 const props = defineProps({
   showModal: {
@@ -481,17 +433,26 @@ const emit = defineEmits(['close', 'package-registered'])
 const authStore = useAuthStore()
 const packageStore = usePackageStore()
 
+// Composables independientes de búsqueda de clientes
+const senderSearch = useClientSearch()
+const recipientSearch = useClientSearch()
+
+// Por defecto, inicializar ambos en 'existing' para priorizar la búsqueda rápida
+onMounted(() => {
+  senderSearch.clientType.value = 'existing'
+  recipientSearch.clientType.value = 'existing'
+})
+
 // Estados reactivos
 const isSubmitting = ref(false)
-const senderSearchQuery = ref('')
-const recipientSearchQuery = ref('')
-const foundSenders = ref([])
-const foundRecipients = ref([])
-const searchingSenders = ref(false)
-const searchingRecipients = ref(false)
+const formErrorMessage = ref('')
 
 // Número de paquete (tracking number)
 const packageNumber = ref('000000')
+
+// Formularios para nuevos clientes locales
+const newSenderForm = ref({ firstname: '', lastname: '', document_id: '', phone: '' })
+const newRecipientForm = ref({ firstname: '', lastname: '', document_id: '', phone: '' })
 
 // Fecha actual
 const now = new Date()
@@ -499,7 +460,7 @@ const currentDay = ref(now.getDate().toString().padStart(2, '0'))
 const currentMonth = ref((now.getMonth() + 1).toString().padStart(2, '0'))
 const currentYear = ref(now.getFullYear().toString())
 
-// Datos del paquete — SIN trip_id ni driver
+// Datos del paquete principal
 const packageData = ref({
   tracking_number: '',
   origin: '',
@@ -507,24 +468,8 @@ const packageData = ref({
   total_weight: 0,
   total_declared_value: 0,
   notes: '',
-  sender: {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: ''
-  },
-  recipient: {
-    firstname: '',
-    lastname: '',
-    document_id: '',
-    phone: ''
-  },
   items: [
-    {
-      quantity: 1,
-      description: '',
-      unit_price: 0
-    }
+    { quantity: 1, description: '', unit_price: 0 }
   ],
   payment_status: 'paid_on_send',
   payment_method: 'cash',
@@ -533,44 +478,60 @@ const packageData = ref({
 
 // Computed properties
 const totalAmount = computed(() => {
-  return packageData.value.items.reduce((total, item) => {
-    return total + (item.quantity * item.unit_price)
-  }, 0)
+  return packageData.value.items.reduce((total, item) => total + (item.quantity * item.unit_price), 0)
 })
 
 const totalItemsCount = computed(() => {
   return packageData.value.items.reduce((total, item) => total + item.quantity, 0)
 })
 
-const isFormValid = computed(() => {
-  const basicValidation = packageData.value.sender.firstname.trim() !== '' &&
-         packageData.value.sender.lastname.trim() !== '' &&
-         packageData.value.sender.document_id.trim() !== '' &&
-         packageData.value.recipient.firstname.trim() !== '' &&
-         packageData.value.recipient.lastname.trim() !== '' &&
-         packageData.value.recipient.document_id.trim() !== '' &&
-         packageData.value.destination.trim() !== '' &&
-         packageData.value.items.length > 0 &&
-         packageData.value.items.every(item => 
-           item.description.trim() !== '' && 
-           item.quantity > 0 && 
-           item.unit_price >= 0
-         ) &&
-         packageData.value.received_confirmation
+const getSenderDocument = () => {
+  return senderSearch.clientType.value === 'existing' 
+    ? senderSearch.selectedExistingClient.value?.document_id 
+    : newSenderForm.value.document_id
+}
 
-  // No se requiere trip_id
-
-  const samePersonValidation = packageData.value.sender.document_id.trim() === '' ||
-                               packageData.value.recipient.document_id.trim() === '' ||
-                               packageData.value.sender.document_id.trim() !== packageData.value.recipient.document_id.trim()
-
-  return basicValidation && samePersonValidation
-})
+const getRecipientDocument = () => {
+  return recipientSearch.clientType.value === 'existing' 
+    ? recipientSearch.selectedExistingClient.value?.document_id 
+    : newRecipientForm.value.document_id
+}
 
 const isSamePerson = computed(() => {
-  return packageData.value.sender.document_id.trim() !== '' &&
-         packageData.value.recipient.document_id.trim() !== '' &&
-         packageData.value.sender.document_id.trim() === packageData.value.recipient.document_id.trim()
+  const sDoc = getSenderDocument()
+  const rDoc = getRecipientDocument()
+  return sDoc && rDoc && sDoc.trim() === rDoc.trim()
+})
+
+const hasSender = computed(() => {
+  if (senderSearch.clientType.value === 'existing') {
+    return !!senderSearch.selectedExistingClient.value
+  } else {
+    const f = newSenderForm.value
+    return f.firstname.trim() !== '' && f.lastname.trim() !== '' && f.document_id.trim() !== ''
+  }
+})
+
+const hasRecipient = computed(() => {
+  if (recipientSearch.clientType.value === 'existing') {
+    return !!recipientSearch.selectedExistingClient.value
+  } else {
+    const f = newRecipientForm.value
+    return f.firstname.trim() !== '' && f.lastname.trim() !== '' && f.document_id.trim() !== ''
+  }
+})
+
+const isFormValid = computed(() => {
+  const basicValidation = 
+    hasSender.value && 
+    hasRecipient.value && 
+    packageData.value.destination.trim() !== '' &&
+    packageData.value.origin.trim() !== '' &&
+    packageData.value.items.length > 0 &&
+    packageData.value.items.every(item => item.description.trim() !== '' && item.quantity > 0 && item.unit_price >= 0) &&
+    packageData.value.received_confirmation
+
+  return basicValidation && !isSamePerson.value
 })
 
 // Estados para el recibo
@@ -583,11 +544,7 @@ const closeModal = () => {
 }
 
 const addItem = () => {
-  packageData.value.items.push({
-    quantity: 1,
-    description: '',
-    unit_price: 0
-  })
+  packageData.value.items.push({ quantity: 1, description: '', unit_price: 0 })
 }
 
 const removeItem = (index) => {
@@ -596,118 +553,76 @@ const removeItem = (index) => {
   }
 }
 
-// Funciones de búsqueda
-const searchSenders = async () => {
-  if (!senderSearchQuery.value.trim() || senderSearchQuery.value.trim().length < 2) {
-    foundSenders.value = []
-    return
-  }
-
-  searchingSenders.value = true
-  try {
-    const response = await apiFetch(`/clients/search?q=${encodeURIComponent(senderSearchQuery.value)}`, {
-      method: 'GET'
-    })
-    foundSenders.value = response || []
-  } catch (error) {
-    console.error('Error searching senders:', error)
-    foundSenders.value = []
-  } finally {
-    searchingSenders.value = false
-  }
-}
-
-const searchRecipients = async () => {
-  if (!recipientSearchQuery.value.trim() || recipientSearchQuery.value.trim().length < 2) {
-    foundRecipients.value = []
-    return
-  }
-
-  searchingRecipients.value = true
-  try {
-    const response = await apiFetch(`/clients/search?q=${encodeURIComponent(recipientSearchQuery.value)}`, {
-      method: 'GET'
-    })
-    foundRecipients.value = response || []
-  } catch (error) {
-    console.error('Error searching recipients:', error)
-    foundRecipients.value = []
-  } finally {
-    searchingRecipients.value = false
-  }
-}
-
-const selectSender = (sender) => {
-  packageData.value.sender = {
-    firstname: sender.firstname || '',
-    lastname: sender.lastname || '',
-    document_id: sender.document_id || '',
-    phone: sender.phone || ''
-  }
-  senderSearchQuery.value = `${sender.firstname} ${sender.lastname} (${sender.document_id})`
-  foundSenders.value = []
+const copySenderToRecipient = () => {
+  if (!senderSearch.selectedExistingClient.value && !newSenderForm.value.document_id) return
   
-  if (packageData.value.recipient.document_id === sender.document_id) {
-    packageData.value.recipient = { firstname: '', lastname: '', document_id: '', phone: '' }
-    recipientSearchQuery.value = ''
-  }
-}
-
-const selectRecipient = (recipient) => {
-  packageData.value.recipient = {
-    firstname: recipient.firstname || '',
-    lastname: recipient.lastname || '',
-    document_id: recipient.document_id || '',
-    phone: recipient.phone || ''
-  }
-  recipientSearchQuery.value = `${recipient.firstname} ${recipient.lastname} (${recipient.document_id})`
-  foundRecipients.value = []
-  
-  if (packageData.value.sender.document_id === recipient.document_id) {
-    packageData.value.sender = { firstname: '', lastname: '', document_id: '', phone: '' }
-    senderSearchQuery.value = ''
+  if (senderSearch.clientType.value === 'existing') {
+    recipientSearch.clientType.value = 'existing'
+    recipientSearch.hasSearched.value = true
+    recipientSearch.foundClients.value = [senderSearch.selectedExistingClient.value]
+    recipientSearch.selectExistingClient(senderSearch.selectedExistingClient.value)
+  } else {
+    recipientSearch.clientType.value = 'new'
+    newRecipientForm.value = { ...newSenderForm.value }
   }
 }
 
 const submitPackage = async () => {
-  if (!isFormValid.value) return
+  formErrorMessage.value = ''
+  if (!isFormValid.value) {
+    if (!hasSender.value) formErrorMessage.value = 'Complete la información del remitente.'
+    else if (!hasRecipient.value) formErrorMessage.value = 'Complete la información del destinatario.'
+    else if (!packageData.value.received_confirmation) formErrorMessage.value = 'Debe marcar la casilla de validación.'
+    else formErrorMessage.value = 'Complete los datos requeridos.'
+    return
+  }
+  
+  if (isSamePerson.value) {
+    formErrorMessage.value = 'El remitente y el destinatario no pueden ser la misma persona.'
+    return
+  }
 
   isSubmitting.value = true
   try {
-    // Crear o obtener clientes
-    const senderData = await createOrGetClient(packageData.value.sender)
-    const recipientData = await createOrGetClient(packageData.value.recipient)
+    // 1. Resolver Remitente
+    const senderPayload = senderSearch.clientType.value === 'existing' 
+                          ? senderSearch.selectedExistingClient.value 
+                          : newSenderForm.value
+    const finalSender = await senderSearch.getOrCreateClient(senderPayload)
 
-    if (senderData.id === recipientData.id) {
-      throw new Error('El remitente y el destinatario no pueden ser la misma persona.')
+    // 2. Resolver Destinatario 
+    const recipientPayload = recipientSearch.clientType.value === 'existing'
+                             ? recipientSearch.selectedExistingClient.value
+                             : newRecipientForm.value
+    const finalRecipient = await recipientSearch.getOrCreateClient(recipientPayload)
+
+    // Validar en el caso de que la validación visual fallara
+    if (finalSender.id === finalRecipient.id) {
+      throw new Error('El remitente y el destinatario no pueden ser el mismo registro en la base de datos.')
     }
 
-    // Obtener el usuario autenticado
     if (!authStore.user || !authStore.user.id) {
       throw new Error('Debe iniciar sesión para registrar paquetes.')
     }
     
-    // Obtener el secretary_id
+    // Obtener secretary_id
     let secretaryId = null
     try {
-      const secretaryResponse = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, {
-        method: 'GET'
-      })
+      const secretaryResponse = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, { method: 'GET' })
       secretaryId = secretaryResponse.id
     } catch (error) {
-      console.error('Error obteniendo secretary_id:', error)
-      throw new Error('No se pudo obtener la información del secretario. Verifique que tenga permisos.')
+      throw new Error('No se pudo verificar su rol de secretario o no tiene los permisos suficientes.')
     }
 
-    // Preparar datos del paquete
+    // Payload de encomienda
     const packagePayload = {
       tracking_number: packageData.value.tracking_number,
       total_weight: packageData.value.total_weight || null,
       total_declared_value: packageData.value.total_declared_value || null,
       notes: packageData.value.notes || null,
       status: props.tripId ? 'assigned_to_trip' : 'registered_at_office',
-      sender_id: senderData.id,
-      recipient_id: recipientData.id,
+      sender_id: finalSender.id,
+      recipient_id: finalRecipient.id,
       secretary_id: secretaryId,
       trip_id: props.tripId ? Number(props.tripId) : null,
       payment_status: packageData.value.payment_status,
@@ -728,16 +643,16 @@ const submitPackage = async () => {
         origin: packageData.value.origin,
         destination: packageData.value.destination,
         sender: {
-          firstname: senderData.firstname,
-          lastname: senderData.lastname,
-          document_id: senderData.document_id,
-          phone: senderData.phone
+          firstname: finalSender.firstname,
+          lastname: finalSender.lastname,
+          document_id: finalSender.document_id,
+          phone: finalSender.phone
         },
         recipient: {
-          firstname: recipientData.firstname,
-          lastname: recipientData.lastname,
-          document_id: recipientData.document_id,
-          phone: recipientData.phone
+          firstname: finalRecipient.firstname,
+          lastname: finalRecipient.lastname,
+          document_id: finalRecipient.document_id,
+          phone: finalRecipient.phone
         },
         items: response.items || packageData.value.items,
         total_amount: response.total_amount || totalAmount.value,
@@ -747,69 +662,15 @@ const submitPackage = async () => {
 
       showReceiptModal.value = true
       emit('package-registered', response)
-      closeModal()
+      
       resetForm()
     }
   } catch (error) {
-    console.error('Error registering package:', error)
+    console.error('Error registrando encomienda:', error)
+    formErrorMessage.value = error.message || error.data?.detail || 'Hubo un error al registrar la encomienda.'
   } finally {
     isSubmitting.value = false
   }
-}
-
-const createOrGetClient = async (clientData) => {
-  try {
-    if (clientData.document_id && clientData.document_id.trim().length >= 2) {
-      const searchResponse = await apiFetch(`/clients/search?q=${encodeURIComponent(clientData.document_id)}`, {
-        method: 'GET'
-      })
-
-      if (searchResponse && searchResponse.length > 0) {
-        const existingClient = searchResponse.find(client => client.document_id === clientData.document_id)
-        if (existingClient) {
-          return existingClient
-        }
-      }
-    }
-
-    const newClient = await apiFetch('/clients', {
-      method: 'POST',
-      body: {
-        firstname: clientData.firstname,
-        lastname: clientData.lastname,
-        document_id: clientData.document_id,
-        phone: clientData.phone
-      }
-    })
-
-    return newClient
-  } catch (error) {
-    console.error('Error creating/getting client:', error)
-    throw error
-  }
-}
-
-const resetForm = () => {
-  const trackingNumber = generateTrackingNumber()
-  packageData.value = {
-    tracking_number: trackingNumber,
-    origin: '',
-    destination: '',
-    total_weight: 0,
-    total_declared_value: 0,
-    notes: '',
-    sender: { firstname: '', lastname: '', document_id: '', phone: '' },
-    recipient: { firstname: '', lastname: '', document_id: '', phone: '' },
-    items: [{ quantity: 1, description: '', unit_price: 0 }],
-    payment_status: 'paid_on_send',
-    payment_method: 'cash',
-    received_confirmation: false
-  }
-  packageNumber.value = trackingNumber
-  senderSearchQuery.value = ''
-  recipientSearchQuery.value = ''
-  foundSenders.value = []
-  foundRecipients.value = []
 }
 
 const generateTrackingNumber = () => {
@@ -818,12 +679,48 @@ const generateTrackingNumber = () => {
   return `${timestamp}${random}`
 }
 
+const resetForm = () => {
+  const trackingNumber = generateTrackingNumber()
+  
+  senderSearch.resetClientSearch()
+  recipientSearch.resetClientSearch()
+  
+  newSenderForm.value = { firstname: '', lastname: '', document_id: '', phone: '' }
+  newRecipientForm.value = { firstname: '', lastname: '', document_id: '', phone: '' }
+  formErrorMessage.value = ''
+
+  packageData.value = {
+    tracking_number: trackingNumber,
+    origin: '',
+    destination: '',
+    total_weight: 0,
+    total_declared_value: 0,
+    notes: '',
+    items: [{ quantity: 1, description: '', unit_price: 0 }],
+    payment_status: 'paid_on_send',
+    payment_method: 'cash',
+    received_confirmation: false
+  }
+  packageNumber.value = trackingNumber
+}
+
 const closeReceiptModal = () => {
   showReceiptModal.value = false
   registeredPackageData.value = {}
+  emit('close')
 }
 
-// Generar número de paquete al montar
+watch(() => props.showModal, (newVal) => {
+  if (newVal) {
+    if (!packageData.value.origin) {
+         packageData.value.origin = 'Comarapa' // Default fallback, should probably come from user branch 
+    }
+  } else {
+    resetForm()
+  }
+})
+
+// Inicializar form on mounted
 onMounted(() => {
   const trackingNumber = generateTrackingNumber()
   packageNumber.value = trackingNumber

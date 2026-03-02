@@ -25,27 +25,23 @@
           </h4>
           
           <div>
-            <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-            <input 
-              id="firstname" 
-              v-model="form.firstname" 
-              type="text" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-              :class="{ 'border-red-500': errors.firstname }"
+            <FormInput
+              id="firstname"
+              label="Nombre"
+              v-model="form.firstname"
+              type="text"
+              :error="errors.firstname"
             />
-            <p v-if="errors.firstname" class="mt-1 text-sm text-red-600">{{ errors.firstname }}</p>
           </div>
           
           <div>
-            <label for="lastname" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-            <input 
-              id="lastname" 
-              v-model="form.lastname" 
-              type="text" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-              :class="{ 'border-red-500': errors.lastname }"
+            <FormInput
+              id="lastname"
+              label="Apellido"
+              v-model="form.lastname"
+              type="text"
+              :error="errors.lastname"
             />
-            <p v-if="errors.lastname" class="mt-1 text-sm text-red-600">{{ errors.lastname }}</p>
           </div>
         </div>
         
@@ -59,71 +55,68 @@
           </h4>
           
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="text-gray-500">@</span>
-              </div>
-              <input 
-                id="username" 
-                v-model="form.username" 
-                type="text" 
-                class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-                :class="{ 'border-red-500': errors.username }"
-              />
-            </div>
-            <p v-if="errors.username" class="mt-1 text-sm text-red-600">{{ errors.username }}</p>
-          </div>
-          
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <input 
-                id="email" 
-                v-model="form.email" 
-                type="email" 
-                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-                :class="{ 'border-red-500': errors.email }"
-              />
-            </div>
-            <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
-          </div>
-          
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-              {{ isEditing ? 'Contraseña (dejar en blanco para mantener la actual)' : 'Contraseña' }}
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <input 
-                id="password" 
-                v-model="form.password" 
-                type="password" 
-                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-                :class="{ 'border-red-500': errors.password }"
-                :required="!isEditing"
-              />
-              <div v-if="form.password" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <div class="h-1 w-10 rounded-full overflow-hidden bg-gray-200">
-                  <div 
-                    class="h-full transition-all duration-300"
-                    :class="passwordStrengthClass"
-                    :style="{ width: `${passwordStrength * 10}%` }"
-                  ></div>
+            <FormInput
+              id="username"
+              label="Nombre de Usuario"
+              v-model="form.username"
+              type="text"
+              :error="errors.username"
+            >
+              <template #prefix>
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-500">@</span>
                 </div>
-              </div>
-            </div>
-            <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
-            <p v-else-if="form.password" class="mt-1 text-xs text-gray-500">
+              </template>
+            </FormInput>
+          </div>
+          
+          <div>
+            <FormInput
+              id="email"
+              label="Correo Electrónico"
+              v-model="form.email"
+              type="email"
+              :error="errors.email"
+            >
+              <template #prefix>
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </template>
+            </FormInput>
+          </div>
+          
+          <div>
+            <FormInput
+              id="password"
+              :label="isEditing ? 'Contraseña (dejar en blanco para mantener la actual)' : 'Contraseña'"
+              v-model="form.password"
+              type="password"
+              :required="!isEditing"
+              :error="errors.password"
+            >
+              <template #prefix>
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+              </template>
+              <template v-if="form.password" #suffix>
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <div class="h-1 w-10 rounded-full overflow-hidden bg-gray-200">
+                    <div 
+                      class="h-full transition-all duration-300"
+                      :class="passwordStrengthClass"
+                      :style="{ width: `${passwordStrength * 10}%` }"
+                    ></div>
+                  </div>
+                </div>
+              </template>
+            </FormInput>
+            <p v-if="form.password && !errors.password" class="mt-1 text-xs text-gray-500">
               Fortaleza: 
               <span :class="passwordStrengthTextClass">{{ passwordStrengthText }}</span>
             </p>
@@ -143,18 +136,13 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-            <select 
-              id="role" 
-              v-model="form.role" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
-              :class="{ 'border-red-500': errors.role }"
-            >
-              <option v-for="role in roles" :key="role" :value="role">
-                {{ getRoleLabel(role) }}
-              </option>
-            </select>
-            <p v-if="errors.role" class="mt-1 text-sm text-red-600">{{ errors.role }}</p>
+            <FormSelect
+              id="role"
+              label="Rol"
+              v-model="form.role"
+              :options="roles.map(role => ({ value: role, label: getRoleLabel(role) }))"
+              :error="errors.role"
+            />
           </div>
           
           <div class="flex items-center space-x-6 mt-6">
@@ -211,6 +199,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 const props = defineProps({
   user: {

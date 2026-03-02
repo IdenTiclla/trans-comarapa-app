@@ -47,6 +47,15 @@ async def get_packages(
     return [PackageService.to_summary(pkg) for pkg in packages]
 
 
+@router.get("/search", response_model=List[PackageSummary])
+async def search_packages(
+    q: str, skip: int = 0, limit: int = 100, service: PackageService = Depends(get_service)
+):
+    """Search packages by term."""
+    packages = service.search_packages(term=q, skip=skip, limit=limit)
+    return [PackageService.to_summary(pkg) for pkg in packages]
+
+
 @router.post("", response_model=PackageResponse)
 async def create_package(package: PackageCreate, service: PackageService = Depends(get_service)):
     """Create a new package with items."""

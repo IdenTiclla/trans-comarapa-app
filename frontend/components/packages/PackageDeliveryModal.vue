@@ -47,7 +47,7 @@
               <div class="flex justify-between items-start mb-3">
                 <div>
                   <h4 class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Nº Tracking</h4>
-                  <p class="text-xl font-bold text-gray-900 tracking-wide">#{{ packageData.tracking_number || packageData.tracking_code }}</p>
+                  <p class="text-xl font-bold text-gray-900 tracking-wide">{{ packageData.tracking_number }}</p>
                 </div>
                 <div class="text-right">
                   <h4 class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Total</h4>

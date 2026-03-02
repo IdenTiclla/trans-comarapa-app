@@ -210,13 +210,7 @@ export const getPackagesByTrip = async (tripId) => {
 }
 
 export const searchPackages = async (term) => {
-  try {
-    const pkg = await getPackageByTrackingNumber(term)
-    return [pkg]
-  } catch (error) {
-    console.warn('Package not found by tracking number:', term)
-    return []
-  }
+  return apiFetch(`${BASE_PATH}/search?q=${encodeURIComponent(term)}`)
 }
 
 // === UTILITY FUNCTIONS ===
@@ -233,10 +227,6 @@ export const calculateItemsCount = (items) => {
 
 export const validatePackageData = (packageData) => {
   const errors = []
-
-  if (!packageData.tracking_number || packageData.tracking_number.length < 3) {
-    errors.push('Número de tracking debe tener al menos 3 caracteres')
-  }
 
   if (!packageData.items || packageData.items.length === 0) {
     errors.push('El paquete debe tener al menos un item')

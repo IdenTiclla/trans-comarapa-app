@@ -46,8 +46,15 @@
             <!-- Botón Despachar Viaje -->
             <button
               v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
-              @click="promptDispatchTrip"
-              class="inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
+              @click="canDispatchTrip ? promptDispatchTrip() : null"
+              :disabled="!canDispatchTrip"
+              :title="!canDispatchTrip ? 'Aún no es la hora de salida del viaje' : 'Despachar Viaje'"
+              :class="[
+                'inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg shadow-sm transition-colors',
+                canDispatchTrip 
+                  ? 'text-white bg-blue-600 hover:bg-blue-700' 
+                  : 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'
+              ]"
             >
               <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -636,6 +643,14 @@ const packageStore = usePackageStore()
 const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
 
+// Computed property to check if the trip can be dispatched
+const canDispatchTrip = computed(() => {
+  if (!displayedTrip.value || !displayedTrip.value.trip_datetime) return false
+  const now = new Date()
+  const tripTime = new Date(displayedTrip.value.trip_datetime)
+  return now >= tripTime
+})
+
 // Formatear hora con AM/PM para la barra compacta
 const formatTimeAmPm = (timeString) => {
   if (!timeString) return ''
@@ -774,7 +789,6 @@ const handleOpenRegistration = () => {
 }
 
 const handlePackageRegistered = async (pkg) => {
-  showNotification('success', 'Encomienda registrada', 'La encomienda fue registrada y asignada al viaje correctamente.')
   if (displayedTrip.value?.id) {
     await fetchTripPackages(displayedTrip.value.id)
   }

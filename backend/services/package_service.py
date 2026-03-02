@@ -75,22 +75,21 @@ class PackageService:
     # ── Create / Update / Delete ─────────────────────────────────────────
 
     def create_package(self, data: PackageCreate) -> Package:
-        """Create a new package with items."""
+        """Create a new package with items and auto-generate tracking number."""
+        import uuid
         logger.debug("Creating package with data: %s", data)
-
-        # Check unique tracking
-        existing = self.repo.find_by_tracking_number(data.tracking_number)
-        if existing:
-            raise ConflictException(
-                f"Package with tracking number {data.tracking_number} already exists"
-            )
+        # We don't check tracking number here because we generate it later
 
         # Create the package
-        package_data = data.model_dump(exclude={"items"})
-        package_data["status"] = "registered_at_office"
+        package_data = data.model_dump(exclude={"items", "tracking_number"})
+        package_data["tracking_number"] = f"TEMP-{uuid.uuid4().hex[:8]}"
+        actual_status = package_data.get("status", "registered_at_office")
         db_package = Package(**package_data)
         self.db.add(db_package)
         self.db.flush()
+
+        # Generate tracking number ENC-XXXXXX
+        db_package.tracking_number = f"ENC-{db_package.id:06d}"
 
         # Create items
         for item_data in data.items:
@@ -103,7 +102,7 @@ class PackageService:
         self.repo.log_state_change(
             package_id=db_package.id,
             old_state=None,
-            new_state="registered_at_office",
+            new_state=actual_status,
         )
 
         self.db.commit()
@@ -282,6 +281,40 @@ class PackageService:
 
         self.db.delete(db_item)
         self.db.commit()
+
+    # ── Search ──────────────────────────────────────────────────────────
+
+    def search_packages(self, term: str, skip: int = 0, limit: int = 100) -> list[Package]:
+        from models.client import Client
+        from sqlalchemy import or_
+        from sqlalchemy.orm import aliased
+        
+        Sender = aliased(Client)
+        Recipient = aliased(Client)
+        search_term = f"%{term}%"
+        
+        query = self.db.query(Package).outerjoin(
+            Sender, Package.sender_id == Sender.id
+        ).outerjoin(
+            Recipient, Package.recipient_id == Recipient.id
+        ).outerjoin(
+            Package.items
+        ).filter(
+            or_(
+                Package.tracking_number.ilike(search_term),
+                Sender.firstname.ilike(search_term),
+                Sender.lastname.ilike(search_term),
+                Recipient.firstname.ilike(search_term),
+                Recipient.lastname.ilike(search_term),
+                PackageItem.description.ilike(search_term)
+            )
+        ).options(
+            joinedload(Package.sender),
+            joinedload(Package.recipient),
+            joinedload(Package.items),
+        ).distinct()
+        
+        return query.order_by(Package.created_at.desc()).offset(skip).limit(limit).all()
 
     # ── Helpers ──────────────────────────────────────────────────────────
 

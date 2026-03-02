@@ -39,117 +39,80 @@
               <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <!-- Ruta -->
                 <div class="sm:col-span-3">
-                  <label for="route_id" class="block text-sm font-medium text-gray-700">Ruta</label>
-                  <div class="mt-1">
-                    <select 
-                      id="route_id" 
-                      v-model="formData.route_id"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option :value="null" disabled>Seleccione una ruta</option>
-                      <option v-for="route_item in availableRoutes" :key="route_item.id" :value="route_item.id">
-                        {{ route_item.origin }} - {{ route_item.destination }}
-                      </option>
-                    </select>
-                  </div>
+                  <FormSelect 
+                    id="route_id" 
+                    label="Ruta" 
+                    v-model="formData.route_id"
+                    :options="routeOptions"
+                    placeholder="Seleccione una ruta"
+                    required
+                  />
                 </div>
                 
                 <!-- Fecha de salida -->
                 <div class="sm:col-span-3">
-                  <label for="departure_date" class="block text-sm font-medium text-gray-700">Fecha de salida</label>
-                  <div class="mt-1">
-                    <input 
-                      type="date" 
-                      id="departure_date" 
-                      v-model="formData.departure_date"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
+                  <FormInput 
+                    type="date" 
+                    id="departure_date" 
+                    label="Fecha de salida" 
+                    v-model="formData.departure_date"
+                    required
+                  />
                 </div>
                 
                 <!-- Hora de salida -->
                 <div class="sm:col-span-3">
-                  <label for="departure_time" class="block text-sm font-medium text-gray-700">Hora de salida</label>
-                  <div class="mt-1">
-                    <input 
-                      type="time" 
-                      id="departure_time" 
-                      v-model="formData.departure_time"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    />
-                  </div>
+                  <FormInput 
+                    type="time" 
+                    id="departure_time" 
+                    label="Hora de salida" 
+                    v-model="formData.departure_time"
+                    required
+                  />
                 </div>
                 
                 <!-- Estado -->
                 <div class="sm:col-span-3">
-                  <label for="status" class="block text-sm font-medium text-gray-700">Estado</label>
-                  <div class="mt-1">
-                    <select 
-                      id="status" 
-                      v-model="formData.status"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option value="scheduled">Programado</option>
-                      <option value="in_progress">En progreso</option>
-                      <option value="completed">Completado</option>
-                      <option value="cancelled">Cancelado</option>
-                    </select>
-                  </div>
+                  <FormSelect 
+                    id="status" 
+                    label="Estado" 
+                    v-model="formData.status"
+                    :options="statusOptions"
+                    required
+                  />
                 </div>
                 
                 <!-- Bus -->
                 <div class="sm:col-span-3">
-                  <label for="bus_id" class="block text-sm font-medium text-gray-700">Bus</label>
-                  <div class="mt-1">
-                    <select 
-                      id="bus_id" 
-                      v-model="formData.bus_id"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option v-for="bus in availableBuses" :key="bus.id" :value="bus.id">
-                        {{ bus.plate }} - {{ bus.model }}
-                      </option>
-                    </select>
-                  </div>
+                  <FormSelect 
+                    id="bus_id" 
+                    label="Bus" 
+                    v-model="formData.bus_id"
+                    :options="busOptions"
+                    required
+                  />
                 </div>
                 
                 <!-- Conductor -->
                 <div class="sm:col-span-3">
-                  <label for="driver_id" class="block text-sm font-medium text-gray-700">Conductor</label>
-                  <div class="mt-1">
-                    <select 
-                      id="driver_id" 
-                      v-model="formData.driver_id"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option v-for="driver in availableDrivers" :key="driver.id" :value="driver.id">
-                        {{ driver.name }}
-                      </option>
-                    </select>
-                  </div>
+                  <FormSelect 
+                    id="driver_id" 
+                    label="Conductor" 
+                    v-model="formData.driver_id"
+                    :options="driverOptions"
+                    required
+                  />
                 </div>
                 
                 <!-- Asistente -->
                 <div class="sm:col-span-3">
-                  <label for="assistant_id" class="block text-sm font-medium text-gray-700">Asistente</label>
-                  <div class="mt-1">
-                    <select 
-                      id="assistant_id" 
-                      v-model="formData.assistant_id"
-                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      required
-                    >
-                      <option v-for="assistant in availableAssistants" :key="assistant.id" :value="assistant.id">
-                        {{ assistant.name }}
-                      </option>
-                    </select>
-                  </div>
+                  <FormSelect 
+                    id="assistant_id" 
+                    label="Asistente" 
+                    v-model="formData.assistant_id"
+                    :options="assistantOptions"
+                    required
+                  />
                 </div>
               </div>
               
@@ -188,6 +151,8 @@ import { useDriverStore } from '~/stores/driverStore'
 import { useAssistantStore } from '~/stores/assistantStore'
 // Location store might not be needed if routes are used directly
 // import { useLocationStore } from '~/stores/locationStore'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -203,11 +168,45 @@ const submitting = ref(false)
 // Error will primarily be handled by tripStore.error, but a local one can be for specific form issues
 const pageError = ref(null) 
 
-// Data for select dropdowns
 const availableRoutes = computed(() => routeStore.routes)
 const availableBuses = computed(() => busStore.buses)
 const availableDrivers = computed(() => driverStore.drivers)
 const availableAssistants = computed(() => assistantStore.assistants)
+
+const routeOptions = computed(() => {
+  return (availableRoutes.value || []).map(route => ({
+    value: route.id,
+    label: `${route.origin} - ${route.destination}`
+  }));
+});
+
+const statusOptions = [
+  { value: 'scheduled', label: 'Programado' },
+  { value: 'in_progress', label: 'En progreso' },
+  { value: 'completed', label: 'Completado' },
+  { value: 'cancelled', label: 'Cancelado' }
+];
+
+const busOptions = computed(() => {
+  return (availableBuses.value || []).map(bus => ({
+    value: bus.id,
+    label: `${bus.plate} - ${bus.model}`
+  }));
+});
+
+const driverOptions = computed(() => {
+  return (availableDrivers.value || []).map(driver => ({
+    value: driver.id,
+    label: driver.name
+  }));
+});
+
+const assistantOptions = computed(() => {
+  return (availableAssistants.value || []).map(assistant => ({
+    value: assistant.id,
+    label: assistant.name
+  }));
+});
 
 // Form data
 const formData = reactive({

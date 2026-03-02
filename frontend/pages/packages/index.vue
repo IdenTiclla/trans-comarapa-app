@@ -118,56 +118,43 @@
             <div>
               <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
               <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <input 
-                  type="text" 
+                <FormInput 
                   id="search" 
                   v-model="searchTerm" 
                   @input="debouncedSearchPackages" 
-                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Buscar por remitente, destinatario, código..."
-                >
+                  :left-icon="SearchIcon"
+                  clearable
+                  @clear="searchTerm = ''; debouncedSearchPackages()"
+                />
               </div>
             </div>
             <div>
               <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-              <select 
+              <FormSelect 
                 id="status-filter" 
                 v-model="statusFilter" 
                 @change="applyFilters" 
-                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              >
-                <option value="all">Todos</option>
-                <option value="registered_at_office">En oficina</option>
-                <option value="assigned_to_trip">Asignada a viaje</option>
-                <option value="in_transit">En tránsito</option>
-                <option value="arrived_at_destination">En destino</option>
-                <option value="delivered">Entregada</option>
-              </select>
+                :options="statusOptions"
+              />
             </div>
             <div>
               <label for="date-from" class="block text-sm font-medium text-gray-700 mb-2">Fecha desde</label>
-              <input 
+              <FormInput 
                 type="date" 
                 id="date-from" 
                 v-model="dateFrom"
                 @change="applyFilters"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              >
+              />
             </div>
             <div>
               <label for="date-to" class="block text-sm font-medium text-gray-700 mb-2">Fecha hasta</label>
-              <input 
+              <FormInput 
                 type="date" 
                 id="date-to" 
                 v-model="dateTo"
                 @change="applyFilters"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 sm:text-sm"
-              >
+              />
             </div>
           </div>
         </div>
@@ -303,8 +290,15 @@ import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePackageStore } from '~/stores/packageStore'
 import { debounce } from 'lodash-es'
+import FormInput from '~/components/forms/FormInput.vue'
+import FormSelect from '~/components/forms/FormSelect.vue'
 import PackageRegistrationModal from '~/components/packages/PackageRegistrationModal.vue'
 import PackageDeliveryModal from '~/components/packages/PackageDeliveryModal.vue'
+
+// Custom icons for inputs
+const SearchIcon = {
+  template: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>`
+}
 
 // Meta
 definePageMeta({
@@ -327,6 +321,15 @@ const viewMode = ref('grid')
 const showRegistrationModal = ref(false)
 const showDeliveryModal = ref(false)
 const selectedPackageForDelivery = ref(null)
+
+const statusOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'registered_at_office', label: 'En oficina' },
+  { value: 'assigned_to_trip', label: 'Asignada a viaje' },
+  { value: 'in_transit', label: 'En tránsito' },
+  { value: 'arrived_at_destination', label: 'En destino' },
+  { value: 'delivered', label: 'Entregada' }
+]
 
 // Get packages from store
 const packages = computed(() => {
