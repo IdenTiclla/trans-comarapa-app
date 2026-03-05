@@ -1,12 +1,16 @@
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <div>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+    <ToastContainer />
+  </div>
 </template>
 
 <script setup>
 import { useAuthStore } from '~/stores/auth'
 import { onMounted } from 'vue'
+import ToastContainer from '~/components/common/ToastContainer.vue'
 
 const authStore = useAuthStore()
 

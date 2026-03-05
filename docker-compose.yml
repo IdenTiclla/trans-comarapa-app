@@ -17,7 +17,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./backend/scripts/db:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Passw0rd!}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Passw0rd!}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,7 +35,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,19 +69,39 @@ services:
     networks:
       - trans-comarapa-network
 
-  # Frontend (Nuxt.js)
+  # Frontend (Nuxt.js) - Legacy
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     target: ${FRONTEND_TARGET:-development}
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+  #     - NODE_ENV=${NODE_ENV:-development}
+  #     - TZ=America/La_Paz
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - trans-comarapa-network
+
+  # Frontend React (Vite)
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-react
       target: ${FRONTEND_TARGET:-development}
     restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./frontend-react:/app
       - /app/node_modules
     environment:
-      - NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
       - NODE_ENV=${NODE_ENV:-development}
       - TZ=America/La_Paz
     depends_on:
@@ -97,4 +117,4 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
-    driver: local 
+    driver: local

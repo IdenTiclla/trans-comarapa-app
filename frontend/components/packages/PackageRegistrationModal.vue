@@ -1,5 +1,6 @@
 <template>
-  <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
+  <Transition name="fade">
+    <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
       <!-- Overlay de fondo -->
       <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="closeModal">
@@ -56,6 +57,7 @@
                   v-model="packageData.origin"
                   type="text"
                   placeholder="Ej: Comarapa"
+                  :error="fieldErrors.origin"
                   required
                 />
                 <FormInput 
@@ -63,6 +65,7 @@
                   v-model="packageData.destination" 
                   required 
                   placeholder="Ej: Santa Cruz" 
+                  :error="fieldErrors.destination"
                 />
                 
                 <!-- Pago -->
@@ -396,6 +399,7 @@
       </div>
     </div>
   </div>
+  </Transition>
 
   <!-- Modal del recibo -->
   <PackageReceiptModal
@@ -415,6 +419,7 @@ import PackageReceiptModal from './PackageReceiptModal.vue'
 import FormInput from '~/components/forms/FormInput.vue'
 import FormSelect from '~/components/forms/FormSelect.vue'
 import { useClientSearch } from '~/composables/useClientSearch'
+import { useFormValidation } from '~/composables/useFormValidation'
 
 const props = defineProps({
   showModal: {
@@ -446,6 +451,7 @@ onMounted(() => {
 // Estados reactivos
 const isSubmitting = ref(false)
 const formErrorMessage = ref('')
+const { errors: fieldErrors, clearError } = useFormValidation()
 
 // Número de paquete (tracking number)
 const packageNumber = ref('000000')
@@ -718,6 +724,16 @@ watch(() => props.showModal, (newVal) => {
   } else {
     resetForm()
   }
+})
+
+watch(() => packageData.value.origin, (val) => {
+  if (!val || typeof val !== 'string' || !val.trim()) fieldErrors.origin = 'El origen es requerido'
+  else clearError('origin')
+})
+
+watch(() => packageData.value.destination, (val) => {
+  if (!val || typeof val !== 'string' || !val.trim()) fieldErrors.destination = 'El destino es requerido'
+  else clearError('destination')
 })
 
 // Inicializar form on mounted

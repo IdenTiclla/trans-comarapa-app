@@ -1,0 +1,77 @@
+import { useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from 'sonner'
+
+export function Component() {
+  const { user, userFullName, userInitials, userRole, updateProfile, loading } = useAuth()
+  const [formData, setFormData] = useState({
+    firstname: user?.firstname || '',
+    lastname: user?.lastname || '',
+    email: user?.email || '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', secretary: 'Secretaria', driver: 'Conductor', assistant: 'Asistente', client: 'Cliente' }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await updateProfile(formData)
+      toast.success('Perfil actualizado correctamente')
+    } catch {
+      toast.error('Error al actualizar perfil')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+        <p className="text-gray-600 mt-1">Administra tu información personal</p>
+      </div>
+
+      {/* Profile Card */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8">
+          <div className="flex items-center space-x-4">
+            <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-2xl border-2 border-white/40">
+              {userInitials}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">{userFullName}</h2>
+              <p className="text-blue-100">{user?.email}</p>
+              <span className="mt-1 inline-block px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
+                {ROLE_LABELS[userRole || ''] || userRole}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+              <input type="text" value={formData.firstname} onChange={(e) => setFormData({ ...formData, firstname: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+              <input type="text" value={formData.lastname} onChange={(e) => setFormData({ ...formData, lastname: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+          <div className="flex justify-end pt-4">
+            <button type="submit" disabled={saving || loading} className="px-6 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50">
+              {saving ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

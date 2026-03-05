@@ -1,0 +1,126 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Trans Comarapa" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e9]:
+          - link "Dashboard" [ref=e10] [cursor=pointer]:
+            - /url: /dashboards/dashboard-secretary
+          - link "Viajes" [ref=e11] [cursor=pointer]:
+            - /url: /trips
+          - link "Boletos" [ref=e12] [cursor=pointer]:
+            - /url: /bookings
+          - link "Encomiendas" [ref=e13] [cursor=pointer]:
+            - /url: /packages
+          - link "Clientes" [ref=e14] [cursor=pointer]:
+            - /url: /clients
+        - button "Open user menu SP" [ref=e17]:
+          - generic [ref=e18]: Open user menu
+          - generic [ref=e19]: SP
+    - main [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - img [ref=e27]
+            - generic [ref=e29]:
+              - heading "Dashboard de Secretaría" [level=1] [ref=e30]
+              - paragraph [ref=e31]: Bienvenida, Secretaria Principal
+          - generic [ref=e32]:
+            - img [ref=e33]
+            - generic [ref=e35]: miércoles, 4 de marzo de 2026
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e39]:
+              - generic [ref=e40]:
+                - paragraph [ref=e41]: Boletos Vendidos Hoy
+                - paragraph [ref=e42]: "0"
+                - generic [ref=e43]:
+                  - img [ref=e44]
+                  - generic [ref=e46]: 0% vs. ayer
+              - img [ref=e48]
+            - generic [ref=e51]:
+              - generic [ref=e52]:
+                - paragraph [ref=e53]: Ingresos del Día
+                - paragraph [ref=e54]: Bs. 0
+                - generic [ref=e55]:
+                  - img [ref=e56]
+                  - generic [ref=e58]: 0% vs. ayer
+              - img [ref=e60]
+            - generic [ref=e63]:
+              - generic [ref=e64]:
+                - paragraph [ref=e65]: Paquetes Registrados
+                - paragraph [ref=e66]: "0"
+                - generic [ref=e67]:
+                  - img [ref=e68]
+                  - generic [ref=e70]: 0% vs. ayer
+              - img [ref=e72]
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - paragraph [ref=e77]: Viajes Programados
+                - paragraph [ref=e78]: "1"
+                - generic [ref=e79]:
+                  - img [ref=e80]
+                  - generic [ref=e82]: "-66.67% vs. ayer"
+              - img [ref=e84]
+          - generic [ref=e86]:
+            - generic [ref=e88] [cursor=pointer]:
+              - img [ref=e90]
+              - generic [ref=e92]:
+                - heading "Vender Boletos" [level=3] [ref=e93]
+                - paragraph [ref=e94]: Gestionar venta de boletos
+            - generic [ref=e96] [cursor=pointer]:
+              - img [ref=e98]
+              - generic [ref=e100]:
+                - heading "Nuevo Paquete" [level=3] [ref=e101]
+                - paragraph [ref=e102]: Registrar nuevo paquete
+            - generic [ref=e104] [cursor=pointer]:
+              - img [ref=e106]
+              - generic [ref=e108]:
+                - heading "Buscar Cliente" [level=3] [ref=e109]
+                - paragraph [ref=e110]: Buscar información de clientes
+            - generic [ref=e112] [cursor=pointer]:
+              - img [ref=e114]
+              - generic [ref=e116]:
+                - heading "Reporte Diario" [level=3] [ref=e117]
+                - paragraph [ref=e118]: Ver reportes del día
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - generic [ref=e123]:
+                - heading "Próximos Viajes" [level=2] [ref=e124]
+                - button "Ver todos" [ref=e125]
+              - generic [ref=e129]:
+                - heading "Ventas Recientes" [level=2] [ref=e132]
+                - paragraph [ref=e135]: Cargando ventas...
+                - button "Ver todas las ventas →" [ref=e137]
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - heading "Búsqueda Rápida" [level=2] [ref=e141]
+                - generic [ref=e143]:
+                  - generic [ref=e144]:
+                    - generic [ref=e145]: Buscar por
+                    - combobox "Buscar por" [ref=e146]:
+                      - option "Cliente" [selected]
+                      - option "Boleto"
+                      - option "Viaje"
+                      - option "Paquete"
+                  - generic [ref=e147]:
+                    - generic [ref=e148]: Nombre o CI del cliente
+                    - textbox "Nombre o CI del cliente" [ref=e149]:
+                      - /placeholder: "Ej: Juan Pérez o 12345678"
+                  - button "Buscar" [ref=e150]
+              - generic [ref=e151]:
+                - heading "Actividad Reciente" [level=2] [ref=e153]
+                - generic [ref=e155]:
+                  - generic [ref=e159]:
+                    - paragraph [ref=e160]: Boleto vendido para el viaje Comarapa - Santa Cruz
+                    - paragraph [ref=e161]: Hace 15 minutos
+                  - generic [ref=e165]:
+                    - paragraph [ref=e166]: Paquete registrado para María González
+                    - paragraph [ref=e167]: Hace 32 minutos
+                  - generic [ref=e171]:
+                    - paragraph [ref=e172]: Nuevo viaje programado para mañana
+                    - paragraph [ref=e173]: Hace 1 hora
+    - contentinfo [ref=e174]:
+      - paragraph [ref=e175]: ©2025 Trans Comarapa
+  - region "Notifications alt+T"

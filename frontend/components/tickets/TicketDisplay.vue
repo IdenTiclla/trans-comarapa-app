@@ -542,42 +542,6 @@ const getDepartureTimeAmPm = () => {
 <style scoped>
 .ticket-container {
   font-family: 'Arial', sans-serif;
-  max-width: 950px;
-  background: white;
-}
-
-.ticket-header {
-  background: linear-gradient(135deg, #00bcd4 0%, #2196f3 100%);
-}
-
-.ticket-footer {
-  background: linear-gradient(135deg, #00bcd4 0%, #2196f3 100%);
-}
-
-/* Bordes azules específicos */
-.border-blue-500 {
-  border-color: #3b82f6;
-}
-
-.border-blue-600 {
-  border-color: #2563eb;
-}
-
-.border-blue-400 {
-  border-color: #60a5fa;
-}
-
-.bg-blue-500 {
-  background-color: #3b82f6;
-}
-
-.bg-blue-600 {
-  background-color: #2563eb;
-}
-
-/* Grid sistema para layout horizontal */
-.grid-cols-12 {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 /* Print styles */
@@ -596,7 +560,7 @@ const getDepartureTimeAmPm = () => {
   .bg-blue-600 {
     background: #3b82f6 !important;
     -webkit-print-color-adjust: exact;
-    color-adjust: exact;
+    print-color-adjust: exact;
   }
   
   .border-4 {
@@ -626,118 +590,5 @@ const getDepartureTimeAmPm = () => {
   .text-2xl {
     font-size: 20px !important;
   }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .ticket-container {
-    max-width: 100%;
-    margin: 0;
-  }
-  
-  .grid-cols-12 {
-    display: block;
-  }
-  
-  .col-span-2,
-  .col-span-3,
-  .col-span-4,
-  .col-span-5,
-  .col-span-7,
-  .col-span-8 {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .text-xl {
-    font-size: 1.125rem;
-  }
-  
-  .text-lg {
-    font-size: 1rem;
-  }
-  
-  .px-6 {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .flex {
-    flex-direction: column;
-  }
-  
-  .flex-grow {
-    flex-grow: initial;
-  }
-}
-
-@media (max-width: 480px) {
-  .grid-cols-2 {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  .grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.25rem;
-  }
-  
-  .text-sm {
-    font-size: 0.75rem;
-  }
-  
-  .px-4 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-  
-  .border-4 {
-    border-width: 2px;
-  }
-}
-
-/* Ensure proper spacing for horizontal layout */
-.col-span-1 { grid-column: span 1 / span 1; }
-.col-span-2 { grid-column: span 2 / span 2; }
-.col-span-3 { grid-column: span 3 / span 3; }
-.col-span-4 { grid-column: span 4 / span 4; }
-.col-span-5 { grid-column: span 5 / span 5; }
-.col-span-6 { grid-column: span 6 / span 6; }
-.col-span-7 { grid-column: span 7 / span 7; }
-.col-span-8 { grid-column: span 8 / span 8; }
-.col-span-9 { grid-column: span 9 / span 9; }
-.col-span-10 { grid-column: span 10 / span 10; }
-.col-span-11 { grid-column: span 11 / span 11; }
-.col-span-12 { grid-column: span 12 / span 12; }
-
-/* Bordes gruesos específicos */
-.border-4 {
-  border-width: 4px;
-}
-
-.border-2 {
-  border-width: 2px;
-}
-
-/* Colores de texto específicos */
-.text-red-600 {
-  color: #dc2626;
-}
-
-.text-blue-600 {
-  color: #2563eb;
-}
-
-.text-gray-700 {
-  color: #374151;
-}
-
-/* Flexbox específico para el layout del nombre */
-.flex-grow {
-  flex-grow: 1;
-}
-
-.flex-shrink-0 {
-  flex-shrink: 0;
 }
 </style> 

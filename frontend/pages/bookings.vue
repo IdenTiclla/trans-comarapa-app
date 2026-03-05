@@ -35,16 +35,16 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-blue-600">Boletos Confirmados Hoy</p>
-                  <p class="text-3xl font-bold text-blue-900">{{ stats.confirmed }}</p>
-                  <p :class="getComparisonClass(comparison.confirmed)" class="text-xs mt-1 font-medium">
-                    {{ getComparisonText(comparison.confirmed) }}
+                  <p class="text-3xl font-bold text-blue-900">{{ stats?.confirmed }}</p>
+                  <p :class="getComparisonClass(comparison?.confirmed)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison?.confirmed) }}
                   </p>
                 </div>
               </div>
             </div>
             <div class="text-right">
               <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
-                <span class="text-xs font-bold text-blue-800">{{ stats.confirmed > 99 ? '99+' : stats.confirmed }}</span>
+                <span class="text-xs font-bold text-blue-800">{{ stats?.confirmed > 99 ? '99+' : stats?.confirmed }}</span>
               </div>
             </div>
           </div>
@@ -62,16 +62,16 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-yellow-600">Boletos Reservados Hoy</p>
-                  <p class="text-3xl font-bold text-yellow-900">{{ stats.pending }}</p>
-                  <p :class="getComparisonClass(comparison.pending)" class="text-xs mt-1 font-medium">
-                    {{ getComparisonText(comparison.pending) }}
+                  <p class="text-3xl font-bold text-yellow-900">{{ stats?.pending }}</p>
+                  <p :class="getComparisonClass(comparison?.pending)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison?.pending) }}
                   </p>
                 </div>
               </div>
             </div>
             <div class="text-right">
               <div class="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center">
-                <span class="text-xs font-bold text-yellow-800">{{ stats.pending > 99 ? '99+' : stats.pending }}</span>
+                <span class="text-xs font-bold text-yellow-800">{{ stats?.pending > 99 ? '99+' : stats?.pending }}</span>
               </div>
             </div>
           </div>
@@ -89,16 +89,16 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-red-600">Boletos Cancelados Hoy</p>
-                  <p class="text-3xl font-bold text-red-900">{{ stats.cancelled }}</p>
-                  <p :class="getComparisonClass(comparison.cancelled)" class="text-xs mt-1 font-medium">
-                    {{ getComparisonText(comparison.cancelled) }}
+                  <p class="text-3xl font-bold text-red-900">{{ stats?.cancelled }}</p>
+                  <p :class="getComparisonClass(comparison?.cancelled)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison?.cancelled) }}
                   </p>
                 </div>
               </div>
             </div>
             <div class="text-right">
               <div class="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
-                <span class="text-xs font-bold text-red-800">{{ stats.cancelled > 99 ? '99+' : stats.cancelled }}</span>
+                <span class="text-xs font-bold text-red-800">{{ stats?.cancelled > 99 ? '99+' : stats?.cancelled }}</span>
               </div>
             </div>
           </div>
@@ -116,9 +116,9 @@
                 </div>
                 <div>
                   <p class="text-sm font-medium text-green-600">Total Ingresos Hoy</p>
-                  <p class="text-3xl font-bold text-green-900">{{ formatCurrency(stats.totalRevenue) }}</p>
-                  <p :class="getComparisonClass(comparison.totalRevenue)" class="text-xs mt-1 font-medium">
-                    {{ getComparisonText(comparison.totalRevenue) }}
+                  <p class="text-3xl font-bold text-green-900">{{ formatCurrency(stats?.totalRevenue) }}</p>
+                  <p :class="getComparisonClass(comparison?.totalRevenue)" class="text-xs mt-1 font-medium">
+                    {{ getComparisonText(comparison?.totalRevenue) }}
                   </p>
                 </div>
               </div>
@@ -752,6 +752,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { getBookingsStatsComparison } from '~/services/statsService'
 import FormInput from '~/components/forms/FormInput.vue'
 import FormSelect from '~/components/forms/FormSelect.vue'
+import { useAuthStore } from '~/stores/auth'
+import { useToast } from '~/composables/useToast'
 
 definePageMeta({
   middleware: 'auth'
@@ -760,6 +762,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const toast = useToast()
 
 // Reactive data
 const tickets = ref([])
@@ -1131,16 +1134,16 @@ const calculateStats = async () => {
     console.log('✅ Estadísticas obtenidas exitosamente:', statsData)
     
     stats.value = {
-      confirmed: statsData.today.confirmed,
-      pending: statsData.today.pending,
-      cancelled: statsData.today.cancelled,
-      totalRevenue: statsData.today.totalRevenue
+      confirmed: statsData?.today?.confirmed || 0,
+      pending: statsData?.today?.pending || 0,
+      cancelled: statsData?.today?.cancelled || 0,
+      totalRevenue: statsData?.today?.totalRevenue || 0
     }
     comparison.value = {
-      confirmed: statsData.comparison.confirmed,
-      pending: statsData.comparison.pending,
-      cancelled: statsData.comparison.cancelled,
-      totalRevenue: statsData.comparison.totalRevenue
+      confirmed: statsData?.comparison?.confirmed || 0,
+      pending: statsData?.comparison?.pending || 0,
+      cancelled: statsData?.comparison?.cancelled || 0,
+      totalRevenue: statsData?.comparison?.totalRevenue || 0
     }
   } catch (error) {
     console.error('❌ Error al obtener estadísticas de bookings:', error)
@@ -1256,9 +1259,9 @@ const submitTicketForm = async () => {
     if (error.name === 'SessionExpiredError') return
 
     if (error.status === 403 || error.statusCode === 403) {
-      alert('No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.')
+      toast.error('Permiso denegado', 'No tiene permisos para crear boletos. Solo secretarios y administradores pueden hacerlo.')
     } else {
-      alert('Error al crear el boleto: ' + (error.message || 'Error desconocido'))
+      toast.error('Error', 'Error al crear el boleto: ' + (error.message || 'Error desconocido'))
     }
   } finally {
     isSubmitting.value = false

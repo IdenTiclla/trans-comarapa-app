@@ -90,19 +90,10 @@
               </div>
             </div>
           </div>
-        </div>
-        
-        <div class="mt-6 flex justify-center">
-          <button 
-            @click="router.push('/trips')"
-            class="text-sm font-medium text-blue-600 hover:text-blue-800"
-          >
-            Volver a la lista de viajes
-          </button>
-        </div>
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script setup>

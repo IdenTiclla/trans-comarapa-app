@@ -18,7 +18,7 @@
         </div>
 
         <h2 class="mt-2 text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600 drop-shadow-sm">
-          {{ error.statusCode || '500' }}
+          {{ displayStatusCode }}
         </h2>
         <h3 class="mt-6 text-2xl font-bold text-gray-900 tracking-tight sm:text-3xl">
           {{ getErrorTitle }}
@@ -29,14 +29,6 @@
       </div>
       
       <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-        <AppButton 
-          variant="primary" 
-          size="lg" 
-          @click="handleError"
-          class="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow"
-        >
-          Volver al Inicio
-        </AppButton>
         <AppButton 
           v-if="error.statusCode !== 404"
           variant="outline" 
@@ -52,7 +44,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import AppButton from '~/components/common/AppButton.vue'
 
 const props = defineProps({
@@ -62,31 +54,81 @@ const props = defineProps({
   }
 })
 
+const isOffline = ref(false)
+
+const updateOnlineStatus = () => {
+  isOffline.value = !navigator.onLine
+}
+
+onMounted(() => {
+  window.addEventListener('online', updateOnlineStatus)
+  window.addEventListener('offline', updateOnlineStatus)
+  updateOnlineStatus()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('online', updateOnlineStatus)
+  window.removeEventListener('offline', updateOnlineStatus)
+})
+
+const displayStatusCode = computed(() => {
+  if (isOffline.value) return 'OFFLINE'
+  return props.error.statusCode || '500'
+})
+
 const getErrorTitle = computed(() => {
+  if (isOffline.value) return 'Sin conexión a internet'
+  
   if (props.error.statusCode === 404) {
     return 'Página no encontrada'
   }
   if (props.error.statusCode === 403) {
     return 'Acceso denegado'
   }
+  if (props.error.statusCode === 401) {
+    return 'Sesión expirada'
+  }
+  if (props.error.statusCode === 408 || props.error.statusCode === 504) {
+    return 'Tiempo de espera agotado'
+  }
   return 'Ha ocurrido un error inesperado'
 })
 
 const getErrorMessage = computed(() => {
+  if (isOffline.value) return 'Por favor, verifica tu conexión a internet e intenta nuevamente.'
+  
   if (props.error.statusCode === 404) {
     return 'Lo sentimos, no pudimos encontrar la página que estás buscando.'
   }
   if (props.error.statusCode === 403) {
     return 'No tienes permisos para acceder a este recurso.'
   }
+  if (props.error.statusCode === 401) {
+    return 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+  }
+  if (props.error.statusCode === 408 || props.error.statusCode === 504) {
+    return 'El servidor tardó demasiado en responder. Por favor, intenta de nuevo.'
+  }
   return props.error.message || 'Por favor, intenta nuevamente más tarde o contacta al soporte técnico.'
 })
 
 const handleError = () => {
-  clearError({ redirect: '/' })
+  const redirectPath = props.error.statusCode === 401 ? '/login' : '/'
+  
+  if (typeof clearError !== 'undefined') {
+    clearError({ redirect: redirectPath })
+  } else if (typeof navigateTo !== 'undefined') {
+    navigateTo(redirectPath)
+  } else {
+    window.location.href = redirectPath
+  }
 }
 
 const handleRetry = () => {
-  window.location.reload()
+  if (typeof clearError !== 'undefined') {
+    clearError()
+  } else {
+    window.location.reload()
+  }
 }
 </script>

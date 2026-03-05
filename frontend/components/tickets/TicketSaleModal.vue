@@ -1,5 +1,6 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 overflow-hidden">
+  <Transition name="fade">
+    <div v-if="show" class="fixed inset-0 z-50 overflow-hidden">
     <!-- Overlay -->
     <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" @click="$emit('close')"></div>
     
@@ -34,9 +35,9 @@
         </div>
 
         <!-- Contenido principal -->
-        <div class="flex h-[calc(90vh-80px)]">
+        <div class="flex flex-col lg:flex-row h-[calc(90vh-80px)] overflow-y-auto lg:overflow-hidden">
           <!-- Panel izquierdo - Formulario -->
-          <div class="w-1/2 p-8 overflow-y-auto bg-gray-50">
+          <div class="w-full lg:w-1/2 p-4 lg:p-8 shrink-0 lg:overflow-y-auto bg-gray-50">
             <form @submit.prevent="handleSubmit" class="space-y-6">
               <!-- Selección de tipo de cliente -->
               <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -289,7 +290,7 @@
           </div>
 
           <!-- Panel derecho - Previsualización del boleto -->
-          <div class="w-1/2 p-8 bg-white border-l border-gray-200">
+          <div class="w-full lg:w-1/2 p-4 lg:p-8 bg-white lg:border-l border-t lg:border-t-0 border-gray-200 shrink-0">
             <div class="sticky top-0">
               <h4 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
                 <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,7 +323,8 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup>

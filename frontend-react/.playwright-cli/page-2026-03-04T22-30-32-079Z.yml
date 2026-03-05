@@ -1,0 +1,52 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e11]:
+        - img [ref=e14]
+        - heading "Trans Comarapa" [level=1] [ref=e18]
+        - paragraph [ref=e19]: Sistema de Gestión de Transporte
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - img [ref=e23]
+            - generic [ref=e26]: "23"
+            - generic [ref=e27]: Localidades
+          - generic [ref=e28]:
+            - img [ref=e30]
+            - generic [ref=e32]: 10+
+            - generic [ref=e33]: Años
+          - generic [ref=e34]:
+            - img [ref=e36]
+            - generic [ref=e38]: "4"
+            - generic [ref=e39]: Oficinas
+        - paragraph [ref=e41]: "\"Conectando el corazón de Bolivia con seguridad y confianza\""
+      - generic [ref=e42]:
+        - button "Ir a imagen 1" [ref=e43]
+        - button "Ir a imagen 2" [ref=e44]
+        - button "Ir a imagen 3" [ref=e45]
+    - main "Bienvenido de vuelta" [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - heading "Bienvenido de vuelta" [level=2] [ref=e51]
+          - paragraph [ref=e52]: Ingresa tus credenciales para continuar
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - generic [ref=e55]: Correo Electrónico
+            - generic [ref=e56]:
+              - generic:
+                - img
+              - textbox "Correo Electrónico" [active] [ref=e57]:
+                - /placeholder: usuario@transcomarapa.com
+          - generic [ref=e58]:
+            - generic [ref=e59]: Contraseña
+            - generic [ref=e60]:
+              - generic:
+                - img
+              - textbox "Contraseña" [ref=e61]:
+                - /placeholder: Ingresa tu contraseña
+              - button "Mostrar contraseña" [ref=e62]:
+                - img [ref=e63]
+          - button "Iniciar Sesión" [disabled] [ref=e65]:
+            - generic [ref=e66]: Iniciar Sesión
+          - paragraph [ref=e67]: Complete todos los campos correctamente para continuar
+        - paragraph [ref=e69]: © 2026 Trans Comarapa. Todos los derechos reservados.
+  - region "Notifications alt+T"

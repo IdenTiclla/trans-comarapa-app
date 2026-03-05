@@ -106,12 +106,4 @@ const formatCurrency = (amount) => {
 
 </script>
 
-<style scoped>
-/* Add any specific styles for the card if needed */
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 250px; /* Adjust as needed */
-}
-</style> 
+ 

@@ -1,0 +1,114 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Trans Comarapa" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e9]:
+          - link "Dashboard" [ref=e10] [cursor=pointer]:
+            - /url: /dashboards/dashboard-secretary
+          - link "Viajes" [ref=e11] [cursor=pointer]:
+            - /url: /trips
+          - link "Boletos" [ref=e12] [cursor=pointer]:
+            - /url: /bookings
+          - link "Encomiendas" [ref=e13] [cursor=pointer]:
+            - /url: /packages
+          - link "Clientes" [ref=e14] [cursor=pointer]:
+            - /url: /clients
+        - button "Open user menu SP" [ref=e17]:
+          - generic [ref=e18]: Open user menu
+          - generic [ref=e19]: SP
+    - main [ref=e20]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - heading "Crear Nuevo Viaje" [level=1] [ref=e24]
+          - paragraph [ref=e25]: Configura un nuevo viaje seleccionando la ruta, horario, vehículo asignado y el personal a bordo.
+        - generic [ref=e28]:
+          - group [ref=e29]:
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - heading "Ruta y Horario" [level=2] [ref=e32]
+                - generic [ref=e33]:
+                  - generic [ref=e35]:
+                    - generic [ref=e36]: Ruta*
+                    - generic [ref=e37]:
+                      - combobox "Ruta*" [ref=e38]:
+                        - option "Santa Cruz → Comarapa (Bs 35,00)"
+                        - option "Comarapa → Santa Cruz (Bs 35,00)"
+                      - generic:
+                        - img
+                  - generic [ref=e39]:
+                    - generic [ref=e40]: Fecha de salida *
+                    - generic [ref=e41]:
+                      - button "Hoy" [ref=e42]
+                      - button "Mañana" [ref=e43]
+                      - button "Pasado mañana" [ref=e44]
+                    - textbox [ref=e47]: 2026-03-04
+                  - generic [ref=e48]:
+                    - generic [ref=e49]: Hora de salida *
+                    - textbox [ref=e52]
+              - generic [ref=e53]:
+                - heading "Vehículo y Personal" [level=2] [ref=e54]
+                - generic [ref=e55]:
+                  - generic [ref=e57]:
+                    - generic [ref=e58]: Bus*
+                    - generic [ref=e59]:
+                      - combobox "Bus*" [ref=e60]:
+                        - option "2013ABC0 - O-500RS (45 asientos)"
+                        - option "2014ABC1 - 9900 (50 asientos, 2 pisos)"
+                        - option "2015ABC2 - K450 (42 asientos)"
+                        - option "2016ABC3 - O-400RSD (48 asientos, 2 pisos)"
+                        - option "2017ABC4 - B450R (46 asientos)"
+                        - option "2018ABC5 - Marcopolo Paradiso (52 asientos, 2 pisos)"
+                        - option "2019ABC6 - Irizar Century (44 asientos)"
+                      - generic:
+                        - img
+                  - generic [ref=e61]:
+                    - generic [ref=e62]: Conductor
+                    - generic [ref=e63]:
+                      - combobox "Conductor" [ref=e64]:
+                        - option "Sin asignar"
+                        - option "Ruperta Cárdenas Baeza (LC639487)"
+                        - option "Martirio Villa Alarcón (LC666538)"
+                        - option "Gilberto de Barrios (LC593655)"
+                        - option "Isabel Arrieta Palau (LC285960)"
+                        - option "Pánfilo Hoz Alba (LC512120)"
+                        - option "Dionisio Aroca Franch (LC206312)"
+                        - option "Jessica Lobato Belmonte (LC842916)"
+                        - option "Ciriaco de Álvarez (LC920216)"
+                        - option "Arturo Ávila Tenorio (LC826678)"
+                        - option "Flavio Bustos Martín (LC405960)"
+                        - option "Eligia Cortes (LC689881)"
+                        - option "Edelmira Alba Pazos Donaire (LC181468)"
+                        - option "Conductor Principal (LC123456)"
+                      - generic:
+                        - img
+                  - generic [ref=e65]:
+                    - generic [ref=e66]: Asistente
+                    - generic [ref=e67]:
+                      - combobox "Asistente" [ref=e68]:
+                        - option "Sin asignar"
+                        - option "Lorena del Villaverde"
+                        - option "Carolina Porras Esteve"
+                        - option "Alberto Jordá Solana"
+                        - option "Salvador de Marquez"
+                        - option "Laura Cano Sandoval"
+                        - option "Cecilio Pont"
+                        - option "Begoña Álvarez Alemán"
+                        - option "Zaida Real-Cuevas"
+                        - option "Clotilde Casandra Carro Otero"
+                        - option "Cecilio Dionisio Cordero Gaya"
+                        - option "Brígida Vidal"
+                        - option "Fulgencio Tapia Villegas"
+                        - option "Asistente Principal"
+                      - generic:
+                        - img
+          - generic [ref=e69]:
+            - button "Cancelar" [ref=e70]
+            - button "Crear Viaje" [disabled] [ref=e71]:
+              - img [ref=e72]
+              - text: Crear Viaje
+          - paragraph [ref=e74]: Complete los campos de ruta, fecha, hora y bus para continuar
+    - contentinfo [ref=e75]:
+      - paragraph [ref=e76]: ©2025 Trans Comarapa
+  - region "Notifications alt+T"

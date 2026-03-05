@@ -1,57 +1,16 @@
 <template>
   <div>
-    <!-- Navigation Header with Breadcrumb -->
-    <nav class="bg-gray-50 border-b border-gray-200" aria-label="Breadcrumb">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center space-x-4 py-4">
-          <button 
-            @click="router.back()" 
-            class="flex items-center text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-md p-1"
-            aria-label="Volver a la página anterior"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-            Volver
-          </button>
-          <span class="text-gray-400" aria-hidden="true">/</span>
-          <span class="text-sm font-medium text-gray-500">Viajes</span>
-          <span class="text-gray-400" aria-hidden="true">/</span>
-          <span class="text-sm font-medium text-gray-900">Nuevo Viaje</span>
-        </div>
-      </div>
-    </nav>
-
     <main class="py-6" role="main">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Page Header -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900">Crear Nuevo Viaje</h1>
-          <p class="mt-2 text-sm text-gray-600">
-            Seleccione la ruta, fecha, hora y bus para programar un nuevo viaje.
+        <div class="mb-10 text-center">
+          <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Crear Nuevo Viaje</h1>
+          <p class="mt-3 text-base text-gray-500 max-w-2xl mx-auto">
+            Configura un nuevo viaje seleccionando la ruta, horario, vehículo asignado y el personal a bordo.
           </p>
         </div>
 
-        <!-- Success Message -->
-        <div 
-          v-if="showSuccessMessage" 
-          class="mb-6 bg-green-50 border border-green-200 rounded-md p-4"
-          role="alert"
-          aria-live="polite"
-        >
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-green-800">Viaje creado exitosamente!</h3>
-              <p class="text-sm text-green-700 mt-1">El viaje ha sido programado correctamente.</p>
-            </div>
-          </div>
-        </div>
-        
+
         <!-- Error Messages -->
         <div 
           v-if="hasErrors" 
@@ -87,8 +46,8 @@
         </div>
         
         <!-- Main Form -->
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div class="px-6 py-8">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
+          <div class="px-8 py-10">
             <form @submit.prevent="handleSubmit" novalidate>
               <fieldset :disabled="tripStore.isLoading || isLoadingData">
                 <legend class="sr-only">Informacion del viaje</legend>
@@ -128,16 +87,16 @@
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                               </svg>
-                              {{ selectedRoute.distance }} km
+                              {{ selectedRoute?.distance }} km
                             </span>
                             <span class="flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              {{ selectedRoute.duration }}h
+                              {{ selectedRoute?.duration }}h
                             </span>
                             <span class="flex items-center gap-1 font-semibold">
-                              {{ formatCurrency(selectedRoute.price) }}
+                              {{ formatCurrency(selectedRoute?.price) }}
                             </span>
                           </div>
                         </div>
@@ -344,6 +303,25 @@
         </div>
       </div>
     </main>
+
+    <!-- Modals -->
+    <ConfirmDialog
+      v-model="showConfirmModal"
+      title="Confirmar creación de viaje"
+      message="¿Está seguro de que desea crear este viaje con los datos proporcionados?"
+      type="info"
+      confirmText="Crear viaje"
+      cancelText="Cancelar"
+      @confirm="executeTripCreation"
+    />
+
+    <NotificationModal
+      :show="showSuccessModal"
+      type="success"
+      title="Viaje creado exitosamente"
+      message="El viaje ha sido programado correctamente. Será redirigido al listado de viajes."
+      @close="closeSuccessModal"
+    />
   </div>
 </template>
 
@@ -359,6 +337,9 @@ import { useSecretaryStore } from '~/stores/secretaryStore';
 import { useAuthStore } from '~/stores/auth';
 import FormInput from '~/components/forms/FormInput.vue';
 import FormSelect from '~/components/forms/FormSelect.vue';
+import ConfirmDialog from '~/components/ui/ConfirmDialog.vue';
+import NotificationModal from '~/components/common/NotificationModal.vue';
+import { useFormValidation, validators } from '~/composables/useFormValidation';
 
 // Set page metadata
 definePageMeta({
@@ -382,9 +363,20 @@ const queryDate = route.query.date || '';
 const queryTime = route.query.time || '';
 
 // Reactive state
-const showSuccessMessage = ref(false);
+const showConfirmModal = ref(false);
+const showSuccessModal = ref(false);
 const validationErrors = ref([]);
-const fieldErrors = ref({});
+const { errors: fieldErrors, validateForm: runValidation, clearError } = useFormValidation();
+
+const validationRules = computed(() => ({
+  route_id: [validators.required('La ruta es requerida')],
+  departure_date: [
+    validators.required('La fecha de salida es requerida'),
+    (val) => val && val < today.value ? 'La fecha no puede ser anterior a hoy' : null
+  ],
+  departure_time: [validators.required('La hora de salida es requerida')],
+  bus_id: [validators.required('El bus es requerido')]
+}));
 
 // Form data (pre-filled from query params if available)
 const formData = reactive({
@@ -444,17 +436,20 @@ const routeOptions = computed(() => {
 });
 
 const busOptions = computed(() => {
-  return (busStore.buses || []).map(bus => ({
-    value: bus.id,
-    label: `${bus.license_plate} - ${bus.model} (${bus.capacity} asientos)`
-  }));
+  return (busStore.buses || []).map(bus => {
+    const pisosText = bus.floors === 2 ? '2 pisos' : '1 piso';
+    return {
+      value: bus.id,
+      label: `${bus.license_plate} - ${bus.model} (${bus.capacity} asientos, ${pisosText})`
+    };
+  });
 });
 
 const driverOptions = computed(() => {
   const options = [{ value: null, label: 'Sin asignar' }];
   const drivers = (driverStore.drivers || []).map(driver => ({
     value: driver.id,
-    label: `${driver.firstname} ${driver.lastname}${driver.license_number ? ` (${driver.license_number})` : ''}`
+    label: `${driver.firstname} ${driver.lastname}${driver?.license_number ? ` (${driver.license_number})` : ''}`
   }));
   return [...options, ...drivers];
 });
@@ -494,9 +489,12 @@ const hasErrors = computed(() => {
 const isFormValid = computed(() => {
   return formData.route_id && 
          formData.departure_date && 
+         // Check if not less than today
+         formData.departure_date >= today.value &&
          formData.departure_time && 
          formData.bus_id && 
-         Object.keys(fieldErrors.value).length === 0;
+         Object.keys(fieldErrors).length === 0 &&
+         !Object.values(fieldErrors).some(err => err !== null);
 });
 
 // Utility functions
@@ -510,43 +508,25 @@ const formatCurrency = (amount) => {
 };
 
 const validateForm = () => {
-  const errors = {};
   validationErrors.value = [];
-
-  // Required field validation
-  if (!formData.route_id) {
-    errors.route_id = 'La ruta es requerida';
-  }
-
-  if (!formData.departure_date) {
-    errors.departure_date = 'La fecha de salida es requerida';
-  } else if (formData.departure_date < today.value) {
-    errors.departure_date = 'La fecha no puede ser anterior a hoy';
-  }
-
-  if (!formData.departure_time) {
-    errors.departure_time = 'La hora de salida es requerida';
-  }
-
-  if (!formData.bus_id) {
-    errors.bus_id = 'El bus es requerido';
-  }
-
-  fieldErrors.value = errors;
-  return Object.keys(errors).length === 0 && validationErrors.value.length === 0;
+  return runValidation(formData, validationRules.value);
 };
 
 // Event handlers
 const handleSubmit = async () => {
   // Clear previous errors
   tripStore.error = null;
-  fieldErrors.value = {};
   validationErrors.value = [];
 
   if (!validateForm()) {
     return;
   }
 
+  // Show confirmation modal instead of creating right away
+  showConfirmModal.value = true;
+};
+
+const executeTripCreation = async () => {
   // Combine date and time
   formData.trip_datetime = `${formData.departure_date}T${formData.departure_time}:00`;
 
@@ -575,18 +555,17 @@ const handleSubmit = async () => {
   try {
     await tripStore.createNewTrip(submissionData);
     if (!tripStore.error) {
-      showSuccessMessage.value = true;
-      
-      // Hide success message and redirect after 2 seconds
-      setTimeout(() => {
-        showSuccessMessage.value = false;
-        router.push('/trips');
-      }, 2000);
+      showSuccessModal.value = true;
     }
   } catch (err) {
     console.error("Error creating trip:", err);
     // Error is handled by the store
   }
+};
+
+const closeSuccessModal = () => {
+  showSuccessModal.value = false;
+  router.push('/trips');
 };
 
 // Lifecycle
@@ -607,28 +586,22 @@ onMounted(async () => {
 // Watchers for real-time validation
 watch(() => formData.departure_date, (newDate) => {
   if (newDate && newDate < today.value) {
-    fieldErrors.value.departure_date = 'La fecha no puede ser anterior a hoy';
+    fieldErrors.departure_date = 'La fecha no puede ser anterior a hoy';
   } else {
-    delete fieldErrors.value.departure_date;
+    clearError('departure_date');
   }
 });
 
 watch(() => formData.route_id, () => {
-  if (formData.route_id) {
-    delete fieldErrors.value.route_id;
-  }
+  if (formData.route_id) clearError('route_id');
 });
 
 watch(() => formData.departure_time, () => {
-  if (formData.departure_time) {
-    delete fieldErrors.value.departure_time;
-  }
+  if (formData.departure_time) clearError('departure_time');
 });
 
 watch(() => formData.bus_id, () => {
-  if (formData.bus_id) {
-    delete fieldErrors.value.bus_id;
-  }
+  if (formData.bus_id) clearError('bus_id');
 });
 </script>
 

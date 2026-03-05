@@ -37,31 +37,31 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!clients || clients.length === 0" class="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
-      <div class="max-w-md mx-auto">
-        <div class="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    <EmptyState
+      v-else-if="!clients || clients.length === 0"
+      title="No se encontraron clientes"
+      description="No hay clientes que coincidan con los filtros seleccionados."
+    >
+      <template #icon>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </template>
+      <template #action>
+        <button @click="$emit('clear-filters')" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-        </div>
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">No se encontraron clientes</h3>
-        <p class="text-gray-600 mb-6">No hay clientes que coincidan con los filtros seleccionados.</p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button @click="$emit('clear-filters')" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Limpiar filtros
-          </button>
-          <button @click="$emit('new-client')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Crear nuevo cliente
-          </button>
-        </div>
-      </div>
-    </div>
+          Limpiar filtros
+        </button>
+        <button @click="$emit('new-client')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Crear nuevo cliente
+        </button>
+      </template>
+    </EmptyState>
 
     <!-- Client Cards/Table -->
     <div v-else>
@@ -264,6 +264,7 @@
 <script setup>
 import { computed } from 'vue'
 import ClientCard from './ClientCard.vue'
+import EmptyState from '~/components/common/EmptyState.vue'
 
 const props = defineProps({
   clients: {
@@ -391,10 +392,3 @@ const getStatusClass = (client) => {
   return 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'
 }
 </script>
-
-<style scoped>
-/* Ensure consistent spacing, handled by gap utilities */
-.grid {
-  /* Additional grid styles if needed */
-}
-</style> 

@@ -40,11 +40,13 @@
 <script setup>
 import { navigateTo } from '#app'
 
+const toast = useToast()
+
 definePageMeta({
   title: 'Bienvenido a Trans Comarapa',
 });
 
 function showAlert(feature) {
-  alert(`Has hecho clic en ${feature}. Pronto tendremos más información disponible.`);
+  toast.info('Próximamente', `Has hecho clic en ${feature}. Pronto tendremos más información disponible.`);
 }
 </script> 

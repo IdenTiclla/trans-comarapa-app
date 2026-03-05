@@ -5,11 +5,6 @@
       <div class="max-w-screen-2xl mx-auto px-4 lg:px-6">
         <div class="flex items-center justify-between h-14">
           <div class="flex items-center gap-4">
-            <button @click="router.back()" class="p-1.5 -ml-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
             <h1 class="text-lg font-bold text-gray-900 truncate">
               Encomienda {{ packageStore.currentPackage?.tracking_number }}
             </h1>
@@ -55,6 +50,7 @@
 
     <!-- Contenido -->
     <div class="max-w-screen-xl mx-auto px-4 lg:px-6 py-6" v-if="!packageStore.isLoading && packageStore.currentPackage">
+      <ErrorBoundary>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Columna Principal (Info + Viaje) -->
         <div class="lg:col-span-2 space-y-6">
@@ -135,15 +131,15 @@
               <div v-if="packageStore.currentPackage.trip" class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
-                    <span class="font-bold text-gray-900">{{ packageStore.currentPackage.trip.route?.origin_location?.name || 'Origen' }}</span>
+                    <span class="font-bold text-gray-900">{{ packageStore.currentPackage.trip?.route?.origin_location?.name || 'Origen' }}</span>
                     <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
-                    <span class="font-bold text-gray-900">{{ packageStore.currentPackage.trip.route?.destination_location?.name || 'Destino' }}</span>
+                    <span class="font-bold text-gray-900">{{ packageStore.currentPackage.trip?.route?.destination_location?.name || 'Destino' }}</span>
                   </div>
                   <p class="text-sm text-gray-500">
-                    Fecha de salida: {{ formatDateTime(packageStore.currentPackage.trip.departure_date || packageStore.currentPackage.trip.trip_datetime) }} <br>
-                    Estado: <span class="font-medium text-gray-700">{{ formatTripStatus(packageStore.currentPackage.trip.status) }}</span>
+                    Fecha de salida: {{ formatDateTime(packageStore.currentPackage.trip?.departure_date || packageStore.currentPackage.trip?.trip_datetime) }} <br>
+                    Estado: <span class="font-medium text-gray-700">{{ formatTripStatus(packageStore.currentPackage.trip?.status) }}</span>
                   </p>
                 </div>
                 <NuxtLink
@@ -213,10 +209,19 @@
           </div>
         </div>
       </div>
+      </ErrorBoundary>
     </div>
 
-    <div v-else-if="packageStore.isLoading" class="flex justify-center items-center py-20">
-      <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    <div v-else-if="packageStore.isLoading" class="max-w-screen-xl mx-auto px-4 lg:px-6 py-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-6">
+          <SkeletonLoader type="detail" />
+          <SkeletonLoader type="detail" />
+        </div>
+        <div class="space-y-6">
+          <SkeletonLoader type="detail" />
+        </div>
+      </div>
     </div>
     <div v-else class="max-w-screen-md mx-auto px-4 py-20 text-center">
       <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,9 +230,6 @@
       <h3 class="mt-4 text-lg font-medium text-gray-900">Encomienda no encontrada</h3>
       <p class="mt-2 text-gray-500">No se pudo encontrar la encomienda solicitada o ha ocurrido un error.</p>
       <div class="mt-6">
-        <button @click="router.back()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-          Volver atrás
-        </button>
       </div>
     </div>
 
@@ -255,12 +257,14 @@ import { useRouter, useRoute } from 'vue-router'
 import { usePackageStore } from '~/stores/packageStore'
 import PackageDeliveryModal from '~/components/packages/PackageDeliveryModal.vue'
 import PackageReceptionModal from '~/components/packages/PackageReceptionModal.vue'
+import SkeletonLoader from '~/components/common/SkeletonLoader.vue'
 
 import { usePackageStatus } from '~/composables/usePackageStatus'
 
 const router = useRouter()
 const route = useRoute()
 const packageStore = usePackageStore()
+const toast = useToast()
 
 const {
   getStatusLabel,
@@ -302,7 +306,7 @@ const onReceivePackageConfirm = async (id) => {
     await packageStore.fetchPackageById(id)
   } catch (error) {
     console.error('Error al marcar paquete como recibido:', error)
-    alert(error.response?.data?.detail || error.message || 'Error al actualizar el estado del paquete')
+    toast.error('Error al actualizar', error.response?.data?.detail || error.message || 'Error al actualizar el estado del paquete')
   }
 }
 

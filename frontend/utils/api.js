@@ -24,15 +24,16 @@ export const setLoggingOut = (value) => {
 }
 
 export const apiFetch = $fetch.create({
+  timeout: 15000, // 15s timeout por defecto
   onRequest({ options }) {
     const config = useRuntimeConfig()
 
     options.baseURL = config.public.apiBaseUrl
-    
+
     // 🔒 FASE 3: Solo cookies httpOnly - eliminado soporte para Authorization headers
     // Incluir cookies httpOnly en todas las peticiones para autenticación
     options.credentials = 'include'
-    
+
     // console.log('[apiFetch] onRequest:', options.method, options.baseURL, options.url)
   },
   async onResponseError({ response, options, error }) {
@@ -133,12 +134,15 @@ export const apiFetch = $fetch.create({
           isRefreshing = true
           refreshPromise = authStore.refreshToken()
 
-          await refreshPromise;
-          console.log('Token refreshed, retrying original request to:', options.url);
+          try {
+            await refreshPromise;
+          } finally {
+            // Resetear flags obligatoriamente
+            isRefreshing = false
+            refreshPromise = null
+          }
 
-          // Resetear flags
-          isRefreshing = false
-          refreshPromise = null
+          console.log('Token refreshed, retrying original request to:', options.url);
 
           // Retry the original request with new cookies
           const retryOptions = { ...options, _retryCount: (options._retryCount || 0) + 1 };
@@ -152,9 +156,6 @@ export const apiFetch = $fetch.create({
       } catch (refreshError) {
         if (refreshError instanceof SessionExpiredError) throw refreshError
         console.error('Error during token refresh or retrying request:', refreshError);
-        // Resetear flags en caso de error
-        isRefreshing = false
-        refreshPromise = null
         authStore.logout(true); // Skip server logout to avoid additional 401 errors
         await navigateTo('/login');
         throw new SessionExpiredError()

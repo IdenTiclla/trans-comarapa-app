@@ -64,8 +64,105 @@
       </div>
     </div>
 
-    <!-- Tabla de usuarios -->
-    <div class="overflow-x-auto">
+    <!-- Vista móvil (Cards) -->
+    <div class="block sm:hidden">
+      <!-- Loading State Mobile -->
+      <div v-if="loading" class="p-4 space-y-4">
+        <SkeletonLoader v-for="n in 3" :key="'skel-mob-'+n" type="card" />
+      </div>
+      
+      <!-- Error State Mobile -->
+      <div v-else-if="error" class="px-6 py-4 text-center bg-white">
+        <div class="flex justify-center text-red-500 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p class="text-sm text-red-500">{{ error }}</p>
+        <button @click="$emit('refresh')" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+          Intentar nuevamente
+        </button>
+      </div>
+
+      <!-- Empty State Mobile -->
+      <div v-else-if="users.length === 0" class="m-4">
+        <EmptyState
+          title="No se encontraron usuarios"
+          :description="(searchTerm || selectedRole || selectedStatus !== '') ? 'Prueba a cambiar los filtros de búsqueda' : ''"
+        >
+          <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </template>
+        </EmptyState>
+      </div>
+
+      <!-- Cards Mobile -->
+      <div v-else class="divide-y divide-gray-200 border-t border-gray-200 bg-gray-50">
+        <div v-for="user in users" :key="user.id" class="p-4 bg-white hover:bg-gray-50 transition-colors duration-150">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                {{ getUserInitials(user) }}
+              </div>
+              <div>
+                <div class="text-sm font-medium text-gray-900">{{ getUserName(user) }}</div>
+                <div class="text-sm text-gray-500">@{{ user.username }}</div>
+              </div>
+            </div>
+            <span :class="user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+              {{ user.is_active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          
+          <div class="mb-3">
+            <div class="text-sm text-gray-900 flex items-center mb-1">
+              <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              {{ user.email }}
+            </div>
+            <div class="text-sm text-gray-500 flex items-center justify-between mt-2">
+              <span :class="getRoleBadgeClass(user.role)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                {{ getRoleLabel(user.role) }}
+              </span>
+              <span>{{ formatDate(user.created_at) }}</span>
+            </div>
+          </div>
+          
+          <div class="flex justify-end space-x-3 border-t border-gray-100 pt-3 mt-1">
+            <button @click="$emit('view', user)" class="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 transition-colors duration-200" title="Ver detalles">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+            <button @click="$emit('edit', user)" class="p-1.5 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors duration-200" title="Editar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button v-if="user.is_active" @click="$emit('deactivate', user)" class="p-1.5 rounded-md text-yellow-600 hover:bg-yellow-50 transition-colors duration-200" title="Desactivar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </button>
+            <button v-else @click="$emit('activate', user)" class="p-1.5 rounded-md text-green-600 hover:bg-green-50 transition-colors duration-200" title="Activar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <button @click="$emit('delete', user)" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 transition-colors duration-200" title="Eliminar">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de usuarios (Desktop) -->
+    <div class="hidden sm:block overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -90,17 +187,9 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-if="loading">
-            <td colspan="6" class="px-6 py-10 text-center">
-              <div class="flex justify-center">
-                <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-              <p class="mt-2 text-sm text-gray-500">Cargando usuarios...</p>
-            </td>
-          </tr>
+          <template v-if="loading">
+            <SkeletonLoader v-for="n in 5" :key="'skel-'+n" type="table-row" />
+          </template>
           <tr v-else-if="error">
             <td colspan="6" class="px-6 py-4 text-center">
               <div class="flex justify-center text-red-500 mb-2">
@@ -118,16 +207,17 @@
             </td>
           </tr>
           <tr v-else-if="users.length === 0">
-            <td colspan="6" class="px-6 py-10 text-center">
-              <div class="flex justify-center text-gray-400 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <p class="text-sm text-gray-500">No se encontraron usuarios</p>
-              <p v-if="searchTerm || selectedRole || selectedStatus !== ''" class="mt-1 text-sm text-gray-500">
-                Prueba a cambiar los filtros de búsqueda
-              </p>
+            <td colspan="6" class="p-4">
+              <EmptyState
+                title="No se encontraron usuarios"
+                :description="(searchTerm || selectedRole || selectedStatus !== '') ? 'Prueba a cambiar los filtros de búsqueda' : ''"
+              >
+                <template #icon>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </template>
+              </EmptyState>
             </td>
           </tr>
           <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition-colors duration-150">
@@ -281,6 +371,8 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { usePersonData } from '~/composables/usePersonData'
 import FormInput from '~/components/forms/FormInput.vue'
 import FormSelect from '~/components/forms/FormSelect.vue'
+import SkeletonLoader from '~/components/common/SkeletonLoader.vue'
+import EmptyState from '~/components/common/EmptyState.vue'
 
 const props = defineProps({
   users: {

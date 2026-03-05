@@ -201,6 +201,7 @@
 import { ref, computed, watch } from 'vue'
 import FormInput from '~/components/forms/FormInput.vue'
 import FormSelect from '~/components/forms/FormSelect.vue'
+import { useFormValidation, validators } from '~/composables/useFormValidation'
 
 const props = defineProps({
   user: {
@@ -236,79 +237,39 @@ const form = ref({
 })
 
 // Errores de validación
-const errors = ref({})
+const { errors, validateForm: runValidation, clearError } = useFormValidation()
 
-// Cargar datos del usuario si estamos editando
-watch(() => props.user, (newUser) => {
-  if (newUser && Object.keys(newUser).length > 0) {
-    form.value = {
-      firstname: newUser.firstname || '',
-      lastname: newUser.lastname || '',
-      username: newUser.username || '',
-      email: newUser.email || '',
-      password: '', // No cargar la contraseña por seguridad
-      role: newUser.role || (props.roles.length > 0 ? props.roles[0] : 'client'),
-      is_active: newUser.is_active !== undefined ? newUser.is_active : true,
-      is_admin: newUser.is_admin !== undefined ? newUser.is_admin : false
+const validationRules = computed(() => {
+  return {
+    firstname: [validators.required('El nombre es requerido')],
+    lastname: [validators.required('El apellido es requerido')],
+    username: [
+      validators.required('El nombre de usuario es requerido'),
+      validators.minLength(3, 'El nombre de usuario debe tener al menos 3 caracteres')
+    ],
+    email: [
+      validators.required('El correo electrónico es requerido'),
+      validators.email('El correo electrónico no es válido')
+    ],
+    password: props.isEditing ? [
+      val => (val && val.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : null)
+    ] : [
+      validators.required('La contraseña es requerida'),
+      validators.minLength(6, 'La contraseña debe tener al menos 6 caracteres')
+    ],
+    role: [validators.required('El rol es requerido')]
+  }
+})
+
+// Limpiar error al escribir
+watch(form, (newVal) => {
+  Object.keys(newVal).forEach(key => {
+    // Solo limpiamos el error si el campo tiene algún valor para dar feedback instantáneo positivo
+    if (newVal[key] !== '' && newVal[key] !== null && newVal[key] !== undefined) {
+      clearError(key)
     }
-  }
-}, { immediate: true })
-
-// Funciones auxiliares
-const getRoleLabel = (role) => {
-  switch (role) {
-    case 'admin':
-      return 'Administrador'
-    case 'secretary':
-      return 'Secretaria'
-    case 'driver':
-      return 'Conductor'
-    case 'assistant':
-      return 'Asistente'
-    case 'client':
-      return 'Cliente'
-    default:
-      return role
-  }
-}
-
-// Validar formulario
-const validateForm = () => {
-  const newErrors = {}
-  
-  if (!form.value.firstname.trim()) {
-    newErrors.firstname = 'El nombre es requerido'
-  }
-  
-  if (!form.value.lastname.trim()) {
-    newErrors.lastname = 'El apellido es requerido'
-  }
-  
-  if (!form.value.username.trim()) {
-    newErrors.username = 'El nombre de usuario es requerido'
-  } else if (form.value.username.length < 3) {
-    newErrors.username = 'El nombre de usuario debe tener al menos 3 caracteres'
-  }
-  
-  if (!form.value.email.trim()) {
-    newErrors.email = 'El correo electrónico es requerido'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
-    newErrors.email = 'El correo electrónico no es válido'
-  }
-  
-  if (!props.isEditing && !form.value.password) {
-    newErrors.password = 'La contraseña es requerida'
-  } else if (form.value.password && form.value.password.length < 6) {
-    newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
-  }
-  
-  if (!form.value.role) {
-    newErrors.role = 'El rol es requerido'
-  }
-  
-  errors.value = newErrors
-  return Object.keys(newErrors).length === 0
-}
+  })
+}, { deep: true })
 
 // Calcular fortaleza de la contraseña
 const passwordStrength = computed(() => {
@@ -365,7 +326,7 @@ const passwordStrengthTextClass = computed(() => {
 
 // Manejar envío del formulario
 const handleSubmit = () => {
-  if (validateForm()) {
+  if (runValidation(form.value, validationRules.value)) {
     // Crear objeto de datos a enviar
     const userData = {
       firstname: form.value.firstname,

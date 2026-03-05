@@ -96,6 +96,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # Frontend development server
         "http://127.0.0.1:3000",  # Alternative localhost
+        "http://localhost:3001",  # React development server alternative port
+        "http://127.0.0.1:3001",  # React alternative localhost
+        "http://localhost:5173",  # Vite default port
+        "http://127.0.0.1:5173",  # Vite default localhost
         "http://frontend:3000",   # Docker container name
         "http://0.0.0.0:3000",    # Docker internal network
     ],

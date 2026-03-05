@@ -4,20 +4,10 @@
     <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
         <div class="flex items-center justify-between h-14">
-          <!-- Izquierda: Volver + info de ruta -->
+          <!-- Izquierda: info de ruta -->
           <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <button
-              @click="router.back()"
-              class="flex-shrink-0 p-1.5 -ml-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-              title="Volver"
-            >
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
-            
             <!-- Info de ruta compacta -->
-            <div v-if="displayedTrip" class="flex items-center gap-1.5 min-w-0">
+            <div v-if="displayedTrip && !tripStore.isLoading" class="flex items-center gap-1.5 min-w-0">
               <span class="text-sm font-bold text-gray-800 truncate hidden sm:inline">{{ displayedTrip.route?.origin }}</span>
               <span class="text-sm font-bold text-gray-800 truncate sm:hidden">{{ displayedTrip.route?.origin?.substring(0, 3) }}</span>
               <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +22,7 @@
           </div>
 
           <!-- Centro: Countdown compacto -->
-          <div v-if="displayedTrip" class="hidden sm:flex items-center">
+          <div v-if="displayedTrip && !tripStore.isLoading" class="hidden sm:flex items-center">
             <TripCountdown
               :trip-date-time="displayedTrip.trip_datetime"
               :departure-time="displayedTrip.departure_time"
@@ -45,7 +35,7 @@
           <div class="flex items-center gap-2 flex-shrink-0">
             <!-- Botón Despachar Viaje -->
             <button
-              v-if="displayedTrip && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
+              v-if="displayedTrip && !tripStore.isLoading && (displayedTrip.status === 'scheduled' || displayedTrip.status === 'boarding')"
               @click="canDispatchTrip ? promptDispatchTrip() : null"
               :disabled="!canDispatchTrip"
               :title="!canDispatchTrip ? 'Aún no es la hora de salida del viaje' : 'Despachar Viaje'"
@@ -64,7 +54,7 @@
             
             <!-- Botón Terminar Viaje -->
             <button
-              v-if="displayedTrip && displayedTrip.status === 'departed'"
+              v-if="displayedTrip && !tripStore.isLoading && displayedTrip.status === 'departed'"
               @click="promptFinishTrip"
               class="inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors"
             >
@@ -74,7 +64,7 @@
               <span class="hidden sm:inline">Terminar Viaje</span>
             </button>
             <a
-              v-if="displayedTrip"
+              v-if="displayedTrip && !tripStore.isLoading"
               :href="`/trips/${tripId}-sheet`"
               target="_blank"
               rel="noopener noreferrer"
@@ -102,9 +92,16 @@
 
     <!-- Estados de carga y error -->
     <div class="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
-      <div v-if="tripStore.isLoading" class="flex flex-col items-center justify-center py-20">
-        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-500 text-sm">Cargando viaje...</p>
+      <div v-if="tripStore.isLoading" class="w-full py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-6">
+            <SkeletonLoader type="detail" />
+            <SkeletonLoader type="text" />
+          </div>
+          <div class="space-y-6">
+            <SkeletonLoader type="detail" />
+          </div>
+        </div>
       </div>
 
       <div v-else-if="tripStore.error" class="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
@@ -119,6 +116,7 @@
 
     <!-- Contenido principal: Mapa de asientos -->
     <div v-if="displayedTrip && !tripStore.isLoading" class="pt-3 pb-8">
+      <ErrorBoundary>
 
       <!-- Panel de ayuda flotante para modo de cambio de asiento -->
       <div v-if="seatChangeMode" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-40 w-auto sm:w-full sm:max-w-sm">
@@ -245,6 +243,7 @@
           />
         </div>
       </div>
+      </ErrorBoundary>
     </div>
   </div>
   
@@ -631,6 +630,7 @@ import PackageAssignModal from '~/components/packages/PackageAssignModal.vue'
 import PackageRegistrationModal from '~/components/packages/PackageRegistrationModal.vue'
 import PackageDeliveryModal from '~/components/packages/PackageDeliveryModal.vue'
 import PackageReceptionModal from '~/components/packages/PackageReceptionModal.vue'
+import SkeletonLoader from '~/components/common/SkeletonLoader.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -640,6 +640,7 @@ const driverStore = useDriverStore()
 const assistantStore = useAssistantStore()
 const packageStore = usePackageStore()
 
+const isMounted = ref(false)
 const tripId = computed(() => parseInt(route.params.id))
 const displayedTrip = computed(() => tripStore.currentTrip)
 
@@ -989,6 +990,7 @@ const handleKeyPress = (event) => {
 
 // Cargar datos al montar el componente
 onMounted(async () => {
+  isMounted.value = true
   // Limpiar estado anterior
   clearState()
   
@@ -1008,6 +1010,9 @@ onMounted(async () => {
       driverStore.fetchDrivers(),
       assistantStore.fetchAssistants()
     ])
+    
+    if (!isMounted.value) return
+    
     await nextTick()
     
     if (displayedTrip.value && displayedTrip.value.id) {
@@ -1020,23 +1025,19 @@ onMounted(async () => {
       console.error('Trip not loaded properly after fetchTripById')
     }
   } catch (error) {
-    console.error('Error loading trip:', error)
+    if (isMounted.value) {
+      console.error('Error loading trip:', error)
+    }
   }
 })
 
 // Limpiar estado al desmontar el componente
 onBeforeUnmount(() => {
+  isMounted.value = false
   clearState()
   // Remover eventos de teclado
   document.removeEventListener('keydown', handleKeyPress)
 })
-
-// Watchers para recargar datos cuando cambie el trip
-watch(() => displayedTrip.value?.id, (newId, oldId) => {
-  if (newId && newId !== oldId) {
-    fetchSoldTickets(newId)
-  }
-}, { immediate: false })
 
 // Funciones para manejar eventos del mapa de asientos
 const handleSelectionChange = (selectedSeats) => {

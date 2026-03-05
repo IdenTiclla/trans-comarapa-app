@@ -27,7 +27,7 @@ export const usePackageStore = defineStore('packages', () => {
   })
 
   // ── Getters ──────────────────────────────────────────────
-  const packageCount = computed(() => packages.value.length)
+  const packageCount = computed(() => packages.value?.length || 0)
   const currentPackageItems = computed(() => currentPackage.value?.items || [])
   const currentPackageTotal = computed(() => {
     if (!currentPackage.value?.items) return 0
@@ -74,7 +74,7 @@ export const usePackageStore = defineStore('packages', () => {
       return packages.value
     } catch (err) {
       error.value = err.message || 'Error al cargar encomiendas'
-      return []
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -91,7 +91,7 @@ export const usePackageStore = defineStore('packages', () => {
     } catch (err) {
       error.value = err.data?.detail || err.message || 'Error al cargar encomiendas sin asignar'
       unassignedPackages.value = []
-      return []
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -105,7 +105,7 @@ export const usePackageStore = defineStore('packages', () => {
       return currentPackage.value
     } catch (err) {
       error.value = err.message || 'Error al obtener la encomienda'
-      return null
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -119,7 +119,7 @@ export const usePackageStore = defineStore('packages', () => {
       return currentPackage.value
     } catch (err) {
       error.value = err.message || 'Error al buscar por número de tracking'
-      return null
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -150,7 +150,7 @@ export const usePackageStore = defineStore('packages', () => {
       return response
     } catch (err) {
       error.value = err.message || 'Error al actualizar la encomienda'
-      return null
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -165,7 +165,7 @@ export const usePackageStore = defineStore('packages', () => {
       return true
     } catch (err) {
       error.value = err.message || 'Error al eliminar la encomienda'
-      return false
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -250,8 +250,8 @@ export const usePackageStore = defineStore('packages', () => {
       if (currentPackage.value?.id === packageId) currentPackage.value.items = items
       return items
     } catch (err) {
-      console.error('Error fetching package items:', err)
-      return []
+      error.value = err.message || 'Error al obtener items de la encomienda'
+      throw err
     }
   }
 
@@ -264,7 +264,7 @@ export const usePackageStore = defineStore('packages', () => {
       }
       return newItem
     } catch (err) {
-      console.error('Error adding package item:', err)
+      error.value = err.message || 'Error al agregar item a la encomienda'
       throw err
     }
   }
@@ -278,7 +278,7 @@ export const usePackageStore = defineStore('packages', () => {
       }
       return updated
     } catch (err) {
-      console.error('Error updating package item:', err)
+      error.value = err.message || 'Error al actualizar item de la encomienda'
       throw err
     }
   }
@@ -291,7 +291,7 @@ export const usePackageStore = defineStore('packages', () => {
       }
       return true
     } catch (err) {
-      console.error('Error deleting package item:', err)
+      error.value = err.message || 'Error al eliminar item de la encomienda'
       throw err
     }
   }
@@ -302,8 +302,8 @@ export const usePackageStore = defineStore('packages', () => {
       const response = await packageService.getPackagesByTrip(tripId)
       return Array.isArray(response) ? response : []
     } catch (err) {
-      console.error('Error fetching packages by trip:', err)
-      return []
+      error.value = err.message || 'Error al obtener encomiendas por viaje'
+      throw err
     }
   }
 
@@ -314,8 +314,8 @@ export const usePackageStore = defineStore('packages', () => {
         : await packageService.getPackagesByRecipient(clientId)
       return Array.isArray(response) ? response : []
     } catch (err) {
-      console.error('Error fetching packages by client:', err)
-      return []
+      error.value = err.message || 'Error al obtener encomiendas por cliente'
+      throw err
     }
   }
 
@@ -327,7 +327,7 @@ export const usePackageStore = defineStore('packages', () => {
       return searchResults.value
     } catch (err) {
       error.value = err.message || 'Error en la búsqueda'
-      return []
+      throw err
     } finally {
       isLoading.value = false
     }
