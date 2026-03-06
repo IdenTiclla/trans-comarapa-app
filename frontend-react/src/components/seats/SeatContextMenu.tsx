@@ -3,8 +3,6 @@ interface SeatContextMenuProps {
     position: { x: number, y: number }
     selectedSeat: any
     enableContextMenu?: boolean
-    onSellTicket: () => void
-    onReserveSeat: () => void
     onViewDetails: () => void
     onCancelReservation: () => void
     onConfirmSale: () => void
@@ -17,8 +15,6 @@ export default function SeatContextMenu({
     position,
     selectedSeat,
     enableContextMenu = false,
-    onSellTicket,
-    onReserveSeat,
     onViewDetails,
     onCancelReservation,
     onConfirmSale,
@@ -36,23 +32,6 @@ export default function SeatContextMenu({
             <div className="px-3 py-1.5 text-xs text-gray-500 border-b border-gray-100 font-medium bg-gray-50">
                 Asiento {selectedSeat?.number || ''}
             </div>
-
-            {(!selectedSeat?.status || selectedSeat?.status === 'available') && (
-                <>
-                    <button
-                        onClick={onSellTicket}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-blue-600 hover:bg-gray-100 transition-colors"
-                    >
-                        Vender
-                    </button>
-                    <button
-                        onClick={onReserveSeat}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-yellow-600 hover:bg-gray-100 transition-colors"
-                    >
-                        Reservar
-                    </button>
-                </>
-            )}
 
             {(selectedSeat?.status === 'reserved' || selectedSeat?.occupied || selectedSeat?.status === 'occupied') && (
                 <button

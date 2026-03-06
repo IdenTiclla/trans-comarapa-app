@@ -9,7 +9,6 @@ interface BusSeatGridProps {
 
     onSeatSelected?: (seat: any, newSelectedIds: number[]) => void
     onSeatDeselected?: (seat: any, newSelectedIds: number[]) => void
-    onSelectionChange?: (seats: any[]) => void
     onContextMenu?: (event: React.MouseEvent, seat: any) => void
     seatChangeMode?: boolean
 }
@@ -22,7 +21,6 @@ export default function BusSeatGrid({
     tickets = [],
     onSeatSelected,
     onSeatDeselected,
-    onSelectionChange,
     onContextMenu,
     seatChangeMode = false
 }: BusSeatGridProps) {
@@ -79,11 +77,6 @@ export default function BusSeatGrid({
         } else {
             newSelectedIds = selectedSeatIds.filter(id => id !== seat.id)
             if (onSeatDeselected) onSeatDeselected(seat, newSelectedIds)
-        }
-
-        if (onSelectionChange) {
-            const updatedSelectedSeats = seats.filter(s => newSelectedIds.includes(s.id))
-            onSelectionChange(updatedSelectedSeats)
         }
     }
 

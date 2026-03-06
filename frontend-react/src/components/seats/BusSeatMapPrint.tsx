@@ -34,8 +34,6 @@ interface BusSeatMapPrintProps {
     onViewDetails?: (seat: any) => void
     onChangeSeat?: (seat: any) => void
     onRescheduleTrip?: (seat: any) => void
-    onSellTicket?: (seats: any[] | any) => void
-    onReserveSeat?: (seats: any[] | any) => void
     onStartEditDriver?: () => void
     onSaveDriver?: () => void
     onCancelEditDriver?: () => void
@@ -74,8 +72,6 @@ export default function BusSeatMapPrint({
     onViewDetails,
     onChangeSeat,
     onRescheduleTrip,
-    onSellTicket,
-    onReserveSeat,
     onStartEditDriver,
     onSaveDriver,
     onCancelEditDriver,
@@ -183,10 +179,6 @@ export default function BusSeatMapPrint({
         return seats.filter(seat => seat.deck === selectedDeck)
     }, [seats, isDoubleDeck, selectedDeck])
 
-    const selectedSeats = useMemo(() => {
-        return seats.filter(seat => selectedSeatIds.includes(seat.id))
-    }, [seats, selectedSeatIds])
-
     const occupiedSeatsCount = useMemo(() => {
         if (!filteredSeats) return 0
         return filteredSeats.filter(seat => seat.occupied).length
@@ -216,11 +208,17 @@ export default function BusSeatMapPrint({
     const handleSeatSelected = (seat: any, newSelectedIds: number[]) => {
         setSelectedSeatIds(newSelectedIds)
         if (onSeatSelected) onSeatSelected(seat)
+        if (onSelectionChange) {
+            onSelectionChange(seats.filter(s => newSelectedIds.includes(s.id)))
+        }
     }
 
     const handleSeatDeselected = (seat: any, newSelectedIds: number[]) => {
         setSelectedSeatIds(newSelectedIds)
         if (onSeatDeselected) onSeatDeselected(seat)
+        if (onSelectionChange) {
+            onSelectionChange(seats.filter(s => newSelectedIds.includes(s.id)))
+        }
     }
 
     const handleContextMenu = (event: any, seat: any) => {
@@ -305,7 +303,6 @@ export default function BusSeatMapPrint({
                     seatChangeMode={seatChangeMode}
                     onSeatSelected={handleSeatSelected}
                     onSeatDeselected={handleSeatDeselected}
-                    onSelectionChange={onSelectionChange}
                     onContextMenu={handleContextMenu}
                 />
 
@@ -317,23 +314,6 @@ export default function BusSeatMapPrint({
                 position={contextMenuPosition}
                 selectedSeat={selectedSeatForContext}
                 enableContextMenu={enableContextMenu}
-                onSellTicket={() => {
-                    if (selectedSeatForContext && onSellTicket) onSellTicket(selectedSeatForContext)
-                    closeContext()
-                }}
-                onReserveSeat={() => {
-                    if (selectedSeatForContext && onReserveSeat) {
-                        if (!selectedSeatForContext.occupied && selectedSeatForContext.status !== 'reserved' && selectedSeatForContext.status !== 'occupied') {
-                            if (selectedSeats.length > 0) {
-                                const avail = selectedSeats.filter(s => !s.occupied && s.status !== 'reserved' && s.status !== 'occupied')
-                                onReserveSeat(avail.length > 0 ? avail : [selectedSeatForContext])
-                            } else {
-                                onReserveSeat([selectedSeatForContext])
-                            }
-                        }
-                    }
-                    closeContext()
-                }}
                 onViewDetails={() => {
                     if (selectedSeatForContext && onViewDetails) onViewDetails(selectedSeatForContext)
                     closeContext()

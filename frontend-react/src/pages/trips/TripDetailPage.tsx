@@ -89,6 +89,8 @@ export function Component() {
   const [currentSelectedSeats, setCurrentSelectedSeats] = useState<any[]>([])
   const [controlledSeatIds, setControlledSeatIds] = useState<number[]>([])
 
+  const isDoubleDeck = (trip?.bus?.floors || 1) >= 2
+
   const fetchPackages = useCallback(async (tId: number) => {
     setLoadingPackages(true)
     try {
@@ -533,10 +535,8 @@ export function Component() {
             enableContextMenu={true}
             seatChangeMode={seatChangeMode}
             controlledSelectedIds={controlledSeatIds}
-            onClearSelection={handleClearSelection}
             onSelectionChange={handleSelectionChange}
-            onSellTicket={handleSellTicket}
-            onReserveSeat={handleReserveSeat}
+            onStartEditDriver={() => { }} // Placeholder si BusSeatMapPrint lo pide como prop opcional pero tira error si se pasa otra cosa, aunque en realidad onClearSelection no está en la interface. Eliminamos onClearSelection.
             onViewDetails={handleViewDetails}
             onCancelReservation={handleCancelReservation}
             onConfirmSale={handleConfirmSale}
@@ -558,6 +558,7 @@ export function Component() {
         selectedSeats={currentSelectedSeats}
         selectionEnabled={!seatChangeMode}
         seatChangeMode={seatChangeMode}
+        isDoubleDeck={isDoubleDeck}
         onSellTicket={() => handleSellTicket(currentSelectedSeats)}
         onReserveSeat={() => handleReserveSeat(currentSelectedSeats)}
         onClearSelection={handleClearSelection}
