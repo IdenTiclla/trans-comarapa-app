@@ -1,121 +1,75 @@
-# Guía de Contribución
+# Contributing - Backend
 
-Este documento proporciona instrucciones para desarrolladores que deseen contribuir al proyecto Trans Comarapa.
+## Setup
 
-## Configuración del Entorno de Desarrollo
-
-### Requisitos Previos
-- Python 3.12+
-- uv (gestor de paquetes moderno para Python)
-- MySQL 8.0+ (base de datos principal)
-
-### Pasos para Configurar el Entorno
-
-1. Clonar el repositorio:
-```bash
-git clone https://github.com/tu-usuario/trans-comarapa-app.git
-cd trans-comarapa-app
-```
-
-2. Crear y activar un entorno virtual:
 ```bash
 cd backend
-# uv detectará automáticamente la versión 3.12.0 del archivo .python-version
-uv venv
-
-# O especificar explícitamente la versión de Python:
-# uv venv --python=3.12.0
-
-# Activar el entorno virtual
-source .venv/bin/activate  # En Linux/Mac
-# o
-.\.venv\Scripts\activate   # En Windows
+uv sync                        # install dependencies
+source .venv/bin/activate      # activate venv
+cp .env.example .env           # configure DB credentials
+alembic upgrade head           # run migrations
+python db/seed.py              # seed test data
+python run.py                  # start server at http://localhost:8000
 ```
 
-3. Instalar dependencias:
-```bash
-uv sync
-# o
-uv pip install -e .
+## Architecture
+
+The backend follows a **Service-Repository** layered architecture:
+
+```
+Route (thin adapter) → Service (business logic) → Repository (data access) → Model (ORM)
 ```
 
-4. Configurar variables de entorno:
-   - Crear un archivo `.env` en el directorio `backend` basado en `.env.example`
-   - Ajustar las variables según tu entorno local
-
-## Ejecutar el Proyecto
-
-Hay varias formas de ejecutar el servidor para desarrollo:
-
-### Opción 1: Usando el script run.py (recomendado)
-```bash
-# Desde el directorio backend
-python run.py
-```
-
-### Opción 2: Usando uvicorn directamente
-```bash
-# Desde el directorio raíz del proyecto
-uvicorn backend.main:app --reload
-
-# O desde el directorio backend
-uvicorn main:app --reload
-```
-
-### Opción 3: Usando Docker
-```bash
-# Desde el directorio raíz del proyecto
-docker-compose up
-```
-
-## Estructura del Proyecto
-
-El proyecto sigue una estructura modular:
+### Directory Structure
 
 ```
 backend/
-├── db/                # Configuración de la base de datos
-├── models/            # Modelos SQLAlchemy
-├── routes/            # Rutas de la API
-├── schemas/           # Esquemas Pydantic
-├── scripts/           # Scripts de utilidad
-├── main.py            # Punto de entrada de la aplicación
-└── run.py             # Script para ejecutar la aplicación
+├── core/               # Config, enums, exceptions, state machines, Redis, logging
+├── models/             # SQLAlchemy ORM models (22 entities, all inherit Base)
+├── schemas/            # Pydantic v2 request/response schemas
+├── repositories/       # Data access (BaseRepository + specific repos)
+├── services/           # Business logic (auth, trip, ticket, package, user_mgmt, stats)
+├── routes/             # FastAPI routers (18 modules, /api/v1/* prefix)
+├── db/                 # Database session config, seed scripts
+├── alembic/            # Migration versions
+└── tests/              # Pytest tests
 ```
 
-## Flujo de Trabajo para Contribuciones
+### Key Rules
 
-1. Crear una rama para tu característica o corrección:
+1. **Routes are thin** — receive request, call service, return response. No business logic.
+2. **Services own business logic** — validation, state transitions, orchestration. Services call `db.commit()`.
+3. **Repositories own data access** — CRUD, queries, joins. Repositories only `db.flush()`.
+4. **Use domain exceptions** — `NotFoundException`, `ValidationException`, `ConflictException`, `InvalidStateTransitionException` from `core/exceptions.py`. Never raise `HTTPException` in services.
+5. **Use enums** — `TicketState`, `PackageStatus`, `TripStatus`, `PaymentMethod` from `core/enums.py`. No magic strings.
+6. **State transitions** — Always use `validate_transition()` from `core/state_machines.py`.
+7. **Type hints mandatory** — Every function parameter and return value.
+8. **Logging** — Use `logging.getLogger(__name__)`, never `print()`.
+
+## Adding a New Feature
+
+1. **Model:** `models/[entity].py` (inherit `Base`)
+2. **Schema:** `schemas/[entity].py` (`EntityCreate`, `EntityUpdate`, `EntityResponse`)
+3. **Repository:** `repositories/[entity]_repository.py` (inherit `BaseRepository`)
+4. **Service:** `services/[entity]_service.py`
+5. **Route:** `routes/[entity].py` (APIRouter with `Depends` for service injection)
+6. **Migration:**
+   ```bash
+   alembic revision --autogenerate -m "Add [entity]"
+   alembic upgrade head
+   ```
+
+## Testing
+
 ```bash
-git checkout -b feature/nombre-de-la-caracteristica
+pytest -v --cov=.          # all tests with coverage
+pytest tests/unit/         # unit tests only
+pytest tests/integration/  # integration tests only
 ```
 
-2. Realizar cambios y asegurarse de que el código sigue las convenciones del proyecto
+## Code Standards
 
-3. Ejecutar pruebas (cuando estén implementadas)
-
-4. Enviar un Pull Request con una descripción clara de los cambios
-
-## Convenciones de Código
-
-- Seguir las convenciones de PEP 8
-- Documentar todas las funciones y clases
-- Usar nombres descriptivos para variables y funciones
-- Mantener las funciones pequeñas y con una sola responsabilidad
-
-## Solución de Problemas Comunes
-
-### Problemas de Importación
-Si encuentras problemas de importación, asegúrate de:
-- Estar ejecutando el proyecto desde el directorio correcto
-- Tener todos los archivos `__init__.py` necesarios
-- Usar las rutas de importación correctas
-
-### Problemas de Base de Datos
-- Verificar la cadena de conexión en el archivo `.env`
-- Asegurarse de que la base de datos existe y es accesible
-- Revisar los logs para errores específicos
-
-## Contacto
-
-Si tienes preguntas o problemas, contacta al equipo de desarrollo en [correo@ejemplo.com].
+- PEP 8 + Ruff linter
+- Descriptive naming: `get_active_tickets_by_trip_id`, not `get_tickets`
+- Early returns to flatten nested conditions
+- Dependency injection via FastAPI `Depends()`

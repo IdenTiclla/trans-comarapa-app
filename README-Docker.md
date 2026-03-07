@@ -48,15 +48,18 @@ make status
 ## 🏗️ Arquitectura del Proyecto
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │    Backend      │    │   Database      │
-│   (Nuxt.js)     │◄──►│   (FastAPI)     │◄──►│    (MySQL)      │
-│   Port: 3000    │    │   Port: 8000    │    │   Port: 3308    │
-│                 │    │                 │    │                 │
-│ ⭐ Página de    │    │ ⭐ API Optimi-  │    │ ⭐ Datos de     │
-│ Boletos         │    │ zada para       │    │ Prueba          │
-│ Modernizada     │    │ Frontend        │    │ Realistas       │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│ Frontend React  │  │ Frontend Nuxt   │  │    Backend      │  │   Database      │
+│ (Active)        │  │ (Legacy)        │  │   (FastAPI)     │  │    (MySQL)      │
+│ Port: 3001      │  │ Port: 3000      │  │   Port: 8000    │  │   Port: 3308    │
+└────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
+         │                    │                     │                    │
+         └────────────────────┴──── HTTP/REST ──────┘        ◄──────────┘
+                                                    │
+                                             ┌──────┴────────┐
+                                             │    Redis      │
+                                             │   Port: 6379  │
+                                             └───────────────┘
 ```
 
 ## 📁 Estructura de Archivos Docker
@@ -335,11 +338,12 @@ El script crea usuarios específicos para testing:
 
 Una vez que todos los servicios estén ejecutándose:
 
-- **Frontend (Nuxt.js)**: http://localhost:3000
-  - ⭐ Página de boletos modernizada: http://localhost:3000/bookings
+- **Frontend React (Activo)**: http://localhost:3001
+- **Frontend Nuxt (Legacy)**: http://localhost:3000
 - **Backend API (FastAPI)**: http://localhost:8000
 - **Documentación API**: http://localhost:8000/docs
 - **Base de Datos MySQL**: localhost:3308
+- **Redis**: localhost:6379
 
 ## 🚨 Solución de Problemas
 
@@ -482,5 +486,4 @@ Si encuentras problemas:
 
 ---
 
-**Última actualización**: Diciembre 2024  
-**Próxima revisión**: Enero 2025 
+**Última actualización**: Marzo 2026
