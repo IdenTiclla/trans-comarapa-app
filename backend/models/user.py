@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from db.base import Base
 from passlib.context import CryptContext
+from core.security import get_password_hash as _get_password_hash, verify_password as _verify_password
 import enum
 
 class UserRole(enum.Enum):
@@ -45,7 +46,7 @@ class User(Base):
     administrator = relationship("Administrator", uselist=False, back_populates="user", overlaps="person")
     client = relationship("Client", uselist=False, back_populates="user", overlaps="person")
 
-    # Definir el contexto de contraseña - temporarily using sha256_crypt for compatibility
+    # Legacy password context — kept for reference/type compatibility
     _pwd_context = CryptContext(
         schemes=["sha256_crypt"],
         deprecated="auto",
@@ -56,28 +57,14 @@ class User(Base):
 
     @staticmethod
     def verify_password(plain_password, hashed_password):
-        try:
-            return User._pwd_context.verify(plain_password, hashed_password)
-        except Exception as e:
-            print(f"Error verificando contraseña: {e}")
-            return False
+        return _verify_password(plain_password, hashed_password)
 
     @staticmethod
     def get_password_hash(password):
-        try:
-            # Ensure password doesn't exceed bcrypt's 72-byte limit
-            if isinstance(password, str):
-                password_bytes = password.encode('utf-8')
-                if len(password_bytes) > 72:
-                    # Truncate password to 72 bytes for bcrypt compatibility
-                    password = password_bytes[:72].decode('utf-8', errors='ignore')
-            return User._pwd_context.hash(password)
-        except Exception as e:
-            print(f"Error generando hash de contraseña: {e}")
-            raise
+        return _get_password_hash(password)
 
     def set_password(self, password):
-        self.hashed_password = self.get_password_hash(password)
+        self.hashed_password = _get_password_hash(password)
 
     # 🔧 PROPIEDADES DE COMPATIBILIDAD
     @property

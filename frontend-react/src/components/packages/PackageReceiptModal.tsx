@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { getEffectiveName } from '@/lib/person-utils'
-import { usePackageStatus } from '@/hooks/use-package-status'
+
 
 interface PackageReceiptModalProps {
     show: boolean
@@ -9,7 +9,6 @@ interface PackageReceiptModalProps {
 }
 
 export default function PackageReceiptModal({ show, packageData, onClose }: PackageReceiptModalProps) {
-    const { getStatusLabel } = usePackageStatus()
     const [packageNumber, setPackageNumber] = useState('000000')
 
     const now = new Date()

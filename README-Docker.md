@@ -1,489 +1,102 @@
-# 🐳 Docker Setup - Trans Comarapa
+# Docker Setup - Trans Comarapa
 
-Esta guía te ayudará a configurar y ejecutar todo el proyecto Trans Comarapa usando Docker con un solo comando.
+Guia para configurar y ejecutar el proyecto con Docker.
 
-## 📋 Requisitos Previos
+## Requisitos
 
-- [Docker](https://docs.docker.com/get-docker/) (versión 20.10 o superior)
-- [Docker Compose](https://docs.docker.com/compose/install/) (versión 2.0 o superior)
-- [Make](https://www.gnu.org/software/make/) (opcional, para comandos simplificados)
+- Docker 20.10+
+- Docker Compose 2.0+
+- Make (opcional)
 
-## ⚡ Inicio Rápido
-
-### Configuración Inicial (Una sola vez)
+## Inicio Rapido
 
 ```bash
-# Clonar el repositorio (si no lo has hecho)
-git clone <repository-url>
-cd trans-comarapa-app
-
-# Configuración automática completa (incluye seeding)
-make setup
+make setup    # Construye, inicia servicios, migra y siembra la BD
 ```
 
-**¡Eso es todo!** El comando `make setup` hace todo automáticamente:
-- ✅ Crea el archivo `.env` con la configuración
-- ✅ Construye las imágenes Docker
-- ✅ Inicia todos los servicios
-- ✅ Espera que la base de datos esté lista
-- ✅ Puebla la base de datos con datos de prueba
-- ✅ Muestra información de acceso y usuarios de prueba
+Esto crea el `.env`, construye imagenes, inicia servicios, espera la BD y ejecuta el seed.
 
-### Uso Diario
+## Comandos
+
+### Servicios
 
 ```bash
-# Iniciar servicios
-make up
-
-# Ver logs en tiempo real
-make logs
-
-# Detener servicios
-make down
-
-# Ver estado de servicios
-make status
+make up / down / restart / status
+make build / rebuild          # Construir / reconstruir sin cache
 ```
 
-## 🏗️ Arquitectura del Proyecto
-
-```
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ Frontend React  │  │ Frontend Nuxt   │  │    Backend      │  │   Database      │
-│ (Active)        │  │ (Legacy)        │  │   (FastAPI)     │  │    (MySQL)      │
-│ Port: 3001      │  │ Port: 3000      │  │   Port: 8000    │  │   Port: 3308    │
-└────────┬────────┘  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
-         │                    │                     │                    │
-         └────────────────────┴──── HTTP/REST ──────┘        ◄──────────┘
-                                                    │
-                                             ┌──────┴────────┐
-                                             │    Redis      │
-                                             │   Port: 6379  │
-                                             └───────────────┘
-```
-
-## 📁 Estructura de Archivos Docker
-
-```
-trans-comarapa-app/
-├── docker-compose.yml          # Configuración principal (desarrollo)
-├── docker-compose.prod.yml     # Configuración de producción
-├── Makefile                    # Comandos simplificados
-├── env.example                 # Variables de entorno de ejemplo
-├── frontend/
-│   ├── Dockerfile             # Imagen del frontend
-│   ├── .dockerignore          # Archivos excluidos
-│   └── pages/
-│       └── bookings.vue       # ⭐ Página modernizada
-└── backend/
-    ├── Dockerfile             # Imagen del backend
-    ├── docker-compose.yml     # Configuración legacy (solo backend)
-    ├── .dockerignore          # Archivos excluidos
-    └── db/
-        └── seed.py            # ⭐ Datos de prueba mejorados
-```
-
-## 🛠️ Comandos Disponibles
-
-### Comandos con Make (Recomendado)
+### Logs
 
 ```bash
-# Ver todos los comandos disponibles
-make help
-
-# Gestión de servicios
-make up              # Iniciar en desarrollo
-make up-prod         # Iniciar en producción
-make down            # Detener servicios
-make restart         # Reiniciar servicios
-make status          # Ver estado de servicios
-
-# Construcción
-make build           # Construir imágenes
-make rebuild         # Reconstruir sin cache
-
-# Logs
-make logs            # Ver logs de todos los servicios
-make logs-f          # Ver logs en tiempo real
-make logs-backend    # Ver logs solo del backend
-make logs-frontend   # Ver logs solo del frontend
-
-# Acceso a contenedores
-make shell-backend   # Acceder al shell del backend
-make shell-frontend  # Acceder al shell del frontend
-make shell-db        # Acceder a MySQL
-
-# Base de datos
-make seed            # Poblar con datos completos de prueba
-make seed-test-users # Crear solo usuarios de prueba (rápido)
-make clear-db        # Limpiar toda la base de datos
-
-# Limpieza
-make clean           # Limpiar contenedores y volúmenes
-make clean-all       # Limpieza completa
+make logs-f                   # Tiempo real (todos)
+make logs-backend / logs-frontend / logs-db
 ```
 
-### Comandos Docker Compose Directos
+### Shell en contenedores
 
 ```bash
-# Desarrollo
-docker-compose up -d                    # Iniciar en background
-docker-compose up                       # Iniciar con logs visibles
-docker-compose down                     # Detener servicios
-docker-compose logs -f                  # Ver logs en tiempo real
-docker-compose ps                       # Ver estado de servicios
-
-# Producción
-docker-compose -f docker-compose.prod.yml up -d
-docker-compose -f docker-compose.prod.yml down
+make shell-backend / shell-frontend / shell-db
 ```
 
-## ⚙️ Configuración
-
-### Variables de Entorno
-
-Copia `env.example` a `.env` y ajusta las variables según tus necesidades:
+### Base de datos
 
 ```bash
-cp env.example .env
+make seed                     # Datos completos de prueba
+make seed-minimal             # Solo datos minimos
+make seed-test-users          # Solo usuarios de prueba
+make clear-db                 # Limpiar BD
 ```
 
-Variables principales:
+## Servicios y puertos
+
+| Servicio | Puerto |
+|----------|--------|
+| Frontend React (activo) | :3001 |
+| Frontend Nuxt (legacy) | :3000 |
+| Backend API | :8000 |
+| API Docs (Swagger) | :8000/docs |
+| MySQL | :3308 |
+| Redis | :6379 |
+
+## Variables de entorno
+
+Copia `env.example` a `.env`:
 
 ```env
-# Base de datos
 MYSQL_ROOT_PASSWORD=Passw0rd!
-
-# Backend
 SECRET_KEY=your-secret-key-change-in-production
 DEBUG=true
-
-# Frontend
 NODE_ENV=development
-NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
-
-# Targets de Docker
 BACKEND_TARGET=development
 FRONTEND_TARGET=development
 ```
 
-### Modos de Ejecución
+## Modos de ejecucion
 
-#### Desarrollo (Por defecto)
-- Hot reload habilitado
-- Volúmenes montados para desarrollo
-- Logs detallados
-- Debug habilitado
-- ⭐ Página de boletos con diseño moderno
+- **Desarrollo** (por defecto): hot reload, volumenes montados, debug habilitado
+- **Produccion**: `make up-prod` — imagenes optimizadas, sin hot reload
 
-#### Producción
-- Imágenes optimizadas
-- Sin hot reload
-- Configuración de seguridad
-- Límites de recursos
+### Configuracion de produccion
 
-```bash
-# Cambiar a producción
-export BACKEND_TARGET=production
-export FRONTEND_TARGET=production
-make up-prod
-```
+1. Cambiar passwords y `SECRET_KEY` en `.env`
+2. Setear `DEBUG=false`, `NODE_ENV=production`
+3. Ejecutar `make up-prod`
 
-## 🔧 Desarrollo
+## Solucion de problemas
 
-### Modificar Código
+| Problema | Solucion |
+|----------|----------|
+| Puerto en uso | Cambiar puertos en `docker-compose.yml` |
+| Permisos | `sudo chown -R $USER:$USER .` |
+| Contenedores no inician | `make logs` → `make clean` → `make rebuild` |
+| BD no conecta | `make logs-db` → `make restart` |
 
-En modo desarrollo, los cambios en el código se reflejan automáticamente:
-
-- **Frontend**: Hot reload automático (incluyendo página de boletos mejorada)
-- **Backend**: Recarga automática con uvicorn --reload
-
-### Instalar Nuevas Dependencias
+## Backup y restauracion
 
 ```bash
-# Backend (Python)
-make shell-backend
-pip install nueva-dependencia
-pip freeze > requirements.txt
-
-# Frontend (Node.js)
-make shell-frontend
-npm install nueva-dependencia
-```
-
-### Ejecutar Comandos en Contenedores
-
-```bash
-# Ejecutar migraciones de base de datos
-make shell-backend
-python -m alembic upgrade head
-
-# Ejecutar tests
-make shell-backend
-pytest
-
-# Instalar dependencias del frontend
-make shell-frontend
-npm install
-```
-
-## 🗄️ Base de Datos
-
-### Acceso a MySQL
-
-```bash
-# Usando make
-make shell-db
-
-# Usando docker-compose directamente
-docker-compose exec db mysql -u root -p trans_comarapa
-```
-
-### Persistencia de Datos
-
-Los datos se almacenan en un volumen Docker llamado `mysql_data`:
-
-```bash
-# Ver volúmenes
-docker volume ls
-
-# Backup de la base de datos
+# Backup
 docker-compose exec db mysqldump -u root -p trans_comarapa > backup.sql
 
-# Restaurar backup
+# Restaurar
 docker-compose exec -T db mysql -u root -p trans_comarapa < backup.sql
 ```
-
-## 🌱 Poblar la Base de Datos
-
-El proyecto incluye un script completo de seeding que crea datos de prueba realistas:
-
-### Datos Incluidos ⭐ Mejorados
-
-El script `backend/db/seed.py` crea:
-
-- **Ubicaciones**: 5 terminales (Santa Cruz, Comarapa, Cochabamba, Samaipata, Mairana)
-- **Oficinas**: 5 oficinas en diferentes ubicaciones
-- **Rutas**: 5 rutas entre las diferentes ubicaciones
-- **Usuarios**: 40+ clientes, 10 conductores, 7 secretarios, 10 asistentes, 1 administrador
-- **Buses**: 5 buses con diferentes capacidades y modelos
-- **Viajes**: 60 viajes con fechas variadas (pasados, presentes y futuros)
-- **Tickets**: Tickets aleatorios para los viajes con diferentes estados
-- **Paquetes**: Paquetes con items detallados para cada viaje
-
-### Comandos de Seeding
-
-```bash
-# Poblar la base de datos con todos los datos de muestra
-make seed
-
-# Crear solo usuarios de prueba (más rápido para desarrollo)
-make seed-test-users
-
-# Limpiar toda la base de datos (¡CUIDADO!)
-make clear-db
-```
-
-### Usuarios de Prueba ⭐ Actualizados
-
-El script crea usuarios específicos para testing:
-
-#### Administrador
-- **Email**: admin1@comarapa.com
-- **Contraseña**: 123456
-- **Nombre**: Admin Principal
-
-#### Secretarios
-- **Email**: secretary1@comarapa.com (Secretaria Principal)
-- **Email**: secretary2@comarapa.com (Ana García)
-- **Email**: secretary3@comarapa.com (Carlos López)
-- **Contraseña**: 123456 (para todos)
-
-#### Clientes de Prueba
-- **Cliente Principal** - CI: 12693562
-- **María González** - CI: 9876543
-- **Pedro Rojas** - CI: 5432109
-- **Luisa Morales** - CI: 151985270
-- **Roberto Silva** - CI: 9753228
-- **Contraseña**: 123456 (para todos)
-
-#### Otros Roles
-- **Conductor**: driver1@comarapa.com
-- **Asistente**: assistant1@comarapa.com
-- **Contraseña**: 123456
-
-### Uso Recomendado
-
-1. **Primera vez**: Ejecuta `make seed` para tener datos completos
-2. **Desarrollo**: Usa `make seed-test-users` si solo necesitas usuarios
-3. **Reset**: Usa `make clear-db` seguido de `make seed` para empezar limpio
-
-## 🚀 Características Destacadas del Sistema
-
-### Frontend Modernizado ⭐
-- **Página de Boletos**: Completamente rediseñada con gradientes y efectos visuales
-- **Vista Dual**: Alternar entre tarjetas elegantes y tabla profesional
-- **Filtros Avanzados**: Sistema colapsable con múltiples criterios
-- **Exportación**: Descarga de datos filtrados en formato CSV
-- **Responsive**: Aprovechamiento completo del ancho de pantalla
-- **Estadísticas Mejoradas**: Porcentajes, promedios y comparativas
-
-### Backend Optimizado ⭐
-- **API para Boletos**: Endpoints optimizados para el frontend moderno
-- **Filtros Avanzados**: Soporte para búsqueda por múltiples campos
-- **Estadísticas en Tiempo Real**: APIs dedicadas para dashboard
-- **Paginación Mejorada**: Manejo eficiente de grandes volúmenes de datos
-
-### Acceso a la Aplicación
-
-Una vez que todos los servicios estén ejecutándose:
-
-- **Frontend React (Activo)**: http://localhost:3001
-- **Frontend Nuxt (Legacy)**: http://localhost:3000
-- **Backend API (FastAPI)**: http://localhost:8000
-- **Documentación API**: http://localhost:8000/docs
-- **Base de Datos MySQL**: localhost:3308
-- **Redis**: localhost:6379
-
-## 🚨 Solución de Problemas
-
-### Problemas Comunes
-
-1. **Puerto ya en uso**
-   ```bash
-   # Cambiar puertos en docker-compose.yml
-   ports:
-     - "3001:3000"  # Frontend
-     - "8001:8000"  # Backend
-   ```
-
-2. **Problemas de permisos**
-   ```bash
-   sudo chown -R $USER:$USER .
-   ```
-
-3. **Contenedores no inician**
-   ```bash
-   make logs
-   make clean
-   make rebuild
-   ```
-
-4. **Base de datos no conecta**
-   ```bash
-   make logs-db
-   make restart-db
-   ```
-
-5. **Frontend no carga cambios**
-   ```bash
-   # Limpiar cache de Node.js
-   make shell-frontend
-   rm -rf .nuxt node_modules
-   npm install
-   ```
-
-### Logs Detallados
-
-```bash
-# Ver logs específicos
-make logs-backend
-make logs-frontend
-make logs-db
-
-# Ver logs en tiempo real
-make logs-f
-```
-
-### Reiniciar Servicios
-
-```bash
-# Reiniciar todo
-make restart
-
-# Reiniciar servicio específico
-make restart-backend
-make restart-frontend
-make restart-db
-```
-
-## 🔒 Producción
-
-### Configuración de Producción
-
-1. **Cambiar variables de entorno**:
-   ```env
-   SECRET_KEY=super-secret-key-very-long-and-random
-   DEBUG=false
-   NODE_ENV=production
-   MYSQL_ROOT_PASSWORD=strong-password
-   ```
-
-2. **Usar docker-compose de producción**:
-   ```bash
-   make up-prod
-   ```
-
-3. **Configurar proxy reverso** (opcional):
-   - Nginx incluido en `docker-compose.prod.yml`
-   - Configurar SSL/TLS
-   - Configurar dominio
-
-### Seguridad
-
-- Cambiar todas las contraseñas por defecto
-- Usar variables de entorno para secretos
-- Configurar firewall
-- Usar HTTPS en producción
-- Limitar acceso a la base de datos
-
-## 📊 Monitoreo y Métricas
-
-### Estado de Servicios
-
-```bash
-# Ver estado de todos los servicios
-make status
-
-# Ver uso de recursos
-docker stats
-
-# Ver logs de rendimiento
-make logs-f | grep -E "(time|performance|slow)"
-```
-
-### Métricas del Sistema
-
-```bash
-# Verificar base de datos
-make shell-db
-SHOW TABLES;
-SELECT COUNT(*) FROM tickets;
-SELECT COUNT(*) FROM trips;
-
-# Verificar API
-curl http://localhost:8000/api/v1/stats/dashboard
-
-# Verificar frontend
-curl http://localhost:3000/
-```
-
-## 📚 Recursos Adicionales
-
-- [Documentación de Docker](https://docs.docker.com/)
-- [Documentación de Docker Compose](https://docs.docker.com/compose/)
-- [FastAPI con Docker](https://fastapi.tiangolo.com/deployment/docker/)
-- [Nuxt.js con Docker](https://nuxt.com/docs/getting-started/deployment#docker)
-
-## 🆘 Soporte
-
-Si encuentras problemas:
-
-1. Revisa los logs: `make logs-f`
-2. Verifica el estado: `make status`
-3. Limpia y reconstruye: `make clean && make rebuild`
-4. Consulta la documentación específica de cada servicio 
-
----
-
-**Última actualización**: Marzo 2026

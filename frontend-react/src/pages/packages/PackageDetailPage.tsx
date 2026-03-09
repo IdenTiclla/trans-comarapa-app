@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
-import { usePackageStatus } from '@/hooks/use-package-status'
+import { getPackageStatusLabel, getPackageStatusBg, getPackageStatusText, getTimelineIconBg, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } from '@/lib/package-status'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,15 +15,9 @@ export function Component() {
   const dispatch = useDispatch<any>()
 
   const { currentPackage, loading, error } = useSelector((state: RootState) => state.package)
-  const {
-    getStatusLabel,
-    getStatusBg,
-    getTimelineIconBg,
-    getStatusText,
-    getPaymentStatusLabel,
-    getPaymentStatusBg,
-    getPaymentStatusTextClass
-  } = usePackageStatus()
+  const getStatusLabel = getPackageStatusLabel
+  const getStatusBg = getPackageStatusBg
+  const getStatusText = getPackageStatusText
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showReceptionModal, setShowReceptionModal] = useState(false)

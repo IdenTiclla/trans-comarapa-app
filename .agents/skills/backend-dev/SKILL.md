@@ -9,7 +9,7 @@ This skill defines the strict architectural rules that must be followed when wor
 
 ## 1. Directory Structure
 
-- `backend/core/`: Configuration, enums, exceptions, and state machines.
+- `backend/core/`: Configuration, enums, exceptions, security (cryptography), and state machines.
 - `backend/models/`: SQLAlchemy ORM models.
 - `backend/schemas/`: Pydantic schemas for request/response validation.
 - `backend/repositories/`: Data access logic (CRUD operations).
@@ -113,3 +113,15 @@ To ensure long-term maintainability, adhere to the following clean code and reus
   ```
 - **Type Hinting**: Python type hinting is **mandatory**. Every function parameter and return value must have a type annotation. Use Pydantic schemas for data validation and parsing.
 - **Descriptive Naming**: Variables and functions must immediately describe their intention. Methods in repositories should be clear (e.g., `get_active_tickets_by_trip_id`, not `get_tickets`).
+
+### File Size Limits
+
+If a file exceeds its limit, split it (extract helper services, mixins, or utility modules).
+
+| File type | Max lines |
+|-----------|-----------|
+| Service | ~250 |
+| Repository | ~150 |
+| Route | ~100 |
+| Model | ~100 |
+| Schema | ~100 |

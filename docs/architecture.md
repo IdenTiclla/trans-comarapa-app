@@ -106,7 +106,7 @@ Backend API (/api/v1/*)
 ```
 
 - Tokens: JWT (python-jose)
-- Password hashing: bcrypt via passlib
+- Password hashing: bcrypt via passlib (isolated in `core/security.py`)
 - Token blacklist: Redis SET
 - Frontend state: `store/auth.slice.ts` + `hooks/use-auth.ts`
 

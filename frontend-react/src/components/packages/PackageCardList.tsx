@@ -2,7 +2,7 @@ import React from 'react'
 import PackageCard from './PackageCard'
 import SkeletonLoader from '@/components/common/SkeletonLoader'
 import EmptyState from '@/components/common/EmptyState'
-import { usePackageStatus } from '@/hooks/use-package-status'
+import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 
 interface PackageCardListProps {
@@ -34,7 +34,7 @@ export default function PackageCardList({
     onDeletePackage,
     onDeliverPackage
 }: PackageCardListProps) {
-    const { getStatusLabel, getStatusBg, getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } = usePackageStatus()
+
 
     if (isLoading) {
         if (viewMode === 'grid') {

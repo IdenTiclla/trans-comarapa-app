@@ -2,7 +2,7 @@
 
 > Cross-cutting rules for all AI agents. Stack-specific conventions live in:
 > - `.agents/skills/backend-dev/SKILL.md` (Python/FastAPI)
-> - `.agents/skills/frontend-dev/SKILL.md` (React/TypeScript)
+> - `.agents/skills/frontend-dev/SKILL.md` (React 19/TypeScript)
 >
 > **Do not duplicate** what those skills already cover. Read them first.
 
@@ -55,9 +55,9 @@ These boundaries apply on top of the architecture defined in each skill:
 
 ---
 
-## 5. Component Guidelines
+## 5. File Size & Component Guidelines
 
-- Max **~250 lines** per component. Split or extract hooks if it grows.
+- **File size limits** are defined per file type in each skill (`frontend-dev/SKILL.md`, `backend-dev/SKILL.md`). Split files that exceed their limit.
 - Define `interface Props` explicitly — no inline types, no `any`.
 - Use `useMemo`/`useCallback` only when there's a measurable re-render problem. Don't memoize everything.
 - All pages use React Router `lazy()` for code-splitting (already established).

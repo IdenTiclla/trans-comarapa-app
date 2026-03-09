@@ -91,18 +91,20 @@ cd backend && pytest -v --cov=.
 
 ## Documentation
 
-All documentation lives in the [`docs/`](docs/) directory:
+All documentation lives in [`docs/`](docs/). Start at [docs/INDEX.md](docs/INDEX.md) for the full index.
+
+Key documents:
 
 | Document | Description |
 |----------|-------------|
 | [docs/INDEX.md](docs/INDEX.md) | Master documentation index |
+| [docs/pvm.md](docs/pvm.md) | Product Vision Map (strategy & roadmap) |
+| [docs/prd.md](docs/prd.md) | Product Requirements Document |
 | [docs/architecture.md](docs/architecture.md) | System architecture and layer boundaries |
 | [docs/data-model.md](docs/data-model.md) | Database schema and entity relationships |
 | [docs/state-machines.md](docs/state-machines.md) | Ticket, package, and trip state transitions |
 | [docs/api-reference.md](docs/api-reference.md) | All REST API endpoints |
-| [CLAUDE.md](CLAUDE.md) | AI agent instructions and conventions |
-| [README-Docker.md](README-Docker.md) | Detailed Docker setup guide |
-| [backend/CONTRIBUTING.md](backend/CONTRIBUTING.md) | Backend contributing guide |
+| [README-Docker.md](README-Docker.md) | Docker setup guide |
 
 ## Project Structure
 

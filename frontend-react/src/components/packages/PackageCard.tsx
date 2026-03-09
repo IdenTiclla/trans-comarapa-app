@@ -1,4 +1,4 @@
-import { usePackageStatus } from '@/hooks/use-package-status'
+import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Package, Clock, Receipt, CheckCircle } from 'lucide-react'
@@ -29,8 +29,6 @@ export default function PackageCard({
     onDeletePackage,
     onDeliverPackage
 }: PackageCardProps) {
-    const { getStatusLabel, getStatusBg, getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass } = usePackageStatus()
-
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-200">
             <CardContent className="p-0">

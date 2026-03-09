@@ -63,6 +63,10 @@ Activity -> User (audit log)
 ```
 Route (API) -> Service (business logic) -> Repository (data access) -> Model (DB)
 ```
+- **Routes:** Thin adapters, no business logic.
+- **Services:** All business validation, orchestration, and transaction management (`db.commit()`).
+- **Repositories:** Only data access/CRUD operations (`db.flush()`).
+- **Models:** Only data structure, no logic/hash functions (use `core/security.py`).
 
 ### Backend Structure
 ```
@@ -94,11 +98,10 @@ frontend-react/src/
 │                    # packages/, admin/, dashboard/, common/, layout/
 ├── services/        # API modules ([entity].service.ts) - 18 services
 ├── store/           # Redux slices ([entity].slice.ts) - 13 slices
-├── hooks/           # use-auth, use-trip-details, use-client-search,
-│                    # use-destination-search, use-package-status, use-toast
+├── hooks/           # Stateful logic ONLY (use-auth, use-trip-detail-page, use-keyboard-shortcuts, use-toast)
 ├── layouts/         # Default, Login, Print, Auth
 ├── router/          # Routes + guards (ProtectedRoute, RoleGuard, RedirectIfAuthenticated)
-├── lib/             # api.ts (apiFetch), utils, constants
+├── lib/             # Stateless utils (apiFetch, formatters, package-status, package-utils)
 └── types/           # TypeScript interfaces
 ```
 
@@ -130,6 +133,7 @@ frontend-react/src/
 | Component | `[PascalCase].tsx` | `BusSeatGrid.tsx` |
 
 ### Code Standards
+- **File size limits** per file type are defined in each skill (`backend-dev/SKILL.md`, `frontend-dev/SKILL.md`). Split files that exceed their limit.
 - **Backend:** SQLAlchemy 2.0+, all models inherit `Base`, layered architecture
 - **React:** TypeScript, functional components, Redux Toolkit, Tailwind + shadcn/ui, sonner for toasts
 - **API:** REST conventions, all endpoints `/api/v1/` prefix

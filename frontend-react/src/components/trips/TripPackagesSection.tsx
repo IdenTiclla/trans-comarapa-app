@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router'
-import { usePackageStatus } from '@/hooks/use-package-status'
+import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } from '@/lib/package-status'
 
 interface PackageItem {
     id: number
@@ -40,8 +40,6 @@ export default function TripPackagesSection({
     onDeliverPackage,
     onReceivePackage,
 }: TripPackagesSectionProps) {
-    const { getStatusLabel, getStatusBg, getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } = usePackageStatus()
-
     const totalAmount = useMemo(() => tripPackages.reduce((sum, pkg) => sum + (pkg.total_amount || 0), 0), [tripPackages])
 
     const canAssign = tripStatus !== 'arrived' && tripStatus !== 'cancelled' && tripStatus !== 'departed'

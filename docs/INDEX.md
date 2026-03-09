@@ -2,13 +2,12 @@
 
 > Master index of all project documentation. Start here.
 
-## Quick Reference
+## Product & Strategy
 
 | Document | Description |
 |----------|-------------|
-| [../CLAUDE.md](../CLAUDE.md) | AI agent instructions (conventions, commands, patterns) |
-| [../README.md](../README.md) | Project overview, setup, and getting started |
-| [../README-Docker.md](../README-Docker.md) | Docker setup and commands |
+| [pvm.md](pvm.md) | Product Vision Map — strategic goals, target users, roadmap |
+| [prd.md](prd.md) | Product Requirements Document — functional & non-functional requirements |
 
 ## Architecture & Design
 
@@ -23,40 +22,39 @@
 
 | File | Description |
 |------|-------------|
-| [domain_model.mmd](domain_model.mmd) | Domain model class diagram |
-| [actual_class_diagram.mmd](actual_class_diagram.mmd) | Implementation class diagram |
+| [domain_model.mmd](domain_model.mmd) | Domain model (conceptual class diagram) |
+| [actual_class_diagram.mmd](actual_class_diagram.mmd) | Implementation class diagram (all fields & types) |
 | [component_diagram.mmd](component_diagram.mmd) | System component diagram |
-| [ticket_sale_activity_diagram.mmd](ticket_sale_activity_diagram.mmd) | Ticket sale flow |
+| [ticket_sale_activity_diagram.mmd](ticket_sale_activity_diagram.mmd) | Ticket sale workflow |
 
 ## Implementation Plans
 
-Active plans for features in development:
+### Active
 
 | Plan | Status |
 |------|--------|
+| [srp-refactoring.plan.md](implementation-plans/srp-refactoring.plan.md) | Pending |
+| [nuxt-to-react-migration.plan.md](implementation-plans/nuxt-to-react-migration.plan.md) | Ongoing |
 | [react-bookings-page-redesign.plan.md](implementation-plans/react-bookings-page-redesign.plan.md) | In progress |
 | [react-secretary-dashboard-redesign.plan.md](implementation-plans/react-secretary-dashboard-redesign.plan.md) | In progress |
-| [react-floating-seats-panel.plan.md](implementation-plans/react-floating-seats-panel.plan.md) | Completed |
-| [react-ticket-sale-reservation-flow.plan.md](implementation-plans/react-ticket-sale-reservation-flow.plan.md) | Completed |
-| [react-seat-map-integration.plan.md](implementation-plans/react-seat-map-integration.plan.md) | Completed |
-| [react-trip-creation-confirm-modal.plan.md](implementation-plans/react-trip-creation-confirm-modal.plan.md) | Completed |
-| [nuxt-to-react-migration.plan.md](implementation-plans/nuxt-to-react-migration.plan.md) | Ongoing |
 
-## Agent Configuration
+### Archived (Completed)
 
-| File | Description |
-|------|-------------|
-| [../.agents/rules/best-practices.md](../.agents/rules/best-practices.md) | Cross-cutting rules for all AI agents |
-| [../.agents/skills/backend-dev/SKILL.md](../.agents/skills/backend-dev/SKILL.md) | Backend development conventions |
-| [../.agents/skills/frontend-dev/SKILL.md](../.agents/skills/frontend-dev/SKILL.md) | Frontend development conventions (Nuxt/Vue - legacy) |
-| [../.agents/skills/plan-execution/SKILL.md](../.agents/skills/plan-execution/SKILL.md) | How to execute implementation plans |
-| [../.agents/workflows/db-migration.md](../.agents/workflows/db-migration.md) | Database migration workflow |
-| [../.agents/workflows/implement-plan.md](../.agents/workflows/implement-plan.md) | Plan execution workflow |
-| [../.agents/workflows/restrictions.md](../.agents/workflows/restrictions.md) | Project-level restrictions |
+| Plan |
+|------|
+| [react-floating-seats-panel.plan.md](implementation-plans/archive/react-floating-seats-panel.plan.md) |
+| [react-ticket-sale-reservation-flow.plan.md](implementation-plans/archive/react-ticket-sale-reservation-flow.plan.md) |
+| [react-seat-map-integration.plan.md](implementation-plans/archive/react-seat-map-integration.plan.md) |
+| [react-trip-creation-confirm-modal.plan.md](implementation-plans/archive/react-trip-creation-confirm-modal.plan.md) |
 
-## Per-Component READMEs
+## Project Configuration
 
 | File | Description |
 |------|-------------|
+| [../CLAUDE.md](../CLAUDE.md) | AI agent instructions (conventions, commands, patterns) |
+| [../README.md](../README.md) | Project overview and quick start |
 | [../backend/CONTRIBUTING.md](../backend/CONTRIBUTING.md) | Backend contributing guide |
 | [../frontend-react/README.md](../frontend-react/README.md) | React frontend overview |
+| [../.agents/rules/best-practices.md](../.agents/rules/best-practices.md) | Cross-cutting rules for all AI agents |
+| [../.agents/skills/backend-dev/SKILL.md](../.agents/skills/backend-dev/SKILL.md) | Backend development conventions |
+| [../.agents/skills/frontend-dev/SKILL.md](../.agents/skills/frontend-dev/SKILL.md) | Frontend (React) development conventions |

@@ -5,6 +5,7 @@ const heroImages = [
   '/images/buses_challa.jpeg',
   '/images/flota_blanca_rene.png',
   '/images/doble_piso_verde.png',
+  '/images/flota roja.jpeg',
 ]
 
 export default function LoginLayout() {
@@ -28,7 +29,7 @@ export default function LoginLayout() {
               className={`absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
                 index === currentSlide ? 'opacity-100' : 'opacity-0'
               }`}
-              style={{ backgroundImage: `url(${image})` }}
+              style={{ backgroundImage: `url('${image}')` }}
             />
           ))}
           <div className="absolute inset-0 bg-gradient-to-br from-comarapa-dark/90 via-comarapa-medium/80 to-comarapa-dark/90" />
