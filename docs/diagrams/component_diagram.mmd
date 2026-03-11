@@ -1,0 +1,55 @@
+%% Component Diagram - Trans Comarapa
+%% Updated: 2026-03-10
+
+flowchart TB
+    %% Frontend React (Active)
+    subgraph ReactApp ["Frontend React (Active - Port 3000/3001)"]
+        R1["Pages (lazy-loaded)"]
+        R2["Redux Store (13 slices)"]
+        R3["Services (18 modules)"]
+        R4["Router + Guards (RBAC)"]
+        R5["Hooks (stateful logic)"]
+        R4 --> R1
+        R1 --> R5
+        R5 --> R2
+        R1 --> R3
+        R2 --> R3
+    end
+
+    %% Backend
+    subgraph API ["Backend (FastAPI - Port 8000)"]
+        direction TB
+        Routes["Routes (18 modules)"]
+        Services["Services (auth, trip, ticket, package, cash_register, stats, ...)"]
+        Repos["Repositories (base + trip, ticket, package, user, seat)"]
+        Core["Core (enums, state_machines, exceptions, security)"]
+        WS["WebSocket Manager (seat locking)"]
+        Routes --> Services
+        Services --> Repos
+        Services --> Core
+        Repos --> Models
+        Routes --> WS
+    end
+
+    %% Data Layer
+    subgraph DataLayer ["Data Layer"]
+        Models["SQLAlchemy Models (24)"]
+        DB[("MySQL 8.0\n(Port 3308)")]
+        Redis[("Redis 7\n(Port 6379)")]
+        Models --> DB
+    end
+
+    %% Frontend Nuxt (Legacy)
+    subgraph NuxtApp ["Frontend Nuxt (Legacy - Reference only)"]
+        FE1["Pages & Components"]
+        FE2["Pinia Store"]
+        FE3["Services"]
+        FE1 --> FE2
+        FE1 --> FE3
+    end
+
+    %% Connections
+    R3 -- "HTTP/REST\n/api/v1/*" --> Routes
+    R5 -- "WebSocket\n(seat locks)" --> WS
+    FE3 -. "HTTP/REST\n/api/v1/*" .-> Routes
+    Services -- "Token blacklist\n+ caching" --> Redis

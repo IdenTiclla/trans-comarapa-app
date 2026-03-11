@@ -1,0 +1,49 @@
+%% Activity Diagram - Ticket Sale Flow (Secretary)
+%% Updated: 2026-03-10
+
+flowchart TD
+    A([Start]) --> B[Secretary opens Trip Detail page]
+    B --> C[View seat map with real-time status]
+    C --> D{Select available seat/s}
+
+    D --> E{Action type?}
+    E -- "Sell (V key)" --> F[Open Ticket Sale Modal]
+    E -- "Reserve (R key)" --> G[Open Reservation Modal]
+
+    F --> H{Client registered?}
+    G --> H
+
+    H -- Yes --> I[Search and select existing client]
+    H -- No --> J[Register new client inline]
+    J --> I
+
+    I --> K{Sale or Reservation?}
+    K -- Sale --> L[Select payment method\ncash / QR]
+    K -- Reservation --> M[Confirm reservation]
+
+    L --> N[Create ticket\nstate = confirmed]
+    M --> O[Create ticket\nstate = pending]
+
+    N --> P[Seat locked via WebSocket\nupdated in real-time]
+    O --> P
+
+    P --> Q[Show success notification]
+    Q --> R[Seat map refreshes]
+    R --> S([End])
+
+    %% Reservation confirmation flow
+    subgraph ReservationConfirm ["Later: Confirm Reserved Ticket"]
+        R1[Secretary views reserved seat] --> R2[Right-click > Confirm Sale]
+        R2 --> R3[Confirm Sale Modal\nshows price]
+        R3 --> R4[PUT /tickets/:id\nstate → confirmed]
+        R4 --> R5[Seat map refreshes]
+    end
+
+    %% Seat change flow
+    subgraph SeatChange ["Seat Change Flow"]
+        SC1[Right-click occupied seat] --> SC2[Select 'Change Seat']
+        SC2 --> SC3[Enter Seat Change Mode\nbanner shown]
+        SC3 --> SC4[Click new available seat]
+        SC4 --> SC5[Confirm Seat Change Modal]
+        SC5 --> SC6[PUT /tickets/:id/change-seat]
+    end

@@ -1,0 +1,289 @@
+%% Implementation Class Diagram - Trans Comarapa
+%% Updated: 2026-03-10
+%% All fields and types matching actual SQLAlchemy models (24 entities)
+
+classDiagram
+    class User {
+        +id: Integer PK
+        +username: String(100) unique
+        +email: String(255) unique
+        +role: UserRole enum
+        +hashed_password: String(255)
+        +is_active: Boolean
+        +is_admin: Boolean
+        +firstname: String(255) nullable
+        +lastname: String(255) nullable
+        +last_login: DateTime nullable
+        +failed_login_attempts: Integer
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Person {
+        <<polymorphic base>>
+        +id: Integer PK
+        +user_id: Integer FK→users unique
+        +type: String(50) discriminator
+        +firstname: String(100) nullable
+        +lastname: String(100) nullable
+        +phone: String(20) nullable
+        +birth_date: Date nullable
+        +avatar_url: String(500) nullable
+        +bio: Text nullable
+        +created_at: DateTime
+        +updated_at: DateTime
+        +full_name() String
+        +email() String
+        +age() Integer
+    }
+
+    class Administrator {
+        +id: Integer FK→persons PK
+    }
+
+    class Secretary {
+        +id: Integer FK→persons PK
+        +office_id: Integer FK→offices nullable
+    }
+
+    class Driver {
+        +id: Integer FK→persons PK
+        +license_number: String(50) unique nullable
+        +license_type: String(50) nullable
+        +license_expiry: Date nullable
+        +status: String(20) default=active
+    }
+
+    class Assistant {
+        +id: Integer FK→persons PK
+    }
+
+    class Client {
+        +id: Integer FK→persons PK
+        +document_id: String(255) nullable
+        +address: String(255) nullable
+        +city: String(255) nullable
+        +state: String(255) nullable
+        +age_category() String
+    }
+
+    class Office {
+        +id: Integer PK
+        +name: String(255)
+        +location_id: Integer FK→locations nullable
+        +phone: String(255) nullable
+        +email: String(255) nullable
+        +manager_name: String(255) nullable
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Location {
+        +id: Integer PK
+        +name: String(100)
+        +latitude: Float
+        +longitude: Float
+        +address: String(200) nullable
+        +city: String(100) nullable
+        +state: String(100) nullable
+        +country: String(100) default=Bolivia
+        +postal_code: String(10) nullable
+        +description: String(500) nullable
+    }
+
+    class Route {
+        +id: Integer PK
+        +origin_location_id: Integer FK→locations
+        +destination_location_id: Integer FK→locations
+        +distance: Float
+        +duration: Float
+        +price: Float
+    }
+
+    class RouteSchedule {
+        +id: Integer PK
+        +route_id: Integer FK→routes
+        +departure_time: Time
+        +is_active: Boolean default=true
+    }
+
+    class Bus {
+        +id: Integer PK
+        +license_plate: String(10) unique
+        +capacity: Integer
+        +model: String(100)
+        +brand: String(50)
+        +color: String(30)
+        +floors: Integer default=1
+    }
+
+    class Seat {
+        +id: Integer PK
+        +bus_id: Integer FK→buses
+        +seat_number: Integer
+        +deck: String(255)
+        +row: Integer
+        +column: Integer
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class Trip {
+        +id: Integer PK
+        +trip_datetime: DateTime
+        +status: String(50) default=scheduled
+        +driver_id: Integer FK→drivers
+        +assistant_id: Integer FK→assistants nullable
+        +bus_id: Integer FK→buses
+        +route_id: Integer FK→routes
+        +secretary_id: Integer FK→secretaries
+    }
+
+    class Ticket {
+        +id: Integer PK
+        +state: String(255)
+        +seat_id: Integer FK→seats
+        +client_id: Integer FK→clients
+        +trip_id: Integer FK→trips
+        +destination: String(255) nullable
+        +secretary_id: Integer FK→secretaries
+        +price: Numeric(10,2)
+        +payment_method: String(50)
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class TicketStateHistory {
+        +id: Integer PK
+        +ticket_id: Integer FK→tickets
+        +old_state: String(50) nullable
+        +new_state: String(50)
+        +changed_at: DateTime
+        +changed_by_user_id: Integer FK→users nullable
+    }
+
+    class Package {
+        +id: Integer PK
+        +tracking_number: String(20) unique
+        +total_weight: Float nullable
+        +total_declared_value: Float nullable
+        +notes: Text nullable
+        +status: String(50) default=registered_at_office
+        +payment_status: String(50) default=paid_on_send
+        +payment_method: String(50) nullable
+        +sender_id: Integer FK→clients
+        +recipient_id: Integer FK→clients
+        +trip_id: Integer FK→trips nullable
+        +secretary_id: Integer FK→secretaries
+        +created_at: DateTime
+        +updated_at: DateTime
+        +total_amount() Float
+        +total_items_count() Integer
+    }
+
+    class PackageItem {
+        +id: Integer PK
+        +package_id: Integer FK→packages
+        +quantity: Integer default=1
+        +description: Text
+        +unit_price: Float
+        +total_price: Float
+    }
+
+    class PackageStateHistory {
+        +id: Integer PK
+        +package_id: Integer FK→packages
+        +old_state: String(50) nullable
+        +new_state: String(50)
+        +changed_at: DateTime
+        +changed_by_user_id: Integer FK→users nullable
+    }
+
+    class Activity {
+        +id: Integer PK
+        +user_id: Integer FK→users nullable
+        +activity_type: String(255)
+        +details: Text nullable
+        +created_at: DateTime
+    }
+
+    class CashRegister {
+        +id: Integer PK
+        +office_id: Integer FK→offices
+        +date: Date
+        +opened_by_id: Integer FK→users
+        +closed_by_id: Integer FK→users nullable
+        +initial_balance: Float default=0
+        +final_balance: Float nullable
+        +status: CashRegisterStatus enum
+        +opened_at: DateTime
+        +closed_at: DateTime nullable
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    class CashTransaction {
+        +id: Integer PK
+        +cash_register_id: Integer FK→cash_registers
+        +type: CashTransactionType enum
+        +amount: Float
+        +payment_method: PaymentMethod enum
+        +reference_id: Integer nullable
+        +reference_type: String(50) nullable
+        +description: String(255) nullable
+        +created_at: DateTime
+        +updated_at: DateTime
+    }
+
+    %% Polymorphic inheritance
+    Person <|-- Administrator
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+    Person <|-- Client
+
+    %% User-Person 1:1
+    User "1" -- "1" Person : has
+
+    %% Office
+    Office "*" -- "1" Location : located at
+    Office "1" -- "*" Secretary : employs
+
+    %% Routes
+    Location "1" -- "*" Route : origin
+    Location "1" -- "*" Route : destination
+    Route "1" -- "*" RouteSchedule : schedules
+    Route "1" -- "*" Trip : trips
+
+    %% Bus
+    Bus "1" -- "*" Seat : contains
+    Bus "1" -- "*" Trip : assigned to
+
+    %% Trip
+    Trip "*" -- "1" Driver : driven by
+    Trip "*" -- "0..1" Assistant : assisted by
+    Trip "*" -- "1" Secretary : dispatched by
+
+    %% Ticket
+    Trip "1" -- "*" Ticket : has
+    Ticket "*" -- "1" Client : purchased by
+    Ticket "*" -- "1" Seat : occupies
+    Ticket "*" -- "1" Secretary : sold by
+    Ticket "1" -- "*" TicketStateHistory : history
+
+    %% Package
+    Trip "1" -- "*" Package : transports
+    Package "*" -- "1" Client : sender
+    Package "*" -- "1" Client : recipient
+    Package "*" -- "1" Secretary : registered by
+    Package "1" -- "*" PackageItem : items
+    Package "1" -- "*" PackageStateHistory : history
+
+    %% Cash Register
+    Office "1" -- "*" CashRegister : has
+    CashRegister "1" -- "*" CashTransaction : records
+    CashRegister "*" -- "1" User : opened by
+    CashRegister "*" -- "0..1" User : closed by
+
+    %% Activity
+    Activity "*" -- "1" User : performed by

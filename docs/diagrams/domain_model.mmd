@@ -1,0 +1,80 @@
+%% Domain Model - Trans Comarapa
+%% Updated: 2026-03-10
+%% Conceptual class diagram showing main domain entities and relationships
+
+classDiagram
+    class Person
+    class Client
+    class Secretary
+    class Driver
+    class Assistant
+    class Administrator
+    class User
+    class Ticket
+    class TicketStateHistory
+    class Package
+    class PackageItem
+    class PackageStateHistory
+    class Trip
+    class Route
+    class RouteSchedule
+    class Bus
+    class Seat
+    class Office
+    class Location
+    class Activity
+    class CashRegister
+    class CashTransaction
+
+    %% Inheritance (polymorphic via Person)
+    Person <|-- Client
+    Person <|-- Secretary
+    Person <|-- Driver
+    Person <|-- Assistant
+    Person <|-- Administrator
+
+    %% User-Person 1:1
+    User "1" -- "1" Person : has
+
+    %% Office relationships
+    Office "1" -- "*" Secretary : employs
+    Office "1" -- "1" Location : located at
+    Office "1" -- "*" CashRegister : has
+
+    %% Route & Schedule
+    Location "1" -- "*" Route : origin of
+    Location "1" -- "*" Route : destination of
+    Route "1" -- "*" RouteSchedule : has schedules
+    Route "1" -- "*" Trip : followed by
+
+    %% Bus & Seats
+    Bus "1" *-- "*" Seat : contains (composition)
+
+    %% Trip relationships
+    Trip "*" -- "1" Bus : assigned to
+    Trip "*" -- "1" Driver : driven by
+    Trip "*" -- "0..1" Assistant : assisted by
+    Trip "*" -- "1" Secretary : dispatched by
+    Trip "*" -- "1" Route : follows
+
+    %% Ticket relationships
+    Trip "1" o-- "*" Ticket : has (aggregation)
+    Ticket "*" -- "1" Client : purchased by
+    Ticket "1" -- "1" Seat : occupies
+    Ticket "*" -- "1" Secretary : sold by
+    Ticket "1" -- "*" TicketStateHistory : audit trail
+
+    %% Package relationships
+    Trip "1" o-- "*" Package : transports
+    Package "*" -- "1" Client : sent by (sender)
+    Package "*" -- "1" Client : received by (recipient)
+    Package "*" -- "1" Secretary : registered by
+    Package "1" *-- "*" PackageItem : contains (composition)
+    Package "1" -- "*" PackageStateHistory : audit trail
+
+    %% Cash Register
+    CashRegister "1" -- "*" CashTransaction : records
+    CashRegister "*" -- "1" User : opened/closed by
+
+    %% Activity log
+    Activity "*" -- "1" User : performed by
