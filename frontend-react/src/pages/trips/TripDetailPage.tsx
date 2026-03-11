@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, Link } from 'react-router'
+import { useAppSelector } from '@/store'
+import { selectUser } from '@/store/auth.slice'
 import { useTripDetailPage } from '@/hooks/use-trip-detail-page'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import TripCountdown from '@/components/trips/TripCountdown'
@@ -26,6 +28,7 @@ export function Component() {
   const { id } = useParams()
   const tripId = Number(id)
 
+  const currentUser = useAppSelector(selectUser)
   const page = useTripDetailPage(tripId)
   const { trip, loading, error, refreshTrip, seatMap, seatChange, floatPanel } = page
 
@@ -174,6 +177,8 @@ export function Component() {
             trip={trip}
             tickets={page.soldTickets}
             reserved_seat_numbers={page.reservedSeatNumbers}
+            lockedSeats={seatMap.lockedSeats}
+            currentUserId={currentUser?.id}
             selectionEnabled={true}
             enableContextMenu={true}
             seatChangeMode={seatChange.mode}

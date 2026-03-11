@@ -18,6 +18,10 @@ export default function BusSeatLegend() {
                     <div className="w-4 h-4 rounded-md bg-gradient-to-br from-red-100 to-red-200 border-2 border-red-300 shadow-sm" />
                     <span className="text-xs font-semibold text-gray-600">Ocupado</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded-md bg-gradient-to-br from-purple-100 to-violet-200 border-2 border-purple-300 shadow-sm opacity-75" />
+                    <span className="text-xs font-semibold text-gray-600">Bloqueado</span>
+                </div>
             </div>
         </div>
     )

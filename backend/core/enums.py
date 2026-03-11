@@ -46,3 +46,18 @@ class PaymentMethod(str, Enum):
     CASH = "cash"
     TRANSFER = "transfer"
     QR = "qr"
+
+
+class CashRegisterStatus(str, Enum):
+    """Status of a cash register."""
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class CashTransactionType(str, Enum):
+    """Types of cash transactions."""
+    TICKET_SALE = "ticket_sale"
+    PACKAGE_PAYMENT = "package_payment"
+    POR_COBRAR_COLLECTION = "por_cobrar_collection"
+    WITHDRAWAL = "withdrawal"
+    ADJUSTMENT = "adjustment"

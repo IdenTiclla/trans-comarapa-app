@@ -35,6 +35,7 @@ export const authService = {
         lastname: data.lastname || '',
         email,
         person: data.person || null,
+        office_id: data.office_id ?? null,
       }
       localStorage.setItem('user_data', JSON.stringify(userInfo))
       localStorage.setItem('user_email', email)
@@ -81,6 +82,8 @@ export const authService = {
           firstname: data.firstname || currentUserData.firstname,
           lastname: data.lastname || currentUserData.lastname,
           person: data.person || currentUserData.person,
+          // Preserve office_id — it doesn't change during a token refresh
+          office_id: currentUserData.office_id ?? null,
         }
         localStorage.setItem('user_data', JSON.stringify(updated))
       }

@@ -26,6 +26,7 @@ from models.secretary import Secretary
 from models.user import User
 from repositories.ticket_repository import TicketRepository
 from schemas.ticket import TicketCreate, TicketUpdate
+from services.seat_lock_service import SeatLockService
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ class TicketService:
     def __init__(self, db: Session):
         self.db = db
         self.repo = TicketRepository(db)
+        self.lock_service = SeatLockService()
 
     def get_all(self) -> list[Ticket]:
         """Get all tickets."""
@@ -92,7 +94,14 @@ class TicketService:
                 f"Seat with id {data.seat_id} does not belong to the bus assigned to trip {data.trip_id}"
             )
 
-        # 7. Verify seat not already booked
+        # 7. Verify Redis lock: seat must be unlocked or locked by this user
+        lock_holder = self.lock_service.get_lock_holder(data.trip_id, data.seat_id)
+        if lock_holder is not None and lock_holder != data.operator_user_id:
+            raise ConflictException(
+                f"El asiento está temporalmente bloqueado por otro usuario."
+            )
+
+        # 8. Verify seat not already booked
         existing = self.repo.get_active_by_seat_and_trip(data.seat_id, data.trip_id)
         if existing:
             raise ConflictException(
@@ -100,11 +109,27 @@ class TicketService:
             )
 
         # 8. Validate state
-        valid_states = ["pending", "confirmed", "cancelled", "completed"]
+        valid_states = ["pending", "confirmed", "cancelled", "completed", "reserved"]
         if data.state.lower() not in valid_states:
             raise ValidationException(
                 f"Invalid ticket state: {data.state}. Valid states are: {', '.join(valid_states)}"
             )
+
+        # 9. Verify open cash register and record transaction
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod
+        
+        cash_service = CashRegisterService(self.db)
+        secretary = self.db.query(Secretary).filter(Secretary.id == actual_secretary_id).first()
+        
+        office_id = secretary.office_id if secretary and secretary.office_id else 1
+        if not office_id:
+            raise ValidationException("El usuario no tiene una oficina asignada para abrir caja.")
+            
+        current_register = cash_service.get_current_register(office_id)
+        if not current_register:
+            raise ValidationException("No hay caja abierta para su oficina. Debe abrir caja antes de realizar ventas.")
 
         # Create ticket
         new_ticket = Ticket(
@@ -129,6 +154,28 @@ class TicketService:
             changed_by_user_id=data.operator_user_id,
         )
         self.db.commit()
+
+        # Record transaction in cash register
+        if new_ticket.state in ["completed", "confirmed"] and new_ticket.price > 0:
+            payment_enum = PaymentMethod.CASH
+            if data.payment_method:
+                try:
+                    payment_enum = PaymentMethod(data.payment_method.lower())
+                except ValueError:
+                    payment_enum = PaymentMethod.CASH
+            
+            cash_service.record_transaction(CashTransactionCreate(
+                cash_register_id=current_register.id,
+                type=CashTransactionType.TICKET_SALE,
+                amount=new_ticket.price,
+                payment_method=payment_enum,
+                reference_id=new_ticket.id,
+                reference_type="ticket",
+                description=f"Venta de boleto {new_ticket.id} para viaje {data.trip_id}"
+            ))
+
+        # Release Redis lock after successful ticket creation
+        self.lock_service.unlock_seat(data.trip_id, data.seat_id, data.operator_user_id)
 
         logger.debug("Ticket created successfully: %d", new_ticket.id)
         return new_ticket

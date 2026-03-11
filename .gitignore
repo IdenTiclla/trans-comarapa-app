@@ -35,3 +35,6 @@ docs/auth_consolidated_plan.md
 
 # playwright files
 .playwright-mcp/
+
+# Educational documents
+educational_docs/

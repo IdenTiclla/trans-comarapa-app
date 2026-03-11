@@ -155,9 +155,18 @@ frontend-react/src/
 3. Page: `frontend-react/src/pages/[section]/[Entity]Page.tsx`
 4. Route: Add to `frontend-react/src/router/index.tsx`
 
+## Lessons Learned
+
+**IMPORTANT:** Before writing code, review `docs/lessons/` for past mistakes to avoid repeating them. After fixing any bug or unexpected behavior, document it as a new lesson in `docs/lessons/NNN-short-description.md`.
+
+Current lessons:
+- `001`: Don't use Python `set` with objects containing WebSocket/network references (not hashable) — use `list`
+- `002`: Never call `.toFixed()`, `Object.entries()`, etc. directly on API response fields — always use `?? 0` for numbers and `?? {}` for objects
+
 ## Key Resources
 
 - **API Docs:** http://localhost:8000/docs (Swagger UI)
 - **React App:** http://localhost:3001
 - **Database:** MySQL at `:3308` (root/Passw0rd!)
 - **Implementation Plans:** `docs/implementation-plans/`
+- **Lessons Learned:** `docs/lessons/`

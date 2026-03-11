@@ -13,6 +13,8 @@ import clientReducer from './client.slice'
 import ticketReducer from './ticket.slice'
 import packageReducer from './package.slice'
 import secretaryReducer from './secretary.slice'
+import officeReducer from './office.slice'
+import cashRegisterReducer from './cash-register.slice'
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +31,8 @@ export const store = configureStore({
     ticket: ticketReducer,
     package: packageReducer,
     secretary: secretaryReducer,
+    office: officeReducer,
+    cashRegister: cashRegisterReducer,
   },
 })
 

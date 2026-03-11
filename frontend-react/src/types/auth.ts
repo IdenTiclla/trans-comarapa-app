@@ -24,6 +24,7 @@ export interface AuthUser {
   updated_at?: string
   person: Person | null
   profile?: unknown
+  office_id?: number
 }
 
 export interface LoginResponse {
@@ -36,6 +37,7 @@ export interface LoginResponse {
   lastname?: string
   person?: Person | null
   profile?: unknown
+  office_id?: number
 }
 
 export interface RefreshResponse {

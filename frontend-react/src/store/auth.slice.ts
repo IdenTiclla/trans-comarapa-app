@@ -29,6 +29,7 @@ export const login = createAsyncThunk(
         lastname: data.lastname || '',
         person: data.person || null,
         profile: data.profile || null,
+        office_id: data.office_id,
       }
       return user
     } catch (error) {
@@ -69,9 +70,11 @@ export const refreshToken = createAsyncThunk(
 
 export const loadProfile = createAsyncThunk(
   'auth/loadProfile',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
       const profile = await profileService.getProfile()
+      const state = getState() as { auth: AuthState }
+      const currentUser = state.auth.user
       const user: AuthUser = {
         id: profile.id,
         username: profile.username,
@@ -86,6 +89,9 @@ export const loadProfile = createAsyncThunk(
         phone: profile.phone,
         birth_date: profile.birth_date,
         person: profile.person,
+        // Preserve office_id from existing state — the /me profile endpoint
+        // does not return it, but it was set during login for secretaries.
+        office_id: currentUser?.office_id,
       }
       localStorage.setItem('user_data', JSON.stringify(user))
       return user

@@ -32,6 +32,8 @@ export default function BusSeatGrid({
             return 'bg-gradient-to-br from-red-100 to-red-200 border-red-300 cursor-not-allowed hover:scale-100'
         } else if (seat.status === 'reserved') {
             return 'bg-gradient-to-br from-amber-100 to-orange-200 border-orange-300 cursor-not-allowed hover:scale-100'
+        } else if (seat.status === 'locked') {
+            return 'bg-gradient-to-br from-purple-100 to-violet-200 border-purple-300 cursor-not-allowed hover:scale-100 opacity-75'
         } else if (selectedSeatIds.includes(seat.id)) {
             return 'bg-gradient-to-br from-blue-100 to-indigo-200 border-blue-400 cursor-pointer animate-[modern-seat-pulse_2s_infinite] shadow-[0_0_20px_rgba(59,130,246,0.6)]'
         } else if (seatChangeMode) {
@@ -46,6 +48,8 @@ export default function BusSeatGrid({
             return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
         } else if (seat.status === 'reserved') {
             return 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg'
+        } else if (seat.status === 'locked') {
+            return 'bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg'
         } else if (selectedSeatIds.includes(seat.id)) {
             return 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
         } else {
@@ -56,12 +60,13 @@ export default function BusSeatGrid({
     const getSeatStatusText = (seat: any) => {
         if (seat.occupied) return 'OCUPADO'
         if (seat.status === 'reserved') return 'RESERVADO'
+        if (seat.status === 'locked') return 'BLOQUEADO'
         if (selectedSeatIds.includes(seat.id)) return 'SELECCIONADO'
         return 'DISPONIBLE'
     }
 
     const toggleSeatSelection = (seat: any) => {
-        if (seat.occupied || seat.status === 'reserved' || disabled) return
+        if (seat.occupied || seat.status === 'reserved' || seat.status === 'locked' || disabled) return
 
         const index = selectedSeatIds.indexOf(seat.id)
         let newSelectedIds: number[]

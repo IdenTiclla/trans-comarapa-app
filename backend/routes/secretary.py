@@ -84,6 +84,31 @@ async def get_secretary(secretary_id: int, db: Session = Depends(get_db)):
     return db_secretary
 
 
+@router.patch("/{secretary_id}", response_model=SecretarySchema)
+async def update_secretary(
+    secretary_id: int,
+    data: dict,
+    db: Session = Depends(get_db),
+    _: UserModel = Depends(get_current_admin_user),
+):
+    from fastapi import HTTPException
+    from pydantic import BaseModel
+    from typing import Optional
+
+    db_secretary = db.query(SecretaryModel).filter(SecretaryModel.id == secretary_id).first()
+    if not db_secretary:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Secretary with id {secretary_id} not found")
+
+    allowed_fields = {"firstname", "lastname", "phone", "office_id"}
+    for field, value in data.items():
+        if field in allowed_fields and hasattr(db_secretary, field):
+            setattr(db_secretary, field, value)
+
+    db.commit()
+    db.refresh(db_secretary)
+    return db_secretary
+
+
 @router.get("/{secretary_id}/trips", response_model=List[TripSchema])
 async def get_secretary_trips(secretary_id: int, db: Session = Depends(get_db)):
     from fastapi import HTTPException

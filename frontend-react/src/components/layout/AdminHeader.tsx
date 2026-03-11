@@ -7,15 +7,28 @@ const NAV_LINKS: Record<string, { to: string; label: string }[]> = {
     admin: [
         { to: '/dashboards/dashboard-admin', label: 'Dashboard' },
         { to: '/admin/users', label: 'Usuarios' },
+        { to: '/admin/secretaries', label: 'Secretarias' },
+        { to: '/admin/drivers', label: 'Choferes' },
+        { to: '/admin/assistants', label: 'Asistentes' },
         { to: '/admin/buses', label: 'Buses' },
         { to: '/admin/routes', label: 'Rutas' },
+        { to: '/admin/offices', label: 'Oficinas' },
+        { to: '/reports', label: 'Reportes' },
     ],
     secretary: [
         { to: '/dashboards/dashboard-secretary', label: 'Dashboard' },
         { to: '/trips', label: 'Viajes' },
         { to: '/bookings', label: 'Boletos' },
         { to: '/packages', label: 'Encomiendas' },
+        { to: '/admin/cash-register', label: 'Caja' },
         { to: '/clients', label: 'Clientes' },
+        { to: '/reports', label: 'Reportes' },
+    ],
+    driver: [
+        { to: '/dashboards/dashboard-driver', label: 'Dashboard' },
+    ],
+    assistant: [
+        { to: '/dashboards/dashboard-assistant', label: 'Dashboard' },
     ],
 }
 

@@ -328,7 +328,7 @@ def seed_db():
             db.flush()  # Flush to get IDs
             locations[location_info["name"]] = location
 
-        # Crear oficinas principales de Trans Comarapa - Solo Santa Cruz y Comarapa
+        # Crear oficinas principales de Trans Comarapa
         office_data = [
             {
                 "name": "Oficina Central Santa Cruz",
@@ -341,6 +341,18 @@ def seed_db():
                 "phone": "78175578",
                 "email": "comarapa@transcomarapa.com",
                 "location_id": locations["Comarapa"].id
+            },
+            {
+                "name": "Oficina Los Negros",
+                "phone": "78175579",
+                "email": "losnegros@transcomarapa.com",
+                "location_id": locations["Los Negros"].id
+            },
+            {
+                "name": "Oficina San Isidro",
+                "phone": "78175580",
+                "email": "sanisidro@transcomarapa.com",
+                "location_id": locations["San Isidro"].id
             }
         ]
 

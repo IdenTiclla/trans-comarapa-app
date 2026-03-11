@@ -11,6 +11,8 @@ from typing import List
 from db.session import get_db
 from schemas.ticket import TicketCreate, Ticket as TicketSchema, TicketUpdate
 from services.ticket_service import TicketService
+from core.ws_manager import seat_lock_ws
+from services.seat_lock_service import SeatLockService
 
 router = APIRouter(tags=["Tickets"])
 
@@ -52,7 +54,15 @@ async def get_ticket(ticket_id: int, service: TicketService = Depends(get_servic
 @router.post("", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
 async def create_ticket(ticket: TicketCreate, service: TicketService = Depends(get_service)):
     """Create a new ticket."""
-    return service.create_ticket(ticket)
+    result = service.create_ticket(ticket)
+    # Broadcast updated locks (seat lock was released in service)
+    locks = SeatLockService().get_locked_seats(ticket.trip_id)
+    await seat_lock_ws.broadcast(ticket.trip_id, {
+        "type": "seat_locks_updated",
+        "trip_id": ticket.trip_id,
+        "locks": locks,
+    })
+    return result
 
 
 @router.put("/{ticket_id}", response_model=TicketSchema)

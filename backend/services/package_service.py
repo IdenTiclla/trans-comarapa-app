@@ -80,6 +80,24 @@ class PackageService:
         logger.debug("Creating package with data: %s", data)
         # We don't check tracking number here because we generate it later
 
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod
+        from models.secretary import Secretary
+        
+        cash_service = CashRegisterService(self.db)
+        
+        # Verify cash register if payment is made upfront
+        current_register = None
+        if getattr(data, 'payment_status', None) == "paid_on_send":
+            secretary = self.db.query(Secretary).filter(Secretary.id == data.secretary_id).first()
+            office_id = secretary.office_id if secretary and secretary.office_id else 1
+            if not office_id:
+                raise ValidationException("El usuario no tiene una oficina asignada para abrir caja.")
+            current_register = cash_service.get_current_register(office_id)
+            if not current_register:
+                raise ValidationException("No hay caja abierta para su oficina. Debe abrir caja antes de registrar envíos pagados al instante.")
+
         # Create the package
         package_data = data.model_dump(exclude={"items", "tracking_number"})
         package_data["tracking_number"] = f"TEMP-{uuid.uuid4().hex[:8]}"
@@ -92,11 +110,31 @@ class PackageService:
         db_package.tracking_number = f"ENC-{db_package.id:06d}"
 
         # Create items
+        total_amount = 0.0
         for item_data in data.items:
             item_dict = item_data.model_dump()
             item_dict["total_price"] = item_dict["quantity"] * item_dict["unit_price"]
             item_dict["package_id"] = db_package.id
+            total_amount += item_dict["total_price"]
             self.db.add(PackageItem(**item_dict))
+            
+        # Record transaction if paid on send
+        if data.payment_status == "paid_on_send" and current_register and total_amount > 0:
+            payment_enum = PaymentMethod.CASH
+            if data.payment_method:
+                try:
+                    payment_enum = PaymentMethod(data.payment_method.lower())
+                except ValueError:
+                    pass
+            cash_service.record_transaction(CashTransactionCreate(
+                cash_register_id=current_register.id,
+                type=CashTransactionType.PACKAGE_PAYMENT,
+                amount=total_amount,
+                payment_method=payment_enum,
+                reference_id=db_package.id,
+                reference_type="package",
+                description=f"Pago por envío de encomienda temporal {package_data['tracking_number']}"
+            ))
 
         # Log initial state
         self.repo.log_state_change(
@@ -212,6 +250,25 @@ class PackageService:
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
 
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod as EnumPaymentMethod
+        from models.secretary import Secretary
+        
+        cash_service = CashRegisterService(self.db)
+        
+        current_register = None
+        if pkg.payment_status == "collect_on_delivery":
+            if not changed_by_user_id:
+                raise ValidationException("Se requiere el usuario operador para entregas por cobrar.")
+            secretary = self.db.query(Secretary).filter(Secretary.user_id == changed_by_user_id).first()
+            office_id = secretary.office_id if secretary and secretary.office_id else 1
+            if not office_id:
+                raise ValidationException("El usuario no tiene una oficina asignada.")
+            current_register = cash_service.get_current_register(office_id)
+            if not current_register:
+                raise ValidationException("No hay caja abierta para su oficina. No puede recibir cobros de encomiendas por entregar.")
+
         # Use state machine for validation
         validate_transition("package", PACKAGE_TRANSITIONS, pkg.status, "delivered")
 
@@ -220,6 +277,24 @@ class PackageService:
 
         if pkg.payment_status == "collect_on_delivery":
             pkg.payment_method = payment_method
+
+            # Record collection transaction
+            if current_register:
+                payment_enum = EnumPaymentMethod.CASH
+                try:
+                    payment_enum = EnumPaymentMethod(payment_method.lower())
+                except ValueError:
+                    pass
+                
+                cash_service.record_transaction(CashTransactionCreate(
+                    cash_register_id=current_register.id,
+                    type=CashTransactionType.POR_COBRAR_COLLECTION,
+                    amount=sum(i.total_price for i in pkg.items),
+                    payment_method=payment_enum,
+                    reference_id=pkg.id,
+                    reference_type="package",
+                    description=f"Cobro en destino de encomienda {pkg.tracking_number}"
+                ))
 
         self.repo.log_state_change(
             package_id=pkg.id,

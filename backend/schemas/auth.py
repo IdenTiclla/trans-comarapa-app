@@ -27,6 +27,7 @@ class TokenWithRoleInfo(Token):
     user_id: int
     firstname: Optional[str] = None
     lastname: Optional[str] = None
+    office_id: Optional[int] = None  # Oficina asignada (para secretarias)
 
 class TokenData(BaseModel):
     email: EmailStr | None = None

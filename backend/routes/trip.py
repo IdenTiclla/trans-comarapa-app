@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from db.session import get_db
 from schemas.trip import TripCreate, TripUpdate, Trip as TripSchema
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from services.trip_service import TripService
+from auth.jwt import get_current_user
+from models.user import User
 
 router = APIRouter(tags=["trips"])
 
@@ -46,6 +48,16 @@ async def get_trips(
         sort_by=sort_by,
         sort_direction=sort_direction
     )
+
+
+@router.get("/my-trips", response_model=List[Dict[str, Any]])
+async def get_my_trips(
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by trip status (comma-separated)"),
+    current_user: User = Depends(get_current_user),
+    service: TripService = Depends(get_service)
+):
+    """Get trips assigned to the current driver or assistant."""
+    return service.get_my_trips(current_user, status_filter=status_filter)
 
 
 @router.post("/", response_model=TripSchema, status_code=status.HTTP_201_CREATED)

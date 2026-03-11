@@ -162,6 +162,13 @@ class AuthService:
                 response_data["firstname"] = entity.firstname or response_data["firstname"]
                 response_data["lastname"] = entity.lastname or response_data["lastname"]
 
+        # Include office_id for secretaries so the frontend can operate the cash register
+        role_str = user.role.value if hasattr(user.role, 'value') else str(user.role)
+        if role_str == "secretary":
+            secretary = self.db.query(Secretary).filter(Secretary.user_id == user.id).first()
+            if secretary and secretary.office_id:
+                response_data["office_id"] = secretary.office_id
+
         return response_data
 
     def update_user_profile(self, user: User, update_data: dict) -> User:

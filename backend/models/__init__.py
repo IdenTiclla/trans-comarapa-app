@@ -16,6 +16,8 @@ from .office import Office
 from .package_state_history import PackageStateHistory
 from .ticket_state_history import TicketStateHistory
 from .activity import Activity
+from .cash_register import CashRegister
+from .cash_transaction import CashTransaction
 
 __all__ = [
     "User",
@@ -35,5 +37,7 @@ __all__ = [
     "Office",
     "PackageStateHistory",
     "TicketStateHistory",
-    "Activity"
+    "Activity",
+    "CashRegister",
+    "CashTransaction"
 ]

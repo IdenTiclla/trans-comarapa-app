@@ -25,6 +25,8 @@ from models.seat import Seat
 from models.ticket import Ticket
 from models.secretary import Secretary
 from models.package import Package
+from models.person import Person
+from models.user import User
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from repositories.trip_repository import TripRepository
@@ -410,6 +412,82 @@ class TripService:
         self.db.commit()
         self.db.refresh(trip)
         return trip
+
+    def get_my_trips(self, current_user: User, *, status_filter: Optional[str] = None) -> list[Dict[str, Any]]:
+        """Get trips assigned to the current user as driver or assistant."""
+        person = self.db.query(Person).filter(Person.user_id == current_user.id).first()
+        if not person:
+            return []
+
+        query = self.db.query(Trip)
+        if person.type == 'driver':
+            query = query.filter(Trip.driver_id == person.id)
+        elif person.type == 'assistant':
+            query = query.filter(Trip.assistant_id == person.id)
+        else:
+            return []
+
+        if status_filter:
+            statuses = [s.strip() for s in status_filter.split(',')]
+            query = query.filter(Trip.status.in_(statuses))
+
+        query = query.order_by(Trip.trip_datetime.desc())
+        trips = query.all()
+
+        result = []
+        for trip in trips:
+            origin_name = trip.route.origin_location.name if trip.route and trip.route.origin_location else "Unknown"
+            destination_name = trip.route.destination_location.name if trip.route and trip.route.destination_location else "Unknown"
+
+            total_seats = trip.bus.capacity if trip.bus else 0
+            ticket_count = self.db.query(func.count(Ticket.id)).filter(
+                Ticket.trip_id == trip.id, Ticket.state != 'cancelled'
+            ).scalar() or 0
+
+            package_count = self.db.query(func.count(Package.id)).filter(
+                Package.trip_id == trip.id
+            ).scalar() or 0
+
+            # Passenger manifest
+            passengers = []
+            if trip.bus:
+                trip_tickets = self.db.query(Ticket).filter(
+                    Ticket.trip_id == trip.id, Ticket.state.in_(["pending", "confirmed"])
+                ).all()
+                for t in trip_tickets:
+                    seat = self.db.query(Seat).filter(Seat.id == t.seat_id).first()
+                    client_name = "—"
+                    if t.client:
+                        client_name = f"{t.client.firstname or ''} {t.client.lastname or ''}".strip() or "—"
+                    passengers.append({
+                        "ticket_id": t.id,
+                        "seat_number": seat.seat_number if seat else "?",
+                        "client_name": client_name,
+                        "state": t.state,
+                    })
+                passengers.sort(key=lambda p: p["seat_number"])
+
+            result.append({
+                "id": trip.id,
+                "trip_datetime": trip.trip_datetime.isoformat(),
+                "status": trip.status,
+                "route": {
+                    "origin": origin_name,
+                    "destination": destination_name,
+                },
+                "bus": {
+                    "license_plate": trip.bus.license_plate if trip.bus else "—",
+                    "model": trip.bus.model if trip.bus else "",
+                    "brand": trip.bus.brand if trip.bus else "",
+                } if trip.bus else None,
+                "total_seats": total_seats,
+                "occupied_seats": ticket_count,
+                "available_seats": total_seats - ticket_count,
+                "package_count": package_count,
+                "passengers": passengers,
+            })
+
+        return result
 
     def cancel_trip(self, trip_id: int) -> Trip:
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")

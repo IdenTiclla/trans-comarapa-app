@@ -6,11 +6,19 @@ import BusSeatLegend from './BusSeatLegend'
 import SeatContextMenu from './SeatContextMenu'
 import { getEffectiveName } from '@/lib/person-utils'
 
+interface LockedSeatInfo {
+    seat_id: number
+    user_id: number | null
+    ttl: number
+}
+
 interface BusSeatMapPrintProps {
     trip: any
     tickets?: any[]
     occupiedSeats?: any[]
     reserved_seat_numbers?: number[]
+    lockedSeats?: LockedSeatInfo[]
+    currentUserId?: number
     initialSelectedSeats?: any[]
     selectionEnabled?: boolean
     maxSelections?: number
@@ -50,6 +58,8 @@ export default function BusSeatMapPrint({
     trip,
     tickets = [],
     reserved_seat_numbers = [],
+    lockedSeats = [],
+    currentUserId = 0,
     initialSelectedSeats = [],
     maxSelections = 0,
     disabled = false,
@@ -112,6 +122,17 @@ export default function BusSeatMapPrint({
         try { return JSON.parse(reservedNumsStr) } catch { return [] }
     }, [reservedNumsStr])
 
+    // Only seats locked by OTHER users should appear as "locked"
+    const lockedByOthersSeatIds = useMemo(() => {
+        const set = new Set<number>()
+        for (const lock of lockedSeats) {
+            if (lock.user_id !== currentUserId) {
+                set.add(lock.seat_id)
+            }
+        }
+        return set
+    }, [lockedSeats, currentUserId])
+
     // Compute seats synchronously — no async, no loading state, no flickering
     const seats = useMemo(() => {
         if (!trip?.seats_layout) return []
@@ -131,6 +152,12 @@ export default function BusSeatMapPrint({
             let status = backendSeat.status
 
             if (status === 'occupied' && isReserved) status = 'reserved'
+
+            // Mark as locked if locked by another user and not already occupied/reserved
+            const isLockedByOther = status !== 'occupied' && status !== 'reserved'
+                && lockedByOthersSeatIds.has(backendSeat.id)
+
+            if (isLockedByOther) status = 'locked'
 
             const ticket = safeTickets.find((t: any) => t.seat?.id === backendSeat.id)
             let passenger = null
@@ -164,6 +191,7 @@ export default function BusSeatMapPrint({
                 number: backendSeat.seat_number,
                 status: status,
                 occupied: status === 'occupied',
+                locked: status === 'locked',
                 position: position,
                 column: column,
                 deck: backendSeat.deck || 'FIRST',
@@ -172,7 +200,7 @@ export default function BusSeatMapPrint({
         }
 
         return generatedSeats.sort((a, b) => a.number - b.number)
-    }, [seatsLayoutStr, safeReservedSeatNumbers, safeTickets, trip?.seats_layout])
+    }, [seatsLayoutStr, safeReservedSeatNumbers, safeTickets, trip?.seats_layout, lockedByOthersSeatIds])
 
     const filteredSeats = useMemo(() => {
         if (!isDoubleDeck) return seats
@@ -189,10 +217,15 @@ export default function BusSeatMapPrint({
         return filteredSeats.filter(seat => seat.status === 'reserved').length
     }, [filteredSeats])
 
+    const lockedSeatsCount = useMemo(() => {
+        if (!filteredSeats) return 0
+        return filteredSeats.filter(seat => seat.status === 'locked').length
+    }, [filteredSeats])
+
     const availableSeatsCount = useMemo(() => {
         if (!filteredSeats) return 0
-        return filteredSeats.length - occupiedSeatsCount - reservedSeatsCount
-    }, [filteredSeats, occupiedSeatsCount, reservedSeatsCount])
+        return filteredSeats.length - occupiedSeatsCount - reservedSeatsCount - lockedSeatsCount
+    }, [filteredSeats, occupiedSeatsCount, reservedSeatsCount, lockedSeatsCount])
 
     // Sync initialSelectedSeats
     useEffect(() => {

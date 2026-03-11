@@ -45,6 +45,7 @@ class PersonResponse(PersonBase):
     user_id: int = Field(..., description="ID of the associated user account", json_schema_extra={"example": 1})
     type: PersonType = Field(..., description="Type of person", json_schema_extra={"example": "client"})
     avatar_url: Optional[str] = Field(None, description="URL of person's avatar")
+    email: Optional[str] = Field(None, description="Person's email")
     created_at: datetime = Field(..., description="Creation date")
     updated_at: datetime = Field(..., description="Last update date")
     

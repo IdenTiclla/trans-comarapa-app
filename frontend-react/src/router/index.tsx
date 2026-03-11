@@ -42,6 +42,12 @@ export const router = createBrowserRouter([
           { path: '/admin/users', lazy: () => import('@/pages/admin/UsersPage') },
           { path: '/admin/buses', lazy: () => import('@/pages/admin/BusesPage') },
           { path: '/admin/routes', lazy: () => import('@/pages/admin/RoutesPage') },
+          { path: '/admin/offices', lazy: () => import('@/pages/admin/OfficesPage') },
+          { path: '/admin/secretaries', lazy: () => import('@/pages/admin/SecretariesPage') },
+          { path: '/admin/drivers', lazy: () => import('@/pages/admin/DriversPage') },
+          { path: '/admin/assistants', lazy: () => import('@/pages/admin/AssistantsPage') },
+          { path: '/admin/cash-register', lazy: () => import('@/pages/admin/CashRegisterPage') },
+          { path: '/reports', lazy: () => import('@/pages/admin/ReportsPage') },
 
           // Trips
           { path: '/trips', lazy: () => import('@/pages/trips/TripsIndexPage') },

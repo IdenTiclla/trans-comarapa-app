@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
+import { selectUser } from '@/store/auth.slice'
 import { fetchDrivers, selectDrivers } from '@/store/driver.slice'
 import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import { tripService } from '@/services/trip.service'
+import { seatService, type LockedSeatInfo } from '@/services/seat.service'
 import { apiFetch } from '@/lib/api'
+import { API_BASE_URL } from '@/lib/constants'
 import { useTripDetails } from '@/hooks/use-trip-details'
 import { toast } from 'sonner'
 
@@ -24,6 +27,7 @@ export function useTripDetailPage(tripId: number) {
     const error = useAppSelector(selectTripError)
     const drivers = useAppSelector(selectDrivers) as any[]
     const assistants = useAppSelector(selectAssistants) as any[]
+    const currentUser = useAppSelector(selectUser)
 
     const { soldTickets, reservedSeatNumbers, fetchSoldTickets, formatDate } = useTripDetails()
 
@@ -40,12 +44,122 @@ export function useTripDetailPage(tripId: number) {
         finally { setLoadingPackages(false) }
     }, [])
 
+    // ── Seat locks (real-time via WebSocket) ────────────────────────────
+    const [lockedSeats, setLockedSeats] = useState<LockedSeatInfo[]>([])
+    const wsRef = useRef<WebSocket | null>(null)
+    const wsReconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const fetchLockedSeats = useCallback(async (tId: number) => {
+        try {
+            const data = await seatService.getLockedSeats(tId)
+            setLockedSeats(Array.isArray(data) ? data : [])
+        } catch {
+            setLockedSeats([])
+        }
+    }, [])
+
+    // WebSocket connection for real-time lock updates (with polling fallback)
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+    useEffect(() => {
+        if (!tripId || !currentUser?.id) return
+
+        let cancelled = false
+
+        function startPolling() {
+            if (pollRef.current || cancelled) return
+            pollRef.current = setInterval(() => fetchLockedSeats(tripId), 3000)
+        }
+
+        function stopPolling() {
+            if (pollRef.current) {
+                clearInterval(pollRef.current)
+                pollRef.current = null
+            }
+        }
+
+        function connect() {
+            if (cancelled) return
+
+            // Derive WS URL from API_BASE_URL (e.g. http://localhost:8000/api/v1 -> ws://localhost:8000/api/v1)
+            const wsBase = API_BASE_URL.replace(/^http/, 'ws')
+            const wsUrl = `${wsBase}/seats/ws/${tripId}?user_id=${currentUser!.id}`
+
+            let ws: WebSocket
+            try {
+                ws = new WebSocket(wsUrl)
+            } catch {
+                // WebSocket constructor failed — fall back to polling
+                startPolling()
+                return
+            }
+            wsRef.current = ws
+            let wsConnected = false
+
+            ws.onopen = () => {
+                wsConnected = true
+                // Stop polling fallback if it was running
+                stopPolling()
+            }
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data)
+                    if (data.type === 'seat_locks_updated' && data.locks) {
+                        setLockedSeats(data.locks)
+                    }
+                } catch { /* ignore non-JSON messages like "pong" */ }
+            }
+
+            ws.onclose = () => {
+                wsRef.current = null
+                if (!cancelled) {
+                    // If WS never connected, fall back to polling
+                    if (!wsConnected) {
+                        startPolling()
+                    } else {
+                        // Reconnect after 3 seconds
+                        wsReconnectRef.current = setTimeout(connect, 3000)
+                    }
+                }
+            }
+
+            ws.onerror = () => {
+                ws.close()
+            }
+
+            // Send ping every 30s to keep connection alive
+            const pingInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send('ping')
+                }
+            }, 30000)
+
+            ws.addEventListener('close', () => clearInterval(pingInterval))
+        }
+
+        // Initial HTTP fetch for immediate state, then connect WS
+        fetchLockedSeats(tripId)
+        connect()
+
+        return () => {
+            cancelled = true
+            stopPolling()
+            if (wsReconnectRef.current) clearTimeout(wsReconnectRef.current)
+            if (wsRef.current) {
+                wsRef.current.close()
+                wsRef.current = null
+            }
+        }
+    }, [tripId, currentUser?.id, fetchLockedSeats])
+
     // ── Global refresh ────────────────────────────────────────────────────
     const refreshTrip = useCallback(() => {
         dispatch(fetchTripById(tripId))
         fetchSoldTickets(tripId)
         fetchPackages(tripId)
-    }, [dispatch, tripId, fetchSoldTickets, fetchPackages])
+        fetchLockedSeats(tripId)
+    }, [dispatch, tripId, fetchSoldTickets, fetchPackages, fetchLockedSeats])
 
     // ── Dispatch / Finish modals ──────────────────────────────────────────
     const [showDispatchModal, setShowDispatchModal] = useState(false)
@@ -170,14 +284,19 @@ export function useTripDetailPage(tripId: number) {
     const [controlledSeatIds, setControlledSeatIds] = useState<number[]>([])
 
     const handleClearSelection = useCallback(() => {
+        // Unlock all currently selected seats
+        if (currentSelectedSeats.length > 0) {
+            seatService.unlockSeats(tripId, currentSelectedSeats.map(s => s.id)).catch(() => {})
+        }
         setCurrentSelectedSeats([])
         setControlledSeatIds([])
-    }, [])
+    }, [tripId, currentSelectedSeats])
 
     const handleRemoveSeat = useCallback((seat: any) => {
+        seatService.unlockSeats(tripId, [seat.id]).catch(() => {})
         setCurrentSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
         setControlledSeatIds(prev => prev.filter(id => id !== seat.id))
-    }, [])
+    }, [tripId])
 
     const handleSellTicket = useCallback((seats: any[] | any) => {
         const seatsArray = Array.isArray(seats) ? seats : [seats]
@@ -196,7 +315,9 @@ export function useTripDetailPage(tripId: number) {
     const handleTicketCreated = () => {
         setShowTicketSaleModal(false)
         refreshTrip()
-        handleClearSelection()
+        // Locks are released by the backend on ticket creation, just clear local state
+        setCurrentSelectedSeats([])
+        setControlledSeatIds([])
         setSeatMapKey(prev => prev + 1)
     }
 
@@ -240,9 +361,36 @@ export function useTripDetailPage(tripId: number) {
         }
     }
 
-    const handleSelectionChange = (seats: any[]) => {
+    const handleSelectionChange = async (seats: any[]) => {
+        const prevIds = new Set(currentSelectedSeats.map(s => s.id))
+        const newIds = new Set(seats.map(s => s.id))
+
+        // Lock newly selected seats
+        const added = seats.filter(s => !prevIds.has(s.id))
+        for (const seat of added) {
+            try {
+                await seatService.lockSeat(tripId, seat.id)
+            } catch {
+                toast.error('No se pudo bloquear el asiento', {
+                    description: 'Otro usuario ya lo seleccionó.',
+                })
+                // Remove the seat that couldn't be locked
+                seats = seats.filter(s => s.id !== seat.id)
+            }
+        }
+
+        // Unlock deselected seats
+        const removed = currentSelectedSeats.filter(s => !newIds.has(s.id))
+        if (removed.length > 0) {
+            seatService.unlockSeats(tripId, removed.map(s => s.id)).catch(() => {})
+        }
+
         setCurrentSelectedSeats(seats)
         setControlledSeatIds(seats.map(s => s.id))
+
+        // Refresh lock state
+        fetchLockedSeats(tripId)
+
         if (seatChangeMode && seats.length === 1) {
             setNewSelectedSeat(seats[0])
             setShowSeatChangeConfirmModal(true)
@@ -272,6 +420,9 @@ export function useTripDetailPage(tripId: number) {
     }, [trip, soldTickets])
 
     // ── Effects ───────────────────────────────────────────────────────────
+    // Locks are auto-released by the backend when the WebSocket disconnects
+    // (on page refresh, navigation, or tab close)
+
     useEffect(() => {
         dispatch(fetchTripById(tripId))
         dispatch(fetchDrivers({}))
@@ -379,6 +530,7 @@ export function useTripDetailPage(tripId: number) {
             key: seatMapKey,
             selectedSeats: currentSelectedSeats,
             controlledIds: controlledSeatIds,
+            lockedSeats,
             onSelectionChange: handleSelectionChange,
         },
 
