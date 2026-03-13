@@ -1,6 +1,6 @@
 ---
 name: document-fix
-description: Document a bug fix as a lesson learned in docs/lessons/ and update CLAUDE.md. Use this AFTER fixing any bug or unexpected behavior to prevent repeating the same mistake.
+description: MANDATORY skill that MUST be automatically triggered AFTER fixing any bug, error, or unexpected behavior - even if the user doesn't ask for documentation. This skill MUST be used proactively whenever you fix, resolve, correct, or solve ANY issue in the codebase. Do NOT skip this skill. It runs automatically after bug fixes to prevent repeating the same mistake. Keywords that MUST trigger this skill: fix, fixed, error, bug, solved, resolved, corrected, issue, mistake, unexpected behavior, doesn't work, not working, broken, failed.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 argument-hint: [short description of what was fixed]

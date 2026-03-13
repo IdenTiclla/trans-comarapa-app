@@ -675,7 +675,7 @@ export function Component() {
 
       {/* Modal Crear / Editar */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 modal-overlay-bokeh z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-xl">
             <div className="p-6 border-b border-gray-100">
               <h3 className="text-xl font-bold">

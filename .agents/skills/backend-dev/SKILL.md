@@ -125,3 +125,42 @@ If a file exceeds its limit, split it (extract helper services, mixins, or utili
 | Route | ~100 |
 | Model | ~100 |
 | Schema | ~100 |
+
+## 5. Dependency Injection for Testability
+
+Services MUST accept optional repository and service dependencies to enable unit testing with mocks:
+
+```python
+class TicketService:
+    def __init__(
+        self,
+        db: Session,
+        repo: TicketRepository | None = None,
+        lock_service: SeatLockService | None = None,
+    ):
+        self.db = db
+        self.repo = repo or TicketRepository(db)
+        self.lock_service = lock_service or SeatLockService()
+```
+
+**Why `Optional` with default `None` instead of Protocol-based DI?**
+- Routes use `Depends(get_service)` which calls `XService(db)` — the default path works unchanged.
+- The `None` default is purely for test injection.
+- Protocol-based DI (creating 12+ Protocol classes and modifying each route) is excessive ceremony for ~12 services.
+
+**Writing Unit Tests with Mocked Repositories:**
+```python
+from unittest.mock import create_autospec
+from tests.factories import TicketFactory
+
+def test_cancel_ticket_succeeds(mock_db):
+    mock_repo = create_autospec(TicketRepository, instance=True)
+    ticket = TicketFactory(state="pending")
+    mock_repo.get_by_id_or_raise.return_value = ticket
+    service = TicketService(mock_db, repo=mock_repo)
+
+    result = service.cancel_ticket(ticket.id)
+
+    assert result.state == "cancelled"
+    mock_repo.log_state_change.assert_called_once()
+```

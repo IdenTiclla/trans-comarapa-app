@@ -24,8 +24,8 @@ class PersonCreate(PersonBase):
     """
     Esquema para crear una nueva persona.
     """
-    type: PersonType = Field(..., description="Type of person", json_schema_extra={"example": "client"})
-    user_id: int = Field(..., description="ID of the associated user account", json_schema_extra={"example": 1})
+    type: Optional[PersonType] = Field(None, description="Type of person", json_schema_extra={"example": "client"})
+    user_id: Optional[int] = Field(None, description="ID of the associated user account", json_schema_extra={"example": 1})
 
 class PersonUpdate(BaseModel):
     """

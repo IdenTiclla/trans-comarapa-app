@@ -208,7 +208,7 @@ export default function TicketSaleModal({
 
     return (
         <div className="fixed inset-0 z-50 overflow-hidden font-sans">
-            <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
+            <div className="absolute inset-0 modal-overlay-bokeh transition-opacity" onClick={onClose}></div>
 
             <div className="relative flex items-center justify-center min-h-screen p-4 pointer-events-none">
                 <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden pointer-events-auto flex flex-col">

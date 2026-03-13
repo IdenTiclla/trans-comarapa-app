@@ -94,15 +94,10 @@ export default function PackageAssignModal({
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 transition-opacity" onClick={onClose}>
-                    <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-
-                <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-
+            <div className="fixed inset-0 modal-overlay-bokeh" onClick={onClose} />
+            <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
                 <div
-                    className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full"
+                    className="relative z-10 w-full bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-3xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-4">

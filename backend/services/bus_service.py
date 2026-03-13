@@ -14,6 +14,7 @@ from models.bus import Bus as BusModel
 from models.seat import Seat as SeatModel
 from models.ticket import Ticket as TicketModel
 from models.trip import Trip as TripModel
+from repositories.bus_repository import BusRepository
 from schemas.bus import BusCreate, BusWithSeatsCreate, SeatLayoutItem
 
 logger = logging.getLogger(__name__)
@@ -22,21 +23,23 @@ logger = logging.getLogger(__name__)
 class BusService:
     """Business logic for bus operations."""
 
-    def __init__(self, db: Session):
+    def __init__(
+        self,
+        db: Session,
+        repo: BusRepository | None = None,
+    ):
         self.db = db
+        self.repo = repo or BusRepository(db)
 
     # ── Read operations ──────────────────────────────────────────────────
 
     def get_all(self) -> List[BusModel]:
         """Get all buses."""
-        return self.db.query(BusModel).all()
+        return self.repo.get_all(limit=1000)
 
     def get_by_id(self, bus_id: int) -> BusModel:
         """Get a bus by ID, raising NotFoundException if not found."""
-        bus = self.db.query(BusModel).filter(BusModel.id == bus_id).first()
-        if not bus:
-            raise NotFoundException(f"Bus with id {bus_id} not found.")
-        return bus
+        return self.repo.get_by_id_or_raise(bus_id, "Bus")
 
     # ── Validation ───────────────────────────────────────────────────────
 
@@ -74,7 +77,9 @@ class BusService:
                 "Bus must have 2 floors if seats are on SECOND deck."
             )
 
-    def _check_license_plate_unique(self, license_plate: str, exclude_id: int = None) -> None:
+    def _check_license_plate_unique(
+        self, license_plate: str, exclude_id: int = None
+    ) -> None:
         """Raise ConflictException if license plate is already used."""
         query = self.db.query(BusModel).filter(BusModel.license_plate == license_plate)
         if exclude_id:
@@ -124,17 +129,21 @@ class BusService:
         self.db.flush()
 
         for seat in data.seats:
-            self.db.add(SeatModel(
-                bus_id=new_bus.id,
-                seat_number=seat.seat_number,
-                deck=seat.deck,
-                row=seat.row,
-                column=seat.column,
-            ))
+            self.db.add(
+                SeatModel(
+                    bus_id=new_bus.id,
+                    seat_number=seat.seat_number,
+                    deck=seat.deck,
+                    row=seat.row,
+                    column=seat.column,
+                )
+            )
 
         self.db.commit()
         self.db.refresh(new_bus)
-        logger.info("Bus with seats created: id=%d, capacity=%d", new_bus.id, new_bus.capacity)
+        logger.info(
+            "Bus with seats created: id=%d, capacity=%d", new_bus.id, new_bus.capacity
+        )
         return new_bus
 
     def update_bus(self, bus_id: int, data: BusCreate) -> BusModel:
@@ -145,13 +154,21 @@ class BusService:
         self.db.commit()
         return bus_data  # type: ignore[return-value]  # Route already refreshes via response_model
 
-    def update_bus_seats(self, bus_id: int, seats: List[SeatLayoutItem]) -> List[SeatModel]:
+    def update_bus_seats(
+        self, bus_id: int, seats: List[SeatLayoutItem]
+    ) -> List[SeatModel]:
         """Replace all seats of a bus with a new layout. Fails if any seats have tickets."""
         bus = self.get_by_id(bus_id)
 
-        existing_seats = self.db.query(SeatModel).filter(SeatModel.bus_id == bus_id).all()
+        existing_seats = (
+            self.db.query(SeatModel).filter(SeatModel.bus_id == bus_id).all()
+        )
         for seat in existing_seats:
-            if self.db.query(TicketModel).filter(TicketModel.seat_id == seat.id).first():
+            if (
+                self.db.query(TicketModel)
+                .filter(TicketModel.seat_id == seat.id)
+                .first()
+            ):
                 raise ValidationException(
                     f"Cannot update seats because seat {seat.seat_number} has associated tickets."
                 )
@@ -185,21 +202,15 @@ class BusService:
         """Delete a bus. Fails if it has trips or tickets associated."""
         bus = self.get_by_id(bus_id)
 
-        if self.db.query(TripModel).filter(TripModel.bus_id == bus_id).first():
+        if self.repo.has_trips(bus_id):
             raise ValidationException("Bus has trips and cannot be deleted.")
 
-        seat_with_ticket = (
-            self.db.query(SeatModel)
-            .join(TicketModel, TicketModel.seat_id == SeatModel.id)
-            .filter(SeatModel.bus_id == bus_id)
-            .first()
-        )
-        if seat_with_ticket:
+        if self.repo.has_tickets(bus_id):
             raise ValidationException(
                 "Bus has tickets associated to its seats and cannot be deleted."
             )
 
-        self.db.query(SeatModel).filter(SeatModel.bus_id == bus_id).delete()
+        self.repo.delete_seats(bus_id)
         self.db.delete(bus)
         self.db.commit()
         logger.info("Bus %d deleted", bus_id)

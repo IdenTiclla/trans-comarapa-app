@@ -73,3 +73,75 @@ If a file exceeds its limit, split it (extract hooks, sub-components, or utility
 | Store slice | ~200 |
 | Service | ~150 |
 | Lib / utils | ~150 |
+
+## 7. Testing Conventions
+
+### 7.1 MSW (Mock Service Worker)
+Use MSW to mock API calls at the network level. This tests the full service→API integration:
+
+```typescript
+// src/test/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const clientHandlers = [
+  http.get('http://localhost:8000/api/v1/clients/search', ({ request }) => {
+    const url = new URL(request.url)
+    const term = url.searchParams.get('q')
+    return HttpResponse.json({
+      clients: term ? [{ id: 1, firstname: 'Juan' }] : []
+    })
+  }),
+]
+```
+
+### 7.2 Per-test Handler Overrides
+Use `server.use()` to override handlers for specific tests:
+
+```typescript
+import { server } from '@/test/mocks/server'
+import { http, HttpResponse } from 'msw'
+
+it('handles empty results', async () => {
+  server.use(
+    http.get('http://localhost:8000/api/v1/clients/search', () => {
+      return HttpResponse.json({ clients: [] })
+    })
+  )
+  // ... test code
+})
+```
+
+### 7.3 renderWithProviders Utility
+Use `renderWithProviders` from `@/test/test-utils` to wrap components with Redux and Router:
+
+```tsx
+import { renderWithProviders, screen, userEvent } from '@/test/test-utils'
+
+it('renders and interacts', async () => {
+  const user = userEvent.setup()
+  const { store } = renderWithProviders(<MyComponent />, {
+    preloadedState: { auth: { user: { id: 1 } } },
+    route: '/some-path',
+  })
+  
+  await user.click(screen.getByText('Submit'))
+  expect(store.getState().auth.user).toBeDefined()
+})
+```
+
+### 7.4 Testing Hooks
+Use `renderHook` with the provider wrapper:
+
+```tsx
+import { renderHook, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '@/test/test-utils'
+
+it('fetches data on mount', async () => {
+  const wrapper = ({ children }) => {
+    const { store } = renderWithProviders(children)
+    return store
+  }
+  const { result } = renderHook(() => useTripDetailPage('1'), { wrapper })
+  await waitFor(() => expect(result.current.trip).toBeDefined())
+})
+```

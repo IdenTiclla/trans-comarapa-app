@@ -67,6 +67,8 @@ cd frontend-react && npm install && npm run dev  # localhost:3001
 
 - `001`: Don't use Python `set` with objects containing WebSocket/network references — use `list`
 - `002`: Never call `.toFixed()`, `Object.entries()` directly on API response fields — use `?? 0` / `?? {}`
+- `003`: Unit tests must NOT require database — use mocks and dependency injection
+- `004`: Check `package.json` for routing package before importing — use `'react-router'` not `'react-router-dom'`
 
 ## Key Resources
 

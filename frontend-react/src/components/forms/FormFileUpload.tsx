@@ -230,7 +230,7 @@ export default function FormFileUpload({
       ) : null}
 
       {previewSrc && (
-        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50" onClick={() => setPreviewSrc(null)}>
+        <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50" onClick={() => setPreviewSrc(null)}>
           <div className="max-w-3xl max-h-[90vh] p-2 bg-white rounded-lg shadow-xl">
             <img src={previewSrc} className="max-w-full max-h-[80vh] object-contain" alt="Vista previa" />
             <div className="mt-2 flex justify-end">

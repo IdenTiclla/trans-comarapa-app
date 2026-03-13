@@ -38,7 +38,7 @@ export function useTripDetailPage(tripId: number) {
     const fetchPackages = useCallback(async (tId: number) => {
         setLoadingPackages(true)
         try {
-            const data = await apiFetch(`/packages/trip/${tId}`)
+            const data = await apiFetch(`/packages/by-trip/${tId}`)
             setTripPackages(Array.isArray(data) ? data : [])
         } catch { setTripPackages([]) }
         finally { setLoadingPackages(false) }
@@ -398,12 +398,67 @@ export function useTripDetailPage(tripId: number) {
     }
 
     // ── Packages ──────────────────────────────────────────────────────────
+    const [showPackageAssignModal, setShowPackageAssignModal] = useState(false)
+    const [showPackageDeliveryModal, setShowPackageDeliveryModal] = useState(false)
+    const [showPackageReceptionModal, setShowPackageReceptionModal] = useState(false)
+    const [showPackageRegistrationModal, setShowPackageRegistrationModal] = useState(false)
+    const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<any>(null)
+    const [selectedPackageForReception, setSelectedPackageForReception] = useState<any>(null)
+
     const handleUnassignPackage = async (packageId: number) => {
         try {
             await apiFetch(`/packages/${packageId}/unassign`, { method: 'POST' })
             showNotification('success', 'Encomienda removida', 'La encomienda fue removida del viaje.')
             fetchPackages(tripId)
         } catch (err: any) { showNotification('error', 'Error', err?.message || 'No se pudo remover la encomienda.') }
+    }
+
+    const handleDeliverPackage = (packageId: number) => {
+        const pkg = tripPackages.find(p => p.id === packageId)
+        if (pkg) {
+            setSelectedPackageForDelivery(pkg)
+            setShowPackageDeliveryModal(true)
+        }
+    }
+
+    const handleReceivePackage = (packageId: number) => {
+        const pkg = tripPackages.find(p => p.id === packageId)
+        if (pkg) {
+            setSelectedPackageForReception(pkg)
+            setShowPackageReceptionModal(true)
+        }
+    }
+
+    const handlePackagesAssigned = () => {
+        fetchPackages(tripId)
+        showNotification('success', 'Encomiendas cargadas', 'Las encomiendas fueron asignadas al viaje.')
+    }
+
+    const handleDeliveryConfirm = () => {
+        setShowPackageDeliveryModal(false)
+        setSelectedPackageForDelivery(null)
+        fetchPackages(tripId)
+        showNotification('success', 'Encomienda entregada', 'La encomienda fue entregada correctamente.')
+    }
+
+    const handleReceptionConfirm = async (packageId: number) => {
+        try {
+            await apiFetch(`/packages/${packageId}/update-status`, {
+                method: 'PUT',
+                body: { new_status: 'arrived_at_destination' },
+            })
+            setShowPackageReceptionModal(false)
+            setSelectedPackageForReception(null)
+            fetchPackages(tripId)
+            showNotification('success', 'Encomienda recibida', 'La encomienda fue marcada como recibida en destino.')
+        } catch (err: any) {
+            showNotification('error', 'Error', err?.message || 'No se pudo actualizar el estado.')
+        }
+    }
+
+    const handlePackageRegistered = () => {
+        setShowPackageRegistrationModal(false)
+        fetchPackages(tripId)
     }
 
     // ── Derived state ─────────────────────────────────────────────────────
@@ -547,6 +602,32 @@ export function useTripDetailPage(tripId: number) {
             items: tripPackages,
             loading: loadingPackages,
             unassign: handleUnassignPackage,
+            deliver: handleDeliverPackage,
+            receive: handleReceivePackage,
+            openAssignModal: () => setShowPackageAssignModal(true),
+            assignModal: {
+                show: showPackageAssignModal,
+                close: () => setShowPackageAssignModal(false),
+                onAssigned: handlePackagesAssigned,
+            },
+            deliveryModal: {
+                show: showPackageDeliveryModal,
+                packageData: selectedPackageForDelivery,
+                close: () => { setShowPackageDeliveryModal(false); setSelectedPackageForDelivery(null) },
+                onConfirm: handleDeliveryConfirm,
+            },
+            receptionModal: {
+                show: showPackageReceptionModal,
+                packageData: selectedPackageForReception,
+                close: () => { setShowPackageReceptionModal(false); setSelectedPackageForReception(null) },
+                onConfirm: handleReceptionConfirm,
+            },
+            registrationModal: {
+                show: showPackageRegistrationModal,
+                open: () => setShowPackageRegistrationModal(true),
+                close: () => setShowPackageRegistrationModal(false),
+                onRegistered: handlePackageRegistered,
+            },
         },
 
         // Float panel

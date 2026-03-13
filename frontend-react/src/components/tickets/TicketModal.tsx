@@ -29,12 +29,10 @@ export default function TicketModal({
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 transition-opacity bg-black bg-opacity-60" aria-hidden="true" onClick={onClose} />
-                <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
+            <div className="fixed inset-0 modal-overlay-bokeh" aria-hidden="true" onClick={onClose} />
+            <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
                 {modalType === 'details' ? (
-                    <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative z-10 w-full bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-4xl" onClick={(e) => e.stopPropagation()}>
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
@@ -71,7 +69,7 @@ export default function TicketModal({
                         </div>
                     </div>
                 ) : (
-                    <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative z-10 w-full bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md" onClick={(e) => e.stopPropagation()}>
                         <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg leading-6 font-medium text-white">Cancelar Reserva</h3>

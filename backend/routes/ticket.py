@@ -28,19 +28,33 @@ async def get_all_tickets(service: TicketService = Depends(get_service)):
 
 
 @router.get("/client/{client_id}", response_model=List[TicketSchema])
-async def get_tickets_by_client(client_id: int, service: TicketService = Depends(get_service)):
+async def get_tickets_by_client(
+    client_id: int, service: TicketService = Depends(get_service)
+):
     """Get tickets by client ID."""
     return service.get_by_client(client_id)
 
 
 @router.get("/seat/{seat_id}", response_model=List[TicketSchema])
-async def get_tickets_by_seat(seat_id: int, service: TicketService = Depends(get_service)):
+async def get_tickets_by_seat(
+    seat_id: int, service: TicketService = Depends(get_service)
+):
     """Get tickets by seat ID."""
     return service.get_by_seat(seat_id)
 
 
+@router.get("/search", response_model=List[TicketSchema])
+async def search_tickets(
+    term: str, limit: int = 20, service: TicketService = Depends(get_service)
+):
+    """Search tickets by ID, client name, or document ID."""
+    return service.search(term, limit)
+
+
 @router.get("/trip/{trip_id}", response_model=List[TicketSchema])
-async def get_tickets_by_trip(trip_id: int, service: TicketService = Depends(get_service)):
+async def get_tickets_by_trip(
+    trip_id: int, service: TicketService = Depends(get_service)
+):
     """Get tickets by trip ID."""
     return service.get_by_trip(trip_id)
 
@@ -52,22 +66,29 @@ async def get_ticket(ticket_id: int, service: TicketService = Depends(get_servic
 
 
 @router.post("", response_model=TicketSchema, status_code=status.HTTP_201_CREATED)
-async def create_ticket(ticket: TicketCreate, service: TicketService = Depends(get_service)):
+async def create_ticket(
+    ticket: TicketCreate, service: TicketService = Depends(get_service)
+):
     """Create a new ticket."""
     result = service.create_ticket(ticket)
     # Broadcast updated locks (seat lock was released in service)
     locks = SeatLockService().get_locked_seats(ticket.trip_id)
-    await seat_lock_ws.broadcast(ticket.trip_id, {
-        "type": "seat_locks_updated",
-        "trip_id": ticket.trip_id,
-        "locks": locks,
-    })
+    await seat_lock_ws.broadcast(
+        ticket.trip_id,
+        {
+            "type": "seat_locks_updated",
+            "trip_id": ticket.trip_id,
+            "locks": locks,
+        },
+    )
     return result
 
 
 @router.put("/{ticket_id}", response_model=TicketSchema)
 async def update_ticket(
-    ticket_id: int, ticket_update: TicketUpdate, service: TicketService = Depends(get_service)
+    ticket_id: int,
+    ticket_update: TicketUpdate,
+    service: TicketService = Depends(get_service),
 ):
     """Update a ticket."""
     return service.update_ticket(ticket_id, ticket_update)

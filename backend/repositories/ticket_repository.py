@@ -12,7 +12,6 @@ from repositories.base import BaseRepository
 
 
 class TicketRepository(BaseRepository[Ticket]):
-
     def __init__(self, db: Session):
         super().__init__(Ticket, db)
 
@@ -82,3 +81,28 @@ class TicketRepository(BaseRepository[Ticket]):
         self.db.add(entry)
         self.db.flush()
         return entry
+
+    def search(self, term: str, limit: int = 20) -> list[Ticket]:
+        """Search tickets by ID, client name, or document ID."""
+        from models.client import Client
+        from sqlalchemy import or_
+
+        term_lower = f"%{term.lower()}%"
+        try:
+            ticket_id = int(term)
+        except ValueError:
+            ticket_id = None
+
+        query = (
+            self.db.query(Ticket)
+            .join(Client, Client.id == Ticket.client_id, isouter=True)
+            .filter(
+                or_(
+                    Ticket.id == ticket_id if ticket_id else False,
+                    Client.firstname.ilike(term_lower),
+                    Client.lastname.ilike(term_lower),
+                    Client.document_id.ilike(term_lower),
+                )
+            )
+        )
+        return query.limit(limit).all()

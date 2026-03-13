@@ -34,6 +34,8 @@
 | [guides/environment-setup.md](guides/environment-setup.md) | Setup, Docker, env vars, troubleshooting |
 | [guides/naming-conventions.md](guides/naming-conventions.md) | Backend and frontend naming patterns |
 | [guides/adding-features.md](guides/adding-features.md) | Step-by-step for adding new entities |
+| [guides/testing.md](guides/testing.md) | Testing philosophy, patterns, and commands |
+| [guides/testing.md](guides/testing.md) | Testing philosophy, patterns, and commands |
 
 ## Lessons Learned
 

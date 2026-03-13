@@ -12,6 +12,7 @@ class ClientCreate(PersonCreate):
     address: Optional[str] = Field(None, description="Client's address", json_schema_extra={"example": "123 Main St"})
     city: Optional[str] = Field(None, description="Client's city", json_schema_extra={"example": "Comarapa"})
     state: Optional[str] = Field(None, description="Client's state", json_schema_extra={"example": "Santa Cruz"})
+    email: Optional[str] = Field(None, description="Client's email", json_schema_extra={"example": "user@email.com"})
 
 # Usar los esquemas unificados de person.py
 ClientUpdate = PersonClientUpdate

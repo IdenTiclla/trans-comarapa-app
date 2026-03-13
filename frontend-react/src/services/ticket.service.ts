@@ -35,6 +35,10 @@ export const ticketService = {
         return apiFetch(`${RESOURCE_URL}/seat/${seatId}`)
     },
 
+    search(term: string, limit: number = 20) {
+        return apiFetch(`${RESOURCE_URL}/search`, { params: { term, limit } })
+    },
+
     changeSeat(ticketId: number, newSeatId: number) {
         return apiFetch(`${RESOURCE_URL}/${ticketId}/change-seat/${newSeatId}`, { method: 'PUT' })
     },

@@ -10,6 +10,10 @@ import { TripInfoCard } from '@/components/trips/TripInfoCard'
 import { TripConfirmationModals } from '@/components/trips/TripConfirmationModals'
 import BusSeatMapPrint from '@/components/seats/BusSeatMapPrint'
 import FloatingSeatsPanel from '@/components/seats/FloatingSeatsPanel'
+import PackageAssignModal from '@/components/packages/PackageAssignModal'
+import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
+import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
+import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 
 function formatTimeAmPm(timeString: string) {
   if (!timeString) return ''
@@ -196,7 +200,10 @@ export function Component() {
             tripPackages={page.packages.items}
             isLoading={page.packages.loading}
             tripStatus={trip.status}
+            onOpenAssignModal={page.packages.openAssignModal}
             onUnassignPackage={page.packages.unassign}
+            onDeliverPackage={page.packages.deliver}
+            onReceivePackage={page.packages.receive}
           />
         </div>
       </div>
@@ -222,6 +229,33 @@ export function Component() {
         seatChange={page.seatChange}
         ticketSale={page.ticketSale}
         ticketView={page.ticketView}
+      />
+
+      {/* Package Modals */}
+      <PackageAssignModal
+        show={page.packages.assignModal.show}
+        tripId={tripId}
+        onClose={page.packages.assignModal.close}
+        onPackagesAssigned={page.packages.assignModal.onAssigned}
+        onOpenRegistration={page.packages.registrationModal.open}
+      />
+      <PackageDeliveryModal
+        show={page.packages.deliveryModal.show}
+        packageData={page.packages.deliveryModal.packageData}
+        onClose={page.packages.deliveryModal.close}
+        onConfirm={page.packages.deliveryModal.onConfirm}
+      />
+      <PackageReceptionModal
+        show={page.packages.receptionModal.show}
+        packageData={page.packages.receptionModal.packageData}
+        onClose={page.packages.receptionModal.close}
+        onConfirm={page.packages.receptionModal.onConfirm}
+      />
+      <PackageRegistrationModal
+        show={page.packages.registrationModal.show}
+        tripId={tripId}
+        onClose={page.packages.registrationModal.close}
+        onPackageRegistered={page.packages.registrationModal.onRegistered}
       />
     </div>
   )

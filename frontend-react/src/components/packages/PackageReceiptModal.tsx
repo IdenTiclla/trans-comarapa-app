@@ -208,7 +208,7 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
     if (!show || !packageData) return null
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-100">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 modal-overlay-bokeh backdrop-blur-sm transition-all duration-300 opacity-100">
             <div className="absolute inset-0" aria-hidden="true" onClick={onClose}></div>
 
             <div

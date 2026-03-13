@@ -1,6 +1,7 @@
 """
 Pruebas unitarias para la gestión de boletos.
 """
+
 import pytest
 from fastapi import status
 from datetime import datetime, timedelta
@@ -17,6 +18,7 @@ from models.ticket import Ticket
 from models.ticket_state_history import TicketStateHistory
 from models.user import User, UserRole
 
+
 @pytest.fixture
 def setup_ticket_data(db_session):
     """Configura datos para pruebas de boletos."""
@@ -25,6 +27,7 @@ def setup_ticket_data(db_session):
     db_session.query(Ticket).delete()
     db_session.query(Trip).delete()
     from models.person import Person
+
     for p in db_session.query(Person).all():
         db_session.delete(p)
     db_session.flush()
@@ -34,7 +37,12 @@ def setup_ticket_data(db_session):
     db_session.query(Location).delete()
 
     # Eliminar usuarios existentes con los mismos emails
-    for email in ["driver1@example.com", "assistant1@example.com", "secretary1@example.com", "client1@example.com"]:
+    for email in [
+        "driver1@example.com",
+        "assistant1@example.com",
+        "secretary1@example.com",
+        "client1@example.com",
+    ]:
         existing_user = db_session.query(User).filter(User.email == email).first()
         if existing_user:
             db_session.delete(existing_user)
@@ -47,14 +55,14 @@ def setup_ticket_data(db_session):
         address="Dirección A",
         latitude=-17.783333,
         longitude=-63.182222,
-        country="Bolivia"
+        country="Bolivia",
     )
     destination = Location(
         name="Ciudad B",
         address="Dirección B",
         latitude=-17.800000,
         longitude=-63.200000,
-        country="Bolivia"
+        country="Bolivia",
     )
     db_session.add_all([origin, destination])
     db_session.commit()
@@ -65,7 +73,7 @@ def setup_ticket_data(db_session):
         destination_location_id=destination.id,
         distance=100.0,
         duration=2.5,
-        price=50.0
+        price=50.0,
     )
     db_session.add(route)
 
@@ -78,7 +86,7 @@ def setup_ticket_data(db_session):
         is_active=True,
         is_admin=False,
         firstname="Driver",
-        lastname="Test"
+        lastname="Test",
     )
 
     assistant_user = User(
@@ -89,7 +97,7 @@ def setup_ticket_data(db_session):
         is_active=True,
         is_admin=False,
         firstname="Assistant",
-        lastname="Test"
+        lastname="Test",
     )
 
     secretary_user = User(
@@ -100,7 +108,7 @@ def setup_ticket_data(db_session):
         is_active=True,
         is_admin=False,
         firstname="Secretary",
-        lastname="Test"
+        lastname="Test",
     )
 
     client_user = User(
@@ -111,7 +119,7 @@ def setup_ticket_data(db_session):
         is_active=True,
         is_admin=False,
         firstname="Client",
-        lastname="Test"
+        lastname="Test",
     )
 
     db_session.add_all([driver_user, assistant_user, secretary_user, client_user])
@@ -123,14 +131,14 @@ def setup_ticket_data(db_session):
         firstname="Driver",
         lastname="Test",
         license_number="LIC123",
-        phone="123456789"
+        phone="123456789",
     )
 
     assistant = Assistant(
         user_id=assistant_user.id,
         firstname="Assistant",
         lastname="Test",
-        phone="123456789"
+        phone="123456789",
     )
 
     secretary = Secretary(
@@ -138,7 +146,7 @@ def setup_ticket_data(db_session):
         firstname="Secretary",
         lastname="Test",
         office_id=None,  # No necesitamos una oficina para esta prueba
-        phone="123456789"
+        phone="123456789",
     )
 
     client = Client(
@@ -148,18 +156,14 @@ def setup_ticket_data(db_session):
         phone="123456789",
         address="Dirección de prueba",
         city="Ciudad de prueba",
-        state="Estado de prueba"
+        state="Estado de prueba",
     )
 
     db_session.add_all([driver, assistant, secretary, client])
     db_session.flush()
 
     # Crear bus
-    bus = Bus(
-        license_plate="ABC123",
-        capacity=40,
-        model="Bus Model"
-    )
+    bus = Bus(license_plate="ABC123", capacity=40, model="Bus Model")
     db_session.add(bus)
     db_session.commit()
 
@@ -170,8 +174,8 @@ def setup_ticket_data(db_session):
             seat_number=i,
             bus_id=bus.id,
             deck="FIRST",
-            row=(i-1)//4 + 1,
-            column=(i-1)%4 + 1
+            row=(i - 1) // 4 + 1,
+            column=(i - 1) % 4 + 1,
         )
         seats.append(seat)
 
@@ -186,19 +190,15 @@ def setup_ticket_data(db_session):
         assistant_id=assistant.id,
         bus_id=bus.id,
         route_id=route.id,
-        secretary_id=secretary.id
+        secretary_id=secretary.id,
     )
     db_session.add(trip)
     db_session.commit()
 
-    return {
-        "trip": trip,
-        "client": client,
-        "secretary": secretary,
-        "seats": seats
-    }
+    return {"trip": trip, "client": client, "secretary": secretary, "seats": seats}
 
-@pytest.mark.unit
+
+@pytest.mark.integration
 def test_create_ticket(db_session, setup_ticket_data, admin_token, client):
     """Prueba de creación de boleto."""
     data = setup_ticket_data
@@ -213,8 +213,8 @@ def test_create_ticket(db_session, setup_ticket_data, admin_token, client):
             "trip_id": data["trip"].id,
             "payment_method": "cash",
             "price": 50.0,
-            "operator_user_id": data["secretary"].user_id
-        }
+            "operator_user_id": data["secretary"].user_id,
+        },
     )
 
     assert response.status_code == status.HTTP_201_CREATED, response.json()
@@ -224,7 +224,8 @@ def test_create_ticket(db_session, setup_ticket_data, admin_token, client):
     assert ticket_data["client_id"] == data["client"].id
     assert ticket_data["trip_id"] == data["trip"].id
 
-@pytest.mark.unit
+
+@pytest.mark.integration
 def test_create_duplicate_ticket(db_session, setup_ticket_data, admin_token, client):
     """Prueba de creación de boleto duplicado."""
     data = setup_ticket_data
@@ -237,7 +238,7 @@ def test_create_duplicate_ticket(db_session, setup_ticket_data, admin_token, cli
         trip_id=data["trip"].id,
         secretary_id=data["secretary"].id,
         price=50.0,
-        payment_method="cash"
+        payment_method="cash",
     )
     db_session.add(ticket)
     db_session.commit()
@@ -253,13 +254,14 @@ def test_create_duplicate_ticket(db_session, setup_ticket_data, admin_token, cli
             "trip_id": data["trip"].id,
             "payment_method": "cash",
             "price": 50.0,
-            "operator_user_id": data["secretary"].user_id
-        }
+            "operator_user_id": data["secretary"].user_id,
+        },
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT, response.json()
 
-@pytest.mark.unit
+
+@pytest.mark.integration
 def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client):
     """Prueba de actualización de estado de boleto."""
     data = setup_ticket_data
@@ -272,7 +274,7 @@ def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client)
         trip_id=data["trip"].id,
         secretary_id=data["secretary"].id,
         price=50.0,
-        payment_method="cash"
+        payment_method="cash",
     )
     db_session.add(ticket)
     db_session.commit()
@@ -288,15 +290,16 @@ def test_update_ticket_state(db_session, setup_ticket_data, admin_token, client)
             "trip_id": data["trip"].id,
             "payment_method": "cash",
             "price": 50.0,
-            "operator_user_id": data["secretary"].user_id
-        }
+            "operator_user_id": data["secretary"].user_id,
+        },
     )
 
     assert response.status_code == status.HTTP_200_OK
     ticket_data = response.json()
     assert ticket_data["state"] == "confirmed"
 
-@pytest.mark.unit
+
+@pytest.mark.integration
 def test_get_ticket(db_session, setup_ticket_data, admin_token, client):
     """Prueba de obtención de boleto."""
     data = setup_ticket_data
@@ -309,7 +312,7 @@ def test_get_ticket(db_session, setup_ticket_data, admin_token, client):
         trip_id=data["trip"].id,
         secretary_id=data["secretary"].id,
         price=50.0,
-        payment_method="cash"
+        payment_method="cash",
     )
     db_session.add(ticket)
     db_session.commit()
@@ -317,7 +320,7 @@ def test_get_ticket(db_session, setup_ticket_data, admin_token, client):
     # Obtener el boleto
     response = client.get(
         f"/api/v1/tickets/{ticket.id}",
-        headers={"Authorization": f"Bearer {admin_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
 
     assert response.status_code == status.HTTP_200_OK

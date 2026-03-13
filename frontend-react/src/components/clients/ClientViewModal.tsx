@@ -48,48 +48,46 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
     const fullName = getEffectiveName(client)
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
-                <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <div className="inline-block align-bottom bg-white rounded-2xl p-6 max-w-4xl w-full text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h3 className="text-2xl font-bold text-gray-900 border-b-0 pb-0">
-                                {fullName}
-                            </h3>
-                            <div className="flex items-center space-x-3 mt-3">
-                                {client.initials && (
-                                    <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                                        {client.initials}
-                                    </span>
-                                )}
-                                {client.age !== undefined && (
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getAgeColorClass(client.age_category)}`}>
-                                        {client.age} años ({getAgeLabel(client.age_category)})
-                                    </span>
-                                )}
-                                {client.is_minor === false && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Mayor de edad
-                                    </span>
-                                )}
-                                {client.is_minor === true && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                        Menor de edad
-                                    </span>
-                                )}
-                            </div>
+            <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-2xl transform transition-all flex flex-col max-h-[90vh] my-8">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
+                    <div>
+                        <h3 className="text-2xl font-bold text-gray-900 border-b-0 pb-0">
+                            {fullName}
+                        </h3>
+                        <div className="flex items-center space-x-3 mt-3">
+                            {client.initials && (
+                                <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                    {client.initials}
+                                </span>
+                            )}
+                            {client.age !== undefined && (
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getAgeColorClass(client.age_category)}`}>
+                                    {client.age} años ({getAgeLabel(client.age_category)})
+                                </span>
+                            )}
+                            {client.is_minor === false && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Mayor de edad
+                                </span>
+                            )}
+                            {client.is_minor === true && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    Menor de edad
+                                </span>
+                            )}
                         </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md -mt-8">
-                            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
                     </div>
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors self-start">
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
+                <div className="p-6 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* Información Personal */}
                         <div className="space-y-4">
@@ -150,27 +148,32 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                             )}
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
-                        <div className="text-sm text-gray-500">
-                            {client.updated_at && (
-                                <span>Última actualización: {formatDate(client.updated_at)}</span>
-                            )}
-                        </div>
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors"
-                            >
-                                Cerrar
-                            </button>
-                            <button
-                                onClick={() => onEdit(client)}
-                                className="px-4 py-2 bg-blue-600 border border-transparent text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors shadow-sm"
-                            >
-                                Editar Cliente
-                            </button>
-                        </div>
+                <div className="flex flex-col-reverse sm:flex-row justify-between sm:items-center p-6 border-t border-gray-100 shrink-0 bg-gray-50 rounded-b-2xl gap-4 sm:gap-0">
+                    <div className="text-sm text-gray-500 text-center sm:text-left">
+                        {client.updated_at && (
+                            <span>Última actualización: {formatDate(client.updated_at)}</span>
+                        )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="w-full sm:w-auto px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 font-medium transition-colors bg-gray-50 shadow-sm leading-tight"
+                        >
+                            Cerrar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onEdit(client)}
+                            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 border border-transparent text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors shadow-sm leading-tight flex justify-center items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Editar Cliente
+                        </button>
                     </div>
                 </div>
             </div>

@@ -14,6 +14,7 @@ from core.state_machines import (
 from core.exceptions import InvalidStateTransitionException
 
 
+@pytest.mark.unit
 class TestTicketStateMachine:
     """Tests for ticket state transitions."""
 
@@ -42,37 +43,55 @@ class TestTicketStateMachine:
             validate_transition("ticket", TICKET_TRANSITIONS, "pending", "completed")
 
 
+@pytest.mark.unit
 class TestPackageStateMachine:
     """Tests for package state transitions."""
 
     def test_registered_to_assigned(self):
-        validate_transition("package", PACKAGE_TRANSITIONS, "registered_at_office", "assigned_to_trip")
+        validate_transition(
+            "package", PACKAGE_TRANSITIONS, "registered_at_office", "assigned_to_trip"
+        )
 
     def test_assigned_to_in_transit(self):
-        validate_transition("package", PACKAGE_TRANSITIONS, "assigned_to_trip", "in_transit")
+        validate_transition(
+            "package", PACKAGE_TRANSITIONS, "assigned_to_trip", "in_transit"
+        )
 
     def test_assigned_to_unassigned(self):
-        validate_transition("package", PACKAGE_TRANSITIONS, "assigned_to_trip", "registered_at_office")
+        validate_transition(
+            "package", PACKAGE_TRANSITIONS, "assigned_to_trip", "registered_at_office"
+        )
 
     def test_in_transit_to_arrived(self):
-        validate_transition("package", PACKAGE_TRANSITIONS, "in_transit", "arrived_at_destination")
+        validate_transition(
+            "package", PACKAGE_TRANSITIONS, "in_transit", "arrived_at_destination"
+        )
 
     def test_arrived_to_delivered(self):
-        validate_transition("package", PACKAGE_TRANSITIONS, "arrived_at_destination", "delivered")
+        validate_transition(
+            "package", PACKAGE_TRANSITIONS, "arrived_at_destination", "delivered"
+        )
 
     def test_delivered_is_terminal(self):
         with pytest.raises(InvalidStateTransitionException):
-            validate_transition("package", PACKAGE_TRANSITIONS, "delivered", "registered_at_office")
+            validate_transition(
+                "package", PACKAGE_TRANSITIONS, "delivered", "registered_at_office"
+            )
 
     def test_skip_state_not_allowed(self):
         with pytest.raises(InvalidStateTransitionException):
-            validate_transition("package", PACKAGE_TRANSITIONS, "registered_at_office", "in_transit")
+            validate_transition(
+                "package", PACKAGE_TRANSITIONS, "registered_at_office", "in_transit"
+            )
 
     def test_backward_from_in_transit(self):
         with pytest.raises(InvalidStateTransitionException):
-            validate_transition("package", PACKAGE_TRANSITIONS, "in_transit", "assigned_to_trip")
+            validate_transition(
+                "package", PACKAGE_TRANSITIONS, "in_transit", "assigned_to_trip"
+            )
 
 
+@pytest.mark.unit
 class TestTripStateMachine:
     """Tests for trip state transitions."""
 
@@ -100,6 +119,7 @@ class TestTripStateMachine:
         validate_transition("trip", TRIP_TRANSITIONS, "delayed", "boarding")
 
 
+@pytest.mark.unit
 class TestExceptionMessage:
     """Test that InvalidStateTransitionException provides useful messages."""
 
@@ -112,5 +132,7 @@ class TestExceptionMessage:
 
     def test_code_is_set(self):
         with pytest.raises(InvalidStateTransitionException) as exc_info:
-            validate_transition("package", PACKAGE_TRANSITIONS, "delivered", "in_transit")
+            validate_transition(
+                "package", PACKAGE_TRANSITIONS, "delivered", "in_transit"
+            )
         assert exc_info.value.code == "INVALID_STATE_TRANSITION"

@@ -34,10 +34,15 @@ logger = logging.getLogger(__name__)
 class TicketService:
     """Business logic for ticket operations."""
 
-    def __init__(self, db: Session):
+    def __init__(
+        self,
+        db: Session,
+        repo: TicketRepository | None = None,
+        lock_service: SeatLockService | None = None,
+    ):
         self.db = db
-        self.repo = TicketRepository(db)
-        self.lock_service = SeatLockService()
+        self.repo = repo or TicketRepository(db)
+        self.lock_service = lock_service or SeatLockService()
 
     def get_all(self) -> list[Ticket]:
         """Get all tickets."""
@@ -58,6 +63,10 @@ class TicketService:
     def get_by_seat(self, seat_id: int) -> list[Ticket]:
         """Get all tickets for a seat."""
         return self.repo.get_by_seat(seat_id)
+
+    def search(self, term: str, limit: int = 20) -> list[Ticket]:
+        """Search tickets by ID, client name, or document ID."""
+        return self.repo.search(term, limit)
 
     def create_ticket(self, data: TicketCreate) -> Ticket:
         """Create a new ticket with full validation."""
@@ -119,17 +128,23 @@ class TicketService:
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
         from core.enums import CashTransactionType, PaymentMethod
-        
+
         cash_service = CashRegisterService(self.db)
-        secretary = self.db.query(Secretary).filter(Secretary.id == actual_secretary_id).first()
-        
+        secretary = (
+            self.db.query(Secretary).filter(Secretary.id == actual_secretary_id).first()
+        )
+
         office_id = secretary.office_id if secretary and secretary.office_id else 1
         if not office_id:
-            raise ValidationException("El usuario no tiene una oficina asignada para abrir caja.")
-            
+            raise ValidationException(
+                "El usuario no tiene una oficina asignada para abrir caja."
+            )
+
         current_register = cash_service.get_current_register(office_id)
         if not current_register:
-            raise ValidationException("No hay caja abierta para su oficina. Debe abrir caja antes de realizar ventas.")
+            raise ValidationException(
+                "No hay caja abierta para su oficina. Debe abrir caja antes de realizar ventas."
+            )
 
         # Create ticket
         new_ticket = Ticket(
@@ -163,16 +178,18 @@ class TicketService:
                     payment_enum = PaymentMethod(data.payment_method.lower())
                 except ValueError:
                     payment_enum = PaymentMethod.CASH
-            
-            cash_service.record_transaction(CashTransactionCreate(
-                cash_register_id=current_register.id,
-                type=CashTransactionType.TICKET_SALE,
-                amount=new_ticket.price,
-                payment_method=payment_enum,
-                reference_id=new_ticket.id,
-                reference_type="ticket",
-                description=f"Venta de boleto {new_ticket.id} para viaje {data.trip_id}"
-            ))
+
+            cash_service.record_transaction(
+                CashTransactionCreate(
+                    cash_register_id=current_register.id,
+                    type=CashTransactionType.TICKET_SALE,
+                    amount=new_ticket.price,
+                    payment_method=payment_enum,
+                    reference_id=new_ticket.id,
+                    reference_type="ticket",
+                    description=f"Venta de boleto {new_ticket.id} para viaje {data.trip_id}",
+                )
+            )
 
         # Release Redis lock after successful ticket creation
         self.lock_service.unlock_seat(data.trip_id, data.seat_id, data.operator_user_id)
@@ -292,11 +309,15 @@ class TicketService:
                 "The new seat does not belong to the same bus as the trip"
             )
 
-        existing = self.db.query(Ticket).filter(
-            Ticket.trip_id == ticket.trip_id,
-            Ticket.seat_id == new_seat_id,
-            Ticket.state.in_(["sold", "confirmed", "reserved"]),
-        ).first()
+        existing = (
+            self.db.query(Ticket)
+            .filter(
+                Ticket.trip_id == ticket.trip_id,
+                Ticket.seat_id == new_seat_id,
+                Ticket.state.in_(["sold", "confirmed", "reserved"]),
+            )
+            .first()
+        )
         if existing:
             raise ConflictException(
                 f"Seat {new_seat.seat_number} is already occupied for this trip"

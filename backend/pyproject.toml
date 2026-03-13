@@ -22,4 +22,16 @@ test = [
     "pytest-asyncio>=0.21.1",
     "httpx>=0.24.1",
     "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "factory-boy>=3.3.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: Pure unit tests (no DB, no Redis, no HTTP)",
+    "integration: Tests that need a running database",
+    "regression: Tests for previously fixed bugs",
+    "slow: Tests that take more than 5 seconds",
+]
+addopts = "-v --strict-markers"

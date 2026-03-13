@@ -53,7 +53,52 @@ def get_client(client_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=ClientSchema)
 def create_client(client: ClientCreate, db: Session = Depends(get_db)):
     """Create a new client"""
-    new_client = ClientModel(**client.model_dump())
+    from datetime import datetime
+    from models.user import User
+
+    client_data = client.model_dump()
+    
+    # Check if user_id is missing, and create a user if so
+    if not client_data.get("user_id"):
+        # Auto-generate user details if not provided
+        email = client_data.get("email") or f"client_{int(datetime.now().timestamp())}@transcomarapa.com"
+        
+        # Check if email is available or if we should add a unique suffix
+        existing_user = db.query(User).filter(User.email == email).first()
+        if existing_user:
+             email = f"client_{int(datetime.now().timestamp())}_{client_data.get('firstname', 'X').lower()}@transcomarapa.com"
+        
+        # Build username
+        base_username = f"{client_data.get('firstname', 'c')}{int(datetime.now().timestamp())}".lower().replace(" ", "")
+        
+        # Get document_id to use as default password, fallback to default_password_123
+        default_password = client_data.get("document_id")
+        if not default_password:
+            default_password = "default_password_123"
+
+        new_user = User(
+            username=base_username,
+            email=email,
+            role="client",
+            hashed_password=User.get_password_hash(default_password),
+            is_active=True,
+            firstname=client_data.get("firstname"),
+            lastname=client_data.get("lastname")
+        )
+        db.add(new_user)
+        db.flush() # Flush to get the ID for user_id
+        
+        client_data["user_id"] = new_user.id
+        client_data["type"] = "client"
+
+    # Clean out fields not belonging to ClientModel
+    allowed_keys = {
+        "user_id", "type", "firstname", "lastname", "phone", 
+        "birth_date", "document_id", "address", "city", "state", "bio"
+    }
+    client_model_data = {k: v for k, v in client_data.items() if k in allowed_keys}
+
+    new_client = ClientModel(**client_model_data)
     db.add(new_client)
     db.commit()
     db.refresh(new_client)

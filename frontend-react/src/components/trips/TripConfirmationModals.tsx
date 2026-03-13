@@ -62,7 +62,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
         <>
             {/* Dispatch Modal */}
             {dispatch.show && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100"><svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></div>
@@ -78,7 +78,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Finish Modal */}
             {finish.show && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-green-100"><svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
@@ -115,7 +115,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Confirm Sale Modal */}
             {confirmSale.show && confirmSale.ticket && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
@@ -139,7 +139,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Confirm Seat Change Modal */}
             {seatChange.showConfirm && seatChange.ticket && seatChange.newSeat && (
-                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
