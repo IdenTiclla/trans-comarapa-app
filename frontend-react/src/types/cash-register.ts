@@ -70,3 +70,29 @@ export interface RecordTransactionPayload {
   reference_type?: string;
   description?: string;
 }
+
+export interface WithdrawalPayload {
+  amount: number;
+  description: string;
+}
+
+export interface CashRegisterHistoryItem {
+  id: number;
+  date: string;
+  opened_at: string;
+  closed_at: string | null;
+  opened_by_name: string;
+  closed_by_name: string | null;
+  initial_balance: number;
+  final_balance: number | null;
+  transaction_count: number;
+  total_in: number;
+  total_out: number;
+  expected_balance: number;
+  difference: number | null;
+}
+
+export interface CashRegisterHistoryResponse {
+  registers: CashRegisterHistoryItem[];
+  total_count: number;
+}

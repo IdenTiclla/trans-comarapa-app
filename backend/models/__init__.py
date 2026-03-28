@@ -18,6 +18,8 @@ from .ticket_state_history import TicketStateHistory
 from .activity import Activity
 from .cash_register import CashRegister
 from .cash_transaction import CashTransaction
+from .owner import Owner
+from .owner_withdrawal import OwnerWithdrawal
 
 __all__ = [
     "User",
@@ -39,5 +41,7 @@ __all__ = [
     "TicketStateHistory",
     "Activity",
     "CashRegister",
-    "CashTransaction"
+    "CashTransaction",
+    "Owner",
+    "OwnerWithdrawal"
 ]

@@ -1,12 +1,24 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { tripService } from '@/services/trip.service'
+import { toast } from 'sonner'
 
 interface Passenger {
   ticket_id: number
   seat_number: number | string
   client_name: string
   state: string
+}
+
+interface TripPackage {
+  id: number
+  tracking_number: string
+  sender_name: string
+  recipient_name: string
+  destination: string
+  status: string
+  payment_status: string
+  item_count: number
 }
 
 interface MyTrip {
@@ -20,6 +32,7 @@ interface MyTrip {
   available_seats: number
   package_count: number
   passengers: Passenger[]
+  packages?: TripPackage[]
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -38,13 +51,28 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800',
 }
 
+const TRANSITION_CONFIG: Record<string, { action: string; label: string; color: string; confirm?: boolean }> = {
+  scheduled: { action: 'start_boarding', label: 'Iniciar Abordaje', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
+  boarding: { action: 'depart', label: 'Partir', color: 'bg-amber-600 hover:bg-amber-700 text-white', confirm: true },
+  departed: { action: 'arrive', label: 'Llegamos', color: 'bg-gray-700 hover:bg-gray-800 text-white', confirm: true },
+}
+
+const PKG_STATUS_LABELS: Record<string, string> = {
+  registered: 'Registrado',
+  assigned_to_trip: 'Asignado',
+  in_transit: 'En tránsito',
+  arrived_at_destination: 'Llegó',
+  delivered: 'Entregado',
+}
+
 export function Component() {
   const { user } = useAuth()
   const [trips, setTrips] = useState<MyTrip[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null)
   const [filter, setFilter] = useState<'active' | 'all'>('active')
-  const [tab, setTab] = useState<'passengers' | 'checklist'>('passengers')
+  const [tab, setTab] = useState<'passengers' | 'packages' | 'checklist'>('passengers')
+  const [transitioning, setTransitioning] = useState<number | null>(null)
 
   useEffect(() => {
     loadTrips()
@@ -56,10 +84,30 @@ export function Component() {
       const status = filter === 'active' ? 'scheduled,boarding,departed' : undefined
       const data = await tripService.getMyTrips(status ? { status } : undefined)
       setTrips(data)
+      // Clean up localStorage for arrived trips
+      for (const trip of data) {
+        if (trip.status === 'arrived' || trip.status === 'cancelled') {
+          localStorage.removeItem(`boarding-checklist-${trip.id}`)
+        }
+      }
     } catch {
       setTrips([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleTransition(tripId: number, action: string, label: string) {
+    setTransitioning(tripId)
+    try {
+      await tripService.transitionTrip(tripId, action)
+      toast.success(`Viaje actualizado: ${label}`)
+      await loadTrips()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar viaje'
+      toast.error(message)
+    } finally {
+      setTransitioning(null)
     }
   }
 
@@ -80,6 +128,11 @@ export function Component() {
   function formatDate(datetime: string) {
     return new Date(datetime).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' })
   }
+
+  // KPI calculations
+  const totalPassengers = todayTrips.reduce((sum, t) => sum + t.occupied_seats, 0)
+  const totalPackages = todayTrips.reduce((sum, t) => sum + t.package_count, 0)
+  const nextScheduled = todayTrips.find(t => t.status === 'scheduled')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
@@ -117,6 +170,14 @@ export function Component() {
       </div>
 
       <div className="w-full px-2 sm:px-4 lg:px-6 py-6 space-y-6">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="Viajes Hoy" value={todayTrips.length} icon="🚌" />
+          <KpiCard label="Pasajeros" value={totalPassengers} icon="👥" />
+          <KpiCard label="Encomiendas" value={totalPackages} icon="📦" />
+          <KpiCard label="Próximo" value={nextScheduled ? formatTime(nextScheduled.trip_datetime) : '—'} icon="🕐" />
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600" />
@@ -144,6 +205,8 @@ export function Component() {
                       formatTime={formatTime}
                       tab={tab}
                       onTabChange={setTab}
+                      onTransition={handleTransition}
+                      transitioning={transitioning}
                     />
                   ))}
                 </div>
@@ -167,6 +230,8 @@ export function Component() {
                       formatDate={formatDate}
                       tab={tab}
                       onTabChange={setTab}
+                      onTransition={handleTransition}
+                      transitioning={transitioning}
                     />
                   ))}
                 </div>
@@ -174,6 +239,20 @@ export function Component() {
             )}
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+function KpiCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">{icon}</span>
+        <div>
+          <div className="text-xl font-bold text-gray-900">{value}</div>
+          <div className="text-xs text-gray-500">{label}</div>
+        </div>
       </div>
     </div>
   )
@@ -188,6 +267,8 @@ function TripCard({
   formatDate,
   tab,
   onTabChange,
+  onTransition,
+  transitioning,
 }: {
   trip: MyTrip
   expanded: boolean
@@ -195,19 +276,43 @@ function TripCard({
   formatTime: (d: string) => string
   showDate?: boolean
   formatDate?: (d: string) => string
-  tab: 'passengers' | 'checklist'
-  onTabChange: (t: 'passengers' | 'checklist') => void
+  tab: 'passengers' | 'packages' | 'checklist'
+  onTabChange: (t: 'passengers' | 'packages' | 'checklist') => void
+  onTransition: (tripId: number, action: string, label: string) => void
+  transitioning: number | null
 }) {
-  const [checked, setChecked] = useState<Set<number>>(new Set())
+  const transition = TRANSITION_CONFIG[trip.status]
 
-  function toggleCheck(ticketId: number) {
+  // Checklist persistence with localStorage
+  const storageKey = `boarding-checklist-${trip.id}`
+
+  const [checked, setChecked] = useState<Set<number>>(() => {
+    try {
+      const stored = localStorage.getItem(storageKey)
+      return stored ? new Set(JSON.parse(stored)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
+
+  const toggleCheck = useCallback((ticketId: number) => {
     setChecked(prev => {
       const next = new Set(prev)
       if (next.has(ticketId)) next.delete(ticketId)
       else next.add(ticketId)
+      localStorage.setItem(storageKey, JSON.stringify([...next]))
       return next
     })
+  }, [storageKey])
+
+  function handleTransitionClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!transition) return
+    if (transition.confirm && !window.confirm(`¿Confirmar "${transition.label}"?`)) return
+    onTransition(trip.id, transition.action, transition.label)
   }
+
+  const packages = trip.packages ?? []
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -243,6 +348,19 @@ function TripCard({
         </div>
       </button>
 
+      {/* Transition button */}
+      {transition && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={handleTransitionClick}
+            disabled={transitioning === trip.id}
+            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${transition.color} disabled:opacity-50`}
+          >
+            {transitioning === trip.id ? 'Actualizando...' : transition.label}
+          </button>
+        </div>
+      )}
+
       {expanded && (
         <div className="border-t border-gray-100">
           {/* Tabs */}
@@ -254,15 +372,21 @@ function TripCard({
               Pasajeros
             </button>
             <button
+              onClick={() => onTabChange('packages')}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'packages' ? 'text-amber-700 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Encomiendas
+            </button>
+            <button
               onClick={() => onTabChange('checklist')}
               className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'checklist' ? 'text-amber-700 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Verificación de Abordaje
+              Verificación
             </button>
           </div>
 
           <div className="px-4 py-4">
-            {tab === 'passengers' ? (
+            {tab === 'passengers' && (
               <>
                 {trip.passengers.length === 0 ? (
                   <p className="text-sm text-gray-500 italic">Sin pasajeros registrados.</p>
@@ -293,7 +417,56 @@ function TripCard({
                   </div>
                 )}
               </>
-            ) : (
+            )}
+
+            {tab === 'packages' && (
+              <>
+                {packages.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">Sin encomiendas en este viaje.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Tracking #</th>
+                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Remitente</th>
+                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Destinatario</th>
+                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Estado</th>
+                          <th className="text-left py-2 font-medium text-gray-600">Pago</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {packages.map(pkg => (
+                          <tr key={pkg.id} className="border-b border-gray-50">
+                            <td className="py-2 pr-3 font-mono text-xs text-gray-900">{pkg.tracking_number}</td>
+                            <td className="py-2 pr-3 text-gray-700">{pkg.sender_name}</td>
+                            <td className="py-2 pr-3 text-gray-700">{pkg.recipient_name}</td>
+                            <td className="py-2 pr-3">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {PKG_STATUS_LABELS[pkg.status] || pkg.status}
+                              </span>
+                            </td>
+                            <td className="py-2">
+                              {pkg.payment_status === 'collect_on_delivery' ? (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  Por cobrar
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Pagado
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+
+            {tab === 'checklist' && (
               <>
                 {trip.passengers.length === 0 ? (
                   <p className="text-sm text-gray-500 italic">Sin pasajeros para verificar.</p>

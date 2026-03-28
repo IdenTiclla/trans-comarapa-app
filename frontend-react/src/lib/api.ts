@@ -7,6 +7,13 @@ export class SessionExpiredError extends Error {
   }
 }
 
+export class AbortError extends Error {
+  constructor() {
+    super('Request cancelled')
+    this.name = 'AbortError'
+  }
+}
+
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
 let isLoggingOut = false
@@ -53,7 +60,16 @@ export async function apiFetch<T = unknown>(
   }
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  const timeoutId = setTimeout(() => controller.abort('timeout'), timeout)
+
+  // If the caller provided an external signal (e.g. from useEffect cleanup), link it
+  if (init.signal) {
+    if (init.signal.aborted) {
+      controller.abort(init.signal.reason ?? 'cancelled')
+    } else {
+      init.signal.addEventListener('abort', () => controller.abort(init.signal!.reason ?? 'cancelled'))
+    }
+  }
 
   const fetchOptions: RequestInit = {
     ...init,
@@ -118,6 +134,16 @@ export async function apiFetch<T = unknown>(
     }
 
     return (await response.json()) as T
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      const reason = controller.signal.reason
+      if (reason === 'timeout') {
+        throw new Error('La solicitud tardó demasiado. Intenta nuevamente.')
+      }
+      // Cancelled by component unmount or external signal — swallow silently
+      throw new AbortError()
+    }
+    throw error
   } finally {
     clearTimeout(timeoutId)
   }

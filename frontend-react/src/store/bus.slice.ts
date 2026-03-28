@@ -30,6 +30,12 @@ export const updateBus = createAsyncThunk('bus/update', async ({ id, data }: { i
 export const deleteBus = createAsyncThunk('bus/delete', async (id: number, { dispatch, rejectWithValue }) => {
     try { await busService.delete(id); dispatch(fetchBuses({})); return id } catch (e) { return rejectWithValue((e as Error).message) }
 })
+export const createBusWithSeats = createAsyncThunk('bus/createWithSeats', async (data: Record<string, unknown>, { dispatch, rejectWithValue }) => {
+    try { const r = await busService.createWithSeats(data); dispatch(fetchBuses({})); return r } catch (e) { return rejectWithValue((e as Error).message) }
+})
+export const updateBusSeats = createAsyncThunk('bus/updateSeats', async ({ busId, seats }: { busId: number; seats: unknown[] }, { dispatch, rejectWithValue }) => {
+    try { const r = await busService.updateSeats(busId, seats); dispatch(fetchBuses({})); return r } catch (e) { return rejectWithValue((e as Error).message) }
+})
 
 const busSlice = createSlice({
     name: 'bus',
@@ -44,6 +50,8 @@ const busSlice = createSlice({
             .addCase(createBus.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(updateBus.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(deleteBus.rejected, (s, a) => { s.error = a.payload as string })
+            .addCase(createBusWithSeats.rejected, (s, a) => { s.error = a.payload as string })
+            .addCase(updateBusSeats.rejected, (s, a) => { s.error = a.payload as string })
     },
 })
 

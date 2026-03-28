@@ -156,6 +156,12 @@ export const packageService = {
         })
     },
 
+    getPendingCollections(officeId: number, params: Record<string, unknown> = {}) {
+        return apiFetch(`${BASE_PATH}/pending-collections`, {
+            params: { office_id: officeId, ...params },
+        })
+    },
+
     // Items management
     getItems(packageId: number) {
         return apiFetch(`${BASE_PATH}/${packageId}/items`)

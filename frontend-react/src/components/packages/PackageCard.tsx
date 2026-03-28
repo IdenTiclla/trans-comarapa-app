@@ -62,6 +62,17 @@ export default function PackageCard({
 
                 {/* Content Section */}
                 <div className="p-4 space-y-4">
+                    {/* Route */}
+                    {(pkg.origin_office_name || pkg.destination_office_name) && (
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium text-gray-900">{pkg.origin_office_name || 'Origen'}</span>
+                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                            <span className="font-medium text-gray-900">{pkg.destination_office_name || 'Destino'}</span>
+                        </div>
+                    )}
+
                     {/* Routes / People */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>

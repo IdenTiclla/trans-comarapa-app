@@ -116,4 +116,11 @@ export const tripService = {
         const query = params?.status ? `?status=${params.status}` : ''
         return apiFetch(`${RESOURCE_URL}/my-trips${query}`)
     },
+
+    transitionTrip(id: number, action: string) {
+        return apiFetch(`${RESOURCE_URL}/${id}/transition`, {
+            method: 'PUT',
+            body: { action },
+        })
+    },
 }

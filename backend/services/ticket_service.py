@@ -263,7 +263,47 @@ class TicketService:
             )
             self.db.commit()
 
+        # Record cash transaction when confirming a reservation
+        if old_state == "pending" and db_ticket.state == "confirmed" and db_ticket.price and db_ticket.price > 0:
+            self._record_confirmation_transaction(db_ticket)
+
         return db_ticket
+
+    def _record_confirmation_transaction(self, ticket: Ticket) -> None:
+        """Record a cash transaction when confirming a reserved ticket."""
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod
+
+        secretary = (
+            self.db.query(Secretary).filter(Secretary.id == ticket.secretary_id).first()
+        )
+        if not secretary or not secretary.office_id:
+            return
+
+        cash_service = CashRegisterService(self.db)
+        current_register = cash_service.get_current_register(secretary.office_id)
+        if not current_register:
+            return
+
+        payment_enum = PaymentMethod.CASH
+        if ticket.payment_method:
+            try:
+                payment_enum = PaymentMethod(ticket.payment_method)
+            except ValueError:
+                payment_enum = PaymentMethod.CASH
+
+        cash_service.record_transaction(
+            CashTransactionCreate(
+                cash_register_id=current_register.id,
+                type=CashTransactionType.TICKET_SALE,
+                amount=ticket.price,
+                payment_method=payment_enum,
+                reference_id=ticket.id,
+                reference_type="ticket",
+                description=f"Confirmación de reserva - boleto {ticket.id}",
+            )
+        )
 
     def delete_ticket(self, ticket_id: int) -> None:
         """Delete a ticket."""
@@ -272,7 +312,7 @@ class TicketService:
         self.db.commit()
 
     def cancel_ticket(self, ticket_id: int) -> Ticket:
-        """Cancel a ticket."""
+        """Cancel a ticket and create reversal if applicable."""
         ticket = self.repo.get_by_id_or_raise(ticket_id, "Ticket")
 
         if ticket.state == "cancelled":
@@ -288,9 +328,55 @@ class TicketService:
             new_state="cancelled",
             old_state=old_state,
         )
-        self.db.commit()
 
+        self._create_reversal_if_applicable(ticket)
+
+        self.db.commit()
         return ticket
+
+    def _create_reversal_if_applicable(self, ticket: Ticket) -> None:
+        """Create a reversal adjustment if there was a cash transaction for this ticket."""
+        from models.cash_transaction import CashTransaction
+        from models.secretary import Secretary
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod
+
+        original_tx = (
+            self.db.query(CashTransaction)
+            .filter(
+                CashTransaction.reference_type == "ticket",
+                CashTransaction.reference_id == ticket.id,
+            )
+            .first()
+        )
+
+        if not original_tx:
+            return
+
+        secretary = (
+            self.db.query(Secretary).filter(Secretary.id == ticket.secretary_id).first()
+        )
+        if not secretary or not secretary.office_id:
+            return
+
+        cash_service = CashRegisterService(self.db)
+        open_register = cash_service.get_current_register(secretary.office_id)
+
+        if not open_register:
+            return
+
+        cash_service.record_transaction(
+            CashTransactionCreate(
+                cash_register_id=open_register.id,
+                type=CashTransactionType.ADJUSTMENT,
+                amount=-original_tx.amount,
+                payment_method=PaymentMethod.CASH,
+                reference_id=ticket.id,
+                reference_type="ticket_cancellation",
+                description=f"Reversión: cancelación boleto #{ticket.id}",
+            )
+        )
 
     def change_seat(self, ticket_id: int, new_seat_id: int) -> Ticket:
         """Change seat assignment for a ticket."""

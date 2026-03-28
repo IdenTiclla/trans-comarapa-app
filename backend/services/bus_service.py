@@ -99,6 +99,7 @@ class BusService:
             brand=data.brand,
             color=data.color,
             floors=data.floors,
+            owner_id=data.owner_id,
         )
         self.db.add(new_bus)
         self.db.commit()
@@ -124,6 +125,7 @@ class BusService:
             brand=data.brand,
             color=data.color,
             floors=data.floors,
+            owner_id=data.owner_id,
         )
         self.db.add(new_bus)
         self.db.flush()

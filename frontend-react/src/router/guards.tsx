@@ -25,6 +25,17 @@ export function RoleGuard({ roles, children }: { roles: string[]; children: Reac
   return <>{children}</>
 }
 
+export function RoleGuardOutlet({ roles }: { roles: string[] }) {
+  const user = useAppSelector(selectUser)
+
+  if (!user || !roles.includes(user.role)) {
+    const dashboardPath = DASHBOARD_PATHS[(user?.role as Role) ?? ''] ?? '/dashboards/dashboard-secretary'
+    return <Navigate to={dashboardPath} replace />
+  }
+
+  return <Outlet />
+}
+
 export function RedirectIfAuthenticated() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const user = useAppSelector(selectUser)

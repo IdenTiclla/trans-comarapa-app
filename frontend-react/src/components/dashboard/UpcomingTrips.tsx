@@ -28,18 +28,21 @@ export default function UpcomingTrips() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        const controller = new AbortController()
         async function load() {
             try {
-                const data = await tripService.getAll({ status: 'scheduled,in_progress', limit: 5 })
+                const data = await tripService.getAll({ status: 'scheduled,in_progress', limit: 5 }, controller.signal)
                 const items = Array.isArray(data) ? data : (data as { trips?: Trip[]; items?: Trip[] }).trips || (data as any).items || []
                 setTrips(items as Trip[])
-            } catch {
+            } catch (_err) {
+                if (controller.signal.aborted) return
                 setTrips([])
             } finally {
-                setLoading(false)
+                if (!controller.signal.aborted) setLoading(false)
             }
         }
         load()
+        return () => controller.abort('unmount')
     }, [])
 
     if (loading) {

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from core.exceptions import (
+    ForbiddenException,
     NotFoundException,
     ConflictException,
     ValidationException,
@@ -233,6 +234,13 @@ class TripService:
                 "brand": trip.bus.brand,
                 "color": trip.bus.color,
                 "floors": trip.bus.floors,
+                "owner": {
+                    "id": trip.bus.owner.id,
+                    "firstname": trip.bus.owner.firstname,
+                    "lastname": trip.bus.owner.lastname,
+                }
+                if trip.bus.owner
+                else None,
             }
             if trip.bus
             else None,
@@ -592,6 +600,32 @@ class TripService:
                 or 0
             )
 
+            # Package details for this trip
+            trip_packages = (
+                self.db.query(Package)
+                .filter(Package.trip_id == trip.id)
+                .all()
+            )
+            packages_data = []
+            for pkg in trip_packages:
+                sender_name = "—"
+                recipient_name = "—"
+                if pkg.sender:
+                    sender_name = f"{pkg.sender.firstname or ''} {pkg.sender.lastname or ''}".strip() or "—"
+                if pkg.recipient:
+                    recipient_name = f"{pkg.recipient.firstname or ''} {pkg.recipient.lastname or ''}".strip() or "—"
+
+                packages_data.append({
+                    "id": pkg.id,
+                    "tracking_number": pkg.tracking_number,
+                    "sender_name": sender_name,
+                    "recipient_name": recipient_name,
+                    "destination": destination_name,
+                    "status": pkg.status,
+                    "payment_status": pkg.payment_status,
+                    "item_count": pkg.total_items_count,
+                })
+
             # Passenger manifest
             passengers = []
             if trip.bus:
@@ -641,11 +675,71 @@ class TripService:
                     "occupied_seats": ticket_count,
                     "available_seats": total_seats - ticket_count,
                     "package_count": package_count,
+                    "packages": packages_data,
                     "passengers": passengers,
                 }
             )
 
         return result
+
+    def transition_trip(self, trip_id: int, action: str, current_user: User) -> Trip:
+        """Transition a trip's status based on an action.
+
+        Actions: start_boarding, depart, arrive.
+        Only the assigned driver/assistant or admin can transition.
+        """
+        trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
+
+        # Permission check: admin or assigned driver/assistant
+        if current_user.role.value != "admin":
+            person = self.db.query(Person).filter(Person.user_id == current_user.id).first()
+            if not person:
+                raise ForbiddenException("No tienes permiso para cambiar el estado de este viaje")
+            is_assigned = (
+                (person.type == "driver" and trip.driver_id == person.id)
+                or (person.type == "assistant" and trip.assistant_id == person.id)
+            )
+            if not is_assigned:
+                raise ForbiddenException("No estás asignado a este viaje")
+
+        action_map = {
+            "start_boarding": TripStatus.BOARDING,
+            "depart": TripStatus.DEPARTED,
+            "arrive": TripStatus.ARRIVED,
+        }
+
+        target_status = action_map.get(action)
+        if not target_status:
+            raise ValidationException(
+                f"Acción inválida: '{action}'. Acciones válidas: {', '.join(action_map.keys())}"
+            )
+
+        # For start_boarding, validate that trip datetime is today or past
+        if action == "start_boarding":
+            now = datetime.now()
+            trip_dt = (
+                trip.trip_datetime.replace(tzinfo=None)
+                if trip.trip_datetime.tzinfo
+                else trip.trip_datetime
+            )
+            if trip_dt.date() > now.date():
+                raise ValidationException(
+                    "El viaje aún no está programado para hoy"
+                )
+
+        validate_transition("trip", TRIP_TRANSITIONS, trip.status, target_status)
+
+        trip.status = target_status
+
+        # Side effects based on transition
+        if target_status == TripStatus.DEPARTED:
+            self._bulk_transition_packages(
+                trip_id, PackageStatus.ASSIGNED_TO_TRIP, PackageStatus.IN_TRANSIT
+            )
+
+        self.db.commit()
+        self.db.refresh(trip)
+        return trip
 
     def cancel_trip(self, trip_id: int) -> Trip:
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")

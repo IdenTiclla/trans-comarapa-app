@@ -24,7 +24,7 @@ export function Component() {
 
   // Store data
   const packagesState = useSelector((state: RootState) => state.package)
-  const { packages, loading, error, pagination } = packagesState
+  const { packages, loading, error } = packagesState
 
   // Local state
   const [searchTerm, setSearchTerm] = useState('')
@@ -153,7 +153,7 @@ export function Component() {
   }
 
   // Actions
-  const handlePackageRegistered = async (pkg: any) => {
+  const handlePackageRegistered = async () => {
     dispatch(fetchPackages({ limit: 100 }))
   }
 

@@ -9,6 +9,11 @@ import FormSelect from '@/components/forms/FormSelect'
 import PackageReceiptModal from './PackageReceiptModal'
 import { cn } from '@/lib/utils'
 
+interface Office {
+    id: number
+    name: string
+}
+
 interface PackageRegistrationModalProps {
     show: boolean
     tripId?: number | string | null
@@ -34,14 +39,16 @@ export default function PackageRegistrationModal({
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
     const [packageNumber, setPackageNumber] = useState('000000')
+    const [offices, setOffices] = useState<Office[]>([])
+    const [loadingOffices, setLoadingOffices] = useState(false)
 
     const [newSenderForm, setNewSenderForm] = useState({ firstname: '', lastname: '', document_id: '', phone: '' })
     const [newRecipientForm, setNewRecipientForm] = useState({ firstname: '', lastname: '', document_id: '', phone: '' })
 
     const [packageData, setPackageData] = useState({
         tracking_number: '',
-        origin: 'Comarapa',
-        destination: '',
+        origin_office_id: null as number | null,
+        destination_office_id: null as number | null,
         total_weight: 0,
         total_declared_value: 0,
         notes: '',
@@ -105,8 +112,8 @@ export default function PackageRegistrationModal({
         const basicValidation =
             hasSender &&
             hasRecipient &&
-            packageData.destination.trim() !== '' &&
-            packageData.origin.trim() !== '' &&
+            packageData.destination_office_id !== null &&
+            packageData.origin_office_id !== null &&
             packageData.items.length > 0 &&
             packageData.items.every(item => item.description.trim() !== '' && item.quantity > 0 && item.unit_price >= 0) &&
             packageData.received_confirmation
@@ -131,10 +138,11 @@ export default function PackageRegistrationModal({
         setFormErrorMessage('')
         setFieldErrors({})
 
+        const userOfficeId = authStore.user?.office_id || null
         setPackageData({
             tracking_number: trackingNumber,
-            origin: 'Comarapa',
-            destination: '',
+            origin_office_id: userOfficeId,
+            destination_office_id: null,
             total_weight: 0,
             total_declared_value: 0,
             notes: '',
@@ -144,14 +152,29 @@ export default function PackageRegistrationModal({
             received_confirmation: false
         })
         setPackageNumber(trackingNumber)
-    }, [senderSearch, recipientSearch])
+    }, [senderSearch, recipientSearch, authStore.user?.office_id])
+
+    useEffect(() => {
+        const fetchOffices = async () => {
+            setLoadingOffices(true)
+            try {
+                const response = await apiFetch('/offices')
+                setOffices(response)
+            } catch (error) {
+                console.error('Error fetching offices:', error)
+            } finally {
+                setLoadingOffices(false)
+            }
+        }
+        fetchOffices()
+    }, [])
 
     useEffect(() => {
         if (show) {
             senderSearch.setClientType('existing')
             recipientSearch.setClientType('existing')
-            if (!packageData.origin) {
-                setPackageData(prev => ({ ...prev, origin: 'Comarapa' }))
+            if (!packageData.origin_office_id && authStore.user?.office_id) {
+                setPackageData(prev => ({ ...prev, origin_office_id: authStore.user?.office_id ?? null }))
             }
         } else {
             resetForm()
@@ -160,17 +183,17 @@ export default function PackageRegistrationModal({
     }, [show])
 
     useEffect(() => {
-        if (!packageData.origin || !packageData.origin.trim()) {
-            setFieldErrors(prev => ({ ...prev, origin: 'El origen es requerido' }))
+        if (!packageData.origin_office_id) {
+            setFieldErrors(prev => ({ ...prev, origin_office_id: 'El origen es requerido' }))
         } else {
-            setFieldErrors(prev => ({ ...prev, origin: '' }))
+            setFieldErrors(prev => ({ ...prev, origin_office_id: '' }))
         }
-        if (!packageData.destination || !packageData.destination.trim()) {
-            setFieldErrors(prev => ({ ...prev, destination: 'El destino es requerido' }))
+        if (!packageData.destination_office_id) {
+            setFieldErrors(prev => ({ ...prev, destination_office_id: 'El destino es requerido' }))
         } else {
-            setFieldErrors(prev => ({ ...prev, destination: '' }))
+            setFieldErrors(prev => ({ ...prev, destination_office_id: '' }))
         }
-    }, [packageData.origin, packageData.destination])
+    }, [packageData.origin_office_id, packageData.destination_office_id])
 
     const addItem = () => {
         setPackageData(prev => ({
@@ -263,6 +286,8 @@ export default function PackageRegistrationModal({
                 recipient_id: finalRecipient.id,
                 secretary_id: secretaryId,
                 trip_id: tripId ? Number(tripId) : null,
+                origin_office_id: packageData.origin_office_id,
+                destination_office_id: packageData.destination_office_id,
                 payment_status: packageData.payment_status,
                 payment_method: packageData.payment_status === 'paid_on_send' ? packageData.payment_method : null,
                 items: packageData.items.map(item => ({
@@ -275,11 +300,13 @@ export default function PackageRegistrationModal({
             const response = await dispatch(createPackage(packagePayload)).unwrap()
 
             if (response) {
+                const originOffice = offices.find(o => o.id === packageData.origin_office_id)
+                const destinationOffice = offices.find(o => o.id === packageData.destination_office_id)
                 setRegisteredPackageData({
                     id: response.id,
                     tracking_number: response.tracking_number,
-                    origin: packageData.origin,
-                    destination: packageData.destination,
+                    origin_office_name: originOffice?.name || 'N/A',
+                    destination_office_name: destinationOffice?.name || 'N/A',
                     sender: {
                         firstname: finalSender.firstname,
                         lastname: finalSender.lastname,
@@ -358,22 +385,23 @@ export default function PackageRegistrationModal({
 
                             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
-                                    <FormInput
-                                        label="Origen *"
-                                        value={packageData.origin}
-                                        onChange={(e) => setPackageData(prev => ({ ...prev, origin: e.target.value }))}
-                                        type="text"
-                                        placeholder="Ej: Comarapa"
-                                        error={fieldErrors.origin}
+                                    <FormSelect
+                                        label="Oficina Origen *"
+                                        value={packageData.origin_office_id?.toString() || ''}
+                                        onChange={(val) => setPackageData(prev => ({ ...prev, origin_office_id: val ? Number(val) : null }))}
                                         required
+                                        options={offices.map(o => ({ value: o.id.toString(), label: o.name }))}
+                                        error={fieldErrors.origin_office_id}
+                                        placeholder={loadingOffices ? 'Cargando...' : 'Seleccione origen'}
                                     />
-                                    <FormInput
-                                        label="Destino *"
-                                        value={packageData.destination}
-                                        onChange={(e) => setPackageData(prev => ({ ...prev, destination: e.target.value }))}
+                                    <FormSelect
+                                        label="Oficina Destino *"
+                                        value={packageData.destination_office_id?.toString() || ''}
+                                        onChange={(val) => setPackageData(prev => ({ ...prev, destination_office_id: val ? Number(val) : null }))}
                                         required
-                                        placeholder="Ej: Santa Cruz"
-                                        error={fieldErrors.destination}
+                                        options={offices.filter(o => o.id !== packageData.origin_office_id).map(o => ({ value: o.id.toString(), label: o.name }))}
+                                        error={fieldErrors.destination_office_id}
+                                        placeholder={loadingOffices ? 'Cargando...' : 'Seleccione destino'}
                                     />
 
                                     <FormSelect

@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
+import { officeService } from '@/services/office.service'
 import { toast } from 'sonner'
+import type { Office } from '@/types/office'
 
 export function Component() {
   const { user, userFullName, userInitials, userRole, updateProfile, loading } = useAuth()
@@ -10,8 +12,20 @@ export function Component() {
     email: user?.email || '',
   })
   const [saving, setSaving] = useState(false)
+  const [office, setOffice] = useState<Office | null>(null)
+  const [officeLoading, setOfficeLoading] = useState(false)
 
   const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', secretary: 'Secretaria', driver: 'Conductor', assistant: 'Asistente', client: 'Cliente' }
+
+  useEffect(() => {
+    if (userRole === 'secretary' && user?.office_id) {
+      setOfficeLoading(true)
+      officeService.getById(user.office_id)
+        .then(setOffice)
+        .catch(() => toast.error('Error al cargar la oficina'))
+        .finally(() => setOfficeLoading(false))
+    }
+  }, [userRole, user?.office_id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,9 +57,16 @@ export function Component() {
             <div>
               <h2 className="text-xl font-bold text-white">{userFullName}</h2>
               <p className="text-blue-100">{user?.email}</p>
-              <span className="mt-1 inline-block px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
-                {ROLE_LABELS[userRole || ''] || userRole}
-              </span>
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
+                  {ROLE_LABELS[userRole || ''] || userRole}
+                </span>
+                {userRole === 'secretary' && (
+                  <span className="px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
+                    {officeLoading ? 'Cargando...' : office?.name || 'Sin oficina asignada'}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

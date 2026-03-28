@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import BusTripHeader from './BusTripHeader'
 import DeckSelector from './DeckSelector'
 import BusSeatGrid from './BusSeatGrid'
 import BusSeatLegend from './BusSeatLegend'
@@ -24,15 +23,6 @@ interface BusSeatMapPrintProps {
     maxSelections?: number
     disabled?: boolean
     enableContextMenu?: boolean
-    editable?: boolean
-    drivers?: any[]
-    assistants?: any[]
-    editingDriver?: boolean
-    editingAssistant?: boolean
-    selectedDriverId?: number | null
-    selectedAssistantId?: number | null
-    savingDriver?: boolean
-    savingAssistant?: boolean
 
     onSeatSelected?: (seat: any) => void
     onSeatDeselected?: (seat: any) => void
@@ -42,14 +32,6 @@ interface BusSeatMapPrintProps {
     onViewDetails?: (seat: any) => void
     onChangeSeat?: (seat: any) => void
     onRescheduleTrip?: (seat: any) => void
-    onStartEditDriver?: () => void
-    onSaveDriver?: () => void
-    onCancelEditDriver?: () => void
-    onStartEditAssistant?: () => void
-    onSaveAssistant?: () => void
-    onCancelEditAssistant?: () => void
-    onUpdateSelectedDriverId?: (id: number | null) => void
-    onUpdateSelectedAssistantId?: (id: number | null) => void
     seatChangeMode?: boolean
     controlledSelectedIds?: number[]
 }
@@ -64,15 +46,6 @@ export default function BusSeatMapPrint({
     maxSelections = 0,
     disabled = false,
     enableContextMenu = false,
-    editable = false,
-    drivers = [],
-    assistants = [],
-    editingDriver = false,
-    editingAssistant = false,
-    selectedDriverId = null,
-    selectedAssistantId = null,
-    savingDriver = false,
-    savingAssistant = false,
 
     onSeatSelected,
     onSeatDeselected,
@@ -82,14 +55,6 @@ export default function BusSeatMapPrint({
     onViewDetails,
     onChangeSeat,
     onRescheduleTrip,
-    onStartEditDriver,
-    onSaveDriver,
-    onCancelEditDriver,
-    onStartEditAssistant,
-    onSaveAssistant,
-    onCancelEditAssistant,
-    onUpdateSelectedDriverId,
-    onUpdateSelectedAssistantId,
     seatChangeMode = false,
     controlledSelectedIds
 }: BusSeatMapPrintProps) {
@@ -286,32 +251,6 @@ export default function BusSeatMapPrint({
     return (
         <div className="bus-seat-map-print font-sans relative">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden print:max-w-none print:shadow-none print:p-0">
-                <BusTripHeader
-                    trip={trip}
-                    occupiedSeatsCount={occupiedSeatsCount}
-                    reservedSeatsCount={reservedSeatsCount}
-                    availableSeatsCount={availableSeatsCount}
-                    totalSeatsCount={filteredSeats.length}
-                    isDoubleDeck={isDoubleDeck}
-                    editable={editable}
-                    drivers={drivers}
-                    assistants={assistants}
-                    editingDriver={editingDriver}
-                    editingAssistant={editingAssistant}
-                    selectedDriverId={selectedDriverId}
-                    selectedAssistantId={selectedAssistantId}
-                    savingDriver={savingDriver}
-                    savingAssistant={savingAssistant}
-                    onStartEditDriver={onStartEditDriver || (() => { })}
-                    onSaveDriver={onSaveDriver || (() => { })}
-                    onCancelEditDriver={onCancelEditDriver || (() => { })}
-                    onStartEditAssistant={onStartEditAssistant || (() => { })}
-                    onSaveAssistant={onSaveAssistant || (() => { })}
-                    onCancelEditAssistant={onCancelEditAssistant || (() => { })}
-                    onUpdateSelectedDriverId={onUpdateSelectedDriverId || (() => { })}
-                    onUpdateSelectedAssistantId={onUpdateSelectedAssistantId || (() => { })}
-                />
-
                 {isDoubleDeck && (
                     <div className="px-4 sm:px-6 md:px-8">
                         <DeckSelector

@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import time
 
 class RouteScheduleBase(BaseModel):
-    departure_time: time
-    is_active: bool = True
+    departure_time: time = Field(..., description="Departure time", json_schema_extra={"example": "08:30:00"})
+    is_active: bool = Field(True, description="Whether the schedule is active")
 
 class RouteScheduleCreate(RouteScheduleBase):
     pass

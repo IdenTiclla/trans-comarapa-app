@@ -46,6 +46,8 @@ from models.user import User
 from models.activity import Activity
 from models.ticket_state_history import TicketStateHistory
 from models.route_schedule import RouteSchedule
+from models.owner import Owner
+from models.owner_withdrawal import OwnerWithdrawal
 # pylint: enable=unused-import
 
 load_dotenv()

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, func
 from sqlalchemy.orm import sessionmaker
 from models.person import Person
 from models.driver import Driver
@@ -6,7 +6,6 @@ from models.bus import Bus
 from models.assistant import Assistant
 from models.trip import Trip
 from models.route import Route
-from models.route_schedule import RouteSchedule
 from models.location import Location
 from models.client import Client
 from models.seat import Seat
@@ -20,6 +19,12 @@ from models.office import Office
 from models.activity import Activity as ActivityModel
 from models.ticket_state_history import TicketStateHistory
 from models.package_state_history import PackageStateHistory
+from models.owner import Owner
+from models.owner_withdrawal import OwnerWithdrawal
+from models.route_schedule import RouteSchedule
+from models.cash_register import CashRegister
+from models.cash_transaction import CashTransaction
+from core.enums import CashRegisterStatus, CashTransactionType, PaymentMethod
 from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
@@ -42,8 +47,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def clear_db():
     db = SessionLocal()
     try:
-        # Disable foreign key checks temporarily for MySQL
-        db.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        # Disable foreign key checks temporarily for SQLite
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
         
         # Delete all data in reverse order of dependencies
         db.query(PackageStateHistory).delete()
@@ -58,6 +63,10 @@ def clear_db():
         db.query(Route).delete()
         db.query(Assistant).delete()
         db.query(Driver).delete()
+        db.query(OwnerWithdrawal).delete()
+        db.query(CashTransaction).delete()
+        db.query(CashRegister).delete()
+        db.query(Owner).delete()
         db.query(Bus).delete()
         db.query(Office).delete()
         db.query(Location).delete()
@@ -69,7 +78,7 @@ def clear_db():
         db.query(User).delete()
 
         # Re-enable foreign key checks
-        db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
         
         db.commit()
         print("Database cleared successfully!")
@@ -387,30 +396,28 @@ def seed_db():
             db.add(route)
             routes.append(route)
 
-        # Flush routes to get IDs
-        db.flush()
+        db.commit()
 
-        # Crear horarios de salida para las rutas
-        from datetime import time as time_type
-        # Santa Cruz -> Comarapa: 8:00, 10:30, 14:00, 18:30, 20:30
-        scz_com_times = [
-            time_type(8, 0), time_type(10, 30), time_type(14, 0),
-            time_type(18, 30), time_type(20, 30)
-        ]
-        # Comarapa -> Santa Cruz: 8:00, 11:00, 14:00, 20:30, 23:30
-        com_scz_times = [
-            time_type(8, 0), time_type(11, 0), time_type(14, 0),
-            time_type(20, 30), time_type(23, 30)
-        ]
+        # Crear horarios de salida para cada ruta
+        from datetime import time as dt_time
+
+        # Santa Cruz -> Comarapa: 10:30, 14:00, 18:30, 20:30
+        scz_to_com_times = [dt_time(10, 30), dt_time(14, 0), dt_time(18, 30), dt_time(20, 30)]
+        # Comarapa -> Santa Cruz: 08:30, 14:00, 20:30, 23:30
+        com_to_scz_times = [dt_time(8, 30), dt_time(14, 0), dt_time(20, 30), dt_time(23, 30)]
 
         for route in routes:
-            if route.origin_location_id == locations["Santa Cruz"].id:
-                schedule_times = scz_com_times
+            if route.origin_location.name == "Santa Cruz":
+                schedule_times = scz_to_com_times
             else:
-                schedule_times = com_scz_times
+                schedule_times = com_to_scz_times
+
             for t in schedule_times:
                 schedule = RouteSchedule(route_id=route.id, departure_time=t, is_active=True)
                 db.add(schedule)
+
+        db.commit()
+        print(f"Route schedules created for {len(routes)} routes")
 
         # Crear usuarios para clientes primero - Base de datos actualizada 2025
         client_user_data = []
@@ -580,6 +587,55 @@ def seed_db():
             bus = Bus(**bus_info)
             db.add(bus)
             buses.append(bus)
+
+        # Crear dueños/socios de buses
+        owner_names = [
+            ("Ricardo", "Mendoza Quiroga"),
+            ("Fernando", "Vargas Soliz"),
+            ("Miguel", "Torrez Arce"),
+            ("Patricia", "Rojas de Mendoza"),
+            ("Jorge", "Gutiérrez Flores"),
+        ]
+
+        owner_users = []
+        for i, (fn, ln) in enumerate(owner_names):
+            timestamp = int(datetime.now().timestamp()) + i + 5000
+            owner_user = User(
+                username=f"socio{i+1}_{timestamp}",
+                email=f"socio{i+1}_{timestamp}@transcomarapa.com",
+                firstname=fn,
+                lastname=ln,
+                role="owner",
+                hashed_password=User.get_password_hash("socio123"),
+                is_active=True,
+                is_admin=False
+            )
+            db.add(owner_user)
+            owner_users.append(owner_user)
+
+        db.commit()
+
+        owners = []
+        for i, user in enumerate(owner_users):
+            fn, ln = owner_names[i]
+            owner = Owner(
+                user_id=user.id,
+                firstname=fn,
+                lastname=ln,
+                phone=f"7{random.randint(1000000, 9999999)}",
+                birth_date=fake.date_of_birth(minimum_age=35, maximum_age=65)
+            )
+            db.add(owner)
+            owners.append(owner)
+
+        db.commit()
+
+        # Asignar dueños a buses (cada dueño tiene 1-2 buses)
+        for i, bus in enumerate(buses):
+            bus.owner_id = owners[i % len(owners)].id
+
+        db.commit()
+        print(f"{len(owners)} owners created and assigned to {len(buses)} buses")
 
         # Crear usuario administrador
         admin_full_name = fake.name() # Usar fake para consistencia, aunque luego se sobreescriba en AdministratorModel
@@ -1216,6 +1272,153 @@ def seed_db():
 
         db.commit() # Commit simulated package state changes
 
+        # --- Seed Cash Registers and Transactions ---
+        print("Seeding cash registers and transactions for owner financials...")
+
+        all_offices = db.query(Office).all()
+        all_secretary_users = db.query(User).filter(User.role == UserRole.SECRETARY).all()
+
+        if all_offices and all_secretary_users:
+            # Crear cajas para los últimos 30 días (cerradas) + 1 abierta hoy por oficina
+            cash_registers = []
+            for office in all_offices:
+                opener = random.choice(all_secretary_users)
+
+                # Cajas cerradas de días anteriores
+                for days_ago in range(30, 0, -1):
+                    reg_date = date.today() - timedelta(days=days_ago)
+                    opened_at = datetime.combine(reg_date, datetime.min.time().replace(hour=6, minute=0))
+                    closed_at = datetime.combine(reg_date, datetime.min.time().replace(hour=20, minute=0))
+
+                    register = CashRegister(
+                        office_id=office.id,
+                        date=reg_date,
+                        opened_by_id=opener.id,
+                        closed_by_id=opener.id,
+                        initial_balance=500.0,
+                        final_balance=0.0,  # Se actualizará después
+                        status=CashRegisterStatus.CLOSED,
+                        opened_at=opened_at,
+                        closed_at=closed_at
+                    )
+                    db.add(register)
+                    cash_registers.append(register)
+
+                # Caja abierta de hoy
+                today_opened_at = datetime.combine(date.today(), datetime.min.time().replace(hour=6, minute=0))
+                today_register = CashRegister(
+                    office_id=office.id,
+                    date=date.today(),
+                    opened_by_id=opener.id,
+                    initial_balance=500.0,
+                    status=CashRegisterStatus.OPEN,
+                    opened_at=today_opened_at
+                )
+                db.add(today_register)
+                cash_registers.append(today_register)
+
+            db.commit()
+            print(f"{len(cash_registers)} cash registers created")
+
+            # Crear transacciones de venta de boletos para tickets confirmados/completados
+            # Agrupar tickets por viaje para encontrar el cash register correcto
+            paid_tickets = [t for t in all_tickets if t.state in ['confirmed', 'completed']]
+            tx_count = 0
+
+            for ticket in paid_tickets:
+                trip = ticket.trip
+                if not trip:
+                    continue
+
+                # Encontrar un register de la fecha del ticket (o cercana)
+                ticket_date = ticket.created_at.date() if ticket.created_at else date.today()
+
+                # Buscar register de la oficina del secretario del ticket
+                secretary_obj = db.query(Secretary).filter(Secretary.id == ticket.secretary_id).first()
+                if not secretary_obj or not secretary_obj.office_id:
+                    continue
+
+                matching_register = db.query(CashRegister).filter(
+                    CashRegister.office_id == secretary_obj.office_id,
+                    CashRegister.date == ticket_date
+                ).first()
+
+                if not matching_register:
+                    # Usar el register más cercano
+                    matching_register = db.query(CashRegister).filter(
+                        CashRegister.office_id == secretary_obj.office_id
+                    ).order_by(CashRegister.date.desc()).first()
+
+                if matching_register:
+                    tx = CashTransaction(
+                        cash_register_id=matching_register.id,
+                        type=CashTransactionType.TICKET_SALE,
+                        amount=float(ticket.price),
+                        payment_method=PaymentMethod.CASH,
+                        reference_id=ticket.id,
+                        reference_type="ticket",
+                        description=f"Venta boleto #{ticket.id} - Viaje #{trip.id}",
+                        created_at=ticket.created_at or datetime.now()
+                    )
+                    db.add(tx)
+                    tx_count += 1
+
+            # Crear transacciones para paquetes pagados
+            paid_packages = [p for p in all_packages if p.status in ['delivered', 'arrived_at_destination', 'in_transit']]
+            for package in paid_packages:
+                if not package.trip_id:
+                    continue
+
+                pkg_date = package.created_at.date() if package.created_at else date.today()
+
+                # Usar primera oficina como fallback
+                pkg_register = db.query(CashRegister).filter(
+                    CashRegister.date == pkg_date
+                ).first()
+
+                if not pkg_register:
+                    pkg_register = db.query(CashRegister).order_by(CashRegister.date.desc()).first()
+
+                if pkg_register and hasattr(package, 'total_price') and package.total_price:
+                    tx = CashTransaction(
+                        cash_register_id=pkg_register.id,
+                        type=CashTransactionType.PACKAGE_PAYMENT,
+                        amount=float(package.total_price),
+                        payment_method=PaymentMethod.CASH,
+                        reference_id=package.id,
+                        reference_type="package",
+                        description=f"Pago encomienda #{package.tracking_number}",
+                        created_at=package.created_at or datetime.now()
+                    )
+                    db.add(tx)
+                    tx_count += 1
+
+            db.commit()
+
+            # Actualizar final_balance de cajas cerradas
+            for reg in cash_registers:
+                if reg.status == CashRegisterStatus.CLOSED:
+                    total_in = db.query(func.sum(CashTransaction.amount)).filter(
+                        CashTransaction.cash_register_id == reg.id,
+                        CashTransaction.type.in_([
+                            CashTransactionType.TICKET_SALE,
+                            CashTransactionType.PACKAGE_PAYMENT,
+                            CashTransactionType.POR_COBRAR_COLLECTION
+                        ])
+                    ).scalar() or 0.0
+
+                    total_out = db.query(func.sum(CashTransaction.amount)).filter(
+                        CashTransaction.cash_register_id == reg.id,
+                        CashTransaction.type == CashTransactionType.WITHDRAWAL
+                    ).scalar() or 0.0
+
+                    reg.final_balance = reg.initial_balance + total_in - total_out
+
+            db.commit()
+            print(f"{tx_count} cash transactions created")
+        else:
+            print("No offices or secretaries found, skipping cash register seeding")
+
         # --- Seed Activities ---
         print("Seeding activities...")
         activities_to_seed = []
@@ -1312,7 +1515,7 @@ def create_test_users():
         ]
 
         # Disable foreign key checks temporarily for MySQL
-        db.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
         
         for email in test_emails:
             user = db.query(User).filter(User.email == email).first()
@@ -1336,7 +1539,7 @@ def create_test_users():
                 db.delete(user)
         
         # Re-enable foreign key checks
-        db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
 
         db.commit()
         print("Datos de usuarios de prueba limpiados correctamente")

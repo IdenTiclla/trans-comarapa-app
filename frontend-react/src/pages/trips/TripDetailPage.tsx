@@ -188,7 +188,6 @@ export function Component() {
             seatChangeMode={seatChange.mode}
             controlledSelectedIds={seatMap.controlledIds}
             onSelectionChange={seatMap.onSelectionChange}
-            onStartEditDriver={() => { }}
             onViewDetails={page.seatMapHandlers.onViewDetails}
             onCancelReservation={page.seatMapHandlers.onCancelReservation}
             onConfirmSale={page.seatMapHandlers.onConfirmSale}

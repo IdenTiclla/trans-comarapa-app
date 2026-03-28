@@ -9,6 +9,7 @@ class PersonType(str, Enum):
     SECRETARY = "secretary"
     ASSISTANT = "assistant"
     ADMINISTRATOR = "administrator"
+    OWNER = "owner"
 
 class PersonBase(BaseModel):
     """
@@ -90,6 +91,12 @@ class AdministratorResponse(PersonResponse):
     """
     pass  # No campos adicionales
 
+class OwnerResponse(PersonResponse):
+    """
+    Esquema de respuesta específico para dueños.
+    """
+    pass  # No campos adicionales
+
 # Esquemas de actualización específicos
 class DriverUpdate(PersonUpdate):
     """
@@ -110,6 +117,12 @@ class ClientUpdate(PersonUpdate):
     address: Optional[str] = Field(None, description="Client's address")
     city: Optional[str] = Field(None, description="Client's city")
     state: Optional[str] = Field(None, description="Client's state")
+
+class OwnerUpdate(PersonUpdate):
+    """
+    Esquema para actualizar dueños/socios.
+    """
+    pass
 
 # Mantener esquemas legacy para compatibilidad
 Person = PersonResponse  # Alias para compatibilidad hacia atrás

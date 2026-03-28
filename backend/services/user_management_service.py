@@ -22,6 +22,7 @@ from models.administrator import Administrator
 from models.driver import Driver
 from models.assistant import Assistant
 from models.client import Client
+from models.office import Office
 from repositories.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,11 @@ class UserManagementService:
             raise ConflictException("El email ya está registrado")
 
         # Check username uniqueness
-        existing_username = self.db.query(User).filter(User.username == user_data.get("username", "")).first()
+        existing_username = (
+            self.db.query(User)
+            .filter(User.username == user_data.get("username", ""))
+            .first()
+        )
         if existing_username:
             raise ConflictException("El nombre de usuario ya está registrado")
 
@@ -82,7 +87,7 @@ class UserManagementService:
         self.db.commit()
         self.db.refresh(user)
         logger.info("User created: %d (%s)", user.id, user.email)
-        
+
         # If the new user is a secretary, create an associated secretary record
         if user.role == UserRole.SECRETARY:
             secretary_data = Secretary(
@@ -93,7 +98,7 @@ class UserManagementService:
             self.db.add(secretary_data)
             self.db.commit()
             self.db.refresh(secretary_data)
-            
+
         return user
 
     def update_user(self, user_id: int, update_data: dict) -> User:
@@ -108,13 +113,19 @@ class UserManagementService:
 
         # If username is changing, check uniqueness
         if "username" in update_data and update_data["username"] != user.username:
-            existing_username = self.db.query(User).filter(User.username == update_data["username"]).first()
+            existing_username = (
+                self.db.query(User)
+                .filter(User.username == update_data["username"])
+                .first()
+            )
             if existing_username:
                 raise ConflictException("El nombre de usuario ya está registrado")
 
         # Handle password hashing
         if "password" in update_data and update_data["password"]:
-            update_data["hashed_password"] = User.get_password_hash(update_data.pop("password"))
+            update_data["hashed_password"] = User.get_password_hash(
+                update_data.pop("password")
+            )
         else:
             update_data.pop("password", None)
 
@@ -164,18 +175,34 @@ class UserManagementService:
         """Get complete profile of authenticated user."""
         person_data = None
         person_entity = None
-        
+
         if current_user.role == UserRole.ADMIN:
-            person_entity = self.db.query(Administrator).filter(Administrator.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Administrator)
+                .filter(Administrator.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.SECRETARY:
-            person_entity = self.db.query(Secretary).filter(Secretary.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Secretary)
+                .filter(Secretary.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.DRIVER:
-            person_entity = self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
+            )
         elif current_user.role == UserRole.ASSISTANT:
-            person_entity = self.db.query(Assistant).filter(Assistant.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Assistant)
+                .filter(Assistant.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.CLIENT:
-            person_entity = self.db.query(Client).filter(Client.user_id == current_user.id).first()
-        
+            person_entity = (
+                self.db.query(Client).filter(Client.user_id == current_user.id).first()
+            )
+
         if person_entity:
             person_data = {
                 "id": person_entity.id,
@@ -183,32 +210,56 @@ class UserManagementService:
                 "lastname": person_entity.lastname,
                 "phone": person_entity.phone,
                 "birth_date": person_entity.birth_date,
-                "bio": getattr(person_entity, 'bio', None),
+                "bio": getattr(person_entity, "bio", None),
                 "type": current_user.role.value.lower(),
                 "created_at": person_entity.created_at,
-                "updated_at": person_entity.updated_at
+                "updated_at": person_entity.updated_at,
             }
-            
+
             if current_user.role == UserRole.DRIVER:
-                person_data.update({
-                    "license_number": person_entity.license_number,
-                    "license_type": person_entity.license_type,
-                    "license_expiry": person_entity.license_expiry,
-                    "status": person_entity.status
-                })
+                person_data.update(
+                    {
+                        "license_number": person_entity.license_number,
+                        "license_type": person_entity.license_type,
+                        "license_expiry": person_entity.license_expiry,
+                        "status": person_entity.status,
+                    }
+                )
             elif current_user.role == UserRole.CLIENT:
-                person_data.update({
-                    "document_id": person_entity.document_id,
-                    "address": person_entity.address,
-                    "city": person_entity.city,
-                    "state": person_entity.state,
-                    "is_minor": getattr(person_entity, 'is_minor', None)
-                })
+                person_data.update(
+                    {
+                        "document_id": person_entity.document_id,
+                        "address": person_entity.address,
+                        "city": person_entity.city,
+                        "state": person_entity.state,
+                        "is_minor": getattr(person_entity, "is_minor", None),
+                    }
+                )
             elif current_user.role == UserRole.SECRETARY:
-                person_data.update({
-                    "office_id": getattr(person_entity, 'office_id', None)
-                })
-        
+                office_data = None
+                if person_entity.office_id and person_entity.office:
+                    office = person_entity.office
+                    office_data = {
+                        "id": office.id,
+                        "name": office.name,
+                        "phone": office.phone,
+                        "email": office.email,
+                        "manager_name": office.manager_name,
+                        "location": None,
+                    }
+                    if office.location:
+                        office_data["location"] = {
+                            "id": office.location.id,
+                            "name": office.location.name,
+                            "code": office.location.code,
+                        }
+                person_data.update(
+                    {
+                        "office_id": getattr(person_entity, "office_id", None),
+                        "office": office_data,
+                    }
+                )
+
         response_data = {
             "id": current_user.id,
             "username": current_user.username,
@@ -219,12 +270,16 @@ class UserManagementService:
             "created_at": current_user.created_at,
             "updated_at": current_user.updated_at,
             "person": person_data,
-            "firstname": person_data.get("firstname") if person_data else current_user.firstname,
-            "lastname": person_data.get("lastname") if person_data else current_user.lastname,
+            "firstname": person_data.get("firstname")
+            if person_data
+            else current_user.firstname,
+            "lastname": person_data.get("lastname")
+            if person_data
+            else current_user.lastname,
             "phone": person_data.get("phone") if person_data else None,
-            "birth_date": person_data.get("birth_date") if person_data else None
+            "birth_date": person_data.get("birth_date") if person_data else None,
         }
-        
+
         return response_data
 
     def update_my_profile(self, current_user: User, profile_data: dict) -> dict:
@@ -237,34 +292,54 @@ class UserManagementService:
                 raise ConflictException("El email ya está en uso por otro usuario")
             current_user.email = email
             user_updated = True
-        
+
         if user_updated:
             self.db.commit()
             self.db.refresh(current_user)
-            
+
         person_entity = None
         if current_user.role == UserRole.ADMIN:
-            person_entity = self.db.query(Administrator).filter(Administrator.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Administrator)
+                .filter(Administrator.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.SECRETARY:
-            person_entity = self.db.query(Secretary).filter(Secretary.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Secretary)
+                .filter(Secretary.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.DRIVER:
-            person_entity = self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
+            )
         elif current_user.role == UserRole.ASSISTANT:
-            person_entity = self.db.query(Assistant).filter(Assistant.user_id == current_user.id).first()
+            person_entity = (
+                self.db.query(Assistant)
+                .filter(Assistant.user_id == current_user.id)
+                .first()
+            )
         elif current_user.role == UserRole.CLIENT:
-            person_entity = self.db.query(Client).filter(Client.user_id == current_user.id).first()
-            
+            person_entity = (
+                self.db.query(Client).filter(Client.user_id == current_user.id).first()
+            )
+
         if person_entity:
             person_updated = False
             for field in ["firstname", "lastname", "phone", "birth_date"]:
                 if field in profile_data and profile_data[field] is not None:
                     setattr(person_entity, field, profile_data[field])
                     person_updated = True
-            
-            if "bio" in profile_data and profile_data["bio"] is not None and hasattr(person_entity, "bio"):
+
+            if (
+                "bio" in profile_data
+                and profile_data["bio"] is not None
+                and hasattr(person_entity, "bio")
+            ):
                 person_entity.bio = profile_data["bio"]
                 person_updated = True
-                
+
             role_data = profile_data.get("role_specific_data") or {}
             if current_user.role == UserRole.DRIVER:
                 for f in ["license_number", "license_type", "license_expiry", "status"]:
@@ -276,9 +351,9 @@ class UserManagementService:
                     if f in role_data:
                         setattr(person_entity, f, role_data[f])
                         person_updated = True
-                        
+
             if person_updated:
                 self.db.commit()
                 self.db.refresh(person_entity)
-                
+
         return self.get_my_profile(current_user)

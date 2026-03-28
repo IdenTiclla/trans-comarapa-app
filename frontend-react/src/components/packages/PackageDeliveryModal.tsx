@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router'
+import { useAppSelector } from '@/store'
 import { packageService } from '@/services/package.service'
+import { cashRegisterService } from '@/services/cash-register.service'
 import { cn } from '@/lib/utils'
 
 interface PackageDeliveryModalProps {
@@ -15,25 +18,56 @@ export default function PackageDeliveryModal({
     onClose,
     onConfirm
 }: PackageDeliveryModalProps) {
+    const navigate = useNavigate()
+    const { user } = useAppSelector((state) => state.auth)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
+    const [isCashRegisterOpen, setIsCashRegisterOpen] = useState<boolean | null>(null)
+    const [checkingCashRegister, setCheckingCashRegister] = useState(false)
 
     useEffect(() => {
         if (show) {
             setPaymentMethod('cash')
             setIsSubmitting(false)
             setErrorMessage('')
+            setIsCashRegisterOpen(null)
         }
     }, [show])
+
+    useEffect(() => {
+        const checkCashRegister = async () => {
+            if (!show || !packageData) return
+            if (packageData.payment_status !== 'collect_on_delivery') {
+                setIsCashRegisterOpen(true)
+                return
+            }
+            const officeId = user?.office_id
+            if (!officeId) {
+                setIsCashRegisterOpen(false)
+                return
+            }
+            setCheckingCashRegister(true)
+            try {
+                const register = await cashRegisterService.getCurrentRegister(officeId)
+                setIsCashRegisterOpen(register?.status === 'open')
+            } catch {
+                setIsCashRegisterOpen(false)
+            } finally {
+                setCheckingCashRegister(false)
+            }
+        }
+        checkCashRegister()
+    }, [show, packageData, user?.office_id])
 
     const isReadyToDeliver = useMemo(() => {
         if (!packageData) return false
         if (packageData.payment_status === 'collect_on_delivery') {
-            return paymentMethod !== null
+            if (paymentMethod === null) return false
+            if (isCashRegisterOpen === false) return false
         }
         return true
-    }, [packageData, paymentMethod])
+    }, [packageData, paymentMethod, isCashRegisterOpen])
 
     const getSenderName = (pkg: any) => {
         if (!pkg) return 'N/A'
@@ -66,7 +100,7 @@ export default function PackageDeliveryModal({
                 finalPaymentMethod = packageData.payment_method || defaultMethod
             }
 
-            await packageService.deliver(packageData.id, finalPaymentMethod)
+            await packageService.deliver(packageData.id, finalPaymentMethod, user?.id || null)
             onConfirm({ packageId: packageData.id })
             // Don't close here, parent should close on confirm
         } catch (error: any) {
@@ -234,6 +268,34 @@ export default function PackageDeliveryModal({
                                 ) : (
                                     <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
                                         <p className="text-gray-500 text-sm italic">Estado de pago no definido apropiadamente. Se asumirá pago en efectivo.</p>
+                                    </div>
+                                )}
+
+                                {packageData.payment_status === 'collect_on_delivery' && isCashRegisterOpen === false && (
+                                    <div className="bg-red-50 rounded-lg p-4 border border-red-200 mt-4">
+                                        <div className="flex items-start">
+                                            <div className="flex-shrink-0 mt-0.5">
+                                                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </div>
+                                            <div className="ml-3 flex-1">
+                                                <h3 className="text-sm font-bold text-red-800">Caja Cerrada</h3>
+                                                <p className="mt-1 text-sm text-red-700">
+                                                    Debe abrir caja antes de cobrar este paquete. El cobro se registrará en la caja.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => navigate('/admin/cash-register')}
+                                                    className="mt-3 inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                >
+                                                    <svg className="mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                    </svg>
+                                                    Ir a Caja
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>

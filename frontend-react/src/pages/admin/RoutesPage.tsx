@@ -7,14 +7,15 @@ import { toast } from 'sonner'
 interface Location { id: number; name: string;[key: string]: unknown }
 interface Route {
   id: number
-  origin?: Location
-  destination?: Location
-  origin_id?: number
-  destination_id?: number
-  distance_km?: number
-  estimated_duration_minutes?: number
-  base_price?: number
+  origin_location?: Location
+  destination_location?: Location
+  origin_location_id?: number
+  destination_location_id?: number
+  distance?: number
+  duration?: number
+  price?: number
   is_active?: boolean
+  schedules?: unknown[]
   [key: string]: unknown
 }
 
@@ -27,25 +28,25 @@ export function Component() {
 
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Route | null>(null)
-  const [formData, setFormData] = useState({ origin_id: 0, destination_id: 0, distance_km: 0, estimated_duration_minutes: 0, base_price: 0 })
+  const [formData, setFormData] = useState({ origin_location_id: 0, destination_location_id: 0, distance: 0, duration: 0, price: 0 })
   const [saving, setSaving] = useState(false)
 
   useEffect(() => { dispatch(fetchRoutes({})); dispatch(fetchLocations({})) }, [dispatch])
 
   const openCreate = () => {
     setEditing(null)
-    setFormData({ origin_id: 0, destination_id: 0, distance_km: 0, estimated_duration_minutes: 0, base_price: 0 })
+    setFormData({ origin_location_id: 0, destination_location_id: 0, distance: 0, duration: 0, price: 0 })
     setShowForm(true)
   }
 
   const openEdit = (route: Route) => {
     setEditing(route)
     setFormData({
-      origin_id: route.origin_id || route.origin?.id || 0,
-      destination_id: route.destination_id || route.destination?.id || 0,
-      distance_km: route.distance_km || 0,
-      estimated_duration_minutes: route.estimated_duration_minutes || 0,
-      base_price: route.base_price || 0,
+      origin_location_id: route.origin_location_id || route.origin_location?.id || 0,
+      destination_location_id: route.destination_location_id || route.destination_location?.id || 0,
+      distance: route.distance || 0,
+      duration: route.duration || 0,
+      price: route.price || 0,
     })
     setShowForm(true)
   }
@@ -66,7 +67,7 @@ export function Component() {
   }
 
   const handleDelete = async (route: Route) => {
-    const name = `${route.origin?.name || 'Origen'} → ${route.destination?.name || 'Destino'}`
+    const name = `${route.origin_location?.name || 'Origen'} → ${route.destination_location?.name || 'Destino'}`
     if (!confirm(`¿Eliminar ruta ${name}?`)) return
     try { await dispatch(deleteRoute(route.id)).unwrap(); toast.success('Ruta eliminada') } catch (err) { toast.error(`Error: ${err}`) }
   }
@@ -104,11 +105,11 @@ export function Component() {
               ) : (
                 routes.map((r) => (
                   <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{r.origin?.name || '—'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{r.destination?.name || '—'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{r.distance_km ? `${r.distance_km} km` : '—'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{r.estimated_duration_minutes ? `${r.estimated_duration_minutes} min` : '—'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{r.base_price ? `Bs. ${r.base_price}` : '—'}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{r.origin_location?.name || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{r.destination_location?.name || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{r.distance ? `${r.distance} km` : '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{r.duration ? `${r.duration} hrs` : '—'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{r.price ? `Bs. ${r.price}` : '—'}</td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <button onClick={() => openEdit(r)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</button>
                       <button onClick={() => handleDelete(r)} className="text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</button>
@@ -128,14 +129,14 @@ export function Component() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Origen</label>
-                <select value={formData.origin_id} onChange={(e) => setFormData({ ...formData, origin_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <select value={formData.origin_location_id} onChange={(e) => setFormData({ ...formData, origin_location_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                   <option value={0}>Seleccionar origen</option>
                   {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Destino</label>
-                <select value={formData.destination_id} onChange={(e) => setFormData({ ...formData, destination_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <select value={formData.destination_location_id} onChange={(e) => setFormData({ ...formData, destination_location_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                   <option value={0}>Seleccionar destino</option>
                   {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
                 </select>
@@ -143,15 +144,15 @@ export function Component() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Distancia (km)</label>
-                  <input type="number" value={formData.distance_km} onChange={(e) => setFormData({ ...formData, distance_km: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
+                  <input type="number" step="0.1" value={formData.distance} onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
-                  <input type="number" value={formData.estimated_duration_minutes} onChange={(e) => setFormData({ ...formData, estimated_duration_minutes: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duración (hrs)</label>
+                  <input type="number" step="0.1" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Precio (Bs)</label>
-                  <input type="number" value={formData.base_price} onChange={(e) => setFormData({ ...formData, base_price: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
+                  <input type="number" step="0.1" value={formData.price} onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
                 </div>
               </div>
               <div className="flex justify-end space-x-3 pt-4">

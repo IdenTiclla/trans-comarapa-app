@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import {
     fetchClients,
@@ -54,10 +54,11 @@ export function Component() {
             case 'new-client':
                 setShowCreateModal(true)
                 break
-            case 'search-client':
+            case 'search-client': {
                 const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement
                 if (searchInput) searchInput.focus()
                 break
+            }
             case 'export-clients':
                 toast.info('La exportación de clientes estará disponible pronto.')
                 break

@@ -14,6 +14,6 @@ class Route(Base):
 
     # Relationships
     trips = relationship("Trip", back_populates="route")
+    schedules = relationship("RouteSchedule", back_populates="route", cascade="all, delete-orphan")
     origin_location = relationship("Location", foreign_keys=[origin_location_id], back_populates="origin_routes")
     destination_location = relationship("Location", foreign_keys=[destination_location_id], back_populates="destination_routes")
-    schedules = relationship("RouteSchedule", back_populates="route", cascade="all, delete-orphan")

@@ -5,7 +5,9 @@ import type {
   DailySummary, 
   OpenRegisterPayload, 
   CloseRegisterPayload, 
-  RecordTransactionPayload 
+  RecordTransactionPayload,
+  WithdrawalPayload,
+  CashRegisterHistoryResponse
 } from "@/types/cash-register";
 
 const BASE_URL = "/cash-registers";
@@ -36,11 +38,27 @@ export const cashRegisterService = {
     });
   },
 
+  recordWithdrawal: async (registerId: number, data: WithdrawalPayload): Promise<CashTransaction> => {
+    return apiFetch<CashTransaction>(`${BASE_URL}/${registerId}/withdraw`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
   getTransactions: async (registerId: number): Promise<CashTransaction[]> => {
     return apiFetch<CashTransaction[]>(`${BASE_URL}/${registerId}/transactions`);
   },
 
   getDailySummary: async (registerId: number): Promise<DailySummary> => {
     return apiFetch<DailySummary>(`${BASE_URL}/${registerId}/summary`);
+  },
+
+  getHistory: async (officeId?: number, dateFrom?: string, dateTo?: string): Promise<CashRegisterHistoryResponse> => {
+    const params = new URLSearchParams();
+    if (officeId) params.append("office_id", officeId.toString());
+    if (dateFrom) params.append("date_from", dateFrom);
+    if (dateTo) params.append("date_to", dateTo);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return apiFetch<CashRegisterHistoryResponse>(`${BASE_URL}/history${query}`);
   },
 };

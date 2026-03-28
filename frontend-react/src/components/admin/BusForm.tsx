@@ -1,6 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import SeatLayoutEditor, { SeatPos } from './SeatLayoutEditor'
+import React, { useState, useEffect } from 'react'
+import SeatLayoutEditor from './SeatLayoutEditor'
+import type { SeatPos } from './SeatLayoutEditor'
 import { cn } from '@/lib/utils'
+import { ownerService } from '@/services/owner.service'
+
+interface Owner {
+    id: number
+    firstname: string
+    lastname: string
+    phone?: string
+    email?: string
+}
 
 interface BusFormProps {
     bus?: any
@@ -33,8 +43,12 @@ export default function BusForm({
         model: '',
         brand: '',
         color: '',
-        floors: 1
+        floors: 1,
+        owner_id: null as number | null
     })
+
+    const [owners, setOwners] = useState<Owner[]>([])
+    const [loadingOwners, setLoadingOwners] = useState(false)
 
     const [seats, setSeats] = useState<SeatPos[]>([])
 
@@ -49,6 +63,21 @@ export default function BusForm({
     })
 
     useEffect(() => {
+        const fetchOwners = async () => {
+            setLoadingOwners(true)
+            try {
+                const response = await ownerService.getAll()
+                setOwners(response)
+            } catch (error) {
+                console.error('Error fetching owners:', error)
+            } finally {
+                setLoadingOwners(false)
+            }
+        }
+        fetchOwners()
+    }, [])
+
+    useEffect(() => {
         if (bus) {
             setForm({
                 license_plate: bus.license_plate || '',
@@ -56,7 +85,8 @@ export default function BusForm({
                 model: bus.model || '',
                 brand: bus.brand || '',
                 color: bus.color || '',
-                floors: bus.floors || 1
+                floors: bus.floors || 1,
+                owner_id: bus.owner_id || null
             })
         } else {
             setForm({
@@ -65,7 +95,8 @@ export default function BusForm({
                 model: '',
                 brand: '',
                 color: '',
-                floors: 1
+                floors: 1,
+                owner_id: null
             })
         }
 
@@ -129,6 +160,7 @@ export default function BusForm({
                 model: form.model.trim(),
                 brand: form.brand?.trim() || null,
                 color: form.color || null,
+                owner_id: form.owner_id
             }
             onSubmit(busData)
         } else {
@@ -146,8 +178,9 @@ export default function BusForm({
             model: form.model.trim(),
             brand: form.brand?.trim() || null,
             color: form.color || null,
+            owner_id: form.owner_id,
             seats: seats,
-            seatsModified: isEditing // assuming if we hit here in editing, they saved from step 2
+            seatsModified: isEditing
         }
         onSubmit(busData)
     }
@@ -287,6 +320,29 @@ export default function BusForm({
                         <p className="mt-1 text-xs text-gray-500">
                             La capacidad se calculará automáticamente basada en la planilla de asientos.
                         </p>
+                    </div>
+
+                    <div>
+                        <label htmlFor="owner_id" className="block text-sm font-medium text-gray-700">
+                            Dueño del Bus
+                        </label>
+                        <select
+                            id="owner_id"
+                            value={form.owner_id || ''}
+                            onChange={(e) => setForm({ ...form, owner_id: e.target.value ? parseInt(e.target.value) : null })}
+                            disabled={loadingOwners}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                            <option value="">Sin dueño asignado</option>
+                            {owners.map(owner => (
+                                <option key={owner.id} value={owner.id}>
+                                    {owner.firstname} {owner.lastname}{owner.phone ? ` - ${owner.phone}` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        {loadingOwners && (
+                            <p className="mt-1 text-xs text-gray-500">Cargando dueños...</p>
+                        )}
                     </div>
 
                     {isEditing && (

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTrips, selectTrips, selectTripLoading, selectTripError } from '@/store/trip.slice'
 import { fetchRoutesWithSchedules } from '@/store/route.slice'
 import TripCardList from '@/components/trips/TripCardList'
+import CreateTripModal from '@/components/trips/CreateTripModal'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -27,6 +28,7 @@ export function Component() {
   const routeError = useAppSelector((s: any) => s.route.error)
 
   const [selectedDate, setSelectedDate] = useState(getTodayStr())
+  const [createModal, setCreateModal] = useState<{ routeId: number; routeLabel: string; date: string; time: string } | null>(null)
 
   const isLoading = tripLoading || routeLoading
   const hasError = tripError || routeError
@@ -80,7 +82,7 @@ export function Component() {
 
   const quickStats = useMemo(() => {
     let totalSchedules = 0, tripsCreated = 0, emptySlots = 0
-    for (const group of scheduleBoard) for (const slot of group.slots) { totalSchedules++; slot.trip ? tripsCreated++ : emptySlots++ }
+    for (const group of scheduleBoard) for (const slot of group.slots) { totalSchedules++; if (slot.trip) { tripsCreated++ } else { emptySlots++ } }
     return { totalSchedules, tripsCreated, emptySlots, totalRoutes: scheduleBoard.length }
   }, [scheduleBoard])
 
@@ -111,10 +113,6 @@ export function Component() {
                 <button key={btn.label} onClick={btn.fn} className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${btn.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>{btn.label}</button>
               ))}
               <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="pl-3 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm" />
-              <button onClick={() => navigate('/trips/new')} className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 shadow-lg transition-colors">
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                Nuevo Viaje
-              </button>
             </div>
           </div>
         </div>
@@ -157,9 +155,25 @@ export function Component() {
           selectedDate={selectedDate}
           onViewTrip={(id) => navigate(`/trips/${id}`)}
           onEditTrip={(id) => navigate(`/trips/${id}/edit`)}
-          onCreateTrip={({ routeId, date, time }) => navigate(`/trips/new?route_id=${routeId}&date=${date}&time=${time}`)}
+          onCreateTrip={({ routeId, date, time }) => {
+            const routeGroup = scheduleBoard.find((g: any) => g.route.id === routeId)
+            const routeLabel = routeGroup ? `${routeGroup.route.origin} → ${routeGroup.route.destination}` : ''
+            setCreateModal({ routeId, routeLabel, date, time })
+          }}
         />
       </div>
+
+      {createModal && (
+        <CreateTripModal
+          open
+          onClose={() => setCreateModal(null)}
+          onCreated={() => { setCreateModal(null); loadData(selectedDate) }}
+          routeId={createModal.routeId}
+          routeLabel={createModal.routeLabel}
+          date={createModal.date}
+          time={createModal.time}
+        />
+      )}
     </div>
   )
 }

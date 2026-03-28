@@ -304,6 +304,37 @@
                   </dl>
                 </div>
 
+                <!-- Información de la oficina (solo para secretarias) -->
+                <div v-if="profile.role === 'secretary' && profile.person?.office" class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="text-sm font-medium text-gray-900 mb-3">Oficina Asignada</h4>
+                  <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <dt class="text-sm text-gray-500">Nombre</dt>
+                      <dd class="text-sm font-medium text-gray-900">{{ profile.person.office.name }}</dd>
+                    </div>
+                    <div v-if="profile.person.office.location">
+                      <dt class="text-sm text-gray-500">Ubicacion</dt>
+                      <dd class="text-sm font-medium text-gray-900">{{ profile.person.office.location.name }}</dd>
+                    </div>
+                    <div v-if="profile.person.office.phone">
+                      <dt class="text-sm text-gray-500">Telefono</dt>
+                      <dd class="text-sm font-medium text-gray-900">{{ profile.person.office.phone }}</dd>
+                    </div>
+                    <div v-if="profile.person.office.email">
+                      <dt class="text-sm text-gray-500">Email</dt>
+                      <dd class="text-sm font-medium text-gray-900">{{ profile.person.office.email }}</dd>
+                    </div>
+                    <div v-if="profile.person.office.manager_name" class="sm:col-span-2">
+                      <dt class="text-sm text-gray-500">Encargado</dt>
+                      <dd class="text-sm font-medium text-gray-900">{{ profile.person.office.manager_name }}</dd>
+                    </div>
+                  </dl>
+                </div>
+                <div v-else-if="profile.role === 'secretary'" class="bg-yellow-50 rounded-lg p-4">
+                  <h4 class="text-sm font-medium text-gray-900 mb-3">Oficina Asignada</h4>
+                  <p class="text-sm text-gray-600">No tienes una oficina asignada actualmente.</p>
+                </div>
+
                 <!-- Gestión de avatar -->
                 <div class="bg-gray-50 rounded-lg p-4">
                   <h4 class="text-sm font-medium text-gray-900 mb-3">Avatar</h4>

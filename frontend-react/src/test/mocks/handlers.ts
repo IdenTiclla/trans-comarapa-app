@@ -96,6 +96,33 @@ export const packageHandlers = [
   http.get(`${API}/packages`, () => {
     return HttpResponse.json({ packages: [] })
   }),
+
+  http.get(`${API}/packages/pending-collections`, ({ request }) => {
+    const url = new URL(request.url)
+    const officeId = url.searchParams.get('office_id')
+    if (officeId === '1') {
+      return HttpResponse.json([
+        {
+          id: 1,
+          tracking_number: 'ENC-001',
+          status: 'arrived_at_destination',
+          total_amount: 150.0,
+          total_items_count: 2,
+          sender_name: 'Juan Perez',
+          recipient_name: 'Maria Lopez',
+          origin_office_name: 'Comarapa',
+          destination_office_name: 'Santa Cruz',
+          payment_status: 'collect_on_delivery',
+          created_at: '2024-01-15T10:00:00Z',
+          items: [
+            { id: 1, description: 'Caja de libros', quantity: 1, unit_price: 100, total_price: 100 },
+            { id: 2, description: 'Sobre documentos', quantity: 1, unit_price: 50, total_price: 50 },
+          ],
+        },
+      ])
+    }
+    return HttpResponse.json([])
+  }),
 ]
 
 export const authHandlers = [

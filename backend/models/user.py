@@ -13,6 +13,7 @@ class UserRole(enum.Enum):
     ASSISTANT = "assistant"
     CLIENT = "client"
     USER = "user"
+    OWNER = "owner"
 
 class User(Base):
     __tablename__ = "users"
@@ -45,6 +46,7 @@ class User(Base):
     assistant = relationship("Assistant", uselist=False, back_populates="user", overlaps="person")
     administrator = relationship("Administrator", uselist=False, back_populates="user", overlaps="person")
     client = relationship("Client", uselist=False, back_populates="user", overlaps="person")
+    owner = relationship("Owner", uselist=False, back_populates="user", overlaps="person")
 
     # Legacy password context — kept for reference/type compatibility
     _pwd_context = CryptContext(

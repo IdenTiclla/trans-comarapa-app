@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { tripService } from '@/services/trip.service'
+import { toast } from 'sonner'
 
 interface Passenger {
   ticket_id: number
@@ -38,12 +39,19 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800',
 }
 
+const TRANSITION_CONFIG: Record<string, { action: string; label: string; color: string; confirm?: boolean }> = {
+  scheduled: { action: 'start_boarding', label: 'Iniciar Abordaje', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
+  boarding: { action: 'depart', label: 'Partir', color: 'bg-emerald-600 hover:bg-emerald-700 text-white', confirm: true },
+  departed: { action: 'arrive', label: 'Llegamos', color: 'bg-gray-700 hover:bg-gray-800 text-white', confirm: true },
+}
+
 export function Component() {
   const { user } = useAuth()
   const [trips, setTrips] = useState<MyTrip[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null)
   const [filter, setFilter] = useState<'active' | 'all'>('active')
+  const [transitioning, setTransitioning] = useState<number | null>(null)
 
   useEffect(() => {
     loadTrips()
@@ -59,6 +67,20 @@ export function Component() {
       setTrips([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleTransition(tripId: number, action: string, label: string) {
+    setTransitioning(tripId)
+    try {
+      await tripService.transitionTrip(tripId, action)
+      toast.success(`Viaje actualizado: ${label}`)
+      await loadTrips()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar viaje'
+      toast.error(message)
+    } finally {
+      setTransitioning(null)
     }
   }
 
@@ -79,6 +101,11 @@ export function Component() {
   function formatDate(datetime: string) {
     return new Date(datetime).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' })
   }
+
+  // KPI calculations
+  const totalPassengers = todayTrips.reduce((sum, t) => sum + t.occupied_seats, 0)
+  const totalPackages = todayTrips.reduce((sum, t) => sum + t.package_count, 0)
+  const nextScheduled = todayTrips.find(t => t.status === 'scheduled')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
@@ -116,6 +143,14 @@ export function Component() {
       </div>
 
       <div className="w-full px-2 sm:px-4 lg:px-6 py-6 space-y-6">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="Viajes Hoy" value={todayTrips.length} icon="🚌" />
+          <KpiCard label="Pasajeros" value={totalPassengers} icon="👥" />
+          <KpiCard label="Encomiendas" value={totalPackages} icon="📦" />
+          <KpiCard label="Próximo" value={nextScheduled ? formatTime(nextScheduled.trip_datetime) : '—'} icon="🕐" />
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
@@ -130,7 +165,6 @@ export function Component() {
           </div>
         ) : (
           <>
-            {/* Today's trips */}
             {todayTrips.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold text-gray-800 mb-3">Hoy</h2>
@@ -142,13 +176,14 @@ export function Component() {
                       expanded={expandedTrip === trip.id}
                       onToggle={() => setExpandedTrip(expandedTrip === trip.id ? null : trip.id)}
                       formatTime={formatTime}
+                      onTransition={handleTransition}
+                      transitioning={transitioning}
                     />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Upcoming/other trips */}
             {upcomingTrips.length > 0 && (
               <section>
                 <h2 className="text-lg font-semibold text-gray-800 mb-3">
@@ -164,6 +199,8 @@ export function Component() {
                       formatTime={formatTime}
                       showDate
                       formatDate={formatDate}
+                      onTransition={handleTransition}
+                      transitioning={transitioning}
                     />
                   ))}
                 </div>
@@ -176,6 +213,20 @@ export function Component() {
   )
 }
 
+function KpiCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">{icon}</span>
+        <div>
+          <div className="text-xl font-bold text-gray-900">{value}</div>
+          <div className="text-xs text-gray-500">{label}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function TripCard({
   trip,
   expanded,
@@ -183,6 +234,8 @@ function TripCard({
   formatTime,
   showDate,
   formatDate,
+  onTransition,
+  transitioning,
 }: {
   trip: MyTrip
   expanded: boolean
@@ -190,7 +243,18 @@ function TripCard({
   formatTime: (d: string) => string
   showDate?: boolean
   formatDate?: (d: string) => string
+  onTransition: (tripId: number, action: string, label: string) => void
+  transitioning: number | null
 }) {
+  const transition = TRANSITION_CONFIG[trip.status]
+
+  function handleTransitionClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!transition) return
+    if (transition.confirm && !window.confirm(`¿Confirmar "${transition.label}"?`)) return
+    onTransition(trip.id, transition.action, transition.label)
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Card header */}
@@ -227,6 +291,19 @@ function TripCard({
           </div>
         </div>
       </button>
+
+      {/* Transition button */}
+      {transition && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={handleTransitionClick}
+            disabled={transitioning === trip.id}
+            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${transition.color} disabled:opacity-50`}
+          >
+            {transitioning === trip.id ? 'Actualizando...' : transition.label}
+          </button>
+        </div>
+      )}
 
       {/* Expanded: passenger manifest */}
       {expanded && (

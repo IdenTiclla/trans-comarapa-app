@@ -54,7 +54,7 @@ export function Component() {
                     <h1 className="text-2xl font-bold text-gray-900">Gestión de Viajes</h1>
                     <p className="text-gray-600 mt-1">Programación y control de viajes</p>
                 </div>
-                <button onClick={() => navigate('/trips/new')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">+ Nuevo Viaje</button>
+                <button onClick={() => navigate('/trips')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">Ver Tablero</button>
             </div>
 
             {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}

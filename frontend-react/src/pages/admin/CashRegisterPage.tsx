@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { 
   fetchCurrentRegister, 
@@ -9,12 +9,18 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, PlusCircle, ArrowDownCircle, Wallet, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, PlusCircle, ArrowDownCircle, ArrowUpCircle, Wallet, Calendar, History } from "lucide-react";
 import { TransactionList } from "@/components/cash-register/TransactionList";
 import { OpenRegisterModal } from "@/components/cash-register/OpenRegisterModal";
 import { CloseRegisterModal } from "@/components/cash-register/CloseRegisterModal";
+import { WithdrawalModal } from "@/components/cash-register/WithdrawalModal";
+import { RegisterHistoryTable } from "@/components/cash-register/RegisterHistoryTable";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { officeService } from "@/services/office.service";
+import { cashRegisterService } from "@/services/cash-register.service";
+import type { CashRegisterHistoryItem } from "@/types/cash-register";
 
 export function Component() {
   const dispatch = useAppDispatch();
@@ -26,6 +32,10 @@ export function Component() {
     isLoading, 
     error 
   } = useAppSelector((state) => state.cashRegister);
+  const [officeName, setOfficeName] = useState<string>("");
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
+  const [history, setHistory] = useState<CashRegisterHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // office_id comes from the login response for secretaries
   const officeId = user?.office_id;
@@ -37,17 +47,43 @@ export function Component() {
   }, [officeId]);
 
   useEffect(() => {
-    // If we have an open register, fetch its summary and transactions
     if (currentRegister?.id) {
       dispatch(fetchDailySummary(currentRegister.id));
       dispatch(fetchTransactions(currentRegister.id));
     }
   }, [currentRegister?.id, dispatch]);
 
+  useEffect(() => {
+    if (!officeId) return;
+    const loadOfficeName = async () => {
+      try {
+        const office = await officeService.getById(officeId);
+        setOfficeName(office.name);
+      } catch {
+        setOfficeName("");
+      }
+    };
+    loadOfficeName();
+    loadHistory();
+  }, [officeId]);
+
   const loadRegisterData = async () => {
     if (!officeId) return;
     dispatch(clearError());
     await dispatch(fetchCurrentRegister(officeId));
+  };
+
+  const loadHistory = async () => {
+    if (!officeId) return;
+    setHistoryLoading(true);
+    try {
+      const response = await cashRegisterService.getHistory(officeId);
+      setHistory(response.registers);
+    } catch {
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const handleRegisterOpened = () => {
@@ -56,6 +92,14 @@ export function Component() {
 
   const handleRegisterClosed = () => {
     loadRegisterData();
+    loadHistory();
+  };
+
+  const handleWithdrawalSuccess = () => {
+    if (currentRegister?.id) {
+      dispatch(fetchDailySummary(currentRegister.id));
+      dispatch(fetchTransactions(currentRegister.id));
+    }
   };
 
   if (isLoading && !currentRegister) {
@@ -79,15 +123,30 @@ export function Component() {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Caja Registradora</h2>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Caja Registradora</h2>
+          {officeName && (
+            <p className="text-muted-foreground">Oficina: {officeName}</p>
+          )}
+        </div>
         <div className="flex items-center space-x-2">
           {isOpen && dailySummary ? (
-            <CloseRegisterModal 
-              registerId={currentRegister!.id} 
-              userId={userId}
-              expectedBalance={dailySummary.expected_balance}
-              onSuccess={handleRegisterClosed}
-            />
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setWithdrawalModalOpen(true)}
+                className="gap-2"
+              >
+                <ArrowUpCircle className="h-4 w-4" />
+                Registrar Retiro
+              </Button>
+              <CloseRegisterModal 
+                registerId={currentRegister!.id} 
+                userId={userId}
+                expectedBalance={dailySummary.expected_balance}
+                onSuccess={handleRegisterClosed}
+              />
+            </>
           ) : (
             <OpenRegisterModal 
               officeId={officeId!} 
@@ -206,8 +265,31 @@ export function Component() {
               <TransactionList transactions={transactions} />
             </CardContent>
           </Card>
+
+          <WithdrawalModal
+            open={withdrawalModalOpen}
+            onClose={() => setWithdrawalModalOpen(false)}
+            availableBalance={dailySummary?.expected_balance ?? currentRegister!.initial_balance}
+            registerId={currentRegister!.id}
+            onSuccess={handleWithdrawalSuccess}
+          />
         </>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Historial de Cajas
+          </CardTitle>
+          <CardDescription>
+            Cajas cerradas de los últimos 7 días. Haz clic en una fila para ver las transacciones.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RegisterHistoryTable registers={history} isLoading={historyLoading} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

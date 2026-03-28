@@ -64,7 +64,7 @@ clean:
 
 # Database operations
 db-seed:
-	uv run python db/seed.py
+	PYTHONPATH=. uv run python db/seed.py
 
 db-migrate:
 	uv run alembic upgrade head
@@ -72,7 +72,7 @@ db-migrate:
 db-reset:
 	rm -f trans_comarapa.db
 	uv run alembic upgrade head
-	uv run python db/seed.py
+	PYTHONPATH=. uv run python db/seed.py
 
 # Code quality
 lint:

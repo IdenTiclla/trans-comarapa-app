@@ -10,11 +10,20 @@ from typing import List, Dict
 
 from db.session import get_db
 from schemas.package import (
-    PackageResponse, PackageCreate, PackageUpdate, PackageSummary,
-    PackageAssignTrip, PackageStatusUpdate, PackageDeliverRequest
+    PackageResponse,
+    PackageCreate,
+    PackageUpdate,
+    PackageSummary,
+    PackageAssignTrip,
+    PackageStatusUpdate,
+    PackageDeliverRequest,
 )
 
-from schemas.package_item import PackageItemCreate, PackageItemResponse, PackageItemUpdate
+from schemas.package_item import (
+    PackageItemCreate,
+    PackageItemResponse,
+    PackageItemUpdate,
+)
 from services.package_service import PackageService
 
 router = APIRouter(tags=["Packages"])
@@ -28,6 +37,7 @@ def get_service(db: Session = Depends(get_db)) -> PackageService:
 # IMPORTANT: Routes with fixed paths MUST come before /{id}
 # ============================================================
 
+
 @router.get("/unassigned", response_model=List[PackageSummary])
 async def get_unassigned_packages(
     skip: int = 0, limit: int = 100, service: PackageService = Depends(get_service)
@@ -37,9 +47,23 @@ async def get_unassigned_packages(
     return [PackageService.to_summary(pkg) for pkg in packages]
 
 
+@router.get("/pending-collections", response_model=List[PackageSummary])
+async def get_pending_collections(
+    office_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    service: PackageService = Depends(get_service),
+):
+    """Get packages pending collection at destination office."""
+    packages = service.get_pending_collections(office_id, skip, limit)
+    return [PackageService.to_summary(pkg) for pkg in packages]
+
+
 @router.get("", response_model=List[PackageSummary])
 async def get_packages(
-    skip: int = 0, limit: int = 100, status: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    status: str = None,
     service: PackageService = Depends(get_service),
 ):
     """Get packages list with optional status filter."""
@@ -49,7 +73,10 @@ async def get_packages(
 
 @router.get("/search", response_model=List[PackageSummary])
 async def search_packages(
-    q: str, skip: int = 0, limit: int = 100, service: PackageService = Depends(get_service)
+    q: str,
+    skip: int = 0,
+    limit: int = 100,
+    service: PackageService = Depends(get_service),
 ):
     """Search packages by term."""
     packages = service.search_packages(term=q, skip=skip, limit=limit)
@@ -57,7 +84,9 @@ async def search_packages(
 
 
 @router.post("", response_model=PackageResponse)
-async def create_package(package: PackageCreate, service: PackageService = Depends(get_service)):
+async def create_package(
+    package: PackageCreate, service: PackageService = Depends(get_service)
+):
     """Create a new package with items."""
     return service.create_package(package)
 
@@ -69,31 +98,41 @@ async def get_package(package_id: int, service: PackageService = Depends(get_ser
 
 
 @router.get("/tracking/{tracking_number}", response_model=PackageResponse)
-async def get_package_by_tracking(tracking_number: str, service: PackageService = Depends(get_service)):
+async def get_package_by_tracking(
+    tracking_number: str, service: PackageService = Depends(get_service)
+):
     """Get a package by tracking number."""
     return service.get_by_tracking(tracking_number)
 
 
 @router.put("/{package_id}", response_model=PackageResponse)
 async def update_package(
-    package_id: int, package: PackageUpdate, service: PackageService = Depends(get_service)
+    package_id: int,
+    package: PackageUpdate,
+    service: PackageService = Depends(get_service),
 ):
     """Update package metadata."""
     return service.update_package(package_id, package)
 
 
 @router.delete("/{package_id}", response_model=Dict[str, str])
-async def delete_package(package_id: int, service: PackageService = Depends(get_service)):
+async def delete_package(
+    package_id: int, service: PackageService = Depends(get_service)
+):
     """Delete a package and all items."""
     tracking = service.delete_package(package_id)
-    return {"message": f"Package {tracking} and all its items have been successfully deleted"}
+    return {
+        "message": f"Package {tracking} and all its items have been successfully deleted"
+    }
 
 
 # ── Trip assignment ──────────────────────────────────────────────────
 
+
 @router.put("/{package_id}/assign-trip", response_model=PackageResponse)
 async def assign_package_to_trip(
-    package_id: int, assign_data: PackageAssignTrip,
+    package_id: int,
+    assign_data: PackageAssignTrip,
     service: PackageService = Depends(get_service),
 ):
     """Assign a package to a trip."""
@@ -110,33 +149,52 @@ async def unassign_package_from_trip(
 
 @router.put("/{package_id}/update-status", response_model=PackageResponse)
 async def update_package_status(
-    package_id: int, status_update: PackageStatusUpdate,
+    package_id: int,
+    status_update: PackageStatusUpdate,
     service: PackageService = Depends(get_service),
 ):
     """Update package status."""
     return service.update_status(package_id, status_update)
 
 
+@router.put("/{package_id}/cancel", response_model=PackageResponse)
+async def cancel_package(
+    package_id: int, service: PackageService = Depends(get_service)
+):
+    """Cancel a package and create reversal if applicable."""
+    return service.cancel_package(package_id)
+
+
 @router.put("/{package_id}/deliver", response_model=PackageResponse)
 async def deliver_package(
-    package_id: int, deliver_data: PackageDeliverRequest,
+    package_id: int,
+    deliver_data: PackageDeliverRequest,
     service: PackageService = Depends(get_service),
 ):
-    """Deliver a package and handle payment method if needed."""
-    return service.deliver_package(package_id, deliver_data.payment_method, deliver_data.changed_by_user_id)
+    """Deliver a package to recipient."""
+    return service.deliver_package(
+        package_id,
+        deliver_data.payment_method,
+        deliver_data.changed_by_user_id,
+    )
 
 
 # ── Package items ────────────────────────────────────────────────────
 
+
 @router.get("/{package_id}/items", response_model=List[PackageItemResponse])
-async def get_package_items(package_id: int, service: PackageService = Depends(get_service)):
+async def get_package_items(
+    package_id: int, service: PackageService = Depends(get_service)
+):
     """Get all items for a package."""
     return service.get_items(package_id)
 
 
 @router.post("/{package_id}/items", response_model=PackageItemResponse)
 async def add_package_item(
-    package_id: int, item: PackageItemCreate, service: PackageService = Depends(get_service)
+    package_id: int,
+    item: PackageItemCreate,
+    service: PackageService = Depends(get_service),
 ):
     """Add an item to a package."""
     return service.add_item(package_id, item)
@@ -144,14 +202,18 @@ async def add_package_item(
 
 @router.put("/items/{item_id}", response_model=PackageItemResponse)
 async def update_package_item(
-    item_id: int, item: PackageItemUpdate, service: PackageService = Depends(get_service)
+    item_id: int,
+    item: PackageItemUpdate,
+    service: PackageService = Depends(get_service),
 ):
     """Update a package item."""
     return service.update_item(item_id, item)
 
 
 @router.delete("/items/{item_id}", response_model=Dict[str, str])
-async def delete_package_item(item_id: int, service: PackageService = Depends(get_service)):
+async def delete_package_item(
+    item_id: int, service: PackageService = Depends(get_service)
+):
     """Delete a package item."""
     service.delete_item(item_id)
     return {"message": f"Package item {item_id} has been successfully deleted"}
@@ -159,19 +221,28 @@ async def delete_package_item(item_id: int, service: PackageService = Depends(ge
 
 # ── Filtering by client and trip ─────────────────────────────────────
 
+
 @router.get("/by-sender/{client_id}", response_model=List[PackageSummary])
-async def get_packages_by_sender(client_id: int, service: PackageService = Depends(get_service)):
+async def get_packages_by_sender(
+    client_id: int, service: PackageService = Depends(get_service)
+):
     """Get packages sent by a client."""
     return [PackageService.to_summary(pkg) for pkg in service.get_by_sender(client_id)]
 
 
 @router.get("/by-recipient/{client_id}", response_model=List[PackageSummary])
-async def get_packages_by_recipient(client_id: int, service: PackageService = Depends(get_service)):
+async def get_packages_by_recipient(
+    client_id: int, service: PackageService = Depends(get_service)
+):
     """Get packages received by a client."""
-    return [PackageService.to_summary(pkg) for pkg in service.get_by_recipient(client_id)]
+    return [
+        PackageService.to_summary(pkg) for pkg in service.get_by_recipient(client_id)
+    ]
 
 
 @router.get("/by-trip/{trip_id}", response_model=List[PackageSummary])
-async def get_packages_by_trip(trip_id: int, service: PackageService = Depends(get_service)):
+async def get_packages_by_trip(
+    trip_id: int, service: PackageService = Depends(get_service)
+):
     """Get packages for a trip."""
     return [PackageService.to_summary(pkg) for pkg in service.get_by_trip(trip_id)]

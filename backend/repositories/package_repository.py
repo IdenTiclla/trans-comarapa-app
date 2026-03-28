@@ -12,7 +12,6 @@ from repositories.base import BaseRepository
 
 
 class PackageRepository(BaseRepository[Package]):
-
     def __init__(self, db: Session):
         super().__init__(Package, db)
 
@@ -25,6 +24,8 @@ class PackageRepository(BaseRepository[Package]):
             joinedload(Package.trip),
             joinedload(Package.secretary),
             joinedload(Package.state_history),
+            joinedload(Package.origin_office),
+            joinedload(Package.destination_office),
         )
 
     def get_by_id_eager(self, package_id: int) -> Optional[Package]:
@@ -46,27 +47,17 @@ class PackageRepository(BaseRepository[Package]):
 
     def get_by_sender(self, client_id: int) -> list[Package]:
         """Get all packages sent by a client."""
-        return (
-            self._with_eager_loading()
-            .filter(Package.sender_id == client_id)
-            .all()
-        )
+        return self._with_eager_loading().filter(Package.sender_id == client_id).all()
 
     def get_by_recipient(self, client_id: int) -> list[Package]:
         """Get all packages for a recipient client."""
         return (
-            self._with_eager_loading()
-            .filter(Package.recipient_id == client_id)
-            .all()
+            self._with_eager_loading().filter(Package.recipient_id == client_id).all()
         )
 
     def get_by_trip(self, trip_id: int) -> list[Package]:
         """Get all packages assigned to a trip."""
-        return (
-            self._with_eager_loading()
-            .filter(Package.trip_id == trip_id)
-            .all()
-        )
+        return self._with_eager_loading().filter(Package.trip_id == trip_id).all()
 
     def search_by_tracking(self, tracking_number: str) -> Optional[Package]:
         """Find a package by its tracking number."""
@@ -101,3 +92,25 @@ class PackageRepository(BaseRepository[Package]):
         self.db.add(entry)
         self.db.flush()
         return entry
+
+    def get_pending_collections(
+        self, office_id: int, skip: int = 0, limit: int = 100
+    ) -> list[Package]:
+        """Get packages pending collection at destination office.
+
+        Packages where:
+        - destination_office_id == office_id
+        - payment_status == 'collect_on_delivery'
+        - status == 'arrived_at_destination'
+        """
+        return (
+            self._with_eager_loading()
+            .filter(
+                Package.destination_office_id == office_id,
+                Package.payment_status == "collect_on_delivery",
+                Package.status == "arrived_at_destination",
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )

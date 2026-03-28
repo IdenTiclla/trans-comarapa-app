@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { statsService } from '@/services/stats.service'
 import { salesService } from '@/services/sales.service'
+import { AbortError } from '@/lib/api'
 
 interface StatData {
     count: number
@@ -47,6 +48,10 @@ export const fetchDashboardStats = createAsyncThunk(
             ])
             return { dashboard, salesSummary }
         } catch (error) {
+            if (error instanceof AbortError) {
+                // Request was cancelled (e.g. component unmount) — don't treat as error
+                return rejectWithValue(null)
+            }
             return rejectWithValue((error as Error).message || 'Error al cargar estadísticas')
         }
     }
@@ -76,6 +81,8 @@ const statsSlice = createSlice({
                 state.salesSummary = action.payload.salesSummary
             })
             .addCase(fetchDashboardStats.rejected, (state, action) => {
+                // If payload is null, it was an abort — keep previous state
+                if (action.payload === null) return
                 state.isLoading = false
                 state.error = action.payload as string
                 state.dashboardStats = {

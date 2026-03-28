@@ -86,6 +86,12 @@ class PackageService:
     def get_by_trip(self, trip_id: int) -> list[Package]:
         return self.repo.get_by_trip(trip_id)
 
+    def get_pending_collections(
+        self, office_id: int, skip: int = 0, limit: int = 100
+    ) -> list[Package]:
+        """Get packages pending collection at destination office."""
+        return self.repo.get_pending_collections(office_id, skip, limit)
+
     # ── Create / Update / Delete ─────────────────────────────────────────
 
     def create_package(self, data: PackageCreate) -> Package:
@@ -93,7 +99,6 @@ class PackageService:
         import uuid
 
         logger.debug("Creating package with data: %s", data)
-        # We don't check tracking number here because we generate it later
 
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
@@ -102,15 +107,19 @@ class PackageService:
 
         cash_service = CashRegisterService(self.db)
 
-        # Verify cash register if payment is made upfront
+        secretary = (
+            self.db.query(Secretary).filter(Secretary.id == data.secretary_id).first()
+        )
+
+        origin_office_id = data.origin_office_id
+        if not origin_office_id and secretary and secretary.office_id:
+            origin_office_id = secretary.office_id
+
         current_register = None
         if getattr(data, "payment_status", None) == "paid_on_send":
-            secretary = (
-                self.db.query(Secretary)
-                .filter(Secretary.id == data.secretary_id)
-                .first()
+            office_id = (
+                origin_office_id or (secretary.office_id if secretary else None) or 1
             )
-            office_id = secretary.office_id if secretary and secretary.office_id else 1
             if not office_id:
                 raise ValidationException(
                     "El usuario no tiene una oficina asignada para abrir caja."
@@ -121,9 +130,10 @@ class PackageService:
                     "No hay caja abierta para su oficina. Debe abrir caja antes de registrar envíos pagados al instante."
                 )
 
-        # Create the package
         package_data = data.model_dump(exclude={"items", "tracking_number"})
         package_data["tracking_number"] = f"TEMP-{uuid.uuid4().hex[:8]}"
+        package_data["origin_office_id"] = origin_office_id
+        package_data["destination_office_id"] = data.destination_office_id
         actual_status = package_data.get("status", "registered_at_office")
         db_package = Package(**package_data)
         self.db.add(db_package)
@@ -292,17 +302,22 @@ class PackageService:
         cash_service = CashRegisterService(self.db)
 
         current_register = None
+        delivering_secretary = None
         if pkg.payment_status == "collect_on_delivery":
             if not changed_by_user_id:
                 raise ValidationException(
                     "Se requiere el usuario operador para entregas por cobrar."
                 )
-            secretary = (
+            delivering_secretary = (
                 self.db.query(Secretary)
                 .filter(Secretary.user_id == changed_by_user_id)
                 .first()
             )
-            office_id = secretary.office_id if secretary and secretary.office_id else 1
+            office_id = (
+                delivering_secretary.office_id
+                if delivering_secretary and delivering_secretary.office_id
+                else 1
+            )
             if not office_id:
                 raise ValidationException("El usuario no tiene una oficina asignada.")
             current_register = cash_service.get_current_register(office_id)
@@ -311,16 +326,28 @@ class PackageService:
                     "No hay caja abierta para su oficina. No puede recibir cobros de encomiendas por entregar."
                 )
 
-        # Use state machine for validation
         validate_transition("package", PACKAGE_TRANSITIONS, pkg.status, "delivered")
 
         old_status = pkg.status
         pkg.status = "delivered"
 
+        if delivering_secretary:
+            pkg.delivered_by_secretary_id = delivering_secretary.id
+            if (
+                pkg.destination_office_id
+                and delivering_secretary.office_id != pkg.destination_office_id
+            ):
+                logger.warning(
+                    "Secretaria %s (oficina %s) entregando encomienda %d en oficina destino %s distinta",
+                    delivering_secretary.id,
+                    delivering_secretary.office_id,
+                    pkg.id,
+                    pkg.destination_office_id,
+                )
+
         if pkg.payment_status == "collect_on_delivery":
             pkg.payment_method = payment_method
 
-            # Record collection transaction
             if current_register:
                 payment_enum = EnumPaymentMethod.CASH
                 try:
@@ -349,6 +376,75 @@ class PackageService:
         self.db.commit()
         self.db.refresh(pkg)
         return pkg
+
+    def cancel_package(self, package_id: int) -> Package:
+        """Cancel a package and create reversal if applicable."""
+        pkg = self.repo.get_by_id_eager(package_id)
+        if not pkg:
+            raise NotFoundException("Encomienda no encontrada")
+
+        if pkg.status == "cancelled":
+            return pkg
+
+        old_status = pkg.status
+        pkg.status = "cancelled"
+
+        self.repo.log_state_change(
+            package_id=pkg.id,
+            old_state=old_status,
+            new_state="cancelled",
+        )
+
+        self._create_reversal_if_applicable(pkg)
+
+        self.db.commit()
+        self.db.refresh(pkg)
+        return pkg
+
+    def _create_reversal_if_applicable(self, pkg: Package) -> None:
+        """Create a reversal adjustment if there was a cash transaction for this package."""
+        from models.cash_transaction import CashTransaction
+        from models.secretary import Secretary
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+        from core.enums import CashTransactionType, PaymentMethod
+
+        original_tx = (
+            self.db.query(CashTransaction)
+            .filter(
+                CashTransaction.reference_type == "package",
+                CashTransaction.reference_id == pkg.id,
+                CashTransaction.type == CashTransactionType.PACKAGE_PAYMENT,
+            )
+            .first()
+        )
+
+        if not original_tx:
+            return
+
+        secretary = (
+            self.db.query(Secretary).filter(Secretary.id == pkg.secretary_id).first()
+        )
+        if not secretary or not secretary.office_id:
+            return
+
+        cash_service = CashRegisterService(self.db)
+        open_register = cash_service.get_current_register(secretary.office_id)
+
+        if not open_register:
+            return
+
+        cash_service.record_transaction(
+            CashTransactionCreate(
+                cash_register_id=open_register.id,
+                type=CashTransactionType.ADJUSTMENT,
+                amount=-original_tx.amount,
+                payment_method=PaymentMethod.CASH,
+                reference_id=pkg.id,
+                reference_type="package_cancellation",
+                description=f"Reversión: cancelación encomienda {pkg.tracking_number}",
+            )
+        )
 
     # ── Package items ────────────────────────────────────────────────────
 
@@ -469,6 +565,12 @@ class PackageService:
             trip_id=pkg.trip_id,
             payment_status=pkg.payment_status,
             payment_method=pkg.payment_method,
+            origin_office_id=pkg.origin_office_id,
+            destination_office_id=pkg.destination_office_id,
+            origin_office_name=pkg.origin_office.name if pkg.origin_office else None,
+            destination_office_name=pkg.destination_office.name
+            if pkg.destination_office
+            else None,
             created_at=pkg.created_at,
             items=items_preview,
         )

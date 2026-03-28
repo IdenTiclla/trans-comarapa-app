@@ -26,7 +26,7 @@ export function Component() {
         <PackageRegistrationModal
           show={true}
           onClose={() => navigate('/packages')}
-          onPackageRegistered={(pkg) => navigate('/packages')}
+          onPackageRegistered={() => navigate('/packages')}
         />
       </div>
     </div>

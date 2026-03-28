@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Body, Depends, status, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Dict, Any, Optional, List
@@ -95,6 +95,19 @@ async def update_trip(trip_id: int, trip_update: TripUpdate, service: TripServic
 async def delete_trip(trip_id: int, service: TripService = Depends(get_service)):
     service.delete_trip(trip_id)
     return {"message": "Trip deleted successfully", "status_code": status.HTTP_204_NO_CONTENT}
+
+@router.put("/{trip_id}/transition", response_model=Dict[str, Any])
+async def transition_trip(
+    trip_id: int,
+    action: str = Body(..., embed=True),
+    current_user: User = Depends(get_current_user),
+    service: TripService = Depends(get_service),
+):
+    """Transition trip status. Actions: start_boarding, depart, arrive.
+    Only assigned driver/assistant or admin can use this."""
+    service.transition_trip(trip_id, action, current_user)
+    return service.get_trip_detail(trip_id)
+
 
 @router.post("/{trip_id}/dispatch", response_model=Dict[str, Any])
 async def dispatch_trip(trip_id: int, service: TripService = Depends(get_service)):

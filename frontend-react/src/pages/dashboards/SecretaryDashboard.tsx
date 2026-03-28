@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { useAuth } from '@/hooks/use-auth'
@@ -15,6 +15,18 @@ import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
 import UpcomingTrips from '@/components/dashboard/UpcomingTrips'
 import RecentSales from '@/components/dashboard/RecentSales'
 import QuickSearch from '@/components/dashboard/QuickSearch'
+import PendingCollections from '@/components/packages/PendingCollections'
+import { activityService } from '@/services/activity.service'
+import { cashRegisterService } from '@/services/cash-register.service'
+import type { CashRegister, DailySummary } from '@/types/cash-register'
+
+interface Activity {
+  id: number
+  activity_type: string
+  details: string | null
+  user_id: number | null
+  created_at: string
+}
 
 function getCurrentDate() {
   return new Intl.DateTimeFormat('es-ES', {
@@ -25,11 +37,50 @@ function getCurrentDate() {
   }).format(new Date())
 }
 
+function getRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'Hace un momento'
+  if (diffMins < 60) return `Hace ${diffMins} minutos`
+  if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`
+  if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+}
+
+function getActivityColor(type: string): string {
+  switch (type.toLowerCase()) {
+    case 'ticket':
+    case 'ticket_sold':
+      return 'blue'
+    case 'package':
+    case 'package_registered':
+      return 'green'
+    case 'trip':
+    case 'trip_created':
+      return 'purple'
+    case 'cash':
+    case 'cash_register':
+      return 'orange'
+    default:
+      return 'gray'
+  }
+}
+
 export function Component() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { user } = useAuth()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([])
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
+  const [cashRegister, setCashRegister] = useState<CashRegister | null>(null)
+  const [dailySummary, setDailySummary] = useState<DailySummary | null>(null)
+  const [cashLoading, setCashLoading] = useState(true)
 
   const ticketStats = useAppSelector(selectTicketStats)
   const packageStats = useAppSelector(selectPackageStats)
@@ -45,6 +96,48 @@ export function Component() {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [dispatch])
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      try {
+        setActivitiesLoading(true)
+        const data = await activityService.getRecentActivities()
+        setRecentActivities((data as Activity[]).slice(0, 5))
+      } catch {
+        setRecentActivities([])
+      } finally {
+        setActivitiesLoading(false)
+      }
+    }
+    loadActivities()
+  }, [])
+
+  useEffect(() => {
+    const loadCashRegister = async () => {
+      const officeId = user?.office_id
+      if (!officeId) {
+        setCashLoading(false)
+        return
+      }
+      try {
+        setCashLoading(true)
+        const register = await cashRegisterService.getCurrentRegister(officeId)
+        setCashRegister(register)
+        if (register?.id) {
+          const summary = await cashRegisterService.getDailySummary(register.id)
+          setDailySummary(summary)
+        } else {
+          setDailySummary(null)
+        }
+      } catch {
+        setCashRegister(null)
+        setDailySummary(null)
+      } finally {
+        setCashLoading(false)
+      }
+    }
+    loadCashRegister()
+  }, [user?.office_id])
 
   const quickActions = [
     {
@@ -93,7 +186,7 @@ export function Component() {
         </svg>
       ),
       color: 'orange',
-      onClick: () => navigate('/trips'),
+      onClick: () => navigate('/reports'),
     },
   ]
 
@@ -271,44 +364,126 @@ export function Component() {
               </div>
 
               {/* Right Sidebar */}
-              <div className="xl:col-span-1 space-y-6">
-                {/* Quick Search */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="bg-purple-50 px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">Búsqueda Rápida</h2>
-                  </div>
-                  <div className="p-6">
-                    <QuickSearch />
-                  </div>
-                </div>
+               <div className="xl:col-span-1 space-y-6">
+                 {/* Quick Search */}
+                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                   <div className="bg-purple-50 px-6 py-4 border-b border-gray-200">
+                     <h2 className="text-xl font-bold text-gray-900">Búsqueda Rápida</h2>
+                   </div>
+                   <div className="p-6">
+                     <QuickSearch />
+                   </div>
+                 </div>
 
-                {/* Recent Activity */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="bg-orange-50 px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">Actividad Reciente</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {[
-                        { color: 'blue', text: 'Boleto vendido para el viaje Comarapa - Santa Cruz', time: 'Hace 15 minutos' },
-                        { color: 'green', text: 'Paquete registrado para María González', time: 'Hace 32 minutos' },
-                        { color: 'purple', text: 'Nuevo viaje programado para mañana', time: 'Hace 1 hora' },
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-start space-x-3">
-                          <div className={`flex items-center justify-center w-8 h-8 bg-${item.color}-100 rounded-full flex-shrink-0 mt-1`}>
-                            <div className={`w-2 h-2 bg-${item.color}-600 rounded-full`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900 font-medium">{item.text}</p>
-                            <p className="text-xs text-gray-600 mt-1">{item.time}</p>
-                          </div>
-                        </div>
-                      ))}
+                 {/* Cash Register Widget */}
+                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                   <div className="bg-emerald-50 px-6 py-4 border-b border-gray-200">
+                     <h2 className="text-xl font-bold text-gray-900">Mi Caja</h2>
+                   </div>
+                   <div className="p-6">
+                     {cashLoading ? (
+                       <div className="flex justify-center py-4">
+                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
+                       </div>
+                     ) : cashRegister?.status === 'open' ? (
+                       <div className="space-y-4">
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                           <span className="text-sm font-semibold text-green-700">Caja Abierta</span>
+                         </div>
+                         <div className="space-y-2 text-sm">
+                           <div className="flex justify-between">
+                             <span className="text-gray-600">Saldo inicial:</span>
+                             <span className="font-medium">{cashRegister.initial_balance.toFixed(2)} Bs</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span className="text-gray-600">Ingresos del día:</span>
+                             <span className="font-medium text-green-600">+{(dailySummary?.total_in ?? 0).toFixed(2)} Bs</span>
+                           </div>
+                           <div className="flex justify-between border-t pt-2">
+                             <span className="text-gray-900 font-medium">Efectivo esperado:</span>
+                             <span className="font-bold text-emerald-700">{(dailySummary?.expected_balance ?? cashRegister.initial_balance).toFixed(2)} Bs</span>
+                           </div>
+                         </div>
+                         <button
+                           onClick={() => navigate('/admin/cash-register')}
+                           className="w-full mt-2 text-sm text-emerald-700 hover:text-emerald-800 font-medium hover:underline"
+                         >
+                           Ver detalles →
+                         </button>
+                       </div>
+                     ) : (
+                       <div className="space-y-4">
+                         <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 bg-red-500 rounded-full" />
+                           <span className="text-sm font-semibold text-red-700">Caja Cerrada</span>
+                         </div>
+                         <p className="text-sm text-gray-600">
+                           No hay una caja abierta para tu oficina.
+                         </p>
+                         <button
+                           onClick={() => navigate('/admin/cash-register')}
+                           className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                         >
+                           Abrir Caja
+                         </button>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+
+                  {/* Pending Collections */}
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-orange-50 px-6 py-4 border-b border-gray-200">
+                      <h2 className="text-xl font-bold text-gray-900">Cobros Pendientes</h2>
+                    </div>
+                    <div className="p-4">
+                      <PendingCollections
+                        officeId={user?.office_id}
+                        limit={5}
+                        showTitle={false}
+                        compact={true}
+                        onViewAll={() => navigate('/packages/pending-collections')}
+                      />
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
+
+                  {/* Recent Activity */}
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-orange-50 px-6 py-4 border-b border-gray-200">
+                      <h2 className="text-xl font-bold text-gray-900">Actividad Reciente</h2>
+                    </div>
+                   <div className="p-6">
+                     {activitiesLoading ? (
+                       <div className="flex justify-center py-4">
+                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600" />
+                       </div>
+                     ) : recentActivities.length === 0 ? (
+                       <p className="text-sm text-gray-500 text-center py-4">Sin actividad reciente</p>
+                     ) : (
+                       <div className="space-y-4">
+                         {recentActivities.map((activity) => {
+                           const color = getActivityColor(activity.activity_type)
+                           return (
+                             <div key={activity.id} className="flex items-start space-x-3">
+                               <div className={`flex items-center justify-center w-8 h-8 bg-${color}-100 rounded-full flex-shrink-0 mt-1`}>
+                                 <div className={`w-2 h-2 bg-${color}-600 rounded-full`} />
+                               </div>
+                               <div className="flex-1 min-w-0">
+                                 <p className="text-sm text-gray-900 font-medium truncate">
+                                   {activity.details || activity.activity_type}
+                                 </p>
+                                 <p className="text-xs text-gray-600 mt-1">{getRelativeTime(activity.created_at)}</p>
+                               </div>
+                             </div>
+                           )
+                         })}
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             </div>
           </>
         )}
       </div>

@@ -9,7 +9,7 @@ class BusBase(BaseModel):
     brand: Optional[str] = Field(None, description="Bus brand", json_schema_extra={"example": "Mercedes"})
     color: Optional[str] = Field(None, description="Bus color", json_schema_extra={"example": "Azul"})
     floors: int = Field(1, ge=1, le=2, description="Number of floors (1 or 2)", json_schema_extra={"example": 1})
-
+    owner_id: Optional[int] = Field(None, description="ID of the owner of this bus", json_schema_extra={"example": 1})
 
 class BusCreate(BusBase):
     """
@@ -28,7 +28,7 @@ class BusUpdate(BaseModel):
     brand: Optional[str] = Field(None, description="Bus brand", json_schema_extra={"example": "Mercedes"})
     color: Optional[str] = Field(None, description="Bus color", json_schema_extra={"example": "Azul"})
     floors: Optional[int] = Field(None, ge=1, le=2, description="Number of floors (1 or 2)", json_schema_extra={"example": 1})
-
+    owner_id: Optional[int] = Field(None, description="ID of the owner of this bus", json_schema_extra={"example": 1})
 
 class Bus(BusBase):
     """

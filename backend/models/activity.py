@@ -10,7 +10,7 @@ class Activity(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Puede ser una actividad del sistema
     activity_type = Column(String(255), nullable=False, index=True)
     details = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.current_timestamp(), index=True)
 
     user = relationship("User") # Relación con el modelo User
 

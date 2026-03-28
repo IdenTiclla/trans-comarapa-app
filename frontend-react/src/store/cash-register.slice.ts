@@ -6,7 +6,8 @@ import type {
   DailySummary,
   OpenRegisterPayload,
   CloseRegisterPayload,
-  RecordTransactionPayload
+  RecordTransactionPayload,
+  WithdrawalPayload
 } from "@/types/cash-register";
 
 interface CashRegisterState {
@@ -95,6 +96,17 @@ export const recordTransaction = createAsyncThunk(
   }
 );
 
+export const recordWithdrawal = createAsyncThunk(
+  "cashRegister/recordWithdrawal",
+  async ({ registerId, data }: { registerId: number; data: WithdrawalPayload }, { rejectWithValue }) => {
+    try {
+      return await cashRegisterService.recordWithdrawal(registerId, data);
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to record withdrawal");
+    }
+  }
+);
+
 const cashRegisterSlice = createSlice({
   name: "cashRegister",
   initialState,
@@ -174,9 +186,31 @@ const cashRegisterSlice = createSlice({
       .addCase(recordTransaction.rejected, (state, action) => {
         state.isSubmitting = false;
         state.error = action.payload as string;
+      })
+      
+      // recordWithdrawal
+      .addCase(recordWithdrawal.pending, (state) => {
+        state.isSubmitting = true;
+        state.error = null;
+      })
+      .addCase(recordWithdrawal.fulfilled, (state, action: PayloadAction<CashTransaction>) => {
+        state.isSubmitting = false;
+        state.transactions.unshift(action.payload);
+      })
+      .addCase(recordWithdrawal.rejected, (state, action) => {
+        state.isSubmitting = false;
+        state.error = action.payload as string;
       });
   },
 });
 
 export const { clearError, clearCurrentRegister } = cashRegisterSlice.actions;
+
+export const selectIsSubmitting = (state: { cashRegister: CashRegisterState }) => state.cashRegister.isSubmitting;
+export const selectCurrentRegister = (state: { cashRegister: CashRegisterState }) => state.cashRegister.currentRegister;
+export const selectDailySummary = (state: { cashRegister: CashRegisterState }) => state.cashRegister.dailySummary;
+export const selectTransactions = (state: { cashRegister: CashRegisterState }) => state.cashRegister.transactions;
+export const selectIsLoading = (state: { cashRegister: CashRegisterState }) => state.cashRegister.isLoading;
+export const selectError = (state: { cashRegister: CashRegisterState }) => state.cashRegister.error;
+
 export default cashRegisterSlice.reducer;

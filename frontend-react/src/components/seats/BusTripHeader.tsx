@@ -1,5 +1,3 @@
-import FormSelect from '@/components/forms/FormSelect'
-
 interface BusTripHeaderProps {
     trip: any
     occupiedSeatsCount?: number
@@ -29,28 +27,6 @@ interface BusTripHeaderProps {
 
 export default function BusTripHeader({
     trip,
-    occupiedSeatsCount = 0,
-    reservedSeatsCount = 0,
-    availableSeatsCount = 0,
-    totalSeatsCount = null,
-    editable = false,
-    drivers = [],
-    assistants = [],
-    editingDriver = false,
-    editingAssistant = false,
-    selectedDriverId = null,
-    selectedAssistantId = null,
-    savingDriver = false,
-    savingAssistant = false,
-    isDoubleDeck = false,
-    onStartEditDriver,
-    onSaveDriver,
-    onCancelEditDriver,
-    onUpdateSelectedDriverId,
-    onStartEditAssistant,
-    onSaveAssistant,
-    onCancelEditAssistant,
-    onUpdateSelectedAssistantId
 }: BusTripHeaderProps) {
 
     const getDayName = (dateString?: string) => {

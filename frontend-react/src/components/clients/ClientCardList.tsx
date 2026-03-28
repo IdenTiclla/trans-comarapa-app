@@ -59,7 +59,7 @@ export default function ClientCardList({
         } else {
             pages.push(1)
             let start = Math.max(2, currentPage - Math.floor((maxDisplayed - 2) / 2))
-            let end = Math.min(totalPages - 1, start + maxDisplayed - 3)
+            const end = Math.min(totalPages - 1, start + maxDisplayed - 3)
             if (end === totalPages - 1 && (end - start + 1) < (maxDisplayed - 2)) {
                 start = Math.max(2, end - (maxDisplayed - 3))
             }

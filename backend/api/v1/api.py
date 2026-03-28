@@ -1,16 +1,34 @@
 from fastapi import APIRouter
-from routes import driver, bus, assistant, trip, location, route, ticket, seat, seat_lock, client, package, secretary, auth, administrator, stats, user_management, activities, persons, office, cash_register, report
+from routes import (
+    driver,
+    bus,
+    assistant,
+    trip,
+    location,
+    route,
+    ticket,
+    seat,
+    seat_lock,
+    client,
+    package,
+    secretary,
+    auth,
+    administrator,
+    stats,
+    user_management,
+    activities,
+    persons,
+    office,
+    cash_register,
+    report,
+    financial,
+    owner,
+)
 
-# Crear un router principal para la versión 1 de la API
 api_router = APIRouter()
 
-# Incluir el router de autenticación
 api_router.include_router(auth.router)
-
-# Incluir el router de gestión de personas (nuevo modelo unificado)
 api_router.include_router(persons.router)
-
-# Incluir todos los routers existentes
 api_router.include_router(driver.router, prefix="/drivers")
 api_router.include_router(bus.router, prefix="/buses")
 api_router.include_router(assistant.router, prefix="/assistants")
@@ -30,5 +48,5 @@ api_router.include_router(user_management.router)
 api_router.include_router(activities.router)
 api_router.include_router(cash_register.router)
 api_router.include_router(report.router, prefix="/reports")
-
-# Nota: El prefijo '/busses' se cambia a '/buses' para seguir convenciones REST
+api_router.include_router(financial.router)
+api_router.include_router(owner.router)

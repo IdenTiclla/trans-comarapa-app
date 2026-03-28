@@ -35,12 +35,24 @@ class RouteService:
     ) -> None:
         """Ensure the given location IDs exist in the database."""
         if origin_id is not None:
-            if not self.db.query(LocationModel).filter(LocationModel.id == origin_id).first():
-                raise NotFoundException(f"Origin location with id {origin_id} not found")
+            if (
+                not self.db.query(LocationModel)
+                .filter(LocationModel.id == origin_id)
+                .first()
+            ):
+                raise NotFoundException(
+                    f"Origin location with id {origin_id} not found"
+                )
 
         if destination_id is not None:
-            if not self.db.query(LocationModel).filter(LocationModel.id == destination_id).first():
-                raise NotFoundException(f"Destination location with id {destination_id} not found")
+            if (
+                not self.db.query(LocationModel)
+                .filter(LocationModel.id == destination_id)
+                .first()
+            ):
+                raise NotFoundException(
+                    f"Destination location with id {destination_id} not found"
+                )
 
     def _get_route_or_raise(self, route_id: int) -> RouteModel:
         route = self.db.query(RouteModel).filter(RouteModel.id == route_id).first()
@@ -48,11 +60,17 @@ class RouteService:
             raise NotFoundException("Route not found")
         return route
 
-    def _get_schedule_or_raise(self, schedule_id: int, route_id: int) -> RouteScheduleModel:
-        schedule = self.db.query(RouteScheduleModel).filter(
-            RouteScheduleModel.id == schedule_id,
-            RouteScheduleModel.route_id == route_id,
-        ).first()
+    def _get_schedule_or_raise(
+        self, schedule_id: int, route_id: int
+    ) -> RouteScheduleModel:
+        schedule = (
+            self.db.query(RouteScheduleModel)
+            .filter(
+                RouteScheduleModel.id == schedule_id,
+                RouteScheduleModel.route_id == route_id,
+            )
+            .first()
+        )
         if not schedule:
             raise NotFoundException("Schedule not found")
         return schedule
@@ -69,13 +87,18 @@ class RouteService:
         max_price: Optional[float] = None,
     ) -> List[RouteModel]:
         """Get all routes with optional filters."""
-        query = self.db.query(RouteModel)
+        query = self.db.query(RouteModel).options(
+            joinedload(RouteModel.origin_location),
+            joinedload(RouteModel.destination_location),
+        )
         if origin:
-            query = query.join(LocationModel, RouteModel.origin_location_id == LocationModel.id)\
-                         .filter(LocationModel.name.ilike(f"%{origin}%"))
+            query = query.join(
+                LocationModel, RouteModel.origin_location_id == LocationModel.id
+            ).filter(LocationModel.name.ilike(f"%{origin}%"))
         if destination:
-            query = query.join(LocationModel, RouteModel.destination_location_id == LocationModel.id)\
-                         .filter(LocationModel.name.ilike(f"%{destination}%"))
+            query = query.join(
+                LocationModel, RouteModel.destination_location_id == LocationModel.id
+            ).filter(LocationModel.name.ilike(f"%{destination}%"))
         if min_price is not None:
             query = query.filter(RouteModel.price >= min_price)
         if max_price is not None:
@@ -83,23 +106,42 @@ class RouteService:
         return query.offset(skip).limit(limit).all()
 
     def get_by_id(self, route_id: int) -> RouteModel:
-        return self._get_route_or_raise(route_id)
+        route = (
+            self.db.query(RouteModel)
+            .options(
+                joinedload(RouteModel.origin_location),
+                joinedload(RouteModel.destination_location),
+            )
+            .filter(RouteModel.id == route_id)
+            .first()
+        )
+        if not route:
+            raise NotFoundException("Route not found")
+        return route
 
     def get_all_with_schedules(self) -> List[RouteModel]:
-        return self.db.query(RouteModel).options(
-            joinedload(RouteModel.schedules),
-            joinedload(RouteModel.origin_location),
-            joinedload(RouteModel.destination_location),
-        ).all()
+        return (
+            self.db.query(RouteModel)
+            .options(
+                joinedload(RouteModel.schedules),
+                joinedload(RouteModel.origin_location),
+                joinedload(RouteModel.destination_location),
+            )
+            .all()
+        )
 
     def create_route(self, data: RouteCreate) -> RouteModel:
         """Validate locations, check uniqueness, create route."""
         self._validate_locations(data.origin_location_id, data.destination_location_id)
 
-        existing = self.db.query(RouteModel).filter(
-            RouteModel.origin_location_id == data.origin_location_id,
-            RouteModel.destination_location_id == data.destination_location_id,
-        ).first()
+        existing = (
+            self.db.query(RouteModel)
+            .filter(
+                RouteModel.origin_location_id == data.origin_location_id,
+                RouteModel.destination_location_id == data.destination_location_id,
+            )
+            .first()
+        )
         if existing:
             raise ConflictException("Route between these locations already exists")
 
@@ -117,11 +159,19 @@ class RouteService:
         self._validate_locations(data.origin_location_id, data.destination_location_id)
 
         if data.origin_location_id or data.destination_location_id:
-            existing = self.db.query(RouteModel).filter(
-                RouteModel.origin_location_id == (data.origin_location_id or db_route.origin_location_id),
-                RouteModel.destination_location_id == (data.destination_location_id or db_route.destination_location_id),
-                RouteModel.id != route_id,
-            ).first()
+            existing = (
+                self.db.query(RouteModel)
+                .filter(
+                    RouteModel.origin_location_id
+                    == (data.origin_location_id or db_route.origin_location_id),
+                    RouteModel.destination_location_id
+                    == (
+                        data.destination_location_id or db_route.destination_location_id
+                    ),
+                    RouteModel.id != route_id,
+                )
+                .first()
+            )
             if existing:
                 raise ConflictException("Route between these locations already exists")
 
@@ -141,7 +191,9 @@ class RouteService:
             self.db.commit()
         except Exception:
             self.db.rollback()
-            raise ValidationException("Cannot delete route as it is being referenced by other records")
+            raise ValidationException(
+                "Cannot delete route as it is being referenced by other records"
+            )
         logger.info("Route %d deleted", route_id)
         return route
 
@@ -153,20 +205,31 @@ class RouteService:
 
     def get_schedules(self, route_id: int) -> List[RouteScheduleModel]:
         self._get_route_or_raise(route_id)
-        return self.db.query(RouteScheduleModel).filter(
-            RouteScheduleModel.route_id == route_id
-        ).order_by(RouteScheduleModel.departure_time).all()
+        return (
+            self.db.query(RouteScheduleModel)
+            .filter(RouteScheduleModel.route_id == route_id)
+            .order_by(RouteScheduleModel.departure_time)
+            .all()
+        )
 
-    def create_schedule(self, route_id: int, data: RouteScheduleCreate) -> RouteScheduleModel:
+    def create_schedule(
+        self, route_id: int, data: RouteScheduleCreate
+    ) -> RouteScheduleModel:
         """Check for duplicate departure time, then create schedule."""
         self._get_route_or_raise(route_id)
 
-        existing = self.db.query(RouteScheduleModel).filter(
-            RouteScheduleModel.route_id == route_id,
-            RouteScheduleModel.departure_time == data.departure_time,
-        ).first()
+        existing = (
+            self.db.query(RouteScheduleModel)
+            .filter(
+                RouteScheduleModel.route_id == route_id,
+                RouteScheduleModel.departure_time == data.departure_time,
+            )
+            .first()
+        )
         if existing:
-            raise ConflictException("Schedule with this departure time already exists for this route")
+            raise ConflictException(
+                "Schedule with this departure time already exists for this route"
+            )
 
         db_schedule = RouteScheduleModel(route_id=route_id, **data.model_dump())
         self.db.add(db_schedule)
@@ -175,18 +238,29 @@ class RouteService:
         logger.info("Schedule created for route %d", route_id)
         return db_schedule
 
-    def update_schedule(self, route_id: int, schedule_id: int, data: RouteScheduleUpdate) -> RouteScheduleModel:
+    def update_schedule(
+        self, route_id: int, schedule_id: int, data: RouteScheduleUpdate
+    ) -> RouteScheduleModel:
         db_schedule = self._get_schedule_or_raise(schedule_id, route_id)
 
         update_data = data.model_dump(exclude_unset=True)
-        if "departure_time" in update_data and update_data["departure_time"] is not None:
-            existing = self.db.query(RouteScheduleModel).filter(
-                RouteScheduleModel.route_id == route_id,
-                RouteScheduleModel.departure_time == update_data["departure_time"],
-                RouteScheduleModel.id != schedule_id,
-            ).first()
+        if (
+            "departure_time" in update_data
+            and update_data["departure_time"] is not None
+        ):
+            existing = (
+                self.db.query(RouteScheduleModel)
+                .filter(
+                    RouteScheduleModel.route_id == route_id,
+                    RouteScheduleModel.departure_time == update_data["departure_time"],
+                    RouteScheduleModel.id != schedule_id,
+                )
+                .first()
+            )
             if existing:
-                raise ConflictException("Schedule with this departure time already exists for this route")
+                raise ConflictException(
+                    "Schedule with this departure time already exists for this route"
+                )
 
         for field, value in update_data.items():
             setattr(db_schedule, field, value)

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { useAuth } from '@/hooks/use-auth'
@@ -11,6 +11,8 @@ import {
   selectStatsLoading,
   selectStatsError,
 } from '@/store/stats.slice'
+import { financialService } from '@/services/financial.service'
+import type { CashSummaryResponse } from '@/services/financial.service'
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
 import UpcomingTrips from '@/components/dashboard/UpcomingTrips'
 import RecentSales from '@/components/dashboard/RecentSales'
@@ -37,6 +39,8 @@ export function Component() {
   const isLoading = useAppSelector(selectStatsLoading)
   const error = useAppSelector(selectStatsError)
 
+  const [cashSummary, setCashSummary] = useState<CashSummaryResponse | null>(null)
+
   useEffect(() => {
     dispatch(fetchDashboardStats('today'))
     intervalRef.current = setInterval(() => dispatch(fetchDashboardStats('today')), 5 * 60 * 1000)
@@ -44,6 +48,10 @@ export function Component() {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [dispatch])
+
+  useEffect(() => {
+    financialService.getCashSummary().then(setCashSummary).catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
@@ -153,6 +161,79 @@ export function Component() {
                 </div>
               ))}
             </div>
+
+            {/* Financial KPIs */}
+            {cashSummary && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div
+                  onClick={() => navigate('/admin/financial')}
+                  className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-all hover:border-green-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Ingresos Hoy</p>
+                      <p className="text-xl font-bold text-green-600">
+                        Bs. {(cashSummary.total_income_today ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="bg-green-100 p-3 rounded-xl">
+                      <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  onClick={() => navigate('/admin/withdrawals')}
+                  className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-all hover:border-red-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Retiros Hoy</p>
+                      <p className="text-xl font-bold text-red-600">
+                        Bs. {(cashSummary.total_withdrawals_today ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="bg-red-100 p-3 rounded-xl">
+                      <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Cajas Abiertas</p>
+                      <p className="text-xl font-bold text-indigo-600">{cashSummary.registers_open ?? 0}</p>
+                    </div>
+                    <div className="bg-indigo-100 p-3 rounded-xl">
+                      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  onClick={() => navigate('/admin/financial')}
+                  className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl transition-all hover:border-emerald-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Disponible Total</p>
+                      <p className="text-xl font-bold text-emerald-600">
+                        Bs. {(cashSummary.total_available ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="bg-emerald-100 p-3 rounded-xl">
+                      <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

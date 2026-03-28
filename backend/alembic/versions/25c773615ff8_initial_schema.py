@@ -74,7 +74,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('activity_type', sa.String(length=255), nullable=False),
     sa.Column('details', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
