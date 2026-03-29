@@ -1,7 +1,8 @@
 import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
-import { Package, Clock, Receipt, CheckCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Package, Clock, Receipt, CheckCircle, ArrowRight, Pencil, Trash2, Eye } from 'lucide-react'
 
 interface PackageCardProps {
     pkg: any
@@ -32,17 +33,16 @@ export default function PackageCard({
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-200">
             <CardContent className="p-0">
-                {/* Header Section */}
                 <div
-                    className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-start cursor-pointer group"
+                    className="p-4 border-b border-gray-100 bg-muted/50 flex justify-between items-start cursor-pointer group"
                     onClick={() => onViewPackage?.(pkg.id)}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                        <div className="bg-primary/10 p-2 rounded-lg text-primary">
                             <Package size={20} />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                            <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
                                 #{pkg.tracking_number}
                             </h3>
                             <div className="flex items-center text-xs text-gray-500 mt-0.5 gap-1">
@@ -60,20 +60,15 @@ export default function PackageCard({
                     </span>
                 </div>
 
-                {/* Content Section */}
                 <div className="p-4 space-y-4">
-                    {/* Route */}
                     {(pkg.origin_office_name || pkg.destination_office_name) && (
                         <div className="flex items-center gap-2 text-sm">
                             <span className="font-medium text-gray-900">{pkg.origin_office_name || 'Origen'}</span>
-                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
+                            <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             <span className="font-medium text-gray-900">{pkg.destination_office_name || 'Destino'}</span>
                         </div>
                     )}
 
-                    {/* Routes / People */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <p className="text-xs text-gray-500 mb-1">Remitente</p>
@@ -85,8 +80,7 @@ export default function PackageCard({
                         </div>
                     </div>
 
-                    {/* Products (Replacing Weight) */}
-                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <div className="bg-muted/50 rounded-lg p-3 border border-gray-100">
                         <p className="text-xs text-gray-500 mb-1">Productos ({pkg.total_items_count || 0})</p>
                         <p className="text-sm text-gray-700 italic line-clamp-2">
                             {pkg.items && pkg.items.length > 0
@@ -95,7 +89,6 @@ export default function PackageCard({
                         </p>
                     </div>
 
-                    {/* Footer / Payment */}
                     <div className="flex justify-between items-center pt-2">
                         <div className="flex items-center gap-1.5 text-sm">
                             <Receipt size={16} className="text-gray-400" />
@@ -110,35 +103,44 @@ export default function PackageCard({
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                <div className="px-4 py-3 bg-muted/50 border-t border-gray-100 flex items-center justify-end gap-2">
                     {pkg.status === 'arrived_at_destination' && (
-                        <button
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                        <Button
+                            size="sm"
+                            className="gap-1.5"
                             onClick={() => onDeliverPackage?.(pkg.id)}
                         >
-                            <CheckCircle size={14} className="mr-1.5" />
+                            <CheckCircle size={14} />
                             Entregar
-                        </button>
+                        </Button>
                     )}
-                    <button
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
                         onClick={() => onViewPackage?.(pkg.id)}
                     >
+                        <Eye size={14} />
                         Ver
-                    </button>
-                    <button
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
                         onClick={() => onEditPackage?.(pkg.id)}
                     >
+                        <Pencil size={14} />
                         Editar
-                    </button>
-                    <button
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1.5"
                         onClick={() => onDeletePackage?.(pkg.id)}
                     >
+                        <Trash2 size={14} />
                         Eliminar
-                    </button>
+                    </Button>
                 </div>
             </CardContent>
         </Card>

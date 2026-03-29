@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchPackages, deletePackage, selectPackages, selectPackageLoading, selectPackageError } from '@/store/package.slice'
 import { toast } from 'sonner'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Plus } from 'lucide-react'
 
 interface Package {
     id: number
@@ -20,8 +24,8 @@ interface Package {
 const STATUS_LABELS: Record<string, string> = {
     registered: 'Registrado', in_transit: 'En tránsito', delivered: 'Entregado', cancelled: 'Cancelado',
 }
-const STATUS_COLORS: Record<string, string> = {
-    registered: 'bg-blue-100 text-blue-700', in_transit: 'bg-yellow-100 text-yellow-700', delivered: 'bg-green-100 text-green-700', cancelled: 'bg-red-100 text-red-700',
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+    registered: 'secondary', in_transit: 'outline', delivered: 'default', cancelled: 'destructive',
 }
 
 export function Component() {
@@ -39,59 +43,66 @@ export function Component() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Gestión de Encomiendas</h1>
-                    <p className="text-gray-600 mt-1">Registro y seguimiento de paquetes</p>
-                </div>
-                <button onClick={() => navigate('/packages/new')} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">+ Nueva Encomienda</button>
+        <div className="w-full space-y-6">
+            <div className="flex items-center justify-end">
+                <Button onClick={() => navigate('/packages/new')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nueva Encomienda
+                </Button>
             </div>
 
-            {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
+            {error && (
+                <Card className="border-l-4 border-l-destructive">
+                    <CardContent className="p-4">
+                        <p className="text-destructive">{error}</p>
+                    </CardContent>
+                </Card>
+            )}
 
             {loading ? (
-                <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
+                <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" /></div>
             ) : (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remitente</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destinatario</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Peso</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {packages.length === 0 ? (
-                                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500">No hay encomiendas</td></tr>
-                            ) : (
-                                packages.map((p) => (
-                                    <tr key={p.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.tracking_code || `#${p.id}`}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{p.sender_name || '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{p.receiver_name || '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{p.weight_kg ? `${p.weight_kg} kg` : '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{p.price ? `Bs. ${p.price}` : '—'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${STATUS_COLORS[p.status || ''] || 'bg-gray-100 text-gray-700'}`}>
-                                                {STATUS_LABELS[p.status || ''] || p.status || 'Registrado'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            <button onClick={() => navigate(`/packages/${p.id}`)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Ver</button>
-                                            <button onClick={() => handleDelete(p)} className="text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <Card>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-muted/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Código</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Remitente</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Destinatario</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Peso</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Precio</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Estado</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {packages.length === 0 ? (
+                                    <tr><td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">No hay encomiendas</td></tr>
+                                ) : (
+                                    packages.map((p) => (
+                                        <tr key={p.id} className="hover:bg-muted/50">
+                                            <td className="px-6 py-4 text-sm font-medium text-foreground">{p.tracking_code || `#${p.id}`}</td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">{p.sender_name || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">{p.receiver_name || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">{p.weight_kg ? `${p.weight_kg} kg` : '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">{p.price ? `Bs. ${p.price}` : '—'}</td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant={STATUS_VARIANT[p.status || ''] || 'secondary'}>
+                                                    {STATUS_LABELS[p.status || ''] || p.status || 'Registrado'}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-right space-x-2">
+                                                <Button variant="ghost" size="sm" onClick={() => navigate(`/packages/${p.id}`)}>Ver</Button>
+                                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(p)}>Eliminar</Button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
             )}
         </div>
     )

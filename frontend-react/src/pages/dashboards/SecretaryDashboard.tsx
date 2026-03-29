@@ -19,6 +19,8 @@ import PendingCollections from '@/components/packages/PendingCollections'
 import { activityService } from '@/services/activity.service'
 import { cashRegisterService } from '@/services/cash-register.service'
 import type { CashRegister, DailySummary } from '@/types/cash-register'
+import { Card, CardHeader, CardTitle, CardContent, CardAction } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface Activity {
   id: number
@@ -26,15 +28,6 @@ interface Activity {
   details: string | null
   user_id: number | null
   created_at: string
-}
-
-function getCurrentDate() {
-  return new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date())
 }
 
 function getRelativeTime(dateString: string): string {
@@ -52,22 +45,22 @@ function getRelativeTime(dateString: string): string {
   return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
-function getActivityColor(type: string): string {
+function getActivityColors(type: string): { bg: string; dot: string } {
   switch (type.toLowerCase()) {
     case 'ticket':
     case 'ticket_sold':
-      return 'blue'
+      return { bg: 'bg-blue-100', dot: 'bg-blue-600' }
     case 'package':
     case 'package_registered':
-      return 'green'
+      return { bg: 'bg-green-100', dot: 'bg-green-600' }
     case 'trip':
     case 'trip_created':
-      return 'purple'
+      return { bg: 'bg-purple-100', dot: 'bg-purple-600' }
     case 'cash':
     case 'cash_register':
-      return 'orange'
+      return { bg: 'bg-orange-100', dot: 'bg-orange-600' }
     default:
-      return 'gray'
+      return { bg: 'bg-gray-100', dot: 'bg-gray-600' }
   }
 }
 
@@ -149,7 +142,9 @@ export function Component() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
         </svg>
       ),
-      color: 'blue',
+      iconBg: 'bg-blue-100 group-hover:bg-blue-200',
+      hoverBorder: 'hover:border-blue-300',
+      textHover: 'group-hover:text-blue-700',
       onClick: () => navigate('/trips'),
     },
     {
@@ -161,7 +156,9 @@ export function Component() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>
       ),
-      color: 'green',
+      iconBg: 'bg-green-100 group-hover:bg-green-200',
+      hoverBorder: 'hover:border-green-300',
+      textHover: 'group-hover:text-green-700',
       onClick: () => navigate('/packages/new'),
     },
     {
@@ -173,7 +170,9 @@ export function Component() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       ),
-      color: 'purple',
+      iconBg: 'bg-purple-100 group-hover:bg-purple-200',
+      hoverBorder: 'hover:border-purple-300',
+      textHover: 'group-hover:text-purple-700',
       onClick: () => navigate('/clients'),
     },
     {
@@ -185,47 +184,21 @@ export function Component() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      color: 'orange',
+      iconBg: 'bg-orange-100 group-hover:bg-orange-200',
+      hoverBorder: 'hover:border-orange-300',
+      textHover: 'group-hover:text-orange-700',
       onClick: () => navigate('/reports'),
     },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 w-full">
-        <div className="w-full px-2 sm:px-4 lg:px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard de Secretaría</h1>
-                <p className="text-gray-700">
-                  Bienvenida, {user?.firstname} {user?.lastname}
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="font-medium">{getCurrentDate()}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="w-full px-2 sm:px-4 lg:px-6 py-6 overflow-x-hidden">
+    <div>
+      <div className="px-2 sm:px-4 lg:px-6 py-6">
         {isLoading && (
           <div className="flex justify-center items-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-700 text-lg font-medium">Cargando estadísticas...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg font-medium">Cargando estadísticas...</p>
             </div>
           </div>
         )}
@@ -237,12 +210,13 @@ export function Component() {
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-red-800">Error al cargar datos</h3>
                   <p className="text-red-700 mt-1">{error}</p>
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => dispatch(fetchDashboardStats('today'))}
-                    className="mt-3 text-sm bg-red-100 hover:bg-red-200 text-red-800 font-medium px-4 py-2 rounded-lg transition-colors border border-red-300"
+                    className="mt-3"
                   >
                     Intentar nuevamente
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -309,17 +283,17 @@ export function Component() {
                 <div
                   key={action.id}
                   onClick={action.onClick}
-                  className={`group bg-white rounded-2xl p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-${action.color}-300 transform hover:-translate-y-1`}
+                  className={`group bg-white rounded-2xl p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 ${action.hoverBorder} transform hover:-translate-y-1`}
                 >
                   <div className="flex items-center space-x-3 lg:space-x-4">
                     <div
-                      className={`flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-${action.color}-100 group-hover:bg-${action.color}-200 rounded-xl transition-colors flex-shrink-0`}
+                      className={`flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 ${action.iconBg} rounded-xl transition-colors flex-shrink-0`}
                     >
                       {action.icon}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3
-                        className={`text-base lg:text-lg font-semibold text-gray-900 group-hover:text-${action.color}-700 transition-colors truncate`}
+                        className={`text-base lg:text-lg font-semibold text-gray-900 ${action.textHover} transition-colors truncate`}
                       >
                         {action.label}
                       </h3>
@@ -335,155 +309,154 @@ export function Component() {
               {/* Left Column */}
               <div className="xl:col-span-3 space-y-6">
                 {/* Upcoming Trips */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="bg-blue-50 px-6 py-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-gray-900">Próximos Viajes</h2>
-                      <button
-                        onClick={() => navigate('/trips')}
-                        className="text-blue-700 hover:text-blue-800 font-medium text-sm hover:underline transition-colors"
-                      >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Próximos Viajes</CardTitle>
+                    <CardAction>
+                      <Button variant="link" size="sm" onClick={() => navigate('/trips')}>
                         Ver todos
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-6">
+                      </Button>
+                    </CardAction>
+                  </CardHeader>
+                  <CardContent>
                     <UpcomingTrips />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* Recent Sales */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                  <div className="bg-green-50 px-6 py-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-gray-900">Ventas Recientes</h2>
-                    </div>
-                  </div>
-                  <RecentSales onViewAll={() => navigate('/sales')} />
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Ventas Recientes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RecentSales onViewAll={() => navigate('/sales')} />
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Right Sidebar */}
-               <div className="xl:col-span-1 space-y-6">
-                 {/* Quick Search */}
-                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                   <div className="bg-purple-50 px-6 py-4 border-b border-gray-200">
-                     <h2 className="text-xl font-bold text-gray-900">Búsqueda Rápida</h2>
-                   </div>
-                   <div className="p-6">
-                     <QuickSearch />
-                   </div>
-                 </div>
+              <div className="xl:col-span-1 space-y-6">
+                {/* Quick Search */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Búsqueda Rápida</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <QuickSearch />
+                  </CardContent>
+                </Card>
 
-                 {/* Cash Register Widget */}
-                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                   <div className="bg-emerald-50 px-6 py-4 border-b border-gray-200">
-                     <h2 className="text-xl font-bold text-gray-900">Mi Caja</h2>
-                   </div>
-                   <div className="p-6">
-                     {cashLoading ? (
-                       <div className="flex justify-center py-4">
-                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
-                       </div>
-                     ) : cashRegister?.status === 'open' ? (
-                       <div className="space-y-4">
-                         <div className="flex items-center gap-2">
-                           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                           <span className="text-sm font-semibold text-green-700">Caja Abierta</span>
-                         </div>
-                         <div className="space-y-2 text-sm">
-                           <div className="flex justify-between">
-                             <span className="text-gray-600">Saldo inicial:</span>
-                             <span className="font-medium">{cashRegister.initial_balance.toFixed(2)} Bs</span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-gray-600">Ingresos del día:</span>
-                             <span className="font-medium text-green-600">+{(dailySummary?.total_in ?? 0).toFixed(2)} Bs</span>
-                           </div>
-                           <div className="flex justify-between border-t pt-2">
-                             <span className="text-gray-900 font-medium">Efectivo esperado:</span>
-                             <span className="font-bold text-emerald-700">{(dailySummary?.expected_balance ?? cashRegister.initial_balance).toFixed(2)} Bs</span>
-                           </div>
-                         </div>
-                         <button
-                           onClick={() => navigate('/admin/cash-register')}
-                           className="w-full mt-2 text-sm text-emerald-700 hover:text-emerald-800 font-medium hover:underline"
-                         >
-                           Ver detalles →
-                         </button>
-                       </div>
-                     ) : (
-                       <div className="space-y-4">
-                         <div className="flex items-center gap-2">
-                           <div className="w-3 h-3 bg-red-500 rounded-full" />
-                           <span className="text-sm font-semibold text-red-700">Caja Cerrada</span>
-                         </div>
-                         <p className="text-sm text-gray-600">
-                           No hay una caja abierta para tu oficina.
-                         </p>
-                         <button
-                           onClick={() => navigate('/admin/cash-register')}
-                           className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
-                         >
-                           Abrir Caja
-                         </button>
-                       </div>
-                     )}
-                   </div>
-                 </div>
+                {/* Cash Register Widget */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Mi Caja</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {cashLoading ? (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                      </div>
+                    ) : cashRegister?.status === 'open' ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                          <span className="text-sm font-semibold text-green-700">Caja Abierta</span>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Saldo inicial:</span>
+                            <span className="font-medium">{cashRegister.initial_balance.toFixed(2)} Bs</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Ingresos del día:</span>
+                            <span className="font-medium text-green-600">+{(dailySummary?.total_in ?? 0).toFixed(2)} Bs</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-900 font-medium">Efectivo esperado:</span>
+                            <span className="font-bold text-emerald-700">{(dailySummary?.expected_balance ?? cashRegister.initial_balance).toFixed(2)} Bs</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => navigate('/admin/cash-register')}
+                          className="w-full mt-2"
+                        >
+                          Ver detalles →
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-red-500 rounded-full" />
+                          <span className="text-sm font-semibold text-red-700">Caja Cerrada</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          No hay una caja abierta para tu oficina.
+                        </p>
+                        <Button
+                          onClick={() => navigate('/admin/cash-register')}
+                          className="w-full"
+                        >
+                          Abrir Caja
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                  {/* Pending Collections */}
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div className="bg-orange-50 px-6 py-4 border-b border-gray-200">
-                      <h2 className="text-xl font-bold text-gray-900">Cobros Pendientes</h2>
-                    </div>
-                    <div className="p-4">
-                      <PendingCollections
-                        officeId={user?.office_id}
-                        limit={5}
-                        showTitle={false}
-                        compact={true}
-                        onViewAll={() => navigate('/packages/pending-collections')}
-                      />
-                    </div>
-                  </div>
+                {/* Pending Collections */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Cobros Pendientes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4">
+                    <PendingCollections
+                      officeId={user?.office_id}
+                      limit={5}
+                      showTitle={false}
+                      compact={true}
+                      onViewAll={() => navigate('/packages/pending-collections')}
+                    />
+                  </CardContent>
+                </Card>
 
-                  {/* Recent Activity */}
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div className="bg-orange-50 px-6 py-4 border-b border-gray-200">
-                      <h2 className="text-xl font-bold text-gray-900">Actividad Reciente</h2>
-                    </div>
-                   <div className="p-6">
-                     {activitiesLoading ? (
-                       <div className="flex justify-center py-4">
-                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600" />
-                       </div>
-                     ) : recentActivities.length === 0 ? (
-                       <p className="text-sm text-gray-500 text-center py-4">Sin actividad reciente</p>
-                     ) : (
-                       <div className="space-y-4">
-                         {recentActivities.map((activity) => {
-                           const color = getActivityColor(activity.activity_type)
-                           return (
-                             <div key={activity.id} className="flex items-start space-x-3">
-                               <div className={`flex items-center justify-center w-8 h-8 bg-${color}-100 rounded-full flex-shrink-0 mt-1`}>
-                                 <div className={`w-2 h-2 bg-${color}-600 rounded-full`} />
-                               </div>
-                               <div className="flex-1 min-w-0">
-                                 <p className="text-sm text-gray-900 font-medium truncate">
-                                   {activity.details || activity.activity_type}
-                                 </p>
-                                 <p className="text-xs text-gray-600 mt-1">{getRelativeTime(activity.created_at)}</p>
-                               </div>
-                             </div>
-                           )
-                         })}
-                       </div>
-                     )}
-                   </div>
-                 </div>
-               </div>
-             </div>
+                {/* Recent Activity */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold">Actividad Reciente</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {activitiesLoading ? (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                      </div>
+                    ) : recentActivities.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4">Sin actividad reciente</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {recentActivities.map((activity) => {
+                          const colors = getActivityColors(activity.activity_type)
+                          return (
+                            <div key={activity.id} className="flex items-start space-x-3">
+                              <div className={`flex items-center justify-center w-8 h-8 ${colors.bg} rounded-full flex-shrink-0 mt-1`}>
+                                <div className={`w-2 h-2 ${colors.dot} rounded-full`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-900 font-medium truncate">
+                                  {activity.details || activity.activity_type}
+                                </p>
+                                <p className="text-xs text-gray-600 mt-1">{getRelativeTime(activity.created_at)}</p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </>
         )}
       </div>

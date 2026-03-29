@@ -5,6 +5,10 @@ import { ownerService } from '@/services/owner.service'
 import { busService } from '@/services/bus.service'
 import BusForm from '@/components/admin/BusForm'
 import { toast } from 'sonner'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Bus, Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 
 interface Bus {
     id: number
@@ -101,82 +105,89 @@ export function Component() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Administración de Buses</h1>
-                    <p className="text-gray-600 mt-1">Gestiona los buses de la flota</p>
-                </div>
-                <button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
-                    + Nuevo Bus
-                </button>
+        <div className="w-full space-y-6">
+            <div className="flex items-center justify-between">
+                <Button onClick={openCreate}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Bus
+                </Button>
             </div>
 
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
                     <p className="text-red-700">{error}</p>
                 </div>
             )}
 
             {loading ? (
                 <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
             ) : (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Placa</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modelo</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacidad</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pisos</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dueño</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {buses.length === 0 ? (
-                                <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-500">No hay buses registrados</td></tr>
-                            ) : (
-                                buses.map((bus) => (
-                                    <tr key={bus.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{bus.plate_number || bus.license_plate}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{bus.model || '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{bus.brand || '—'}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{bus.capacity || '—'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${(bus.floors ?? 1) === 2 ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
-                                                {(bus.floors ?? 1) === 2 ? '2 pisos' : '1 piso'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {(() => {
-                                                const owner = bus.owner_id ? owners.find(o => o.id === bus.owner_id) : null
-                                                return owner ? `${owner.firstname} ${owner.lastname}` : <span className="text-gray-400">Sin dueño</span>
-                                            })()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${bus.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                {bus.is_active !== false ? 'Activo' : 'Inactivo'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            <button onClick={() => openEdit(bus)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</button>
-                                            <button onClick={() => handleDelete(bus)} className="text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <Card>
+                    <CardContent className="p-0">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-muted/50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Placa</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modelo</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacidad</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pisos</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dueño</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {buses.length === 0 ? (
+                                    <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-500">No hay buses registrados</td></tr>
+                                ) : (
+                                    buses.map((bus) => (
+                                        <tr key={bus.id} className="hover:bg-muted/30">
+                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{bus.plate_number || bus.license_plate}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{bus.model || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{bus.brand || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{bus.capacity || '—'}</td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant={(bus.floors ?? 1) === 2 ? 'default' : 'secondary'}>
+                                                    {(bus.floors ?? 1) === 2 ? '2 pisos' : '1 piso'}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {(() => {
+                                                    const owner = bus.owner_id ? owners.find(o => o.id === bus.owner_id) : null
+                                                    return owner ? `${owner.firstname} ${owner.lastname}` : <span className="text-gray-400">Sin dueño</span>
+                                                })()}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant={bus.is_active !== false ? 'default' : 'destructive'}>
+                                                    {bus.is_active !== false ? 'Activo' : 'Inactivo'}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="outline" size="sm" onClick={() => openEdit(bus)}>
+                                                        <Pencil className="h-3.5 w-3.5 mr-1" />
+                                                        Editar
+                                                    </Button>
+                                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(bus)}>
+                                                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                                        Eliminar
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
             )}
 
             {showForm && (
-                <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <BusForm
                         bus={editingBus}
                         isEditing={!!editingBus}

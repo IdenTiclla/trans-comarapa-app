@@ -3,6 +3,8 @@ import SeatLayoutEditor from './SeatLayoutEditor'
 import type { SeatPos } from './SeatLayoutEditor'
 import { cn } from '@/lib/utils'
 import { ownerService } from '@/services/owner.service'
+import { Button } from '@/components/ui/button'
+import { X, LayoutGrid, ChevronRight, Loader2, AlertTriangle, ChevronLeft } from 'lucide-react'
 
 interface Owner {
     id: number
@@ -190,7 +192,7 @@ export default function BusForm({
     const totalSeatCount = seats.length
 
     return (
-        <div className={cn("bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto", currentStep === 2 ? 'max-w-4xl' : 'max-w-md')}>
+        <div className={cn("bg-card rounded-xl shadow-2xl border w-full max-h-[90vh] overflow-y-auto", currentStep === 2 ? 'max-w-4xl' : 'max-w-md')}>
             <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                     <div>
@@ -202,9 +204,7 @@ export default function BusForm({
                         </p>
                     </div>
                     <button onClick={onCancel} className="text-gray-400 hover:text-gray-500">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <X className="h-6 w-6" />
                     </button>
                 </div>
 
@@ -216,24 +216,24 @@ export default function BusForm({
                             className="flex items-center focus:outline-none"
                             disabled={loading}
                         >
-                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600')}>
+                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-gray-200 text-gray-600')}>
                                 1
                             </div>
-                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 1 ? 'text-indigo-600' : 'text-gray-500')}>
+                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 1 ? 'text-primary' : 'text-gray-500')}>
                                 Datos
                             </span>
                         </button>
-                        <div className={cn("w-16 h-0.5 mx-3", currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-200')}></div>
+                        <div className={cn("w-16 h-0.5 mx-3", currentStep >= 2 ? 'bg-primary' : 'bg-gray-200')}></div>
                         <button
                             type="button"
                             onClick={goToStep2}
                             className="flex items-center focus:outline-none"
                             disabled={loading || !canGoToStep2}
                         >
-                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600')}>
+                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-gray-200 text-gray-600')}>
                                 2
                             </div>
-                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 2 ? 'text-indigo-600' : 'text-gray-500')}>
+                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 2 ? 'text-primary' : 'text-gray-500')}>
                                 Planilla
                             </span>
                         </button>
@@ -254,7 +254,7 @@ export default function BusForm({
                             type="text"
                             required
                             maxLength={10}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm uppercase"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm uppercase"
                             placeholder="Ej: 2312ABX"
                         />
                         {errors.license_plate && <p className="mt-1 text-sm text-red-600">{errors.license_plate}</p>}
@@ -271,7 +271,7 @@ export default function BusForm({
                             type="text"
                             required
                             maxLength={100}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
                             placeholder="Ej: Sprinter 515"
                         />
                         {errors.model && <p className="mt-1 text-sm text-red-600">{errors.model}</p>}
@@ -285,7 +285,7 @@ export default function BusForm({
                             onChange={(e) => setForm({ ...form, brand: e.target.value })}
                             type="text"
                             maxLength={50}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
                             placeholder="Ej: Mercedes-Benz"
                         />
                     </div>
@@ -296,7 +296,7 @@ export default function BusForm({
                             id="color"
                             value={form.color}
                             onChange={(e) => setForm({ ...form, color: e.target.value })}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
                         >
                             <option value="">Seleccionar color</option>
                             {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
@@ -312,7 +312,7 @@ export default function BusForm({
                             value={form.floors}
                             onChange={(e) => setForm({ ...form, floors: parseInt(e.target.value) })}
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
                         >
                             <option value={1}>1 Piso</option>
                             <option value={2}>2 Pisos</option>
@@ -331,7 +331,7 @@ export default function BusForm({
                             value={form.owner_id || ''}
                             onChange={(e) => setForm({ ...form, owner_id: e.target.value ? parseInt(e.target.value) : null })}
                             disabled={loadingOwners}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >
                             <option value="">Sin dueño asignado</option>
                             {owners.map(owner => (
@@ -346,60 +346,49 @@ export default function BusForm({
                     </div>
 
                     {isEditing && (
-                        <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="p-3 bg-muted/50 rounded-lg">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-700">Capacidad actual</p>
-                                    <p className="text-2xl font-bold text-indigo-600">{form.capacity} asientos</p>
+                                    <p className="text-2xl font-bold text-primary">{form.capacity} asientos</p>
                                 </div>
-                                <button
+                                <Button
                                     type="button"
+                                    variant="outline"
                                     onClick={goToStep2}
-                                    className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                    </svg>
+                                    <LayoutGrid className="h-4 w-4 mr-2" />
                                     Editar Planilla
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
 
                     <div className="pt-4 flex justify-end gap-3 border-t border-gray-200">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={onCancel}
                             disabled={loading}
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
                             Cancelar
-                        </button>
+                        </Button>
                         {isEditing ? (
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                             >
-                                {loading && (
-                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                )}
+                                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                 Actualizar
-                            </button>
+                            </Button>
                         ) : (
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                             >
                                 Siguiente: Diseñar Planilla
-                                <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
+                                <ChevronRight className="h-4 w-4 ml-2" />
+                            </Button>
                         )}
                     </div>
                 </form>
@@ -414,20 +403,20 @@ export default function BusForm({
                                     <button
                                         type="button"
                                         onClick={() => setActiveDeck('FIRST')}
-                                        className={cn("py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap", activeDeck === 'FIRST' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')}
+                                        className={cn("py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap", activeDeck === 'FIRST' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')}
                                     >
                                         Piso 1
-                                        <span className={cn("ml-2 py-0.5 px-2 rounded-full text-xs", activeDeck === 'FIRST' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600')}>
+                                        <span className={cn("ml-2 py-0.5 px-2 rounded-full text-xs", activeDeck === 'FIRST' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600')}>
                                             {firstDeckSeatCount}
                                         </span>
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setActiveDeck('SECOND')}
-                                        className={cn("py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap", activeDeck === 'SECOND' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')}
+                                        className={cn("py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap", activeDeck === 'SECOND' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')}
                                     >
                                         Piso 2
-                                        <span className={cn("ml-2 py-0.5 px-2 rounded-full text-xs", activeDeck === 'SECOND' ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-600')}>
+                                        <span className={cn("ml-2 py-0.5 px-2 rounded-full text-xs", activeDeck === 'SECOND' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600')}>
                                             {secondDeckSeatCount}
                                         </span>
                                     </button>
@@ -445,7 +434,7 @@ export default function BusForm({
                         onRowsChange={(r) => setRowsPerDeck({ ...rowsPerDeck, [activeDeck]: r })}
                     />
 
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-700">Total de asientos: {totalSeatCount}</p>
@@ -457,9 +446,7 @@ export default function BusForm({
                             </div>
                             {totalSeatCount === 0 && (
                                 <div className="text-sm text-amber-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
+                                    <AlertTriangle className="h-4 w-4 mr-1" />
                                     Debe agregar al menos un asiento
                                 </div>
                             )}
@@ -467,31 +454,23 @@ export default function BusForm({
                     </div>
 
                     <div className="pt-4 flex justify-between border-t border-gray-200 mt-4">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={() => setCurrentStep(1)}
                             disabled={loading}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
+                            <ChevronLeft className="h-4 w-4 mr-2" />
                             Anterior
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
                             onClick={handleSaveBus}
                             disabled={loading || totalSeatCount === 0}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                            {loading && (
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            )}
+                            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                             {isEditing ? 'Guardar Cambios' : 'Crear Bus'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

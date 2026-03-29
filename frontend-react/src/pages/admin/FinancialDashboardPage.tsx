@@ -2,23 +2,22 @@ import { useEffect, useState } from 'react'
 import { financialService } from '@/services/financial.service'
 import type { OfficeFinancialSummary, FinancialTotals, OfficeCollection } from '@/services/financial.service'
 import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DollarSign, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 
 function formatCurrency(value: number): string {
   return `Bs. ${value.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; text: string; label: string }> = {
-    open: { bg: 'bg-green-100', text: 'text-green-800', label: 'Abierta' },
-    closed: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cerrada' },
-    no_register: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Sin caja' },
+  const config: Record<string, { variant: 'default' | 'secondary' | 'destructive'; label: string }> = {
+    open: { variant: 'default', label: 'Abierta' },
+    closed: { variant: 'secondary', label: 'Cerrada' },
+    no_register: { variant: 'destructive', label: 'Sin caja' },
   }
   const c = config[status] ?? config.no_register
-  return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${c.bg} ${c.text}`}>
-      {c.label}
-    </span>
-  )
+  return <Badge variant={c.variant}>{c.label}</Badge>
 }
 
 export function Component() {
@@ -52,55 +51,62 @@ export function Component() {
   }, [selectedDate])
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Financiero</h1>
-              <p className="text-gray-600 text-sm mt-1">Resumen de caja por oficina</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Fecha:</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
+    <div className="w-full space-y-6">
+      <div className="flex items-center justify-end">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Fecha:</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
         </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
-          </div>
-        ) : (
-          <>
-            {totals && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white rounded-xl shadow p-4 border border-gray-200">
-                  <p className="text-sm text-gray-500">Total Ingresos</p>
-                  <p className="text-xl font-bold text-green-600">{formatCurrency(totals.total_in)}</p>
-                </div>
-                <div className="bg-white rounded-xl shadow p-4 border border-gray-200">
-                  <p className="text-sm text-gray-500">Total Retiros</p>
-                  <p className="text-xl font-bold text-red-600">{formatCurrency(totals.total_out)}</p>
-                </div>
-                <div className="bg-white rounded-xl shadow p-4 border border-gray-200">
-                  <p className="text-sm text-gray-500">Disponible Total</p>
-                  <p className="text-xl font-bold text-indigo-600">{formatCurrency(totals.total_available)}</p>
-                </div>
-              </div>
-            )}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          {totals && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Ingresos</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.total_in)}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Retiros</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.total_out)}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Disponible Total</CardTitle>
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(totals.total_available)}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-            <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+          <Card>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-muted/50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -110,9 +116,9 @@ export function Component() {
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Disponible</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200">
                     {offices.map((office) => (
-                      <tr key={office.office_id} className="hover:bg-gray-50">
+                      <tr key={office.office_id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">{office.office_name}</td>
                         <td className="px-4 py-3"><StatusBadge status={office.status} /></td>
                         <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(office.initial_balance)}</td>
@@ -124,30 +130,32 @@ export function Component() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {collections.length > 0 && (
-              <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden mt-6">
-                <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
-                  <h2 className="text-sm font-semibold text-amber-800">
-                    Cobros de Encomiendas por Oficina (POR COBRAR)
-                  </h2>
-                  <p className="text-xs text-amber-600 mt-0.5">
-                    Desglose de cobros realizados en destino
-                  </p>
-                </div>
+          {collections.length > 0 && (
+            <Card>
+              <CardHeader className="bg-amber-50 border-b border-amber-100 px-4 py-3">
+                <CardTitle className="text-sm font-semibold text-amber-800">
+                  Cobros de Encomiendas por Oficina (POR COBRAR)
+                </CardTitle>
+                <p className="text-xs text-amber-600 mt-0.5">
+                  Desglose de cobros realizados en destino
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-muted/50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Transacciones</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cobrado</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200">
                       {collections.map((col) => (
-                        <tr key={col.office_id} className="hover:bg-gray-50">
+                        <tr key={col.office_id} className="hover:bg-muted/30">
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">{col.office_name}</td>
                           <td className="px-4 py-3 text-sm text-gray-600 text-right">{col.transactions_count}</td>
                           <td className="px-4 py-3 text-sm text-amber-700 text-right font-bold">{formatCurrency(col.total_collected)}</td>
@@ -164,11 +172,11 @@ export function Component() {
                     </tfoot>
                   </table>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   )
 }

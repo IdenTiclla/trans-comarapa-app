@@ -6,6 +6,8 @@ import { fetchDrivers, selectDrivers } from '@/store/driver.slice'
 import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import { fetchSecretaries, selectSecretaries } from '@/store/secretary.slice'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { X, Loader2, MapPin, Clock } from 'lucide-react'
 
 interface CreateTripModalProps {
   open: boolean
@@ -112,43 +114,43 @@ export default function CreateTripModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+        <div className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">Crear Viaje</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <h2 className="text-lg font-bold text-foreground">Crear Viaje</h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-5 w-5" />
             </button>
           </div>
-          {/* Route/date/time summary */}
-          <div className="mt-3 p-3 bg-indigo-50 rounded-lg text-sm">
-            <p className="font-semibold text-indigo-900">{routeLabel}</p>
-            <p className="text-indigo-700 mt-1">
+          <div className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/10">
+            <div className="flex items-center gap-2 text-foreground font-semibold">
+              <MapPin className="h-4 w-4 text-primary" />
+              {routeLabel}
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+              <Clock className="h-4 w-4" />
               {new Date(date + 'T00:00:00').toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' })} - {time}
-            </p>
+            </div>
           </div>
         </div>
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          {/* Bus (required) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bus <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Bus <span className="text-destructive">*</span>
             </label>
             {busLoading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600" />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 Cargando buses...
               </div>
             ) : (
               <select
                 value={busId}
                 onChange={(e) => setBusId(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
               >
                 <option value="">Seleccionar bus...</option>
                 {busOptions.map((o) => (
@@ -158,13 +160,12 @@ export default function CreateTripModal({
             )}
           </div>
 
-          {/* Driver (optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Conductor</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Conductor</label>
             <select
               value={driverId}
               onChange={(e) => setDriverId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
             >
               <option value="">Sin asignar</option>
               {driverOptions.map((o) => (
@@ -173,13 +174,12 @@ export default function CreateTripModal({
             </select>
           </div>
 
-          {/* Assistant (optional) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Asistente</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Asistente</label>
             <select
               value={assistantId}
               onChange={(e) => setAssistantId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
             >
               <option value="">Sin asignar</option>
               {assistantOptions.map((o) => (
@@ -190,21 +190,25 @@ export default function CreateTripModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
-          <button
+        <div className="px-6 py-4 bg-muted/50 border-t flex gap-3 justify-end">
+          <Button
+            variant="outline"
             onClick={onClose}
             disabled={submitting}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={!busId || submitting}
-            className="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {submitting ? 'Creando...' : 'Crear Viaje'}
-          </button>
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Creando...
+              </>
+            ) : 'Crear Viaje'}
+          </Button>
         </div>
       </div>
     </div>

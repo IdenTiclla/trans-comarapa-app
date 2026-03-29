@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { locationService } from '@/services/location.service'
+import { Button } from '@/components/ui/button'
+import { X, Plus, Clock, Eye, EyeOff, Trash2, Loader2 } from 'lucide-react'
 
 interface RouteFormProps {
     route?: any
@@ -178,16 +180,14 @@ export default function RouteForm({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="bg-card rounded-xl shadow-2xl border w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900">
                         {isEditing ? 'Editar Ruta' : 'Nueva Ruta'}
                     </h3>
                     <button onClick={onCancel} className="text-gray-400 hover:text-gray-500">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <X className="h-6 w-6" />
                     </button>
                 </div>
             </div>
@@ -199,7 +199,7 @@ export default function RouteForm({
                         id="origin"
                         value={form.origin_location_id}
                         onChange={(e) => setForm({ ...form, origin_location_id: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     >
                         <option value="" disabled>Seleccionar origen</option>
@@ -217,7 +217,7 @@ export default function RouteForm({
                         id="destination"
                         value={form.destination_location_id}
                         onChange={(e) => setForm({ ...form, destination_location_id: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     >
                         <option value="" disabled>Seleccionar destino</option>
@@ -241,7 +241,7 @@ export default function RouteForm({
                         onChange={(e) => setForm({ ...form, distance: e.target.value })}
                         step="0.1"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
                 </div>
@@ -255,7 +255,7 @@ export default function RouteForm({
                         onChange={(e) => setForm({ ...form, duration: e.target.value })}
                         step="0.5"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
                 </div>
@@ -269,7 +269,7 @@ export default function RouteForm({
                         onChange={(e) => setForm({ ...form, price: e.target.value })}
                         step="0.5"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
                 </div>
@@ -285,31 +285,27 @@ export default function RouteForm({
                                 type="time"
                                 value={newScheduleTime}
                                 onChange={(e) => setNewScheduleTime(e.target.value)}
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                                 placeholder="HH:MM"
                             />
                         </div>
-                        <button
+                        <Button
                             type="button"
+                            size="sm"
                             onClick={addLocalSchedule}
                             disabled={!newScheduleTime}
-                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                            <Plus className="h-4 w-4 mr-1" />
                             Agregar
-                        </button>
+                        </Button>
                     </div>
                     {scheduleError && (
                         <p className="mb-2 text-sm text-red-600">{scheduleError}</p>
                     )}
 
                     {localSchedules.length === 0 ? (
-                        <div className="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                            <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        <div className="text-center py-4 bg-muted/50 rounded-lg border border-dashed border-gray-300">
+                            <Clock className="mx-auto h-8 w-8 text-gray-400" />
                             <p className="mt-1 text-sm text-gray-500">Sin horarios configurados</p>
                         </div>
                     ) : (
@@ -317,15 +313,13 @@ export default function RouteForm({
                             {sortedLocalSchedules.map((schedule, index) => (
                                 <div
                                     key={schedule._localId || schedule.id}
-                                    className={`flex items-center justify-between p-2 rounded-lg border ${schedule.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'}`}
+                                    className={`flex items-center justify-between p-2 rounded-lg border ${schedule.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-muted/50'}`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <span
-                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold ${schedule.is_active ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-200 text-gray-500'}`}
+                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold ${schedule.is_active ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'}`}
                                         >
-                                            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                                            <Clock className="w-3.5 h-3.5 mr-1" />
                                             {formatTime(schedule.departure_time)}
                                         </span>
                                         {!schedule.is_active && <span className="text-xs text-gray-400">Inactivo</span>}
@@ -339,14 +333,9 @@ export default function RouteForm({
                                             title={schedule.is_active ? 'Desactivar' : 'Activar'}
                                         >
                                             {schedule.is_active ? (
-                                                <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
+                                                <Eye className="h-4 w-4 text-green-600" />
                                             ) : (
-                                                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                                </svg>
+                                                <EyeOff className="h-4 w-4 text-gray-400" />
                                             )}
                                         </button>
 
@@ -356,9 +345,7 @@ export default function RouteForm({
                                             className="p-1 rounded hover:bg-red-50 text-red-600 hover:text-red-900"
                                             title="Eliminar"
                                         >
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
+                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -368,31 +355,27 @@ export default function RouteForm({
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={onCancel}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         disabled={loading}
                     >
                         Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                         disabled={loading || sameLocationError}
                     >
                         {loading ? (
                             <span className="inline-flex items-center">
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 Guardando...
                             </span>
                         ) : (
                             <span>{isEditing ? 'Actualizar' : 'Crear'}</span>
                         )}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>

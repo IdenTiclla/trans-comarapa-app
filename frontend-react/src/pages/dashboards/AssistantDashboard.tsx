@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useAuth } from '@/hooks/use-auth'
 import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
 
@@ -66,7 +65,6 @@ const PKG_STATUS_LABELS: Record<string, string> = {
 }
 
 export function Component() {
-  const { user } = useAuth()
   const [trips, setTrips] = useState<MyTrip[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null)
@@ -135,41 +133,23 @@ export function Component() {
   const nextScheduled = todayTrips.find(t => t.status === 'scheduled')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 w-full">
-        <div className="w-full px-2 sm:px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl shadow-lg">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Mis Viajes</h1>
-                <p className="text-gray-700">Bienvenido, {user?.firstname} {user?.lastname}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilter('active')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'active' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                Activos
-              </button>
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                Todos
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="w-full">
+      <div className="flex justify-end gap-2 px-2 sm:px-4 lg:px-6 pt-4">
+        <button
+          onClick={() => setFilter('active')}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'active' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        >
+          Activos
+        </button>
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        >
+          Todos
+        </button>
       </div>
 
-      <div className="w-full px-2 sm:px-4 lg:px-6 py-6 space-y-6">
+      <div className="w-full px-2 sm:px-4 lg:px-6 py-4 space-y-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard label="Viajes Hoy" value={todayTrips.length} icon="🚌" />
@@ -180,7 +160,7 @@ export function Component() {
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600" />
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
           </div>
         ) : trips.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
@@ -367,19 +347,19 @@ function TripCard({
           <div className="flex border-b border-gray-100">
             <button
               onClick={() => onTabChange('passengers')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'passengers' ? 'text-amber-700 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'passengers' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Pasajeros
             </button>
             <button
               onClick={() => onTabChange('packages')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'packages' ? 'text-amber-700 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'packages' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Encomiendas
             </button>
             <button
               onClick={() => onTabChange('checklist')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'checklist' ? 'text-amber-700 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'checklist' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Verificación
             </button>
@@ -478,7 +458,7 @@ function TripCard({
                       </span>
                       <div className="w-32 bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-amber-600 h-2 rounded-full transition-all"
+                          className="bg-primary h-2 rounded-full transition-all"
                           style={{ width: `${trip.passengers.length > 0 ? (checked.size / trip.passengers.length) * 100 : 0}%` }}
                         />
                       </div>
@@ -486,13 +466,13 @@ function TripCard({
                     {trip.passengers.map(p => (
                       <label
                         key={p.ticket_id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${checked.has(p.ticket_id) ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${checked.has(p.ticket_id) ? 'bg-primary/5 border-primary/30' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
                       >
                         <input
                           type="checkbox"
                           checked={checked.has(p.ticket_id)}
                           onChange={() => toggleCheck(p.ticket_id)}
-                          className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/50"
                         />
                         <span className="font-medium text-gray-900 w-10">#{p.seat_number}</span>
                         <span className={`flex-1 ${checked.has(p.ticket_id) ? 'text-gray-400 line-through' : 'text-gray-700'}`}>

@@ -2,6 +2,8 @@
 
 @import 'tailwindcss';
 
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   /* Screens */
   --breakpoint-xs: 320px;
@@ -20,6 +22,20 @@
   --color-comarapa-light: #64B5F6;
   --color-comarapa-white: #FFFFFF;
   --color-comarapa-gray: #E3F2FD;
+
+  /* Navy palette */
+  --color-navy-900: #1B2A4A;
+  --color-navy-800: #243656;
+  --color-navy-700: #2D3F5E;
+
+  /* CTA */
+  --color-cta-brown: #6B3A2A;
+  --color-cta-brown-hover: #7D4A38;
+
+  /* Status */
+  --color-status-available: #22C55E;
+  --color-status-medium: #F59E0B;
+  --color-status-full: #EF4444;
 
   /* Spacing */
   --spacing-18: 4.5rem;
@@ -75,14 +91,14 @@
     --comarapa-white: #FFFFFF;
     --comarapa-gray: #E3F2FD;
 
-    --background: oklch(1 0 0);
+    --background: #F8F9FA;
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
+    --primary: #1B2A4A;
+    --primary-foreground: #FFFFFF;
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
@@ -100,14 +116,14 @@
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #1B2A4A;
+    --sidebar-foreground: #FFFFFF;
+    --sidebar-primary: #3B82F6;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #243656;
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: #2D3F5E;
+    --sidebar-ring: #3B82F6;
   }
 }
 
@@ -146,63 +162,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @layer components {
-  .comarapa-gradient {
-    background: linear-gradient(135deg, var(--comarapa-dark) 0%, var(--comarapa-medium) 50%, var(--comarapa-light) 100%);
-  }
-
-  .comarapa-card {
-    @apply bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 transition-all duration-300;
-  }
-
-  .comarapa-card:hover {
-    @apply shadow-xl;
-    box-shadow: 0 25px 50px -12px rgba(33, 150, 243, 0.25);
-  }
-
-  .comarapa-button-primary {
-    @apply bg-comarapa-dark text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base;
-  }
-
-  .comarapa-button-primary:hover {
-    @apply bg-comarapa-medium shadow-lg;
-    transform: translateY(-2px);
-  }
-
-  .comarapa-button-secondary {
-    @apply bg-white text-comarapa-dark border-2 border-comarapa-dark px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base;
-  }
-
-  .comarapa-button-secondary:hover {
-    @apply bg-comarapa-dark text-white shadow-lg;
-    transform: translateY(-2px);
-  }
-
-  .touch-safe {
-    @apply touch-manipulation;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  .responsive-text-title {
-    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl;
-  }
-
-  .responsive-text-subtitle {
-    @apply text-base sm:text-lg md:text-xl;
-  }
-
-  .responsive-text-body {
-    @apply text-sm sm:text-base;
-  }
-
-  .responsive-spacing-section {
-    @apply py-12 sm:py-16 md:py-20 lg:py-24;
-  }
-
-  .responsive-container {
-    @apply px-4 sm:px-6 lg:px-8;
-  }
-
   .modal-overlay-bokeh {
     background:
       radial-gradient(ellipse 600px 400px at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
@@ -212,3 +171,5 @@ h1, h2, h3, h4, h5, h6 {
       rgba(0, 0, 0, 0.5);
   }
 }
+
+

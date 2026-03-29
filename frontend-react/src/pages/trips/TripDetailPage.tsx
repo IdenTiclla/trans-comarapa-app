@@ -14,6 +14,8 @@ import PackageAssignModal from '@/components/packages/PackageAssignModal'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
+import { Button } from '@/components/ui/button'
+import { Send, Check, FileText } from 'lucide-react'
 
 function formatTimeAmPm(timeString: string) {
   if (!timeString) return ''
@@ -38,7 +40,6 @@ export function Component() {
 
   const isDoubleDeck = (trip?.bus?.floors || 1) >= 2
 
-  // Keyboard shortcuts
   const shortcuts = useMemo(() => ({
     'escape': () => {
       page.ticketSale.close()
@@ -69,18 +70,18 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent" />
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 px-4 py-8">
-        <div className="max-w-xl mx-auto bg-red-50 border border-red-200 rounded-xl p-6">
+      <div className="max-w-xl mx-auto py-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <div className="flex items-start gap-3">
-            <svg className="h-5 w-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+            <div className="h-5 w-5 text-red-400 mt-0.5">!</div>
             <div><p className="text-sm font-medium text-red-800">{error}</p><button onClick={refreshTrip} className="mt-2 text-sm text-red-600 underline">Reintentar</button></div>
           </div>
         </div>
@@ -91,18 +92,17 @@ export function Component() {
   if (!trip) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
+    <div className="w-full">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b shadow-sm">
         <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm font-bold text-gray-800 truncate">{trip.route?.origin}</span>
-                <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                <span className="text-sm font-bold text-gray-800 truncate">{trip.route?.destination}</span>
-                <span className="hidden md:inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">{trip.departure_time ? formatTimeAmPm(trip.departure_time) : ''}</span>
+                <span className="text-sm font-bold text-foreground truncate">{trip.route?.origin}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="text-sm font-bold text-foreground truncate">{trip.route?.destination}</span>
+                <span className="hidden md:inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">{trip.departure_time ? formatTimeAmPm(trip.departure_time) : ''}</span>
               </div>
             </div>
 
@@ -112,25 +112,33 @@ export function Component() {
 
             <div className="flex items-center gap-2 flex-shrink-0">
               {(trip.status === 'scheduled' || trip.status === 'boarding') && (
-                <button
-                  onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
+                <Button
+                  size="sm"
+                  variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
                   disabled={!page.dispatch.canDispatch}
-                  className={`inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg shadow-sm transition-colors ${page.dispatch.canDispatch ? 'text-white bg-blue-600 hover:bg-blue-700' : 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed'}`}
+                  onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
                   title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
+                  className="gap-1.5"
                 >
-                  <svg className="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  <Send className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Despachar</span>
-                </button>
+                </Button>
               )}
               {trip.status === 'departed' && (
-                <button onClick={() => page.finish.setShow(true)} className="inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm transition-colors">
-                  <svg className="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <Button
+                  size="sm"
+                  onClick={() => page.finish.setShow(true)}
+                  className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Check className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Terminar</span>
-                </button>
+                </Button>
               )}
-              <Link to={`/trips/${tripId}/sheet`} target="_blank" className="inline-flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors no-underline">
-                <svg className="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                <span className="hidden sm:inline">Planilla</span>
+              <Link to={`/trips/${tripId}/sheet`} target="_blank">
+                <Button size="sm" className="gap-1.5">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Planilla</span>
+                </Button>
               </Link>
             </div>
           </div>
@@ -144,7 +152,7 @@ export function Component() {
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (
-        <div className="sticky top-[56px] z-20 bg-gradient-to-r from-orange-400 to-amber-500 shadow-md">
+        <div className="sticky top-[56px] z-20 bg-orange-500 shadow-md">
           <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center text-white">
               <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,9 +163,9 @@ export function Component() {
                 <p className="text-sm text-orange-50">Seleccione el nuevo asiento para {seatChange.ticket.client?.firstname} {seatChange.ticket.client?.lastname} (Asiento actual: {seatChange.ticket.seat?.seat_number})</p>
               </div>
             </div>
-            <button onClick={seatChange.cancel} className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm font-semibold">
+            <Button variant="ghost" onClick={seatChange.cancel} className="text-white hover:bg-white/20">
               Cancelar Cambio
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -165,7 +173,6 @@ export function Component() {
       {/* Main Content */}
       <div className="pt-3 pb-8 px-3 sm:px-4 lg:px-6">
         <div className="max-w-screen-2xl mx-auto space-y-6">
-          {/* Trip Info Card */}
           <TripInfoCard
             trip={trip}
             ticketStats={page.ticketStats}
@@ -175,7 +182,6 @@ export function Component() {
             staff={page.staff}
           />
 
-          {/* Seat Map */}
           <BusSeatMapPrint
             key={seatMap.key}
             trip={trip}
@@ -194,7 +200,6 @@ export function Component() {
             onChangeSeat={page.seatMapHandlers.onChangeSeat}
           />
 
-          {/* Packages */}
           <TripPackagesSection
             tripPackages={page.packages.items}
             isLoading={page.packages.loading}

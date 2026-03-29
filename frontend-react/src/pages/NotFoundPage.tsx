@@ -10,7 +10,7 @@ export function Component() {
         <p className="text-xl text-gray-600 mt-4">Página no encontrada</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-6 comarapa-button-primary"
+          className="mt-6 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
         >
           Volver al inicio
         </button>
