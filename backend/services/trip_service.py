@@ -113,6 +113,20 @@ class TripService:
 
             available_seats = total_seats - occupied_seats_count
 
+            driver_info = None
+            if trip.driver:
+                driver_info = {
+                    "firstname": trip.driver.firstname,
+                    "lastname": trip.driver.lastname,
+                }
+
+            bus_info = None
+            if trip.bus:
+                bus_info = {
+                    "license_plate": trip.bus.license_plate,
+                    "floors": trip.bus.floors,
+                }
+
             processed_trips.append(
                 {
                     "id": trip.id,
@@ -127,6 +141,8 @@ class TripService:
                         "destination": destination_name,
                         "price": route_price,
                     },
+                    "driver": driver_info,
+                    "bus": bus_info,
                     "total_seats": total_seats,
                     "available_seats": available_seats,
                     "occupied_seats": occupied_seats_count,

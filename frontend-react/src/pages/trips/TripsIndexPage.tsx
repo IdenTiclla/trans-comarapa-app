@@ -5,6 +5,9 @@ import { fetchTrips, selectTrips, selectTripLoading, selectTripError } from '@/s
 import { fetchRoutesWithSchedules } from '@/store/route.slice'
 import TripCardList from '@/components/trips/TripCardList'
 import CreateTripModal from '@/components/trips/CreateTripModal'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Calendar, AlertCircle, RefreshCw, Printer } from 'lucide-react'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -80,10 +83,27 @@ export function Component() {
     return board
   }, [routesWithSchedules, trips, selectedDate])
 
-  const quickStats = useMemo(() => {
-    let totalSchedules = 0, tripsCreated = 0, emptySlots = 0
-    for (const group of scheduleBoard) for (const slot of group.slots) { totalSchedules++; if (slot.trip) { tripsCreated++ } else { emptySlots++ } }
-    return { totalSchedules, tripsCreated, emptySlots, totalRoutes: scheduleBoard.length }
+  // Stats computed from loaded trips
+  const boardStats = useMemo(() => {
+    let totalSeats = 0
+    let soldTickets = 0
+    let estimatedRevenue = 0
+    let activeRoutes = scheduleBoard.length
+
+    for (const group of scheduleBoard) {
+      for (const slot of group.slots) {
+        if (slot.trip) {
+          const total = (slot.trip.total_seats as number) ?? 0
+          const available = (slot.trip.available_seats as number) ?? 0
+          const occupied = Math.max(0, total - available)
+          totalSeats += total
+          soldTickets += occupied
+          estimatedRevenue += occupied * (group.route.price ?? 0)
+        }
+      }
+    }
+
+    return { totalSeats, soldTickets, estimatedRevenue, activeRoutes }
   }, [scheduleBoard])
 
   const isToday = selectedDate === getTodayStr()
@@ -91,77 +111,113 @@ export function Component() {
   const isDayAfter = selectedDate === getDayAfterStr()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-100 w-full">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 w-full">
-        <div className="w-full px-2 sm:px-4 lg:px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl shadow-lg">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Tablero de Viajes</h1>
-                <p className="text-gray-700">{formattedDate}</p>
-              </div>
-            </div>
-            <div className="flex items-center flex-wrap gap-2">
-              {[{ label: 'Hoy', active: isToday, fn: () => setSelectedDate(getTodayStr()) },
-              { label: 'Mañana', active: isTomorrow, fn: () => setSelectedDate(getTomorrowStr()) },
-              { label: 'Pasado mañana', active: isDayAfter, fn: () => setSelectedDate(getDayAfterStr()) },
-              ].map((btn) => (
-                <button key={btn.label} onClick={btn.fn} className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${btn.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>{btn.label}</button>
-              ))}
-              <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="pl-3 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm" />
-            </div>
+    <div className="w-full space-y-4">
+      {/* Header + Date Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Tablero de Viajes Diarios</h1>
+          <div className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{formattedDate}</span>
+            <span className="text-border">|</span>
+            <span className="text-primary font-medium">{boardStats.activeRoutes} Rutas Activas</span>
           </div>
         </div>
-      </div>
-
-      {/* Main */}
-      <div className="w-full px-2 sm:px-4 lg:px-6 py-6 overflow-x-hidden">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {[{ value: quickStats.totalSchedules, label: 'Horarios del dia', color: 'text-indigo-600' },
-          { value: quickStats.tripsCreated, label: 'Viajes creados', color: 'text-green-600' },
-          { value: quickStats.emptySlots, label: 'Sin viaje', color: 'text-orange-600' },
-          { value: quickStats.totalRoutes, label: 'Rutas activas', color: 'text-purple-600' },
-          ].map((s) => (
-            <div key={s.label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-              <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-sm text-gray-600">{s.label}</div>
-            </div>
+        <div className="flex items-center flex-wrap gap-1.5">
+          {[
+            { label: 'Hoy', active: isToday, fn: () => setSelectedDate(getTodayStr()) },
+            { label: 'Mañana', active: isTomorrow, fn: () => setSelectedDate(getTomorrowStr()) },
+            { label: 'Pasado', active: isDayAfter, fn: () => setSelectedDate(getDayAfterStr()) },
+          ].map((btn) => (
+            <Button
+              key={btn.label}
+              variant={btn.active ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={btn.fn}
+            >
+              {btn.label}
+            </Button>
           ))}
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-2 py-1 border border-input rounded-md text-xs bg-background focus:ring-2 focus:ring-ring focus:border-ring h-7"
+          />
         </div>
+      </div>
 
-        {/* Error */}
-        {hasError && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <svg className="h-6 w-6 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-red-800">Error al cargar datos</h3>
-                <p className="text-red-700 mt-1">{tripError || routeError}</p>
-                <button onClick={() => loadData(selectedDate)} className="mt-3 text-sm bg-red-100 hover:bg-red-200 text-red-800 font-medium px-4 py-2 rounded-lg transition-colors border border-red-300">Intentar nuevamente</button>
+      {/* Error */}
+      {hasError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-red-800">Error al cargar datos</h3>
+                <p className="text-sm text-red-700 mt-1">{tripError || routeError}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadData(selectedDate)}
+                  className="mt-3 border-red-300 text-red-800 hover:bg-red-100"
+                >
+                  Intentar nuevamente
+                </Button>
               </div>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Schedule Board */}
-        <TripCardList
-          scheduleBoard={scheduleBoard}
-          loading={isLoading}
-          selectedDate={selectedDate}
-          onViewTrip={(id) => navigate(`/trips/${id}`)}
-          onEditTrip={(id) => navigate(`/trips/${id}/edit`)}
-          onCreateTrip={({ routeId, date, time }) => {
-            const routeGroup = scheduleBoard.find((g: any) => g.route.id === routeId)
-            const routeLabel = routeGroup ? `${routeGroup.route.origin} → ${routeGroup.route.destination}` : ''
-            setCreateModal({ routeId, routeLabel, date, time })
-          }}
-        />
-      </div>
+      {/* Schedule Board */}
+      <TripCardList
+        scheduleBoard={scheduleBoard}
+        loading={isLoading}
+        selectedDate={selectedDate}
+        onViewTrip={(id) => navigate(`/trips/${id}`)}
+        onSellTicket={(id) => navigate(`/trips/${id}`)}
+        onCreateTrip={({ routeId, date, time }) => {
+          const routeGroup = scheduleBoard.find((g: any) => g.route.id === routeId)
+          const routeLabel = routeGroup ? `${routeGroup.route.origin} → ${routeGroup.route.destination}` : ''
+          setCreateModal({ routeId, routeLabel, date, time })
+        }}
+      />
+
+      {/* Footer Stats Bar */}
+      {!isLoading && scheduleBoard.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Total Asientos</p>
+              <p className="text-xl font-bold text-foreground">{boardStats.totalSeats}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Boletos Vendidos</p>
+              <p className="text-xl font-bold text-foreground">{boardStats.soldTickets}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ingresos Estimados</p>
+              <p className="text-xl font-bold text-primary">Bs. {boardStats.estimatedRevenue.toLocaleString('es-BO')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => window.print()}>
+              <Printer className="h-3.5 w-3.5" />
+              Imprimir Manifiesto
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 h-8 bg-[#7c2d12] hover:bg-[#9a3412]"
+              onClick={() => loadData(selectedDate)}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Sincronizar Datos
+            </Button>
+          </div>
+        </div>
+      )}
 
       {createModal && (
         <CreateTripModal
