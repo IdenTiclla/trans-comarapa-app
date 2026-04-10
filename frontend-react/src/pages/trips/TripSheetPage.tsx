@@ -78,6 +78,8 @@ export function Component() {
   }
 
   const totalPassengers = Object.keys(passengersBySeat).length
+  const busCapacity: number = trip?.bus?.capacity ?? 50
+  const halfCapacity = Math.ceil(busCapacity / 2)
   const isLoading = loading || loadingPassengers
   const hasError = error || passError
 
@@ -426,16 +428,16 @@ export function Component() {
             <div className="ts-stat">
               <div className="ts-stat-label">Pasajeros</div>
               <div className="ts-stat-value">{totalPassengers}</div>
-              <div className="ts-stat-sub">de 50 asientos</div>
+              <div className="ts-stat-sub">de {busCapacity} asientos</div>
             </div>
             <div className="ts-stat">
               <div className="ts-stat-label">Disponibles</div>
-              <div className="ts-stat-value">{50 - totalPassengers}</div>
+              <div className="ts-stat-value">{busCapacity - totalPassengers}</div>
               <div className="ts-stat-sub">asientos libres</div>
             </div>
             <div className="ts-stat">
               <div className="ts-stat-label">Ocupación</div>
-              <div className="ts-stat-value">{Math.round((totalPassengers / 50) * 100)}%</div>
+              <div className="ts-stat-value">{busCapacity > 0 ? Math.round((totalPassengers / busCapacity) * 100) : 0}%</div>
               <div className="ts-stat-sub">del bus</div>
             </div>
             <div className="ts-stat">
@@ -554,7 +556,7 @@ export function Component() {
               {/* ══ Passenger tables ══ */}
               <div className="pax-grid">
 
-                {/* Left 1–25 */}
+                {/* Left column: seats 1 → halfCapacity */}
                 <table className="pax-table">
                   <thead>
                     <tr>
@@ -565,7 +567,7 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: 25 }, (_, i) => i + 1).map((n) => {
+                    {Array.from({ length: halfCapacity }, (_, i) => i + 1).map((n) => {
                       const name = getPassengerName(n)
                       return (
                         <tr key={n} className={name.trim() ? 'pax-occupied' : ''}>
@@ -579,7 +581,7 @@ export function Component() {
                   </tbody>
                 </table>
 
-                {/* Right 26–50 */}
+                {/* Right column: seats halfCapacity+1 → busCapacity */}
                 <table className="pax-table">
                   <thead>
                     <tr>
@@ -590,7 +592,7 @@ export function Component() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: 25 }, (_, i) => i + 26).map((n) => {
+                    {Array.from({ length: busCapacity - halfCapacity }, (_, i) => i + halfCapacity + 1).map((n) => {
                       const name = getPassengerName(n)
                       return (
                         <tr key={n} className={name.trim() ? 'pax-occupied' : ''}>
