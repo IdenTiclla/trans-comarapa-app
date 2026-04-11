@@ -23,8 +23,20 @@ export const ownerService = {
         return apiFetch(`${RESOURCE_URL}/${id}`, { method: 'DELETE' })
     },
 
-    getFinancials(id: number) {
-        return apiFetch(`${RESOURCE_URL}/${id}/financials`)
+    getFinancials(id: number, busId?: number) {
+        const params: Record<string, unknown> = {}
+        if (busId !== undefined) params.bus_id = busId
+        return apiFetch(`${RESOURCE_URL}/${id}/financials`, { params })
+    },
+
+    getBuses(id: number) {
+        return apiFetch(`${RESOURCE_URL}/${id}/buses`)
+    },
+
+    getWithdrawals(id: number, busId?: number) {
+        const params: Record<string, unknown> = {}
+        if (busId !== undefined) params.bus_id = busId
+        return apiFetch(`${RESOURCE_URL}/${id}/withdrawals`, { params })
     },
 
     withdraw(id: number, data: { trip_id: number; amount: number; office_id: number }) {

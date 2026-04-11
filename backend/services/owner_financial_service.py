@@ -22,7 +22,9 @@ class OwnerFinancialService:
         self.db = db
         self.cash_register_service = CashRegisterService(db)
 
-    def get_owner_trips_financials(self, owner_id: int) -> List[Dict[str, Any]]:
+    def get_owner_trips_financials(
+        self, owner_id: int, bus_id: int = None
+    ) -> List[Dict[str, Any]]:
         owner = self.db.query(Owner).filter(Owner.id == owner_id).first()
         if not owner:
             raise NotFoundException(f"Dueño con ID {owner_id} no encontrado")
@@ -31,18 +33,25 @@ class OwnerFinancialService:
         if not bus_ids:
             return []
 
+        if bus_id is not None:
+            if bus_id not in bus_ids:
+                raise ValidationException("El bus no pertenece a este socio")
+            bus_ids = [bus_id]
+
         trips = self.db.query(Trip).filter(Trip.bus_id.in_(bus_ids)).all()
 
         financials = []
         for trip in trips:
-            office_data = defaultdict(lambda: {
-                "office_name": "",
-                "tickets_amount": 0.0,
-                "packages_paid_amount": 0.0,
-                "packages_collected_amount": 0.0,
-                "packages_pending_amount": 0.0,
-                "withdrawn_amount": 0.0,
-            })
+            office_data = defaultdict(
+                lambda: {
+                    "office_name": "",
+                    "tickets_amount": 0.0,
+                    "packages_paid_amount": 0.0,
+                    "packages_collected_amount": 0.0,
+                    "packages_pending_amount": 0.0,
+                    "withdrawn_amount": 0.0,
+                }
+            )
 
             def _ensure_office(oid, name):
                 if not office_data[oid]["office_name"]:
@@ -57,7 +66,12 @@ class OwnerFinancialService:
                     tickets_total += amt
                     if t.secretary and t.secretary.office_id:
                         oid = t.secretary.office_id
-                        _ensure_office(oid, t.secretary.office.name if t.secretary.office else f"Oficina {oid}")
+                        _ensure_office(
+                            oid,
+                            t.secretary.office.name
+                            if t.secretary.office
+                            else f"Oficina {oid}",
+                        )
                         office_data[oid]["tickets_amount"] += amt
 
             # 2. Encomiendas
@@ -78,7 +92,9 @@ class OwnerFinancialService:
                 origin_name = p.origin_office.name if p.origin_office else None
                 if not origin_oid and p.secretary and p.secretary.office_id:
                     origin_oid = p.secretary.office_id
-                    origin_name = p.secretary.office.name if p.secretary.office else None
+                    origin_name = (
+                        p.secretary.office.name if p.secretary.office else None
+                    )
                 if origin_oid and not origin_name:
                     origin_name = f"Oficina {origin_oid}"
 
@@ -146,7 +162,12 @@ class OwnerFinancialService:
                     total_withdrawn += w_amount
                     if ct.cash_register and ct.cash_register.office_id:
                         oid = ct.cash_register.office_id
-                        _ensure_office(oid, ct.cash_register.office.name if ct.cash_register.office else f"Oficina {oid}")
+                        _ensure_office(
+                            oid,
+                            ct.cash_register.office.name
+                            if ct.cash_register.office
+                            else f"Oficina {oid}",
+                        )
                         office_data[oid]["withdrawn_amount"] += w_amount
 
             # 4. Totales del viaje
@@ -154,7 +175,9 @@ class OwnerFinancialService:
             pkg_paid_total = round(pkg_paid_total, 2)
             pkg_collected_total = round(pkg_collected_total, 2)
             pkg_pending_total = round(pkg_pending_total, 2)
-            total_collected = round(tickets_total + pkg_paid_total + pkg_collected_total, 2)
+            total_collected = round(
+                tickets_total + pkg_paid_total + pkg_collected_total, 2
+            )
             total_withdrawn = round(total_withdrawn, 2)
             available_balance = round(total_collected - total_withdrawn, 2)
 
@@ -167,34 +190,42 @@ class OwnerFinancialService:
                 pend_amt = round(d["packages_pending_amount"], 2)
                 w_amt = round(d["withdrawn_amount"], 2)
                 collected = round(t_amt + pp_amt + pc_amt, 2)
-                office_breakdown.append({
-                    "office_id": oid,
-                    "office_name": d["office_name"],
-                    "tickets_amount": t_amt,
-                    "packages_paid_amount": pp_amt,
-                    "packages_collected_amount": pc_amt,
-                    "packages_pending_amount": pend_amt,
-                    "total_collected": collected,
-                    "withdrawn_amount": w_amt,
-                    "available": round(collected - w_amt, 2),
-                })
+                office_breakdown.append(
+                    {
+                        "office_id": oid,
+                        "office_name": d["office_name"],
+                        "tickets_amount": t_amt,
+                        "packages_paid_amount": pp_amt,
+                        "packages_collected_amount": pc_amt,
+                        "packages_pending_amount": pend_amt,
+                        "total_collected": collected,
+                        "withdrawn_amount": w_amt,
+                        "available": round(collected - w_amt, 2),
+                    }
+                )
             office_breakdown.sort(key=lambda x: x["office_name"])
 
-            financials.append({
-                "trip_id": trip.id,
-                "trip_datetime": trip.trip_datetime,
-                "route_origin": trip.route.origin_location.name if trip.route and trip.route.origin_location else "N/A",
-                "route_destination": trip.route.destination_location.name if trip.route and trip.route.destination_location else "N/A",
-                "bus_license_plate": trip.bus.license_plate if trip.bus else "N/A",
-                "tickets_amount": tickets_total,
-                "packages_paid_amount": pkg_paid_total,
-                "packages_collected_amount": pkg_collected_total,
-                "packages_pending_amount": pkg_pending_total,
-                "total_collected": total_collected,
-                "total_withdrawn": total_withdrawn,
-                "available_balance": available_balance,
-                "office_breakdown": office_breakdown,
-            })
+            financials.append(
+                {
+                    "trip_id": trip.id,
+                    "trip_datetime": trip.trip_datetime,
+                    "route_origin": trip.route.origin_location.name
+                    if trip.route and trip.route.origin_location
+                    else "N/A",
+                    "route_destination": trip.route.destination_location.name
+                    if trip.route and trip.route.destination_location
+                    else "N/A",
+                    "bus_license_plate": trip.bus.license_plate if trip.bus else "N/A",
+                    "tickets_amount": tickets_total,
+                    "packages_paid_amount": pkg_paid_total,
+                    "packages_collected_amount": pkg_collected_total,
+                    "packages_pending_amount": pkg_pending_total,
+                    "total_collected": total_collected,
+                    "total_withdrawn": total_withdrawn,
+                    "available_balance": available_balance,
+                    "office_breakdown": office_breakdown,
+                }
+            )
 
         financials.sort(key=lambda x: x["trip_datetime"], reverse=True)
         return financials
@@ -237,7 +268,9 @@ class OwnerFinancialService:
 
         # Validar por oficina si se especifica office_id
         office_breakdown = trip_fin.get("office_breakdown", [])
-        office_entry = next((o for o in office_breakdown if o["office_id"] == office_id), None)
+        office_entry = next(
+            (o for o in office_breakdown if o["office_id"] == office_id), None
+        )
         if office_entry:
             if amount > office_entry["available"]:
                 raise ValidationException(
@@ -306,3 +339,69 @@ class OwnerFinancialService:
             self.db.rollback()
             logger.error(f"Error procesando retiro de socio: {str(e)}")
             raise e
+
+    def get_owner_withdrawals(
+        self, owner_id: int, bus_id: int = None
+    ) -> List[Dict[str, Any]]:
+        owner = self.db.query(Owner).filter(Owner.id == owner_id).first()
+        if not owner:
+            raise NotFoundException(f"Dueño con ID {owner_id} no encontrado")
+
+        query = self.db.query(OwnerWithdrawal).filter(
+            OwnerWithdrawal.owner_id == owner_id
+        )
+
+        if bus_id is not None:
+            bus_ids = [b.id for b in owner.buses]
+            if bus_id not in bus_ids:
+                raise ValidationException("El bus no pertenece a este socio")
+            trip_ids = [
+                t.id for t in self.db.query(Trip).filter(Trip.bus_id == bus_id).all()
+            ]
+            if not trip_ids:
+                return []
+            query = query.filter(OwnerWithdrawal.trip_id.in_(trip_ids))
+
+        withdrawals = query.order_by(OwnerWithdrawal.created_at.desc()).all()
+
+        result = []
+        for w in withdrawals:
+            ct = (
+                self.db.query(CashTransaction)
+                .filter(CashTransaction.id == w.cash_transaction_id)
+                .first()
+            )
+            office_name = "N/A"
+            if ct and ct.cash_register and ct.cash_register.office:
+                office_name = ct.cash_register.office.name
+
+            trip_info = ""
+            if w.trip:
+                origin = (
+                    w.trip.route.origin_location.name
+                    if w.trip.route and w.trip.route.origin_location
+                    else "N/A"
+                )
+                dest = (
+                    w.trip.route.destination_location.name
+                    if w.trip.route and w.trip.route.destination_location
+                    else "N/A"
+                )
+                trip_info = f"{origin} → {dest}"
+
+            result.append(
+                {
+                    "id": w.id,
+                    "created_at": w.created_at.isoformat() if w.created_at else None,
+                    "amount": float(ct.amount) if ct else 0.0,
+                    "office_name": office_name,
+                    "trip_id": w.trip_id,
+                    "trip_info": trip_info,
+                    "bus_license_plate": w.trip.bus.license_plate
+                    if w.trip and w.trip.bus
+                    else "N/A",
+                    "status": "PROCESSED",
+                }
+            )
+
+        return result
