@@ -28,20 +28,21 @@ interface CloseRegisterModalProps {
 export function CloseRegisterModal({ registerId, userId, expectedBalance, onSuccess }: CloseRegisterModalProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [finalBalance, setFinalBalance] = useState(expectedBalance.toString());
+  const [finalBalance, setFinalBalance] = useState(expectedBalance.toFixed(2));
   const dispatch = useAppDispatch();
   const toast = useToast();
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
-      setFinalBalance(expectedBalance.toString());
+      setFinalBalance(expectedBalance.toFixed(2));
     }
     setOpen(isOpen);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const balance = parseFloat(finalBalance);
+    const parsedVal = parseFloat(finalBalance);
+    const balance = isNaN(parsedVal) ? NaN : parseFloat(parsedVal.toFixed(2));
     
     if (isNaN(balance) || balance < 0) {
       toast.error("El monto final debe ser un número válido indicando el efectivo en caja.");
@@ -101,7 +102,7 @@ export function CloseRegisterModal({ registerId, userId, expectedBalance, onSucc
               <Input
                 id="finalBalance"
                 type="number"
-                step="0.10"
+                step="0.01"
                 min="0"
                 required
                 value={finalBalance}

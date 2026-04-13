@@ -322,7 +322,8 @@ export default function PackageRegistrationModal({
                     items: response.items || packageData.items,
                     total_amount: response.total_amount || totalAmount,
                     total_items_count: response.total_items_count || totalItemsCount,
-                    created_at: response.created_at || new Date().toISOString()
+                    created_at: response.created_at || new Date().toISOString(),
+                    payment_status: response.payment_status || packageData.payment_status
                 })
 
                 setShowReceiptModal(true)

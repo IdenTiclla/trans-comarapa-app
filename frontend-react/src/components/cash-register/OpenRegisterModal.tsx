@@ -31,7 +31,8 @@ export function OpenRegisterModal({ officeId, userId, onSuccess }: OpenRegisterM
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const balance = parseFloat(initialBalance);
+    const parsedVal = parseFloat(initialBalance);
+    const balance = isNaN(parsedVal) ? NaN : parseFloat(parsedVal.toFixed(2));
     
     if (isNaN(balance) || balance < 0) {
       toast.error("El monto inicial debe ser un número válido y mayor o igual a cero.");
@@ -81,7 +82,7 @@ export function OpenRegisterModal({ officeId, userId, onSuccess }: OpenRegisterM
               <Input
                 id="initialBalance"
                 type="number"
-                step="0.10"
+                step="0.01"
                 min="0"
                 required
                 value={initialBalance}

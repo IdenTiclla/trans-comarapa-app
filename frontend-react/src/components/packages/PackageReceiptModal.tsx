@@ -32,6 +32,9 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
     const getSenderNameStr = (sender: any) => getEffectiveName(sender)
     const getRecipientNameStr = (recipient: any) => getEffectiveName(recipient)
 
+    const originName = packageData?.origin || packageData?.origin_office_name || packageData?.origin_office?.name || 'SCZ';
+    const destinationName = packageData?.destination || packageData?.destination_office_name || packageData?.destination_office?.name || 'N/A';
+
     const printReceipt = () => {
         const printContent = document.getElementById('receipt-content')
         if (!printContent) return
@@ -261,7 +264,7 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
                                     <div className="bg-blue-800 text-white px-2 py-1 text-[10px] font-bold text-center rounded-t">AÑO</div>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1 mb-2">
-                                    <div className="border border-gray-600 px-2 py-1 text-xs font-semibold text-center bg-gray-50">{packageData.origin ? packageData.origin.slice(0, 3) : 'SCZ'}</div>
+                                    <div className="border border-gray-600 px-2 py-1 text-xs font-semibold text-center bg-gray-50">{originName.slice(0, 3).toUpperCase()}</div>
                                     <div className="border-2 border-gray-600 px-3 py-2 text-sm font-semibold text-center bg-gray-50">{currentDay}</div>
                                     <div className="border-2 border-gray-600 px-3 py-2 text-sm font-semibold text-center bg-gray-50">{currentMonth}</div>
                                     <div className="border-2 border-gray-600 px-3 py-2 text-sm font-semibold text-center bg-gray-50">{currentYear}</div>
@@ -304,7 +307,7 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
                                 <div className="flex items-center flex-1">
                                     <span className="text-blue-800 font-bold w-24">Destino:</span>
                                     <div className="flex-1 relative">
-                                        <span className="bg-white pr-2 relative z-10">{packageData.destination}</span>
+                                        <span className="bg-white pr-2 relative z-10">{destinationName}</span>
                                         <div className="absolute inset-x-0 bottom-0 border-b border-dotted border-gray-400"></div>
                                     </div>
                                 </div>
@@ -354,9 +357,6 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
                         <div className="flex items-center justify-between text-xs mb-2">
                             <div className="w-2/3">
                                 <p className="text-gray-600 mb-1">Pasado los 30 días la empresa no se responsabiliza.</p>
-                                <div className="text-blue-700 font-medium leading-relaxed">
-                                    <p>Of. SCZ: 68921188 | Of. Comarapa: 68921154</p>
-                                </div>
                             </div>
                             <div className="text-center w-1/3">
                                 <div className="border-t border-dotted border-gray-500 w-full mb-1"></div>

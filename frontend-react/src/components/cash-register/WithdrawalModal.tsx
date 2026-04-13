@@ -60,7 +60,7 @@ export function WithdrawalModal({
         recordWithdrawal({
           registerId,
           data: {
-            amount: parsedAmount,
+            amount: parseFloat(parsedAmount.toFixed(2)),
             description: description.trim(),
           },
         })

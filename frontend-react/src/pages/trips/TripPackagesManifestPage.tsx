@@ -20,83 +20,85 @@ function formatTime(timeString: string) {
   return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
-interface Passenger {
+interface PackageItem {
+  quantity: number
+  description: string
+}
+
+interface TripPackage {
   id: number
-  state: string
-  seat?: { seat_number: number }
-  client?: { firstname: string; lastname: string; document_id?: string }
-  destination?: string
-  price?: number | string
+  sender_name?: string
+  recipient_name?: string
+  description?: string
+  items?: PackageItem[]
+  payment_status?: string
+  total_amount?: string | number
+}
+
+function getDescription(pkg: TripPackage): string {
+  if (pkg.items && pkg.items.length > 0) {
+    return pkg.items.map((i) => `${i.quantity}x ${i.description}`).join(', ')
+  }
+  return pkg.description || '—'
+}
+
+function getPaymentLabel(status?: string): string {
+  if (!status) return 'Por Cobrar'
+  const s = status.toLowerCase()
+  if (s === 'paid_on_send' || s === 'paid' || s === 'pagado') return 'Pagado'
+  return 'Por Cobrar'
+}
+
+function isPaid(status?: string): boolean {
+  if (!status) return false
+  const s = status.toLowerCase()
+  return s === 'paid_on_send' || s === 'paid' || s === 'pagado'
 }
 
 export function Component() {
   const { id } = useParams()
-  const tripId = Number(typeof id === 'string' ? id.replace('-sheet', '') : id)
+  const tripId = Number(typeof id === 'string' ? id : id)
   const dispatch = useAppDispatch()
   const trip = useAppSelector(selectCurrentTrip) as any
   const loading = useAppSelector(selectTripLoading)
   const error = useAppSelector(selectTripError)
 
-  const [passengersBySeat, setPassengersBySeat] = useState<Record<number, Passenger>>({})
-  const [loadingPassengers, setLoadingPassengers] = useState(true)
-  const [passError, setPassError] = useState<string | null>(null)
+  const [packages, setPackages] = useState<TripPackage[]>([])
+  const [loadingPkgs, setLoadingPkgs] = useState(true)
+  const [pkgError, setPkgError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
-      setLoadingPassengers(true)
-      setPassError(null)
+      setLoadingPkgs(true)
+      setPkgError(null)
       try {
         await dispatch(fetchTripById(tripId))
-        const tickets = await apiFetch(`/tickets/trip/${tripId}`)
-        const confirmed = (Array.isArray(tickets) ? tickets : [])
-          .filter((t: Passenger) => ['confirmed', 'sold', 'paid'].includes(t.state))
-          .sort((a: Passenger, b: Passenger) => (a.seat?.seat_number || 0) - (b.seat?.seat_number || 0))
-        setPassengersBySeat(
-          confirmed.reduce((acc: Record<number, Passenger>, p: Passenger) => {
-            if (p.seat?.seat_number) acc[p.seat.seat_number] = p
-            return acc
-          }, {})
-        )
+        const data = await apiFetch(`/packages/by-trip/${tripId}`)
+        setPackages(Array.isArray(data) ? data : data?.items || [])
       } catch (err: any) {
-        setPassError(err?.message || 'Error al cargar la planilla.')
+        setPkgError(err?.message || 'Error al cargar el manifiesto.')
       } finally {
-        setLoadingPassengers(false)
+        setLoadingPkgs(false)
       }
     }
     load()
   }, [dispatch, tripId])
 
-  const getPassengerName = (n: number) => {
-    const p = passengersBySeat[n]
-    return p ? `${p.client?.firstname || ''} ${p.client?.lastname || ''}` : ''
-  }
-  const getPassengerDoc = (n: number) => passengersBySeat[n]?.client?.document_id || ''
-  const getPassengerDest = (n: number) => {
-    const p = passengersBySeat[n]
-    if (!p) return ''
-    if (p.destination?.trim()) return p.destination
-    return trip?.route?.destination?.name || trip?.route?.destination || ''
-  }
-
-  const totalPassengers = Object.keys(passengersBySeat).length
-  const busCapacity: number = trip?.bus?.capacity ?? 50
-  const halfCapacity = Math.ceil(busCapacity / 2)
-  const totalAmount = Object.values(passengersBySeat).reduce((acc, p) => acc + Number(p.price || 0), 0)
-  const isLoading = loading || loadingPassengers
-  const hasError = error || passError
+  const isLoading = loading || loadingPkgs
+  const hasError = error || pkgError
 
   return (
     <>
       <style>{`
         /* ─── Base ─── */
-        .ts-page {
+        .pm-page {
           min-height: 100vh;
           background: #edf2f7;
           font-family: Arial, Helvetica, sans-serif;
         }
 
         /* ─── Toolbar (screen only) ─── */
-        .ts-toolbar {
+        .pm-toolbar {
           background: #1a365d;
           padding: 11px 24px;
           display: flex;
@@ -107,18 +109,18 @@ export function Component() {
           top: 0;
           z-index: 50;
         }
-        .ts-toolbar-title {
+        .pm-toolbar-title {
           color: #fff;
           font-size: 15px;
           font-weight: 700;
           letter-spacing: .3px;
         }
-        .ts-toolbar-sub {
+        .pm-toolbar-sub {
           color: #90cdf4;
           font-size: 11px;
           margin-top: 2px;
         }
-        .ts-btn-print {
+        .pm-btn-print {
           background: #3182ce;
           color: #fff;
           border: none;
@@ -132,30 +134,28 @@ export function Component() {
           gap: 6px;
           transition: background .15s;
         }
-        .ts-btn-print:hover { background: #2b6cb0; }
-
+        .pm-btn-print:hover { background: #2b6cb0; }
 
         /* ─── Paper wrapper ─── */
-        .ts-paper-wrap {
+        .pm-paper-wrap {
           padding: 24px 32px 48px;
         }
-        .ts-paper {
+        .pm-paper {
           background: #fff;
           border-radius: 6px;
           box-shadow: 0 4px 20px rgba(0,0,0,.14);
           padding: 24px 28px 28px;
         }
 
-        /* ─── Document header (printable) ─── */
+        /* ─── Document header ─── */
         .doc-header {
           display: flex;
           align-items: flex-start;
           gap: 16px;
           border-bottom: 2px solid #276749;
           padding-bottom: 12px;
-          margin-bottom: 14px;
+          margin-bottom: 18px;
         }
-        /* Logo */
         .doc-logo {
           flex-shrink: 0;
           width: 185px;
@@ -190,7 +190,6 @@ export function Component() {
           color: #4a5568;
           line-height: 1.5;
         }
-        /* Center info */
         .doc-center {
           flex: 1;
           overflow: hidden;
@@ -203,6 +202,15 @@ export function Component() {
           letter-spacing: .4px;
           border-bottom: 1px solid #c3d9ca;
           padding-bottom: 5px;
+          margin-bottom: 8px;
+        }
+        .doc-manifest-title {
+          font-size: 13px;
+          font-weight: 900;
+          color: #1a365d;
+          text-align: center;
+          letter-spacing: 1px;
+          text-transform: uppercase;
           margin-bottom: 8px;
         }
         .doc-fields {
@@ -233,7 +241,6 @@ export function Component() {
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        /* Trip ID badge — sits at end of flex row, NOT absolute */
         .doc-trip-id {
           flex-shrink: 0;
           border: 2px solid #e53e3e;
@@ -258,73 +265,100 @@ export function Component() {
           line-height: 1;
         }
 
-        /* ─── Passenger tables ─── */
-        .pax-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-        }
-        .pax-table {
+        /* ─── Packages table ─── */
+        .pkg-table {
           width: 100%;
           border-collapse: collapse;
           font-size: 10.5px;
+          margin-top: 4px;
         }
-        .pax-table thead th {
-          background: #276749;
+        .pkg-table thead th {
+          background: #1a365d;
           color: #fff;
-          font-size: 10px;
+          font-size: 9.5px;
           font-weight: 700;
-          padding: 5px 6px;
+          padding: 5px 7px;
           text-align: left;
-          border: 1px solid #276749;
+          border: 1px solid #1a365d;
         }
-        .pax-table thead th.col-no  { width: 28px; text-align: center; }
-        .pax-table thead th.col-ci  { width: 78px; }
-        .pax-table thead th.col-dst { width: 74px; }
+        .pkg-table thead th.col-no   { width: 28px; text-align: center; }
+        .pkg-table thead th.col-amt  { width: 62px; text-align: right; }
+        .pkg-table thead th.col-est  { width: 80px; text-align: center; }
 
-        .pax-table tbody tr { height: 21px; }
-        .pax-table tbody tr:nth-child(even) { background: #f0fff4; }
-        .pax-table tbody tr:nth-child(odd)  { background: #fff; }
-        .pax-table tbody tr.pax-occupied    { background: #c6f6d5 !important; }
+        .pkg-table tbody tr { height: 22px; }
+        .pkg-table tbody tr:nth-child(even) { background: #ebf8ff; }
+        .pkg-table tbody tr:nth-child(odd)  { background: #fff; }
 
-        .pax-table tbody td {
-          border: 1px solid #68d391;
-          padding: 1px 5px;
+        .pkg-table tbody td {
+          border: 1px solid #bee3f8;
+          padding: 2px 6px;
           font-size: 9.5px;
           color: #1a202c;
           vertical-align: middle;
         }
-        .pax-table tbody td.col-no {
+        .pkg-table tbody td.col-no {
           text-align: center;
           font-weight: 700;
-          color: #276749;
-          border-color: #276749;
+          color: #1a365d;
+          border-color: #1a365d;
           width: 28px;
         }
-        .pax-table tbody td.col-name {
+        .pkg-table tbody td.col-amt {
+          text-align: right;
+          font-weight: 700;
+          width: 62px;
+        }
+        .pkg-table tbody td.col-est {
+          text-align: center;
+          width: 80px;
+          padding: 2px 4px;
+        }
+        .pkg-table tbody td.col-desc {
           max-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .pax-table tbody td.col-ci  { width: 78px; }
-        .pax-table tbody td.col-dst { width: 74px; }
+
+        /* ─── Estado badge ─── */
+        .badge-paid {
+          display: inline-block;
+          background: #c6f6d5;
+          color: #22543d;
+          font-size: 8.5px;
+          font-weight: 700;
+          border-radius: 3px;
+          padding: 1px 6px;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .badge-unpaid {
+          display: inline-block;
+          background: #fefcbf;
+          color: #744210;
+          font-size: 8.5px;
+          font-weight: 700;
+          border-radius: 3px;
+          padding: 1px 6px;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
 
         /* ─── Summary bar ─── */
-        .ts-summary {
+        .pm-summary {
           display: flex;
           gap: 16px;
           flex-wrap: wrap;
           margin-top: 14px;
           padding-top: 10px;
-          border-top: 1px solid #c8e6c9;
+          border-top: 1px solid #bee3f8;
           font-size: 10px;
           color: #4a5568;
         }
-        .ts-summary strong { color: #1a202c; }
+        .pm-summary strong { color: #1a202c; }
 
         /* ─── Loading / Error ─── */
-        .ts-loading {
+        .pm-loading {
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -333,7 +367,7 @@ export function Component() {
           gap: 14px;
           color: #718096;
         }
-        .ts-spinner {
+        .pm-spinner {
           width: 36px; height: 36px;
           border: 3px solid #bee3f8;
           border-top-color: #3182ce;
@@ -344,57 +378,50 @@ export function Component() {
 
         /* ─── PRINT ─── */
         @media print {
-          /* Hide screen-only chrome */
-          .ts-toolbar  { display: none !important; }
+          .pm-toolbar { display: none !important; }
 
-          /* Reset backgrounds */
           html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-          .ts-page         { background: #fff !important; min-height: unset !important; }
-          .ts-paper-wrap   { padding: 0 !important; }
-          .ts-paper        { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+          .pm-page       { background: #fff !important; min-height: unset !important; }
+          .pm-paper-wrap { padding: 0 !important; }
+          .pm-paper      { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
 
-          /* Preserve green header bg */
-          .pax-table thead th {
-            background: #276749 !important;
+          .pkg-table thead th {
+            background: #1a365d !important;
             color: #fff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          /* Preserve zebra / occupied row colors */
-          .pax-table tbody tr:nth-child(even) {
-            background: #f0fff4 !important;
+          .pkg-table tbody tr:nth-child(even) {
+            background: #ebf8ff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          .pax-table tbody tr.pax-occupied {
-            background: #c6f6d5 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .doc-trip-id { background: #fff5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .badge-paid   { background: #c6f6d5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .badge-unpaid { background: #fefcbf !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .doc-trip-id  { background: #fff5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
           @page { size: letter landscape; margin: 10mm 12mm; }
         }
       `}</style>
 
-      <div className="ts-page">
+      <div className="pm-page">
 
         {/* ── Toolbar (hidden on print) ── */}
-        <div className="ts-toolbar">
+        <div className="pm-toolbar">
           <div>
-            <div className="ts-toolbar-title">
-              📋 Planilla de Pasajeros
+            <div className="pm-toolbar-title">
+              📦 Manifiesto de Encomiendas
               {trip ? ` — Viaje #${String(trip.id).padStart(6, '0')}` : ''}
             </div>
             {trip && (
-              <div className="ts-toolbar-sub">
+              <div className="pm-toolbar-sub">
                 {trip.route?.origin?.name || trip.route?.origin} →{' '}
                 {trip.route?.destination?.name || trip.route?.destination}
                 {' · '}{formatDate(trip.trip_datetime)} · {formatTime(trip.departure_time)}
               </div>
             )}
           </div>
-          <button id="btn-imprimir-planilla" className="ts-btn-print" onClick={() => window.print()}>
+          <button id="btn-imprimir-manifiesto" className="pm-btn-print" onClick={() => window.print()}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2"/>
               <path d="M17 9V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4"/>
@@ -405,18 +432,18 @@ export function Component() {
         </div>
 
         {/* ── Paper ── */}
-        <div className="ts-paper-wrap">
+        <div className="pm-paper-wrap">
 
           {isLoading && (
-            <div className="ts-loading">
-              <div className="ts-spinner" />
-              <span>Cargando planilla de pasajeros…</span>
+            <div className="pm-loading">
+              <div className="pm-spinner" />
+              <span>Cargando manifiesto de encomiendas…</span>
             </div>
           )}
 
           {hasError && !isLoading && (
             <div style={{ background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: 8, padding: '14px 20px', color: '#c53030', maxWidth: 480, margin: '40px auto' }}>
-              <strong>Error:</strong> {error || passError}
+              <strong>Error:</strong> {error || pkgError}
             </div>
           )}
 
@@ -427,7 +454,7 @@ export function Component() {
           )}
 
           {trip && !isLoading && !hasError && (
-            <div className="ts-paper">
+            <div className="pm-paper">
 
               {/* ══ Document header ══ */}
               <div className="doc-header">
@@ -451,6 +478,7 @@ export function Component() {
                   <div className="doc-route-banner">
                     MAIRANA · YERBA BUENA · AGUA CLARA · LOS NEGROS · MATARAL · QUINE · PALIZADA · SAN ISIDRO · COMARAPA
                   </div>
+                  <div className="doc-manifest-title">Manifiesto de Encomiendas</div>
                   <div className="doc-fields">
                     <div className="doc-field">
                       <span className="doc-field-label">Ruta:</span>
@@ -471,37 +499,17 @@ export function Component() {
                       <span className="doc-field-value">{formatTime(trip.departure_time)}</span>
                     </div>
                     <div className="doc-field">
-                      <span className="doc-field-label">Lic.:</span>
-                      <span className="doc-field-value">{trip.driver?.license_number || ''}</span>
+                      <span className="doc-field-label">Ayudante:</span>
+                      <span className="doc-field-value">{trip.assistant?.firstname} {trip.assistant?.lastname}</span>
                     </div>
                     <div className="doc-field">
                       <span className="doc-field-label">Placa:</span>
                       <span className="doc-field-value">{trip.bus?.license_plate || 'N/A'}</span>
                     </div>
-                    <div className="doc-field">
-                      <span className="doc-field-label">Ayudante:</span>
-                      <span className="doc-field-value">{trip.assistant?.firstname} {trip.assistant?.lastname}</span>
-                    </div>
-                    <div className="doc-field">
-                      <span className="doc-field-label">Marca:</span>
-                      <span className="doc-field-value">{trip.bus?.brand || 'N/A'}</span>
-                    </div>
-                    <div className="doc-field">
-                      <span className="doc-field-label">Cat.:</span>
-                      <span className="doc-field-value">{trip.driver?.license_type || ''}</span>
-                    </div>
-                    <div className="doc-field">
-                      <span className="doc-field-label">Modelo:</span>
-                      <span className="doc-field-value">{trip.bus?.model || 'N/A'}</span>
-                    </div>
-                    <div className="doc-field">
-                      <span className="doc-field-label">Color:</span>
-                      <span className="doc-field-value">{trip.bus?.color || ''}</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Trip ID badge — inline flex item, no absolute */}
+                {/* Trip ID badge */}
                 <div className="doc-trip-id">
                   <div className="doc-trip-id-label">Nº</div>
                   <div className="doc-trip-id-number">{String(trip.id).padStart(6, '0')}</div>
@@ -509,71 +517,59 @@ export function Component() {
 
               </div>{/* end doc-header */}
 
-              {/* ══ Passenger tables ══ */}
-              <div className="pax-grid">
-
-                {/* Left column: seats 1 → halfCapacity */}
-                <table className="pax-table">
-                  <thead>
-                    <tr>
-                      <th className="col-no">No.</th>
-                      <th>Nombre y Apellido</th>
-                      <th className="col-ci">C.I.</th>
-                      <th className="col-dst">Destino</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: halfCapacity }, (_, i) => i + 1).map((n) => {
-                      const name = getPassengerName(n)
-                      return (
-                        <tr key={n} className={name.trim() ? 'pax-occupied' : ''}>
-                          <td className="col-no">{n}</td>
-                          <td className="col-name">{name}</td>
-                          <td className="col-ci">{getPassengerDoc(n)}</td>
-                          <td className="col-dst">{getPassengerDest(n)}</td>
+              {/* ══ Packages table ══ */}
+              {packages.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#718096', fontSize: 13 }}>
+                  No hay encomiendas registradas para este viaje.
+                </div>
+              ) : (
+                <>
+                  <table className="pkg-table">
+                    <thead>
+                      <tr>
+                        <th className="col-no">Nº</th>
+                        <th>Remitente</th>
+                        <th>Descripción Encomienda</th>
+                        <th>Destinatario</th>
+                        <th className="col-est">Estado</th>
+                        <th className="col-amt">Bs.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {packages.map((pkg, idx) => (
+                        <tr key={pkg.id}>
+                          <td className="col-no">{idx + 1}</td>
+                          <td>{pkg.sender_name || '—'}</td>
+                          <td className="col-desc">{getDescription(pkg)}</td>
+                          <td>{pkg.recipient_name || '—'}</td>
+                          <td className="col-est">
+                            {isPaid(pkg.payment_status)
+                              ? <span className="badge-paid">Pagado</span>
+                              : <span className="badge-unpaid">Por Cobrar</span>
+                            }
+                          </td>
+                          <td className="col-amt">{Number(pkg.total_amount || 0).toFixed(2)}</td>
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
 
-                {/* Right column: seats halfCapacity+1 → busCapacity */}
-                <table className="pax-table">
-                  <thead>
-                    <tr>
-                      <th className="col-no">No.</th>
-                      <th>Nombre y Apellido</th>
-                      <th className="col-ci">C.I.</th>
-                      <th className="col-dst">Destino</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: busCapacity - halfCapacity }, (_, i) => i + halfCapacity + 1).map((n) => {
-                      const name = getPassengerName(n)
-                      return (
-                        <tr key={n} className={name.trim() ? 'pax-occupied' : ''}>
-                          <td className="col-no">{n}</td>
-                          <td className="col-name">{name}</td>
-                          <td className="col-ci">{getPassengerDoc(n)}</td>
-                          <td className="col-dst">{getPassengerDest(n)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-
-              </div>{/* end pax-grid */}
-
-              {/* Summary */}
-              <div className="ts-summary">
-                <span>Total pasajeros: <strong>{totalPassengers}</strong></span>
-                <span>Monto total: <strong>Bs. {totalAmount.toFixed(2)}</strong></span>
-              </div>
+                  {/* Summary */}
+                  <div className="pm-summary">
+                    <span>Total encomiendas: <strong>{packages.length}</strong></span>
+                    <span>Pagadas: <strong>{packages.filter(p => isPaid(p.payment_status)).length}</strong></span>
+                    <span>Monto pagado: <strong>Bs. {packages.filter(p => isPaid(p.payment_status)).reduce((acc, p) => acc + Number(p.total_amount || 0), 0).toFixed(2)}</strong></span>
+                    <span>Por cobrar: <strong>{packages.filter(p => !isPaid(p.payment_status)).length}</strong></span>
+                    <span>Monto por cobrar: <strong>Bs. {packages.filter(p => !isPaid(p.payment_status)).reduce((acc, p) => acc + Number(p.total_amount || 0), 0).toFixed(2)}</strong></span>
+                    <span>Monto total: <strong>Bs. {packages.reduce((acc, p) => acc + Number(p.total_amount || 0), 0).toFixed(2)}</strong></span>
+                  </div>
+                </>
+              )}
 
             </div>
-          )}{/* end ts-paper */}
-        </div>{/* end ts-paper-wrap */}
-      </div>{/* end ts-page */}
+          )}{/* end pm-paper */}
+        </div>{/* end pm-paper-wrap */}
+      </div>{/* end pm-page */}
     </>
   )
 }

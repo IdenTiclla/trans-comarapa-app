@@ -15,7 +15,7 @@ import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import { Button } from '@/components/ui/button'
-import { Send, Check, FileText } from 'lucide-react'
+import { Send, Check, FileText, Package } from 'lucide-react'
 
 function formatTimeAmPm(timeString: string) {
   if (!timeString) return ''
@@ -135,9 +135,15 @@ export function Component() {
                 </Button>
               )}
               <Link to={`/trips/${tripId}/sheet`} target="_blank">
-                <Button size="sm" className="gap-1.5">
+                <Button size="sm" variant="outline" className="gap-1.5">
                   <FileText className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Planilla</span>
+                  <span className="hidden sm:inline">Planilla de pasajeros</span>
+                </Button>
+              </Link>
+              <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <Package className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Manifiesto de encomiendas</span>
                 </Button>
               </Link>
             </div>

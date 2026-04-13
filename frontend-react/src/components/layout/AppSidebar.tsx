@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router'
+import { useEffect, useState } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,10 +17,20 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 import { NAV_GROUPS, ROLE_LABELS } from '@/lib/navigation'
 import type { Role } from '@/lib/constants'
-import { LogOut, Settings, Bus } from 'lucide-react'
+import { LogOut, Settings, Bus, MapPin } from 'lucide-react'
+import { officeService } from '@/services/office.service'
 
 export default function AppSidebar() {
-  const { userRole, logout } = useAuth()
+  const { user, userRole, logout } = useAuth()
+  const [officeName, setOfficeName] = useState<string>("")
+
+  useEffect(() => {
+    if (user?.office_id) {
+      officeService.getById(user.office_id)
+        .then(office => setOfficeName(office.name))
+        .catch(() => setOfficeName(""))
+    }
+  }, [user?.office_id])
 
   const groups = NAV_GROUPS[userRole as Role] ?? []
   const roleLabel = ROLE_LABELS[userRole as Role] ?? userRole ?? ''
@@ -34,6 +45,12 @@ export default function AppSidebar() {
           <div className="flex flex-col">
             <span className="text-sm font-bold text-sidebar-foreground">Trans Comarapa</span>
             <span className="text-xs text-sidebar-foreground/60">{roleLabel}</span>
+            {officeName && (
+              <span className="text-[10px] text-sidebar-foreground/50 flex items-center mt-0.5">
+                <MapPin className="h-3 w-3 mr-0.5" />
+                {officeName}
+              </span>
+            )}
           </div>
         </div>
       </SidebarHeader>

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime, date
 from typing import Optional, List
 from core.enums import CashRegisterStatus, CashTransactionType, PaymentMethod
@@ -7,6 +7,11 @@ from core.enums import CashRegisterStatus, CashTransactionType, PaymentMethod
 class WithdrawalRequest(BaseModel):
     amount: float = Field(..., gt=0, description="Monto a retirar, debe ser mayor a 0")
     description: str = Field(..., min_length=3, description="Motivo del retiro")
+
+    @field_validator('amount')
+    @classmethod
+    def round_amount(cls, v: float) -> float:
+        return round(v, 2)
 
 
 # Cash Transaction Schemas
@@ -17,6 +22,11 @@ class CashTransactionBase(BaseModel):
     reference_id: Optional[int] = None
     reference_type: Optional[str] = None
     description: Optional[str] = None
+
+    @field_validator('amount')
+    @classmethod
+    def round_amount(cls, v: float) -> float:
+        return round(v, 2)
 
 
 class CashTransactionCreate(CashTransactionBase):
@@ -37,6 +47,11 @@ class CashRegisterBase(BaseModel):
     office_id: int
     initial_balance: float = Field(default=0.0, ge=0)
 
+    @field_validator('initial_balance')
+    @classmethod
+    def round_balance(cls, v: float) -> float:
+        return round(v, 2)
+
 
 class CashRegisterCreate(CashRegisterBase):
     date: date
@@ -48,6 +63,11 @@ class CashRegisterUpdate(BaseModel):
     closed_by_id: int
     status: CashRegisterStatus = CashRegisterStatus.CLOSED
     closed_at: datetime
+
+    @field_validator('final_balance')
+    @classmethod
+    def round_balance(cls, v: float) -> float:
+        return round(v, 2)
 
 
 class CashRegisterResponse(CashRegisterBase):

@@ -107,6 +107,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/trips/:id/sheet', lazy: () => import('@/pages/trips/TripSheetPage') },
           { path: '/trips/:id-sheet', lazy: () => import('@/pages/trips/TripSheetPage') },
+          { path: '/trips/:id/packages-manifest', lazy: () => import('@/pages/trips/TripPackagesManifestPage') },
         ],
       },
     ],
