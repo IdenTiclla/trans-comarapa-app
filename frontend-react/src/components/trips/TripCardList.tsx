@@ -67,17 +67,33 @@ function TripRow({
     onSellTicket,
     onCreateTrip,
     selectedDate,
+    isPastDate,
 }: {
     slot: Slot
     onViewTrip?: (id: number) => void
     onSellTicket?: (tripId: number) => void
     onCreateTrip?: (data: { routeId: number; date: string; time: string }) => void
     selectedDate: string
+    isPastDate: boolean
 }) {
     const trip = slot.trip
 
     // Empty slot — same structure as assigned trip
     if (!trip) {
+        if (isPastDate) {
+            return (
+                <div className="border border-dashed border-muted rounded-lg px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed">
+                    <div className="flex items-center">
+                        <span className="text-2xl font-bold text-muted-foreground/30 flex-shrink-0 min-w-[4.5rem]">{slot.time}</span>
+                        <div className="h-8 w-px bg-muted mx-3 flex-shrink-0" />
+                        <div className="flex-1 flex items-center gap-6 text-muted-foreground/40">
+                            <p className="text-xs italic">Horario pasado sin viaje registrado</p>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
         return (
             <div
                 className="border-2 border-dashed border-blue-200 rounded-lg px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
@@ -143,25 +159,28 @@ function TripRow({
                 </div>
                 <div className="h-8 w-px bg-border mx-3 flex-shrink-0" />
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Button
-                        variant="link"
-                        size="sm"
-                        className="text-[11px] font-semibold text-[#1a365d] uppercase tracking-wider px-1.5 h-7"
-                        onClick={() => onViewTrip?.(tripId)}
-                    >
-                        Ver Detalle
-                    </Button>
-                    <Button
-                        variant={isSoldOut ? 'outline' : 'default'}
-                        size="sm"
-                        disabled={isSoldOut}
-                        className={`text-[11px] font-semibold uppercase tracking-wider h-7 px-2.5 ${
-                            isSoldOut ? '' : 'bg-[#1a365d] hover:bg-[#2a4a7f]'
-                        }`}
-                        onClick={() => onSellTicket?.(tripId)}
-                    >
-                        Vender Boleto
-                    </Button>
+                    {isPastDate ? (
+                        <Button
+                            variant="link"
+                            size="sm"
+                            className="text-[11px] font-semibold text-[#1a365d] uppercase tracking-wider px-1.5 h-7"
+                            onClick={() => onViewTrip?.(tripId)}
+                        >
+                            Ver Detalle
+                        </Button>
+                    ) : (
+                        <Button
+                            variant={isSoldOut ? 'outline' : 'default'}
+                            size="sm"
+                            disabled={isSoldOut}
+                            className={`text-[11px] font-semibold uppercase tracking-wider h-7 px-2.5 ${
+                                isSoldOut ? '' : 'bg-[#1a365d] hover:bg-[#2a4a7f]'
+                            }`}
+                            onClick={() => onSellTicket?.(tripId)}
+                        >
+                            Vender Boleto
+                        </Button>
+                    )}
                 </div>
             </div>
             {/* Bottom row */}
@@ -198,6 +217,9 @@ export default function TripCardList({
             </div>
         )
     }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+    const isPastDate = selectedDate < todayStr
 
     if (!scheduleBoard || scheduleBoard.length === 0) {
         return (
@@ -242,6 +264,7 @@ export default function TripCardList({
                                 onSellTicket={onSellTicket}
                                 onCreateTrip={onCreateTrip}
                                 selectedDate={selectedDate}
+                                isPastDate={isPastDate}
                             />
                         ))}
                     </div>

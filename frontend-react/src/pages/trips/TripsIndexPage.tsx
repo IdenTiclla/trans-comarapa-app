@@ -7,7 +7,9 @@ import TripCardList from '@/components/trips/TripCardList'
 import CreateTripModal from '@/components/trips/CreateTripModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, AlertCircle, RefreshCw, Printer } from 'lucide-react'
+import { Calendar, AlertCircle, RefreshCw, Printer, ChevronDown } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { CalendarView } from '@/components/ui/calendar-view'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -116,12 +118,24 @@ export function Component() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Tablero de Viajes Diarios</h1>
-          <div className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{formattedDate}</span>
-            <span className="text-border">|</span>
-            <span className="text-primary font-medium">{boardStats.activeRoutes} Rutas Activas</span>
-          </div>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer group">
+                <Calendar className="h-3.5 w-3.5" />
+                <span className="font-medium group-hover:underline underline-offset-4 decoration-primary/30">{formattedDate}</span>
+                <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span className="text-border mx-1">|</span>
+                <span className="text-primary font-medium">{boardStats.activeRoutes} Rutas Activas</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-4 border shadow-xl bg-card rounded-xl">
+              <CalendarView 
+                value={selectedDate} 
+                onChange={(date) => setSelectedDate(date)} 
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="flex items-center flex-wrap gap-1.5">
           {[
@@ -139,12 +153,21 @@ export function Component() {
               {btn.label}
             </Button>
           ))}
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-2 py-1 border border-input rounded-md text-xs bg-background focus:ring-2 focus:ring-ring focus:border-ring h-7"
-          />
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-2 font-medium">
+                <Calendar className="h-3 w-3" />
+                Elegir fecha
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto p-4 border shadow-xl bg-card rounded-xl">
+              <CalendarView 
+                value={selectedDate} 
+                onChange={(date) => setSelectedDate(date)} 
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
