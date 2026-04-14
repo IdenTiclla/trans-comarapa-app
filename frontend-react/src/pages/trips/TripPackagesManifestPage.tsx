@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams, Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
 import { apiFetch } from '@/lib/api'
@@ -27,6 +27,7 @@ interface PackageItem {
 
 interface TripPackage {
   id: number
+  tracking_number?: string
   sender_name?: string
   recipient_name?: string
   description?: string
@@ -282,6 +283,7 @@ export function Component() {
           border: 1px solid #1a365d;
         }
         .pkg-table thead th.col-no   { width: 28px; text-align: center; }
+        .pkg-table thead th.col-id   { width: 45px; text-align: center; }
         .pkg-table thead th.col-amt  { width: 62px; text-align: right; }
         .pkg-table thead th.col-est  { width: 80px; text-align: center; }
 
@@ -302,6 +304,25 @@ export function Component() {
           color: #1a365d;
           border-color: #1a365d;
           width: 28px;
+        }
+        .pkg-table tbody td.col-id {
+          text-align: center;
+          font-weight: 600;
+          color: #2b6cb0;
+          width: 45px;
+          padding: 0; /* Remove padding to allow link to fill cell */
+        }
+        .pkg-table tbody td.col-id a {
+          display: block;
+          width: 100%;
+          height: 100%;
+          padding: 2px 0;
+          color: inherit;
+          text-decoration: none;
+        }
+        .pkg-table tbody td.col-id a:hover {
+          text-decoration: underline;
+          background: rgba(43, 108, 176, 0.05);
         }
         .pkg-table tbody td.col-amt {
           text-align: right;
@@ -528,6 +549,7 @@ export function Component() {
                     <thead>
                       <tr>
                         <th className="col-no">Nº</th>
+                        <th className="col-id">ID</th>
                         <th>Remitente</th>
                         <th>Descripción Encomienda</th>
                         <th>Destinatario</th>
@@ -539,6 +561,9 @@ export function Component() {
                       {packages.map((pkg, idx) => (
                         <tr key={pkg.id}>
                           <td className="col-no">{idx + 1}</td>
+                          <td className="col-id">
+                            <Link to={`/packages/${pkg.id}`}>{pkg.tracking_number || pkg.id}</Link>
+                          </td>
                           <td>{pkg.sender_name || '—'}</td>
                           <td className="col-desc">{getDescription(pkg)}</td>
                           <td>{pkg.recipient_name || '—'}</td>

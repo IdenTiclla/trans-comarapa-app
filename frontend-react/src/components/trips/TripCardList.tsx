@@ -79,116 +79,130 @@ function TripRow({
     isSlotPast: boolean
 }) {
     const trip = slot.trip
+    const isPast = isPastDate || isSlotPast
+    const occ = trip ? getOccupancyInfo(trip) : { occupied: 0, total: 0, label: '--', color: 'text-muted-foreground/30' }
+    const driverName = trip ? getDriverName(trip) : 'Sin viaje creado'
+    const busInfo = trip ? getBusInfo(trip) : { plate: '--', floors: 0 }
+    const tripId = trip ? (trip.id as number) : null
+    const isSoldOut = trip ? occ.label === 'Agotado' : false
+    const floorLabel = busInfo.floors >= 2 ? '2 Pisos' : busInfo.floors === 1 ? '1 Piso' : null
 
-    // Empty slot — same structure as assigned trip
-    if (!trip) {
-        if (isPastDate || isSlotPast) {
-            return (
-                <div className="border border-dashed border-muted rounded-lg px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed">
-                    <div className="flex items-center">
-                        <span className="text-2xl font-bold text-muted-foreground/30 flex-shrink-0 min-w-[4.5rem]">{slot.time}</span>
-                        <div className="h-8 w-px bg-muted mx-3 flex-shrink-0" />
-                        <div className="flex-1 flex items-center gap-6 text-muted-foreground/40">
-                            <p className="text-xs italic">Horario pasado sin viaje registrado</p>
-                        </div>
-                    </div>
-                </div>
-            )
-        }
+    const containerClasses = trip
+        ? "border border-border rounded-lg px-4 py-3 hover:shadow-md transition-shadow bg-card"
+        : isPast
+        ? "border border-dashed border-muted rounded-lg px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed"
+        : "border-2 border-dashed border-blue-200 rounded-lg px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
 
-        return (
-            <div
-                className="border-2 border-dashed border-blue-200 rounded-lg px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
-                onClick={() => onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time })}
-            >
-                {/* Top row */}
-                <div className="flex items-center">
-                    <span className="text-2xl font-bold text-muted-foreground/30 flex-shrink-0 min-w-[4.5rem]">{slot.time}</span>
-                    <div className="h-8 w-px bg-blue-100 mx-3 flex-shrink-0" />
-                    <div className="flex-1 flex items-center gap-6 text-muted-foreground/40">
-                        <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider">Bus</p>
-                            <p className="text-xs font-bold">--</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider">Ocupación</p>
-                            <p className="text-xs font-bold">--/--</p>
-                        </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="gap-1 text-[11px] font-semibold h-7 text-blue-700 border-blue-200 hover:bg-blue-50 flex-shrink-0">
-                        <Plus className="h-3 w-3" />
-                        Crear Viaje
-                    </Button>
-                </div>
-                {/* Bottom row */}
-                <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-blue-100 text-xs text-muted-foreground/40">
-                    <User className="h-3 w-3" />
-                    <span>Sin viaje creado</span>
-                </div>
-            </div>
-        )
-    }
+    const timeClasses = trip
+        ? "text-2xl font-bold text-[#1a365d]"
+        : "text-2xl font-bold text-muted-foreground/30"
 
-    const occ = getOccupancyInfo(trip)
-    const driverName = getDriverName(trip)
-    const busInfo = getBusInfo(trip)
-    const tripId = trip.id as number
-    const isSoldOut = occ.label === 'Agotado'
-    const floorLabel = busInfo.floors >= 2 ? '2 Pisos' : '1 Piso'
+    const dividerClasses = trip ? "bg-border" : isPast ? "bg-muted" : "bg-blue-100"
 
     return (
-        <div className="border border-border rounded-lg px-4 py-3 hover:shadow-md transition-shadow">
-            {/* Top row */}
-            <div className="flex items-center">
-                <span className="text-2xl font-bold text-[#1a365d] flex-shrink-0 min-w-[4.5rem]">{slot.time}</span>
-                <div className="h-8 w-px bg-border mx-3 flex-shrink-0" />
-                <div className="flex-1 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <div>
+        <div 
+            className={containerClasses}
+            onClick={() => !trip && !isPast && onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time })}
+        >
+            {/* Top row: Content Alignment */}
+            <div className="flex items-center h-10">
+                <span className={`flex-shrink-0 min-w-[5rem] ${timeClasses}`}>{slot.time}</span>
+                
+                <div className={`h-8 w-px mx-3 flex-shrink-0 ${dividerClasses}`} />
+                
+                <div className="flex-1 flex items-center justify-between">
+                    {/* Bus Info */}
+                    <div className="flex items-center gap-3">
+                        <div className={!trip ? "opacity-40" : ""}>
                             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bus No.</p>
-                            <p className="text-xs font-bold text-foreground">{busInfo.plate}</p>
+                            <p className="text-sm font-bold text-foreground leading-tight">{busInfo.plate}</p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] h-5 px-1.5">{floorLabel}</Badge>
+                        {floorLabel && (
+                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium whitespace-nowrap">
+                                {floorLabel}
+                            </Badge>
+                        )}
                     </div>
-                    <div className="ml-auto text-right">
+
+                    {/* Occupancy Info */}
+                    <div className={`text-right ${!trip ? "opacity-30" : ""}`}>
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ocupación</p>
-                        <p className="text-xs font-bold">
-                            <span className={occ.color}>{String(occ.occupied).padStart(2, '0')}/{occ.total}</span>
-                            {' '}
-                            <span className={occ.color}>{occ.label}</span>
+                        <p className="text-sm font-bold leading-tight">
+                            {trip ? (
+                                <>
+                                    <span className={occ.color}>{String(occ.occupied).padStart(2, '0')}/{occ.total}</span>
+                                    <span className={`ml-1.5 text-[10px] uppercase ${occ.color}`}>{occ.label}</span>
+                                </>
+                            ) : (
+                                <span className="text-muted-foreground">--/--</span>
+                            )}
                         </p>
                     </div>
                 </div>
-                <div className="h-8 w-px bg-border mx-3 flex-shrink-0" />
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {isPastDate ? (
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="text-[11px] font-semibold text-[#1a365d] uppercase tracking-wider px-1.5 h-7"
-                            onClick={() => onViewTrip?.(tripId)}
-                        >
-                            Ver Detalle
-                        </Button>
+
+                <div className={`h-8 w-px mx-3 flex-shrink-0 ${dividerClasses}`} />
+
+                {/* Actions */}
+                <div className="flex items-center justify-end min-w-[90px] flex-shrink-0">
+                    {!trip ? (
+                        isPast ? (
+                            <span className="text-[10px] italic text-muted-foreground/40 leading-tight text-right">
+                                Horario<br/>pasado
+                            </span>
+                        ) : (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="gap-1 text-[11px] font-bold h-8 text-blue-700 border-blue-200 hover:bg-blue-50 w-full"
+                            >
+                                <Plus className="h-3 w-3" />
+                                Crear
+                            </Button>
+                        )
                     ) : (
-                        <Button
-                            variant={isSoldOut ? 'outline' : 'default'}
-                            size="sm"
-                            disabled={isSoldOut}
-                            className={`text-[11px] font-semibold uppercase tracking-wider h-7 px-2.5 ${
-                                isSoldOut ? '' : 'bg-[#1a365d] hover:bg-[#2a4a7f]'
-                            }`}
-                            onClick={() => onSellTicket?.(tripId)}
-                        >
-                            Vender Boleto
-                        </Button>
+                        isPastDate ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-[11px] font-bold text-[#1a365d] h-8 w-full border-[#1a365d]/20 hover:bg-[#1a365d]/5"
+                                onClick={(e) => { e.stopPropagation(); onViewTrip?.(tripId!) }}
+                            >
+                                Ver
+                            </Button>
+                        ) : (
+                            <Button
+                                variant={isSoldOut ? 'outline' : 'default'}
+                                size="sm"
+                                disabled={isSoldOut}
+                                className={`text-[11px] font-bold uppercase h-8 w-full ${
+                                    isSoldOut ? '' : 'bg-[#1a365d] hover:bg-[#2a4a7f]'
+                                }`}
+                                onClick={(e) => { e.stopPropagation(); onSellTicket?.(tripId!) }}
+                            >
+                                {isSoldOut ? 'Lleno' : 'Vender'}
+                            </Button>
+                        )
                     )}
                 </div>
             </div>
-            {/* Bottom row */}
-            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/50 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span>Chofer: <span className="text-foreground font-medium">{driverName}</span></span>
+
+            {/* Bottom row: Meta Info */}
+            <div className={`flex items-center gap-1.5 mt-2 pt-2 border-t text-xs ${
+                trip ? "border-border/50 text-muted-foreground" : "border-blue-100/30 text-muted-foreground/30"
+            }`}>
+                <User className="h-3 w-3 opacity-70" />
+                <span className="flex-1">
+                    {trip ? "Chofer: " : ""}
+                    <span className={`${trip ? "text-foreground font-medium" : "italic"}`}>
+                        {driverName}
+                    </span>
+                </span>
+                {trip && (
+                    <div className="flex items-center gap-1.5 opacity-50">
+                        <CalendarClock className="h-3 w-3" />
+                        <span className="text-[10px]">ID: {tripId}</span>
+                    </div>
+                )}
             </div>
         </div>
     )
