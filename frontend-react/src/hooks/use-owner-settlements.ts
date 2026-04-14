@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { ownerService } from '@/services/owner.service'
 import { useAuth } from '@/hooks/use-auth'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 export interface OwnerOption {
@@ -92,10 +93,33 @@ export function useOwnerSettlements() {
     const { user } = useAuth()
     const officeId = user?.office_id
 
+    const [searchParams, setSearchParams] = useSearchParams()
+    
     const [owners, setOwners] = useState<OwnerOption[]>([])
-    const [selectedOwnerId, setSelectedOwnerId] = useState<string>('')
     const [buses, setBuses] = useState<BusOption[]>([])
-    const [selectedBusId, setSelectedBusId] = useState<string>('')
+    
+    const selectedOwnerId = searchParams.get('owner') || ''
+    const selectedBusId = searchParams.get('bus') || '__all__'
+
+    const setSelectedOwnerId = (id: string) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev)
+            if (id) next.set('owner', id)
+            else next.delete('owner')
+            // Reset bus when owner changes
+            next.delete('bus')
+            return next
+        })
+    }
+
+    const setSelectedBusId = (id: string) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev)
+            if (id && id !== '__all__') next.set('bus', id)
+            else next.delete('bus')
+            return next
+        })
+    }
     const [financials, setFinancials] = useState<TripFinancial[]>([])
     const [withdrawalsHistory, setWithdrawalsHistory] = useState<WithdrawalEntry[]>([])
     const [loading, setLoading] = useState(false)

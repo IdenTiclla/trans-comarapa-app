@@ -64,7 +64,7 @@ export function Component() {
                         ) : (
                             <SelectRoot
                                 value={selectedOwnerId}
-                                onValueChange={(v) => { setSelectedOwnerId(v); setSelectedBusId('') }}
+                                onValueChange={setSelectedOwnerId}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Selecciona un socio" />

@@ -68,6 +68,7 @@ function TripRow({
     onCreateTrip,
     selectedDate,
     isPastDate,
+    isSlotPast,
 }: {
     slot: Slot
     onViewTrip?: (id: number) => void
@@ -75,12 +76,13 @@ function TripRow({
     onCreateTrip?: (data: { routeId: number; date: string; time: string }) => void
     selectedDate: string
     isPastDate: boolean
+    isSlotPast: boolean
 }) {
     const trip = slot.trip
 
     // Empty slot — same structure as assigned trip
     if (!trip) {
-        if (isPastDate) {
+        if (isPastDate || isSlotPast) {
             return (
                 <div className="border border-dashed border-muted rounded-lg px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed">
                     <div className="flex items-center">
@@ -218,8 +220,12 @@ export default function TripCardList({
         )
     }
 
-    const todayStr = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const isPastDate = selectedDate < todayStr
+    const isToday = selectedDate === todayStr
+    // Current time as "HH:MM" in local timezone for slot-level comparison
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
     if (!scheduleBoard || scheduleBoard.length === 0) {
         return (
@@ -265,6 +271,7 @@ export default function TripCardList({
                                 onCreateTrip={onCreateTrip}
                                 selectedDate={selectedDate}
                                 isPastDate={isPastDate}
+                                isSlotPast={isToday && slot.time < currentTimeStr}
                             />
                         ))}
                     </div>
