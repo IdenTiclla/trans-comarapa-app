@@ -28,7 +28,7 @@ export function Component() {
         : ''
 
     return (
-        <div className="w-full max-w-[1400px] mx-auto">
+        <div className="w-full">
             {/* ──── Page Header ──── */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>

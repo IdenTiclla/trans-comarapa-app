@@ -4,7 +4,6 @@ import { useAppSelector } from '@/store'
 import { selectUser } from '@/store/auth.slice'
 import { useTripDetailPage } from '@/hooks/use-trip-detail-page'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
-import TripCountdown from '@/components/trips/TripCountdown'
 import TripPackagesSection from '@/components/trips/TripPackagesSection'
 import { TripInfoCard } from '@/components/trips/TripInfoCard'
 import { TripConfirmationModals } from '@/components/trips/TripConfirmationModals'
@@ -16,19 +15,6 @@ import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import { Button } from '@/components/ui/button'
 import { Send, Check, FileText, Package } from 'lucide-react'
-
-function formatTimeAmPm(timeString: string) {
-  if (!timeString) return ''
-  const parts = timeString.split(':')
-  if (parts.length >= 2) {
-    const hours = parseInt(parts[0], 10)
-    const minutes = parts[1]
-    const period = hours >= 12 ? 'PM' : 'AM'
-    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
-    return `${displayHours}:${minutes} ${period}`
-  }
-  return timeString
-}
 
 export function Component() {
   const { id } = useParams()
@@ -93,72 +79,10 @@ export function Component() {
 
   return (
     <div className="w-full">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b shadow-sm">
-        <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm font-bold text-foreground truncate">{trip.route?.origin}</span>
-                <span className="text-muted-foreground">→</span>
-                <span className="text-sm font-bold text-foreground truncate">{trip.route?.destination}</span>
-                <span className="hidden md:inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">{trip.departure_time ? formatTimeAmPm(trip.departure_time) : ''}</span>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center">
-              <TripCountdown tripDateTime={trip.trip_datetime} departureTime={trip.departure_time} tripStatus={trip.status} compact />
-            </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {(trip.status === 'scheduled' || trip.status === 'boarding') && (
-                <Button
-                  size="sm"
-                  variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
-                  disabled={!page.dispatch.canDispatch}
-                  onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
-                  title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
-                  className="gap-1.5"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Despachar</span>
-                </Button>
-              )}
-              {trip.status === 'departed' && (
-                <Button
-                  size="sm"
-                  onClick={() => page.finish.setShow(true)}
-                  className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Terminar</span>
-                </Button>
-              )}
-              <Link to={`/trips/${tripId}/sheet`} target="_blank">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <FileText className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Planilla de pasajeros</span>
-                </Button>
-              </Link>
-              <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <Package className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Manifiesto de encomiendas</span>
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile countdown */}
-      <div className="sm:hidden px-3 pt-3">
-        <TripCountdown tripDateTime={trip.trip_datetime} departureTime={trip.departure_time} tripStatus={trip.status} compact />
-      </div>
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (
-        <div className="sticky top-[56px] z-20 bg-orange-500 shadow-md">
+        <div className="sticky top-0 z-20 bg-orange-500 shadow-md">
           <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center text-white">
               <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,7 +102,7 @@ export function Component() {
 
       {/* Main Content */}
       <div className="pt-3 pb-8 px-3 sm:px-4 lg:px-6">
-        <div className="max-w-screen-2xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
           <TripInfoCard
             trip={trip}
             ticketStats={page.ticketStats}
@@ -186,6 +110,45 @@ export function Component() {
             drivers={page.drivers}
             assistants={page.assistants}
             staff={page.staff}
+            actions={
+              <>
+                {(trip.status === 'scheduled' || trip.status === 'boarding') && (
+                  <Button
+                    size="sm"
+                    variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
+                    disabled={!page.dispatch.canDispatch}
+                    onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
+                    title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
+                    className="gap-1.5"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Despachar
+                  </Button>
+                )}
+                {trip.status === 'departed' && (
+                  <Button
+                    size="sm"
+                    onClick={() => page.finish.setShow(true)}
+                    className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Terminar
+                  </Button>
+                )}
+                <Link to={`/trips/${tripId}/sheet`} target="_blank">
+                  <Button size="sm" variant="outline" className="gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    Planilla de pasajeros
+                  </Button>
+                </Link>
+                <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
+                  <Button size="sm" variant="outline" className="gap-1.5">
+                    <Package className="h-3.5 w-3.5" />
+                    Manifiesto de encomiendas
+                  </Button>
+                </Link>
+              </>
+            }
           />
 
           <BusSeatMapPrint

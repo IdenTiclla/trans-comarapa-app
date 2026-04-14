@@ -1,10 +1,26 @@
 import { TripStaffEditor } from './TripStaffEditor'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { MapPin, Bus, Banknote, Building2, User } from 'lucide-react'
 
-const STATUS_MAP: Record<string, string> = { scheduled: 'Programado', boarding: 'Abordando', departed: 'Despachado', in_progress: 'En Progreso', arrived: 'Llegó', completed: 'Completado', cancelled: 'Cancelado' }
-const STATUS_BADGE: Record<string, string> = { scheduled: 'bg-blue-50 text-blue-700 border-blue-200', boarding: 'bg-purple-50 text-purple-700 border-purple-200', departed: 'bg-orange-50 text-orange-700 border-orange-200', in_progress: 'bg-orange-50 text-orange-700 border-orange-200', arrived: 'bg-green-50 text-green-700 border-green-200', completed: 'bg-green-50 text-green-700 border-green-200', cancelled: 'bg-red-50 text-red-700 border-red-200' }
+import { MapPin, Clock, Bus, Banknote, Layers, Hash, CalendarDays } from 'lucide-react'
+
+const STATUS_MAP: Record<string, string> = {
+    scheduled: 'Programado',
+    boarding: 'Abordando',
+    departed: 'Despachado',
+    in_progress: 'En Progreso',
+    arrived: 'Llegó',
+    completed: 'Completado',
+    cancelled: 'Cancelado',
+}
+
+const STATUS_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
+    scheduled: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+    boarding: { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
+    departed: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+    in_progress: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+    arrived: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+    completed: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+    cancelled: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+}
 
 function formatTimeAmPm(timeString: string) {
     if (!timeString) return ''
@@ -19,18 +35,18 @@ function formatTimeAmPm(timeString: string) {
     return timeString
 }
 
-function getDayName(dateString?: string) {
+function formatFullDate(dateString?: string) {
     if (!dateString) return ''
-    const date = new Date(dateString)
+    // Parse as local date to avoid timezone offset issues
+    const [datePart] = dateString.split('T')
+    const [y, m, d] = datePart.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
     if (isNaN(date.getTime())) return ''
-    return new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date)
-}
-
-function formatShortDate(dateString?: string) {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return ''
-    return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
+    const weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date)
+    const day = String(d).padStart(2, '0')
+    const month = String(m).padStart(2, '0')
+    const year = String(y).slice(2)
+    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${day}/${month}/${year}`
 }
 
 interface TicketStats {
@@ -62,132 +78,153 @@ interface Props {
     drivers: any[]
     assistants: any[]
     staff: StaffState
+    actions?: React.ReactNode
 }
 
-export function TripInfoCard({ trip, ticketStats, formatDate, drivers, assistants, staff }: Props) {
-    const occupancyPercent = ticketStats.total > 0 ? ((ticketStats.sold + ticketStats.reserved) / ticketStats.total) * 100 : 0
+// ── Small info cell used in the data grid ────────────────────────────────────
+function InfoCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+    return (
+        <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex-shrink-0 text-muted-foreground">{icon}</div>
+            <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
+                <p className="text-sm font-bold text-foreground truncate leading-tight mt-0.5">{value}</p>
+            </div>
+        </div>
+    )
+}
 
-    const occupancyLevel = occupancyPercent >= 80 ? 'full' : occupancyPercent >= 50 ? 'medium' : 'available'
-    const occupancyColors = {
-        available: { bar: 'bg-status-available', bg: 'bg-green-50', text: 'text-green-700', label: 'Disponible' },
-        medium: { bar: 'bg-status-medium', bg: 'bg-yellow-50', text: 'text-yellow-700', label: 'Moderado' },
-        full: { bar: 'bg-status-full', bg: 'bg-red-50', text: 'text-red-700', label: 'Lleno' },
-    }[occupancyLevel]
+export function TripInfoCard({ trip, ticketStats, formatDate, drivers, assistants, staff, actions }: Props) {
+    const occupancyPercent = ticketStats.total > 0
+        ? ((ticketStats.sold + ticketStats.reserved) / ticketStats.total) * 100
+        : 0
+
+    const statusStyle = STATUS_BADGE[trip.status] ?? { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' }
+    const statusLabel = STATUS_MAP[trip.status] ?? trip.status
+
+    const driverName = trip.driver ? `${trip.driver.firstname} ${trip.driver.lastname}` : 'No asignado'
+    const assistantName = trip.assistant ? `${trip.assistant.firstname} ${trip.assistant.lastname}` : 'No asignado'
 
     return (
-        <Card>
-            <CardContent className="p-0">
-                {/* Header */}
-                <div className="px-5 py-4 border-b bg-muted/30 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-primary p-2 rounded-lg">
-                            <MapPin className="h-5 w-5 text-primary-foreground" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-primary uppercase tracking-wide">Trans Comarapa</p>
-                            <p className="text-[11px] text-muted-foreground">Viaje #{trip.id}</p>
-                        </div>
-                    </div>
-                    <Badge variant="outline" className={`text-xs font-semibold border ${STATUS_BADGE[trip.status] || ''}`}>
-                        {STATUS_MAP[trip.status] || trip.status}
-                    </Badge>
-                </div>
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
 
-                {/* Route + Date/Time info */}
-                <div className="px-5 py-3 border-b">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                        <div className="bg-primary/5 px-3 py-2 rounded-lg text-center">
-                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Origen</span>
-                            <p className="text-sm font-bold text-foreground truncate">{trip.route?.origin || 'N/D'}</p>
-                        </div>
-                        <div className="bg-primary/5 px-3 py-2 rounded-lg text-center">
-                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Destino</span>
-                            <p className="text-sm font-bold text-foreground truncate">{trip.route?.destination || 'N/D'}</p>
-                        </div>
-                        <div className="bg-primary/5 px-3 py-2 rounded-lg text-center">
-                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Día</span>
-                            <p className="text-sm font-bold text-foreground capitalize">{getDayName(trip.trip_datetime)}</p>
-                        </div>
-                        <div className="bg-primary/5 px-3 py-2 rounded-lg text-center">
-                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Fecha</span>
-                            <p className="text-sm font-bold text-foreground">{formatShortDate(trip.trip_datetime)}</p>
-                        </div>
-                        <div className="bg-primary/5 px-3 py-2 rounded-lg text-center col-span-2 sm:col-span-1">
-                            <span className="text-[10px] font-semibold text-muted-foreground block uppercase">Hora</span>
-                            <p className="text-sm font-bold text-foreground">{trip.departure_time ? formatTimeAmPm(trip.departure_time) : 'N/A'}</p>
-                        </div>
+            {/* ── Row 1: Title + time ─────────────────────────────────── */}
+            <div className="px-5 pt-5 pb-3 border-b border-border/60">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+                            {trip.route?.origin ?? 'N/D'}
+                            <span className="mx-2 text-muted-foreground font-normal">→</span>
+                            {trip.route?.destination ?? 'N/D'}
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-0.5 font-medium">
+                            {trip.departure_time ? formatTimeAmPm(trip.departure_time) : ''}
+                        </p>
+                    </div>
+
+                    {/* Status pill + action buttons */}
+                    <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
+                            {statusLabel}
+                        </span>
+                        {actions}
                     </div>
                 </div>
+            </div>
 
-                {/* Body */}
-                <div className="p-5">
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                        {/* Left: Bus details + Staff */}
-                        <div className="flex-1 space-y-4">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                                <div className="bg-muted/50 rounded-lg p-2.5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <Bus className="h-3.5 w-3.5 text-muted-foreground" />
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Bus</p>
-                                    </div>
-                                    <p className="font-semibold text-foreground">{trip.bus?.license_plate || 'N/A'}</p>
-                                    {trip.bus?.brand && <p className="text-xs text-muted-foreground">{trip.bus.brand} {trip.bus.model || ''}</p>}
+            {/* ── Row 2: Main data grid + Occupancy box ───────────────── */}
+            <div className="px-5 py-4 border-b border-border/60">
+                <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+
+                    {/* Left: data cells grid */}
+                    <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-4">
+                        <InfoCell
+                            icon={<Hash className="h-4 w-4" />}
+                            label="Viaje"
+                            value={`#${trip.id}`}
+                        />
+                        <InfoCell
+                            icon={<MapPin className="h-4 w-4" />}
+                            label="Origen"
+                            value={trip.route?.origin ?? 'N/D'}
+                        />
+                        <InfoCell
+                            icon={<MapPin className="h-4 w-4" />}
+                            label="Destino"
+                            value={trip.route?.destination ?? 'N/D'}
+                        />
+                        <InfoCell
+                            icon={<CalendarDays className="h-4 w-4" />}
+                            label="Fecha"
+                            value={formatFullDate(trip.trip_datetime)}
+                        />
+                        <InfoCell
+                            icon={<Clock className="h-4 w-4" />}
+                            label="Hora"
+                            value={trip.departure_time ? formatTimeAmPm(trip.departure_time) : 'N/A'}
+                        />
+                        <InfoCell
+                            icon={<Bus className="h-4 w-4" />}
+                            label="Bus"
+                            value={trip.bus?.license_plate ?? 'N/A'}
+                        />
+                        <InfoCell
+                            icon={<Banknote className="h-4 w-4" />}
+                            label="Precio"
+                            value={`Bs. ${trip.route?.price ?? trip.price ?? 'N/A'}`}
+                        />
+                        <InfoCell
+                            icon={<Layers className="h-4 w-4" />}
+                            label="Pisos"
+                            value={trip.bus?.floors ?? 1}
+                        />
+                    </div>
+
+                    {/* Right: Occupancy card */}
+                    <div className="lg:w-52 flex-shrink-0">
+                        <div className="border border-border rounded-xl p-3.5 bg-muted/30">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Ocupación</p>
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-muted-foreground">Total</span>
+                                    <span className="text-sm font-extrabold text-foreground">{ticketStats.total}</span>
                                 </div>
-                                <div className="bg-muted/50 rounded-lg p-2.5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <Banknote className="h-3.5 w-3.5 text-muted-foreground" />
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Precio</p>
-                                    </div>
-                                    <p className="font-semibold text-foreground">Bs. {trip.route?.price ?? trip.price ?? 'N/A'}</p>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-green-600 font-medium">Vendidos</span>
+                                    <span className="text-sm font-bold text-green-700">{ticketStats.sold}</span>
                                 </div>
-                                <div className="bg-muted/50 rounded-lg p-2.5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Pisos</p>
-                                    </div>
-                                    <p className="font-semibold text-foreground">{trip.bus?.floors || 1}</p>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-yellow-600 font-medium">Reservados</span>
+                                    <span className="text-sm font-bold text-yellow-700">{ticketStats.reserved}</span>
                                 </div>
-                                <div className="bg-muted/50 rounded-lg p-2.5">
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <User className="h-3.5 w-3.5 text-muted-foreground" />
-                                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Dueño</p>
-                                    </div>
-                                    <p className="font-semibold text-foreground">
-                                        {trip.bus?.owner ? `${trip.bus.owner.firstname} ${trip.bus.owner.lastname}` : 'Sin asignar'}
-                                    </p>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-blue-600 font-medium">Disponibles</span>
+                                    <span className="text-sm font-bold text-blue-700">{ticketStats.available}</span>
                                 </div>
                             </div>
-
-                            <TripStaffEditor
-                                drivers={drivers}
-                                assistants={assistants}
-                                trip={trip}
-                                staff={staff}
-                            />
-                        </div>
-
-                        {/* Right: Ticket stats */}
-                        <div className="lg:w-56">
-                            <div className={`${occupancyColors.bg} rounded-xl p-4 border`}>
-                                <h4 className="text-xs font-bold text-foreground mb-2 uppercase tracking-wide">Ocupación</h4>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Total</span><span className="font-bold">{ticketStats.total}</span></div>
-                                    <div className="flex justify-between text-sm"><span className="text-green-600">Vendidos</span><span className="font-bold text-green-700">{ticketStats.sold}</span></div>
-                                    <div className="flex justify-between text-sm"><span className="text-yellow-600">Reservados</span><span className="font-bold text-yellow-700">{ticketStats.reserved}</span></div>
-                                    <div className="flex justify-between text-sm"><span className="text-primary">Disponibles</span><span className="font-bold text-primary">{ticketStats.available}</span></div>
-                                    <div className="mt-2 w-full bg-muted rounded-full h-2">
-                                        <div className={`${occupancyColors.bar} h-2 rounded-full transition-all`} style={{ width: `${occupancyPercent}%` }} />
-                                    </div>
-                                    <div className="flex justify-between items-center mt-1">
-                                        <span className={`text-[10px] font-semibold ${occupancyColors.text}`}>{occupancyColors.label}</span>
-                                        <span className="text-[10px] text-muted-foreground">{Math.round(occupancyPercent)}%</span>
-                                    </div>
-                                </div>
+                            {/* Occupancy bar */}
+                            <div className="mt-3 w-full bg-muted rounded-full h-1.5">
+                                <div
+                                    className="h-1.5 rounded-full transition-all bg-green-500"
+                                    style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
+                                />
                             </div>
+                            <p className="text-[10px] text-muted-foreground mt-1 text-right">{Math.round(occupancyPercent)}% ocupado</p>
                         </div>
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+
+            {/* ── Row 3: Staff ────────────────────────────────────────── */}
+            <div className="px-5 py-4">
+                <TripStaffEditor
+                    drivers={drivers}
+                    assistants={assistants}
+                    trip={trip}
+                    staff={staff}
+                />
+            </div>
+        </div>
     )
 }
