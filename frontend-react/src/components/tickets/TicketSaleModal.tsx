@@ -2,10 +2,13 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { apiFetch } from '@/lib/api'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { useClientSearch } from '@/hooks/use-client-search'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import TicketDisplay from './TicketDisplay'
+import TicketReceiptModal from './TicketReceiptModal'
 
 interface TicketSaleModalProps {
     show: boolean
@@ -62,6 +65,8 @@ export default function TicketSaleModal({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [hasTriedSubmit, setHasTriedSubmit] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
+    const [showReceiptModal, setShowReceiptModal] = useState(false)
+    const [createdTicketsData, setCreatedTicketsData] = useState<any[]>([])
 
     useEffect(() => {
         if (show) {
@@ -184,8 +189,17 @@ export default function TicketSaleModal({
                 createdTickets.push(createdTicket)
             }
 
-            onTicketCreated(createdTickets)
-            onClose()
+            const seatNumbers = createdTickets.map((t: any) => t.seat?.seat_number).filter(Boolean).join(', ')
+            toast.success(
+                actionType === 'sell' ? '¡Boleto Vendido!' : '¡Asiento Reservado!',
+                {
+                    description: seatNumbers ? `Asiento${createdTickets.length > 1 ? 's' : ''}: ${seatNumbers}` : undefined,
+                    duration: 5000,
+                }
+            )
+
+            setCreatedTicketsData(createdTickets)
+            setShowReceiptModal(true)
 
         } catch (error: any) {
             console.error('Error al crear los boletos:', error)
@@ -204,10 +218,18 @@ export default function TicketSaleModal({
         }
     }
 
-    if (!show) return null
+    const closeReceiptModal = () => {
+        setShowReceiptModal(false)
+        setCreatedTicketsData([])
+        onTicketCreated(createdTicketsData)
+        onClose()
+    }
+
+    if (!show && !showReceiptModal) return null
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden font-sans">
+        <>
+            <div className={cn("fixed inset-0 z-50 overflow-hidden font-sans transition-all duration-300", showReceiptModal ? "hidden" : "opacity-100")}>
             <div className="absolute inset-0 modal-overlay-bokeh transition-opacity" onClick={onClose}></div>
 
             <div className="relative flex items-center justify-center min-h-screen p-4 pointer-events-none">
@@ -409,6 +431,14 @@ export default function TicketSaleModal({
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+
+            <TicketReceiptModal
+                show={showReceiptModal}
+                tickets={createdTicketsData}
+                trip={trip}
+                onClose={closeReceiptModal}
+            />
+        </>
     )
 }

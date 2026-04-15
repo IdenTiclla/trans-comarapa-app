@@ -69,156 +69,137 @@ export default function TicketDisplay({
         return previewMode ? 'text-lg' : 'text-2xl'
     }
 
+    const p = previewMode
+
     return (
-        <div className={`bg-white rounded-lg overflow-hidden mx-auto font-sans print:max-w-none print:w-[210mm] print:shadow-none print:border-2 print:border-black print:m-0 ${previewMode ? 'border-2 border-blue-300 max-w-md shadow-md scale-90 transform origin-top' : 'border-4 border-blue-400 max-w-4xl shadow-2xl'}`}>
-            <div className={`bg-gradient-to-r from-cyan-400 to-blue-500 text-white print:bg-blue-500 print:!bg-none ${previewMode ? 'px-2 py-1 border-b-2 border-blue-500' : 'px-4 py-3 border-b-4 border-blue-600'}`}>
-                <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0">
-                            <svg className={`text-white ${previewMode ? 'w-8 h-6' : 'w-16 h-12'}`} fill="currentColor" viewBox="0 0 100 60">
-                                <rect x="10" y="20" width="70" height="25" rx="5" fill="currentColor" />
-                                <rect x="15" y="15" width="60" height="8" rx="3" fill="currentColor" />
-                                <circle cx="25" cy="50" r="6" fill="currentColor" />
-                                <circle cx="65" cy="50" r="6" fill="currentColor" />
-                                <rect x="20" y="25" width="8" height="6" fill="white" />
-                                <rect x="32" y="25" width="8" height="6" fill="white" />
-                                <rect x="44" y="25" width="8" height="6" fill="white" />
-                                <rect x="56" y="25" width="8" height="6" fill="white" />
+        <div className={`bg-white rounded-lg overflow-hidden mx-auto font-sans print:max-w-none print:w-[210mm] print:shadow-none print:border-2 print:border-black print:m-0 ${p ? 'border-2 border-blue-300 max-w-md shadow-md scale-90 transform origin-top' : 'border-2 border-blue-800 shadow-lg'}`}>
+            <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white print:bg-blue-600 print:!bg-none ${p ? 'px-2 py-1.5' : 'px-5 py-3'}`}>
+                <div className={`flex items-center justify-between ${p ? '' : ''}`}>
+                    <div className="flex items-center space-x-3">
+                        <div className={`flex-shrink-0 bg-white/20 rounded-lg flex items-center justify-center ${p ? 'p-1' : 'p-2'}`}>
+                            <svg className={`text-white ${p ? 'w-6 h-4' : 'w-10 h-7'}`} viewBox="0 0 100 60" fill="none" stroke="currentColor" strokeWidth="3">
+                                <rect x="10" y="15" width="80" height="30" rx="4" />
+                                <circle cx="28" cy="52" r="6" />
+                                <circle cx="72" cy="52" r="6" />
+                                <rect x="20" y="23" width="12" height="7" rx="1" fill="currentColor" stroke="none" />
+                                <rect x="36" y="23" width="12" height="7" rx="1" fill="currentColor" stroke="none" />
+                                <rect x="52" y="23" width="12" height="7" rx="1" fill="currentColor" stroke="none" />
+                                <rect x="68" y="23" width="12" height="7" rx="1" fill="currentColor" stroke="none" />
                             </svg>
                         </div>
                         <div>
-                            <div className="flex items-baseline mb-0">
-                                <h1 className={previewMode ? 'text-base font-bold mr-1' : 'text-2xl font-bold space-x-2'}>TRANS</h1>
-                                <h2 className={previewMode ? 'text-base font-bold italic' : 'text-2xl font-bold italic'}>Comarapa</h2>
+                            <div className="flex items-baseline">
+                                <h1 className={`font-extrabold tracking-wide ${p ? 'text-sm mr-1' : 'text-xl mr-1.5'}`}>TRANS</h1>
+                                <h2 className={`font-extrabold italic ${p ? 'text-sm' : 'text-xl'}`}>Comarapa</h2>
                             </div>
-                            <div className={`leading-none ${previewMode ? 'text-[8px]' : 'text-xs'}`}>
+                            <div className={`leading-tight text-white/80 ${p ? 'text-[7px]' : 'text-[10px]'}`}>
                                 <p className="font-medium">SINDICATO MIXTO DE TRANSPORTISTAS DE LARGA</p>
                                 <p className="font-medium">Y CORTA DISTANCIA "MANUEL MARIA CABALLERO"</p>
                             </div>
                         </div>
                     </div>
-                    <div className="text-center">
-                        <p className={previewMode ? 'text-xs font-bold' : 'text-sm font-bold'}>Resolución Suprema 17996</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                        <svg className={`text-white ${previewMode ? 'w-6 h-6' : 'w-16 h-16'}`} fill="currentColor" viewBox="0 0 100 100">
-                            <path d="M50 10 L30 30 L20 50 L30 60 L50 55 L70 60 L80 50 L70 30 Z" />
-                            <path d="M50 15 L40 25 L50 35 L60 25 Z" />
-                            <circle cx="45" cy="25" r="2" />
-                            <circle cx="55" cy="25" r="2" />
-                        </svg>
+                    <div className={`text-right ${p ? '' : ''}`}>
+                        <p className={`font-bold text-white/70 ${p ? 'text-[7px]' : 'text-[10px]'}`}>Resolución Suprema 17996</p>
                     </div>
                 </div>
-                <div className={`grid grid-cols-2 gap-x-4 ${previewMode ? 'mt-0 text-[8px] leading-tight pb-1' : 'mt-2 text-xs gap-x-8'}`}>
+                <div className={`grid grid-cols-2 gap-x-4 text-white/80 ${p ? 'mt-1 text-[7px] leading-tight' : 'mt-2 text-[10px] gap-x-6'}`}>
                     <div>
-                        <p><span className="font-medium">Of. Santa Cruz:</span> Doble Vía La Guardia 4to <span className="font-medium">Cel:</span> 781-75576</p>
-                        <p><span className="font-medium">Of. Comarapa:</span> Av. Comarapa • <span className="font-medium">Cel:</span> 781-75578</p>
+                        <p><span className="font-semibold text-white">Of. Santa Cruz:</span> Doble Vía La Guardia 4to <span className="font-semibold text-white">Cel:</span> 781-75576</p>
+                        <p><span className="font-semibold text-white">Of. Comarapa:</span> Av. Comarapa • <span className="font-semibold text-white">Cel:</span> 781-75578</p>
                     </div>
                     <div>
-                        <p><span className="font-medium">Of. San Isidro:</span> <span className="font-medium">Cel:</span> 785-15650</p>
-                        <p><span className="font-medium">Of. Los Negros:</span> <span className="font-medium">Cel:</span> 690-29690</p>
+                        <p><span className="font-semibold text-white">Of. San Isidro:</span> <span className="font-semibold text-white">Cel:</span> 785-15650</p>
+                        <p><span className="font-semibold text-white">Of. Los Negros:</span> <span className="font-semibold text-white">Cel:</span> 690-29690</p>
                     </div>
                 </div>
             </div>
 
             <div className="bg-white relative">
-                <div className={`absolute right-4 ${previewMode ? 'top-1' : 'top-2'}`}>
-                    <div className={`bg-blue-500 text-white rounded-lg print:bg-blue-500 ${previewMode ? 'px-3 py-1' : 'px-6 py-2'}`}>
-                        <h3 className={`font-bold ${previewMode ? 'text-sm' : 'text-xl'}`}>BOLETO</h3>
+                <div className={`absolute ${p ? 'right-2 top-1' : 'right-3 top-2'}`}>
+                    <div className={`bg-blue-600 text-white rounded print:bg-blue-600 ${p ? 'px-2 py-0.5' : 'px-4 py-1'}`}>
+                        <h3 className={`font-bold ${p ? 'text-[10px]' : 'text-sm'}`}>BOLETO</h3>
                     </div>
                 </div>
 
-                <div className={previewMode ? 'px-3 py-1 pt-6' : 'px-4 py-4 pt-16'}>
-                    <div className={previewMode ? 'border-2 border-blue-400 mb-1' : 'border-4 border-blue-500 mb-2'}>
+                <div className={p ? 'px-3 py-1.5 pt-5' : 'px-4 py-3 pt-10'}>
+                    <div className={`border-blue-600 mb-2 ${p ? 'border-2' : 'border-2'}`}>
                         <div className="flex">
-                            <div className={`bg-blue-500 text-white font-bold print:bg-blue-500 ${previewMode ? 'px-2 py-1 text-xs flex items-center' : 'px-4 py-3 text-lg'}`}>
+                            <div className={`bg-blue-600 text-white font-bold print:bg-blue-600 ${p ? 'px-2 py-1 text-[10px] flex items-center' : 'px-3 py-2 text-sm'}`}>
                                 NOMBRE:
                             </div>
-                            <div className={`flex-grow bg-white text-gray-700 font-bold ${previewMode ? 'border-r-2 border-blue-400 px-2 py-1 text-xs flex items-center' : 'border-r-4 border-blue-500 px-4 py-3'}`}>
+                            <div className={`flex-grow text-gray-800 font-bold ${p ? 'px-2 py-1 text-[10px] flex items-center' : 'px-3 py-2 text-sm'}`}>
                                 {getFullName()}
                             </div>
-                            <div className={`bg-white text-right ${previewMode ? 'px-2 py-1 flex items-center' : 'px-6 py-3'}`}>
-                                <span className={`text-red-600 font-bold ${previewMode ? 'text-sm' : 'text-2xl'}`}>
-                                    N° {ticket?.id || '115032'}
+                            <div className={`text-right ${p ? 'px-2 py-1 flex items-center' : 'px-3 py-2'}`}>
+                                <span className={`text-red-600 font-bold ${p ? 'text-[10px]' : 'text-base'}`}>
+                                    N° {ticket?.id || '---'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className={`grid grid-cols-12 ${previewMode ? 'gap-1 mb-1' : 'gap-2 mb-2'}`}>
-                        <div className={`col-span-2 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>Bs.</div>
-                            <div className={`bg-white text-center font-bold flex-1 flex items-center justify-center ${previewMode ? 'py-1 text-sm' : 'py-4 text-xl'}`}>{formatPrice(ticket?.price)}</div>
+                    <div className={`grid grid-cols-12 ${p ? 'gap-1 mb-1' : 'gap-1.5 mb-1.5'}`}>
+                        <div className={`col-span-2 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>Bs.</div>
+                            <div className={`bg-white text-center font-bold flex-1 flex items-center justify-center ${p ? 'py-1 text-xs' : 'py-2 text-base'}`}>{formatPrice(ticket?.price)}</div>
                         </div>
-                        <div className={`col-span-7 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>Destino:</div>
-                            <div className={`bg-white text-center font-bold flex-1 flex items-center justify-center ${previewMode ? 'py-1 text-sm line-clamp-1' : 'py-4 text-lg'}`}>{getDestination()}</div>
+                        <div className={`col-span-7 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>Destino:</div>
+                            <div className={`bg-white text-center font-bold flex-1 flex items-center justify-center ${p ? 'py-1 text-xs line-clamp-1' : 'py-2 text-sm'}`}>{getDestination()}</div>
                         </div>
-                        <div className={`col-span-3 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>N°</div>
-                            <div className={`bg-white text-center font-bold text-red-600 flex-1 flex items-center justify-center ${previewMode ? 'py-1 text-base' : 'py-4'} ${getSeatNumberClass()}`}>{getSeatNumbers()}</div>
+                        <div className={`col-span-3 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>N°</div>
+                            <div className={`bg-white text-center font-bold text-red-600 flex-1 flex items-center justify-center ${p ? 'py-1 text-xs' : 'py-2 text-base'} ${getSeatNumberClass()}`}>{getSeatNumbers()}</div>
                         </div>
                     </div>
 
-                    <div className={`grid grid-cols-12 mb-2 ${previewMode ? 'gap-1' : 'gap-2'}`}>
-                        <div className={`col-span-4 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>Fecha</div>
-                            <div className={previewMode ? 'bg-white p-1 flex-1 flex flex-col justify-center' : 'bg-white p-2'}>
-                                <div className="grid grid-cols-3 gap-1">
-                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${previewMode ? 'py-1 text-xs' : 'py-2'}`}>{getDayFromDate()}</div>
-                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${previewMode ? 'py-1 text-xs' : 'py-2'}`}>{getMonthFromDate()}</div>
-                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${previewMode ? 'py-1 text-xs' : 'py-2'}`}>{getYearFromDate()}</div>
+                    <div className={`grid grid-cols-12 ${p ? 'gap-1' : 'gap-1.5'}`}>
+                        <div className={`col-span-4 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>Fecha</div>
+                            <div className={p ? 'bg-white px-1 py-0.5 flex-1 flex flex-col justify-center' : 'bg-white px-1 py-1'}>
+                                <div className="grid grid-cols-3 gap-0.5">
+                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>{getDayFromDate()}</div>
+                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>{getMonthFromDate()}</div>
+                                    <div className={`border-2 border-blue-300 text-center font-bold flex items-center justify-center ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>{getYearFromDate()}</div>
                                 </div>
                             </div>
                         </div>
-                        <div className={`col-span-4 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold leading-tight print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>Hora en Of.:</div>
-                            <div className={previewMode ? 'bg-white flex flex-row items-center justify-center space-x-2 py-2 flex-1' : 'bg-white p-2'}>
-                                <div className={`flex justify-center ${previewMode ? '' : 'mb-2'}`}>
-                                    <span className={`bg-blue-100 rounded font-bold text-blue-600 ${previewMode ? 'px-1 py-0.5 text-[10px]' : 'px-3 py-1'}`}>{getOfficeTimeAmPm()}</span>
-                                </div>
-                                <div className={`text-center font-bold text-red-600 ${previewMode ? 'text-sm' : 'text-lg'}`}>{getCurrentTime()}</div>
+                        <div className={`col-span-4 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold leading-tight print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>Hora en Of.:</div>
+                            <div className={p ? 'bg-white flex items-center justify-center space-x-1 py-0.5 flex-1' : 'bg-white flex items-center justify-center space-x-2 py-1'}>
+                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1 py-0.5 text-[8px]' : 'px-2 py-0.5 text-[10px]'}`}>{getOfficeTimeAmPm()}</span>
+                                <span className={`font-bold text-red-600 ${p ? 'text-[10px]' : 'text-sm'}`}>{getCurrentTime()}</span>
                             </div>
                         </div>
-                        <div className={`col-span-4 ${previewMode ? 'border-2 border-blue-400 flex flex-col' : 'border-4 border-blue-500'}`}>
-                            <div className={`bg-blue-500 text-white text-center font-bold leading-tight print:bg-blue-500 ${previewMode ? 'py-0 text-[10px]' : 'py-2'}`}>Hora Salida:</div>
-                            <div className={previewMode ? 'bg-white flex flex-row items-center justify-center space-x-2 py-2 flex-1' : 'bg-white p-2'}>
-                                <div className={`flex justify-center ${previewMode ? '' : 'mb-2'}`}>
-                                    <span className={`bg-blue-100 rounded font-bold text-blue-600 ${previewMode ? 'px-1 py-0.5 text-[10px]' : 'px-3 py-1'}`}>{getDepartureTimeAmPm()}</span>
-                                </div>
-                                <div className={`text-center font-bold text-red-600 ${previewMode ? 'text-sm' : 'text-lg'}`}>{getDepartureTime()}</div>
+                        <div className={`col-span-4 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
+                            <div className={`bg-blue-600 text-white text-center font-bold leading-tight print:bg-blue-600 ${p ? 'py-0.5 text-[9px]' : 'py-1 text-xs'}`}>Hora Salida:</div>
+                            <div className={p ? 'bg-white flex items-center justify-center space-x-1 py-0.5 flex-1' : 'bg-white flex items-center justify-center space-x-2 py-1'}>
+                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1 py-0.5 text-[8px]' : 'px-2 py-0.5 text-[10px]'}`}>{getDepartureTimeAmPm()}</span>
+                                <span className={`font-bold text-red-600 ${p ? 'text-[10px]' : 'text-sm'}`}>{getDepartureTime()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className={`bg-gradient-to-r from-cyan-400 to-blue-500 text-white flex flex-col print:bg-blue-500 print:!bg-none ${previewMode ? 'px-2 py-1 border-t-2 border-blue-500 pb-2' : 'px-4 py-3 border-t-4 border-blue-600'}`}>
-                <div className={previewMode ? 'grid grid-cols-12 gap-1 items-stretch' : 'grid grid-cols-12 gap-4'}>
-                    <div className="col-span-4 flex items-center justify-center">
-                        <div className="text-center">
-                            <p className={`font-bold mb-0 leading-tight uppercase tracking-widest text-[#FFDF00] ${previewMode ? 'text-[9px]' : 'text-lg'}`}>
-                                NO SE ACEPTAN<br />DEVOLUCIONES
-                            </p>
-                            <p className={`italic opacity-90 tracking-wide mt-1 text-white ${previewMode ? 'text-[7px]' : 'text-sm mt-2'}`}>
-                                ¡Gracias por su preferencia!
-                            </p>
-                        </div>
+            <div className={`bg-gradient-to-r from-blue-600 to-blue-700 text-white print:bg-blue-600 print:!bg-none ${p ? 'px-2 py-1 border-t-2 border-blue-800' : 'px-4 py-2 border-t-2 border-blue-800'}`}>
+                <div className="flex items-center justify-between">
+                    <div className={`${p ? 'w-1/3' : 'w-1/3'}`}>
+                        <p className={`font-bold leading-tight uppercase tracking-wider text-yellow-300 ${p ? 'text-[8px]' : 'text-[10px]'}`}>
+                            NO SE ACEPTAN DEVOLUCIONES
+                        </p>
+                        <p className={`italic text-white/80 ${p ? 'text-[6px]' : 'text-[9px]'}`}>
+                            Gracias por su preferencia
+                        </p>
                     </div>
-                    <div className="col-span-8 flex flex-col">
-                        <div className={`bg-blue-600/50 rounded flex-1 flex flex-col justify-center ${previewMode ? 'px-2 py-1' : 'px-3 py-2'}`}>
-                            <h4 className={`text-center font-bold ${previewMode ? 'text-[8px] mb-1' : 'text-sm mb-2'}`}>
-                                HORARIOS DE SALIDA STZ - COMARAPA
-                            </h4>
-                            <div className={`leading-tight ${previewMode ? 'text-[6.5px] space-y-0.5' : 'text-xs space-y-1'}`}>
-                                <div className="flex justify-between"><span className="font-bold opacity-80">L-J:</span> 10:30, 14:00, 18:30, 20:30</div>
-                                <div className="flex justify-between"><span className="font-bold text-yellow-300">V-S-D:</span> 10:30, 14:00, 18:30, 20:30, 22:00</div>
-                                <h4 className={`text-center font-bold border-t border-white/20 pt-1 mt-1 ${previewMode ? 'text-[8px] pb-0.5' : 'text-sm mt-2'}`}>
-                                    HORARIOS COMARAPA - STZ
-                                </h4>
-                                <div className="flex justify-between"><span className="font-bold opacity-80">L-S:</span> 08:00, 14:00, 20:30, 23:30</div>
-                                <div className="flex justify-between"><span className="font-bold text-yellow-300">DOM:</span> 08:30, 12:00, 14:00, 20:30, 23:30</div>
-                            </div>
+                    <div className={`${p ? 'w-2/3' : 'w-2/3'}`}>
+                        <div className={`bg-blue-800/40 rounded ${p ? 'px-1.5 py-1' : 'px-2 py-1.5'}`}>
+                            <p className={`text-center font-bold ${p ? 'text-[7px] mb-0.5' : 'text-[9px] mb-0.5'}`}>
+                                HORARIOS STZ - COMARAPA: L-J 10:30, 14:00, 18:30, 20:30 | V-S-D +22:00
+                            </p>
+                            <p className={`text-center font-bold ${p ? 'text-[7px]' : 'text-[9px]'}`}>
+                                HORARIOS COMARAPA - STZ: L-S 08:00, 14:00, 20:30, 23:30 | DOM 08:30, 12:00, 14:00, 20:30, 23:30
+                            </p>
                         </div>
                     </div>
                 </div>
