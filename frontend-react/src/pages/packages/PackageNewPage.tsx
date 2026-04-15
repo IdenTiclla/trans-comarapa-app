@@ -22,7 +22,10 @@ export function Component() {
           <PackageRegistrationModal
             show={true}
             onClose={() => navigate('/packages')}
-            onPackageRegistered={() => navigate('/packages')}
+            onPackageRegistered={() => {
+              // No navegamos aquí para permitir ver el recibo primero
+              // El onClose se encargará de la navegación cuando el usuario termine
+            }}
           />
         </CardContent>
       </Card>

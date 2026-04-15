@@ -218,21 +218,8 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
                 className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-3xl sm:w-full border border-gray-100/50"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 border-b border-green-600">
-                    <div className="flex items-center justify-center">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div className="ml-2">
-                                <h3 className="text-lg font-bold text-white tracking-wide">
-                                    ¡Encomienda Registrada!
-                                </h3>
-                            </div>
-                        </div>
-                    </div>
+                <div className="bg-white px-4 py-1">
+                    {/* El mensaje de éxito ahora se muestra vía toast al registrar */}
                 </div>
 
                 <div id="receipt-content" className="bg-white">
@@ -303,18 +290,25 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
                                 </div>
                             </div>
 
-                            <div className="flex items-center mt-2 gap-4">
-                                <div className="flex items-center flex-1">
-                                    <span className="text-blue-800 font-bold w-24">Destino:</span>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2">
+                                <div className="flex items-center">
+                                    <span className="text-blue-800 font-bold w-24 flex-shrink-0">Origen:</span>
+                                    <div className="flex-1 relative">
+                                        <span className="bg-white pr-2 relative z-10">{originName}</span>
+                                        <div className="absolute inset-x-0 bottom-0 border-b border-dotted border-gray-400"></div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center">
+                                    <span className="text-blue-800 font-bold w-24 flex-shrink-0">Destino:</span>
                                     <div className="flex-1 relative">
                                         <span className="bg-white pr-2 relative z-10">{destinationName}</span>
                                         <div className="absolute inset-x-0 bottom-0 border-b border-dotted border-gray-400"></div>
                                     </div>
                                 </div>
-                                <div className="flex items-center flex-1">
-                                    <span className="text-blue-800 font-bold w-12">Pago:</span>
+                                <div className="flex items-center">
+                                    <span className="text-blue-800 font-bold w-24 flex-shrink-0">Estado Pago:</span>
                                     <div className="flex-1 relative">
-                                        <span className="bg-white pr-2 relative z-10 truncate text-[11px]" title={packageData.payment_status === 'paid_on_send' ? 'Pagado (Efectivo)' : 'Por cobrar'}>
+                                        <span className="bg-white pr-2 relative z-10 truncate" title={packageData.payment_status === 'paid_on_send' ? 'Pagado (Efectivo)' : 'Por cobrar'}>
                                             {packageData.payment_status === 'paid_on_send' ? 'Pagado' : 'Por cobrar'}
                                         </span>
                                         <div className="absolute inset-x-0 bottom-0 border-b border-dotted border-gray-400"></div>

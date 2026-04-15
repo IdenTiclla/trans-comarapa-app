@@ -8,6 +8,7 @@ import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import PackageReceiptModal from './PackageReceiptModal'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface Office {
     id: number
@@ -326,6 +327,10 @@ export default function PackageRegistrationModal({
                     payment_status: response.payment_status || packageData.payment_status
                 })
 
+                toast.success('¡Encomienda Registrada!', {
+                    description: `Seguimiento: ${response.tracking_number}`,
+                    duration: 5000,
+                })
                 setShowReceiptModal(true)
                 if (onPackageRegistered) onPackageRegistered(response)
                 resetForm()

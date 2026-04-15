@@ -457,7 +457,8 @@ export function useTripDetailPage(tripId: number) {
     }
 
     const handlePackageRegistered = () => {
-        setShowPackageRegistrationModal(false)
+        // No cerramos el modal aquí para permitir ver el recibo
+        // El modal se cerrará cuando el usuario haga clic en "Cerrar" en el recibo
         fetchPackages(tripId)
     }
 
