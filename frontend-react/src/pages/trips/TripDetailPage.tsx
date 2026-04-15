@@ -135,7 +135,7 @@ export function Component() {
                     Terminar
                   </Button>
                 )}
-                <Link to={`/trips/${tripId}/sheet`} target="_blank">
+                <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
                   <Button size="sm" variant="outline" className="gap-1.5">
                     <FileText className="h-3.5 w-3.5" />
                     Planilla de pasajeros

@@ -112,13 +112,13 @@ export function Component() {
         }
         .pm-toolbar-title {
           color: #fff;
-          font-size: 15px;
+          font-size: 17px;
           font-weight: 700;
           letter-spacing: .3px;
         }
         .pm-toolbar-sub {
           color: #90cdf4;
-          font-size: 11px;
+          font-size: 13px;
           margin-top: 2px;
         }
         .pm-btn-print {
@@ -164,7 +164,7 @@ export function Component() {
           padding-right: 14px;
         }
         .doc-logo-trans {
-          font-size: 12px;
+          font-size: 16px;
           font-weight: 900;
           font-family: 'Times New Roman', serif;
           letter-spacing: 2px;
@@ -172,7 +172,7 @@ export function Component() {
           line-height: 1;
         }
         .doc-logo-comarapa {
-          font-size: 28px;
+          font-size: 36px;
           font-weight: 900;
           font-family: 'Times New Roman', serif;
           color: #1a202c;
@@ -181,13 +181,13 @@ export function Component() {
           margin-bottom: 4px;
         }
         .doc-sindicato {
-          font-size: 8px;
+          font-size: 11px;
           color: #4a5568;
           line-height: 1.35;
           margin-bottom: 5px;
         }
         .doc-phones {
-          font-size: 8px;
+          font-size: 11px;
           color: #4a5568;
           line-height: 1.5;
         }
@@ -196,7 +196,7 @@ export function Component() {
           overflow: hidden;
         }
         .doc-route-banner {
-          font-size: 9px;
+          font-size: 13px;
           font-weight: 700;
           color: #276749;
           text-align: center;
@@ -206,7 +206,7 @@ export function Component() {
           margin-bottom: 8px;
         }
         .doc-manifest-title {
-          font-size: 13px;
+          font-size: 17px;
           font-weight: 900;
           color: #1a365d;
           text-align: center;
@@ -226,14 +226,14 @@ export function Component() {
           min-height: 17px;
         }
         .doc-field-label {
-          font-size: 9px;
+          font-size: 12px;
           font-weight: 700;
           color: #1a202c;
           white-space: nowrap;
           flex-shrink: 0;
         }
         .doc-field-value {
-          font-size: 9px;
+          font-size: 12px;
           color: #1a202c;
           border-bottom: 1px dotted #a0aec0;
           flex: 1;
@@ -252,14 +252,14 @@ export function Component() {
           background: #fff5f5;
         }
         .doc-trip-id-label {
-          font-size: 8px;
+          font-size: 11px;
           color: #e53e3e;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: .5px;
         }
         .doc-trip-id-number {
-          font-size: 18px;
+          font-size: 24px;
           font-weight: 900;
           color: #e53e3e;
           letter-spacing: 1px;
@@ -270,13 +270,13 @@ export function Component() {
         .pkg-table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 10.5px;
+          font-size: 13px;
           margin-top: 4px;
         }
         .pkg-table thead th {
           background: #1a365d;
           color: #fff;
-          font-size: 9.5px;
+          font-size: 12px;
           font-weight: 700;
           padding: 5px 7px;
           text-align: left;
@@ -294,7 +294,7 @@ export function Component() {
         .pkg-table tbody td {
           border: 1px solid #bee3f8;
           padding: 2px 6px;
-          font-size: 9.5px;
+          font-size: 12px;
           color: #1a202c;
           vertical-align: middle;
         }
@@ -346,7 +346,7 @@ export function Component() {
           display: inline-block;
           background: #c6f6d5;
           color: #22543d;
-          font-size: 8.5px;
+          font-size: 11px;
           font-weight: 700;
           border-radius: 3px;
           padding: 1px 6px;
@@ -357,7 +357,7 @@ export function Component() {
           display: inline-block;
           background: #fefcbf;
           color: #744210;
-          font-size: 8.5px;
+          font-size: 11px;
           font-weight: 700;
           border-radius: 3px;
           padding: 1px 6px;
@@ -373,7 +373,7 @@ export function Component() {
           margin-top: 14px;
           padding-top: 10px;
           border-top: 1px solid #bee3f8;
-          font-size: 10px;
+          font-size: 13px;
           color: #4a5568;
         }
         .pm-summary strong { color: #1a202c; }
