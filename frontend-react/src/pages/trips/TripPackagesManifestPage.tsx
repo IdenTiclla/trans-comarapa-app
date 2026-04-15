@@ -444,9 +444,9 @@ export function Component() {
           </div>
           <button id="btn-imprimir-manifiesto" className="pm-btn-print" onClick={() => window.print()}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2"/>
-              <path d="M17 9V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4"/>
-              <rect x="9" y="13" width="6" height="8" rx="1"/>
+              <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2" />
+              <path d="M17 9V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4" />
+              <rect x="9" y="13" width="6" height="8" rx="1" />
             </svg>
             Imprimir
           </button>

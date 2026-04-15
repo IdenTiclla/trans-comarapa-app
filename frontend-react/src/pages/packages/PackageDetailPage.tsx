@@ -3,9 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
-import { Check, Truck, Bus, Box, AlertCircle, Archive } from 'lucide-react'
+import { Check, Truck, Bus, Box, AlertCircle, Archive, ArrowRight } from 'lucide-react'
+import { getPackageStatusLabel as getStatusLabel } from '@/lib/package-status'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
+import PackageStakeholders from '@/components/packages/PackageStakeholders'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -76,6 +78,24 @@ export function Component() {
 
   const statusNum = getStatusNumber(currentPackage.status);
   
+  const originName = currentPackage.origin_office?.name || 
+                    currentPackage.origin_office_name || 
+                    currentPackage.origin || 
+                    currentPackage.sender?.branch?.name || 
+                    currentPackage.sender?.office?.name || 
+                    currentPackage.trip?.route?.origin_location?.name || 
+                    currentPackage.trip?.route?.origin ||
+                    'Origen';
+
+  const destinationName = currentPackage.destination_office?.name || 
+                         currentPackage.destination_office_name || 
+                         currentPackage.destination || 
+                         currentPackage.recipient?.branch?.name || 
+                         currentPackage.recipient?.office?.name || 
+                         currentPackage.trip?.route?.destination_location?.name || 
+                         currentPackage.trip?.route?.destination ||
+                         'Destino';
+  
   // Try to find datetime for each status
   const getHistoryDate = (stateName: string) => {
     if (!currentPackage.state_history) return null;
@@ -90,7 +110,7 @@ export function Component() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="max-w-screen-xl mx-auto px-4 lg:px-8 py-8">
+      <div className="max-w-full mx-auto px-4 lg:px-12 py-8">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
@@ -99,10 +119,13 @@ export function Component() {
             <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
               {currentPackage.tracking_number}
             </h1>
-            <p className="text-gray-600 text-lg">
-              {currentPackage.status === 'in_transit' ? 'En Tránsito' :
-               currentPackage.status === 'arrived_at_destination' ? 'En Agencia' :
-               currentPackage.status === 'delivered' ? 'Entregado' : 'Pendiente'}: {currentPackage.sender?.branch?.name || currentPackage.sender?.office?.name || 'Origen'} <span className="mx-1">→</span> {currentPackage.recipient?.branch?.name || currentPackage.recipient?.office?.name || 'Destino'}
+            <p className="text-gray-600 text-lg flex items-center gap-2">
+              <span className={cn(
+                "px-2 py-0.5 rounded text-xs font-bold uppercase",
+                currentPackage.status === 'delivered' ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+              )}>
+                {getStatusLabel(currentPackage.status)}
+              </span>
             </p>
           </div>
           
@@ -139,11 +162,57 @@ export function Component() {
           {/* LEFT COLUMN */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             
+            {/* Route Details Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+              <h2 className="text-sm font-bold tracking-widest text-gray-800 uppercase mb-6">Detalles de Ruta</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
+                  <ArrowRight className="w-8 h-8 text-gray-300" />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-[#16499B] uppercase tracking-widest">Oficina de Origen</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <Box className="w-5 h-5 text-[#16499B]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                        {originName}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 text-right md:text-left md:items-start md:pl-12">
+                   <span className="text-[10px] font-bold text-[#932720] uppercase tracking-widest">Oficina de Destino</span>
+                   <div className="flex items-start gap-3 flex-row-reverse md:flex-row">
+                    <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                      <Archive className="w-5 h-5 text-[#932720]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                        {destinationName}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <PackageStakeholders 
+              sender={currentPackage.sender}
+              recipient={currentPackage.recipient}
+              secretary={currentPackage.secretary}
+              senderName={currentPackage.sender_name}
+              recipientName={currentPackage.recipient_name}
+            />
+
             {/* Real-time Journey Progress */}
             <div className="bg-white rounded-xl shadow-sm border-l-4 border-l-[#16499B] border-y border-r border-y-gray-100 border-r-gray-100 p-8">
               <h2 className="text-sm font-bold tracking-widest text-gray-800 uppercase mb-10">Progreso del Viaje</h2>
               
-              <div className="relative flex justify-between items-start max-w-2xl mx-auto px-4">
+              <div className="relative flex justify-between items-start max-w-5xl mx-auto px-4">
                 {/* Connecting lines */}
                 <div className="absolute top-4 left-10 right-10 h-[2px] bg-gray-200 -z-10" />
                 <div 
@@ -214,7 +283,7 @@ export function Component() {
             </div>
 
             {/* Map Placeholder */}
-            <div className="relative rounded-xl overflow-hidden shadow-sm h-[320px] bg-gray-900 bg-cover bg-center" style={{ backgroundImage: 'url(/dark_city_map.png)' }}>
+            <div className="relative rounded-xl overflow-hidden shadow-sm h-[400px] bg-gray-900 bg-cover bg-center" style={{ backgroundImage: 'url(/dark_city_map.png)' }}>
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent" />
               
               <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold border border-white/20 text-[#16499B] shadow-sm flex items-center gap-2 uppercase tracking-wide">
@@ -257,9 +326,9 @@ export function Component() {
                             {formatDateTime(event.changed_at, true).replace(',', '')}
                           </td>
                           <td className="px-6 py-4 text-[13px] text-gray-700">
-                             {event.new_state === 'registered_at_office' || event.new_state === 'assigned_to_trip' ? currentPackage.sender?.branch?.name || currentPackage.sender?.office?.name || 'Oficina Origen' : 
+                             {event.new_state === 'registered_at_office' || event.new_state === 'assigned_to_trip' ? originName : 
                               event.new_state === 'in_transit' ? 'En ruta a Destino' :
-                              event.new_state === 'arrived_at_destination' || event.new_state === 'delivered' ? currentPackage.recipient?.branch?.name || currentPackage.recipient?.office?.name || 'Oficina Destino' : 'Desconocido'}
+                              event.new_state === 'arrived_at_destination' || event.new_state === 'delivered' ? destinationName : 'Desconocido'}
                           </td>
                           <td className="px-6 py-4 text-[13px] text-[#1e293b] font-medium">
                             {event.new_state === 'registered_at_office' ? 'Encomienda registrada en origen' :
@@ -314,10 +383,6 @@ export function Component() {
                       <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                         <span className="text-[13px] text-gray-500">Placa / Bus</span>
                         <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.bus?.license_plate || 'Sin Asignar'}</span>
-                      </div>
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                        <span className="text-[13px] text-gray-500">Capacidad Total</span>
-                        <span className="text-[13px] font-bold text-[#16499B]">{currentPackage.trip.bus?.capacity || 'N/A'} asientos</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[13px] text-gray-500">Fecha Llegada Est.</span>
