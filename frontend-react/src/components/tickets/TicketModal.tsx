@@ -32,38 +32,30 @@ export default function TicketModal({
             <div className="fixed inset-0 modal-overlay-bokeh" aria-hidden="true" onClick={onClose} />
             <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
                 {modalType === 'details' ? (
-                    <div className="relative z-10 w-full bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-4xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <div className="flex-shrink-0 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-semibold text-white">Detalles del Boleto</h3>
-                                        <p className="text-blue-100 text-sm">Boleto #{ticket?.id}</p>
-                                    </div>
+                    <div className="relative z-10 w-full bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-gray-100/50" style={{ maxWidth: '42rem' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b shrink-0">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-white p-2 rounded-lg">
+                                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
                                 </div>
-                                <button onClick={onClose} className="text-white hover:text-gray-200 p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors">
-                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white">Detalles del Boleto</h3>
+                                    <p className="text-blue-100 text-sm">Boleto #{ticket?.id}</p>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        <div className="bg-gray-50 p-4">
+                            <div className="mx-auto">
+                                {ticket && trip && <TicketDisplay ticket={ticket} trip={trip} previewMode={false} />}
                             </div>
                         </div>
 
-                        <div className="p-6">
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                {ticket && trip && <TicketDisplay ticket={ticket} trip={trip} previewMode={true} />}
-                            </div>
-                        </div>
-
-                        <div className="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-gray-200">
-                            {onPrint && (
-                                <button onClick={onPrint} className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm hover:shadow-md">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                    Imprimir Boleto
-                                </button>
-                            )}
-                            <button onClick={onClose} className="inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <div className="bg-white px-4 py-3 flex flex-col sm:flex-row justify-end gap-2 border-t border-gray-200">
+                            <button onClick={onClose} className="w-full sm:w-auto px-4 py-2 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
                                 Cerrar
                             </button>
                         </div>
