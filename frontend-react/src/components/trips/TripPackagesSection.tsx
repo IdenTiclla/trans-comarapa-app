@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { PackageListView, PackageCardsView } from './TripPackageViews'
 import type { TripPackage } from './TripPackageViews'
@@ -25,73 +27,161 @@ export default function TripPackagesSection({
     onReceivePackage,
 }: TripPackagesSectionProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('list')
-    const totalAmount = useMemo(() => tripPackages.reduce((sum, pkg) => sum + (pkg.total_amount || 0), 0), [tripPackages])
+    const totalAmount = useMemo(
+        () => tripPackages.reduce((sum, pkg) => sum + (pkg.total_amount ?? 0), 0),
+        [tripPackages],
+    )
+    const totalItems = useMemo(
+        () => tripPackages.reduce((sum, pkg) => sum + (pkg.total_items_count ?? 0), 0),
+        [tripPackages],
+    )
 
     const canAssign = tripStatus !== 'arrived' && tripStatus !== 'cancelled' && tripStatus !== 'departed'
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-4 sm:px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            {/* ── Header ── */}
+            <div className="px-5 pt-5 pb-3 border-b border-border/60">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-lg">
-                            <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
+                            <Package className="h-4.5 w-4.5" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Encomiendas</h3>
-                            <p className="text-sm text-gray-500">{tripPackages.length} encomienda{tripPackages.length !== 1 ? 's' : ''} cargadas</p>
+                            <h2 className="text-lg font-bold text-foreground tracking-tight">Encomiendas</h2>
+                            <p className="text-xs text-muted-foreground font-medium">
+                                {tripPackages.length} encomienda{tripPackages.length !== 1 ? 's' : ''} cargada{tripPackages.length !== 1 ? 's' : ''}
+                            </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* View mode toggle (desktop) */}
                         {tripPackages.length > 0 && (
-                            <ViewModeToggle viewMode={viewMode} onChange={setViewMode} className="hidden sm:flex" />
+                            <div className="hidden sm:flex items-center bg-muted/60 rounded-lg border border-border p-0.5">
+                                <button
+                                    id="btn-view-list"
+                                    onClick={() => setViewMode('list')}
+                                    className={cn(
+                                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
+                                        viewMode === 'list'
+                                            ? 'bg-card text-foreground shadow-sm border border-border'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    <List className="h-3.5 w-3.5" />
+                                    Lista
+                                </button>
+                                <button
+                                    id="btn-view-cards"
+                                    onClick={() => setViewMode('cards')}
+                                    className={cn(
+                                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
+                                        viewMode === 'cards'
+                                            ? 'bg-card text-foreground shadow-sm border border-border'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    <LayoutGrid className="h-3.5 w-3.5" />
+                                    Tarjetas
+                                </button>
+                            </div>
                         )}
                         {canAssign && (
-                            <button
+                            <Button
                                 id="btn-cargar-encomienda"
+                                size="sm"
                                 onClick={onOpenAssignModal}
-                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors"
+                                className="gap-1.5"
                             >
-                                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                <Plus className="h-3.5 w-3.5" />
                                 Cargar Encomienda
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="p-4 sm:p-6">
+            {/* ── Summary stats bar ── */}
+            {tripPackages.length > 0 && (
+                <div className="px-5 py-3 border-b border-border/60 bg-muted/20">
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Paquetes</span>
+                            <span className="text-sm font-bold text-foreground">{tripPackages.length}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Items</span>
+                            <span className="text-sm font-bold text-foreground">{totalItems}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Banknote className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Total</span>
+                            <span className="text-sm font-bold text-foreground">Bs. {totalAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Body ── */}
+            <div className="p-4 sm:p-5">
                 {isLoading ? (
-                    <div className="flex justify-center py-8">
-                        <svg className="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
                     </div>
                 ) : tripPackages.length === 0 ? (
-                    <div className="text-center py-8">
-                        <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                            <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <div className="text-center py-10 px-4">
+                        <div className="flex items-center justify-center w-16 h-16 bg-muted/50 rounded-2xl mx-auto mb-4 text-muted-foreground">
+                            <Package className="h-8 w-8" />
                         </div>
-                        <p className="text-gray-500 font-medium">No hay encomiendas cargadas en este viaje</p>
-                        <p className="text-sm text-gray-400 mt-1">Presione "Cargar Encomienda" para asignar paquetes</p>
+                        <p className="text-sm font-semibold text-foreground mb-1">Sin encomiendas</p>
+                        <p className="text-xs text-muted-foreground">
+                            No hay encomiendas cargadas en este viaje
+                        </p>
+                        {canAssign && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={onOpenAssignModal}
+                                className="mt-4 gap-1.5"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                Cargar Encomienda
+                            </Button>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {/* Summary bar + mobile toggle */}
-                        <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                            <div className="flex items-center gap-4 text-sm">
-                                <span className="text-indigo-700 font-medium">📦 {tripPackages.length} encomiendas</span>
-                                <span className="text-indigo-600">💰 Total: Bs. {totalAmount.toFixed(2)}</span>
+                        {/* Mobile view toggle */}
+                        <div className="flex sm:hidden items-center justify-end">
+                            <div className="flex items-center bg-muted/60 rounded-lg border border-border p-0.5">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={cn(
+                                        'p-1.5 rounded-md transition-all',
+                                        viewMode === 'list'
+                                            ? 'bg-card text-foreground shadow-sm border border-border'
+                                            : 'text-muted-foreground',
+                                    )}
+                                    title="Vista de lista"
+                                >
+                                    <List className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('cards')}
+                                    className={cn(
+                                        'p-1.5 rounded-md transition-all',
+                                        viewMode === 'cards'
+                                            ? 'bg-card text-foreground shadow-sm border border-border'
+                                            : 'text-muted-foreground',
+                                    )}
+                                    title="Vista de tarjetas"
+                                >
+                                    <LayoutGrid className="h-4 w-4" />
+                                </button>
                             </div>
-                            {/* Mobile toggle */}
-                            <ViewModeToggle viewMode={viewMode} onChange={setViewMode} compact className="flex sm:hidden" />
                         </div>
 
-                        {/* Render view */}
                         {viewMode === 'list' ? (
                             <PackageListView
                                 packages={tripPackages}
@@ -112,91 +202,6 @@ export default function TripPackagesSection({
                     </div>
                 )}
             </div>
-        </div>
-    )
-}
-
-/* ─── View mode toggle sub-component ─── */
-
-interface ViewModeToggleProps {
-    viewMode: ViewMode
-    onChange: (mode: ViewMode) => void
-    compact?: boolean
-    className?: string
-}
-
-function ViewModeToggle({ viewMode, onChange, compact, className }: ViewModeToggleProps) {
-    if (compact) {
-        return (
-            <div className={cn('items-center bg-white rounded-lg border border-gray-200 p-0.5 shadow-sm', className)}>
-                <button
-                    onClick={() => onChange('list')}
-                    className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
-                        viewMode === 'list' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400'
-                    )}
-                    title="Vista de lista"
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-                <button
-                    onClick={() => onChange('cards')}
-                    className={cn(
-                        'p-1.5 rounded-md transition-all duration-200',
-                        viewMode === 'cards' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400'
-                    )}
-                    title="Vista de tarjetas"
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="3" width="7" height="7" rx="1" />
-                        <rect x="14" y="3" width="7" height="7" rx="1" />
-                        <rect x="3" y="14" width="7" height="7" rx="1" />
-                        <rect x="14" y="14" width="7" height="7" rx="1" />
-                    </svg>
-                </button>
-            </div>
-        )
-    }
-
-    return (
-        <div className={cn('items-center bg-white rounded-lg border border-gray-200 p-0.5 shadow-sm', className)}>
-            <button
-                id="btn-view-list"
-                onClick={() => onChange('list')}
-                className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
-                    viewMode === 'list'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                )}
-                title="Vista de lista"
-            >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                Lista
-            </button>
-            <button
-                id="btn-view-cards"
-                onClick={() => onChange('cards')}
-                className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
-                    viewMode === 'cards'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                )}
-                title="Vista de tarjetas"
-            >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-                Tarjetas
-            </button>
         </div>
     )
 }

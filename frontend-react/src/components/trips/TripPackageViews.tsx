@@ -1,5 +1,22 @@
 import { Link } from 'react-router'
-import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } from '@/lib/package-status'
+import {
+    Package,
+    User,
+    ArrowRight,
+    MapPin,
+    Truck,
+    Trash2,
+    FileCheck,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+    getPackageStatusLabel,
+    getPackageStatusBg,
+    getPackageStatusText,
+    getPaymentStatusLabel,
+    getPaymentStatusBg,
+    getPaymentStatusTextClass,
+} from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 
 interface PackageItem {
@@ -19,6 +36,8 @@ export interface TripPackage {
     total_amount?: number
     total_items_count?: number
     items?: PackageItem[]
+    origin_office_name?: string
+    destination_office_name?: string
 }
 
 export interface PackageViewProps {
@@ -29,60 +48,161 @@ export interface PackageViewProps {
     onReceivePackage?: (id: number) => void
 }
 
-/* ─── List View (original detailed design) ─── */
+/* ─── Status dot component ─── */
 
-export function PackageListView({ packages, tripStatus, onUnassignPackage, onDeliverPackage, onReceivePackage }: PackageViewProps) {
+function StatusDot({ status }: { status: string }) {
     return (
-        <div className="space-y-3">
+        <span
+            className={cn(
+                'h-1.5 w-1.5 rounded-full flex-shrink-0',
+                status === 'registered_at_office' && 'bg-yellow-500',
+                status === 'assigned_to_trip' && 'bg-blue-500',
+                status === 'in_transit' && 'bg-orange-500',
+                status === 'arrived_at_destination' && 'bg-emerald-500',
+                status === 'delivered' && 'bg-green-500',
+                !['registered_at_office', 'assigned_to_trip', 'in_transit', 'arrived_at_destination', 'delivered'].includes(status) && 'bg-gray-500',
+            )}
+        />
+    )
+}
+
+/* ─── List View ─── */
+
+export function PackageListView({
+    packages,
+    tripStatus,
+    onUnassignPackage,
+    onDeliverPackage,
+    onReceivePackage,
+}: PackageViewProps) {
+    return (
+        <div className="space-y-2">
             {packages.map((pkg) => (
                 <Link
                     key={pkg.id}
                     to={`/packages/${pkg.id}`}
-                    className="block w-full text-left p-4 rounded-lg border border-gray-200 hover:border-indigo-200 bg-white hover:bg-indigo-50/50 transition-colors"
+                    className="group block rounded-lg border border-border hover:border-primary/30 bg-card hover:bg-muted/20 transition-all duration-150"
                 >
-                    <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-gray-900">#{pkg.tracking_number}</span>
-                                <span className={`${getStatusBg(pkg.status)} ${getStatusText(pkg.status)} px-2 py-0.5 text-xs font-medium rounded-full`}>{getStatusLabel(pkg.status)}</span>
-                                {pkg.payment_status && (
-                                    <span className={`${getPaymentStatusBg(pkg.payment_status)} ${getPaymentStatusTextClass(pkg.payment_status)} px-2 py-0.5 text-xs font-medium rounded-full border`}>{getPaymentStatusLabel(pkg.payment_status)}</span>
-                                )}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-500 mt-1 gap-3">
-                                <span>📤 {pkg.sender_name || 'N/A'}</span>
-                                <span className="text-gray-300">→</span>
-                                <span>📥 {pkg.recipient_name || 'N/A'}</span>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-2 bg-gray-50 rounded p-2 border border-gray-100">
-                                <span className="font-medium text-gray-700 block mb-1">Detalle ({pkg.total_items_count || 0} items en total):</span>
-                                {pkg.items && pkg.items.length > 0 ? (
-                                    <ul className="space-y-1">
-                                        {pkg.items.map((item) => (
-                                            <li key={item.id} className="flex justify-between items-center text-xs">
-                                                <span className="truncate pr-2"><span className="font-medium text-gray-600">{item.quantity}x</span> {item.description}</span>
-                                                <span className="text-gray-500 flex-shrink-0">Bs. {(item.total_price || 0).toFixed(2)}</span>
-                                            </li>
-                                        ))}
-                                        {pkg.items.length === 5 && <li className="text-center text-indigo-500 italic mt-1 font-medium">Ver detalles de la encomienda para ver más items...</li>}
-                                    </ul>
-                                ) : (
-                                    <div className="text-gray-400 italic">No hay detalles disponibles</div>
-                                )}
-                                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
-                                    <span className="font-semibold text-gray-700">Total a Pagar / Pagado:</span>
-                                    <span className="font-bold text-indigo-700">Bs. {(pkg.total_amount || 0).toFixed(2)}</span>
+                    <div className="px-4 py-3.5">
+                        {/* Top row: tracking + badges + actions */}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/8 text-primary group-hover:bg-primary/12 transition-colors">
+                                            <Package className="h-3.5 w-3.5" />
+                                        </div>
+                                        <span className="text-sm font-bold text-foreground tracking-tight">
+                                            #{pkg.tracking_number}
+                                        </span>
+                                    </div>
+                                    <span
+                                        className={cn(
+                                            'inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full',
+                                            getPackageStatusBg(pkg.status),
+                                            getPackageStatusText(pkg.status),
+                                        )}
+                                    >
+                                        <StatusDot status={pkg.status} />
+                                        {getPackageStatusLabel(pkg.status)}
+                                    </span>
+                                    {pkg.payment_status && (
+                                        <span
+                                            className={cn(
+                                                'px-2 py-0.5 text-[11px] font-semibold rounded-full border',
+                                                getPaymentStatusBg(pkg.payment_status),
+                                                getPaymentStatusTextClass(pkg.payment_status),
+                                            )}
+                                        >
+                                            {getPaymentStatusLabel(pkg.payment_status)}
+                                        </span>
+                                    )}
                                 </div>
+                            </div>
+                            <PackageActions
+                                pkg={pkg}
+                                tripStatus={tripStatus}
+                                onUnassignPackage={onUnassignPackage}
+                                onDeliverPackage={onDeliverPackage}
+                                onReceivePackage={onReceivePackage}
+                            />
+                        </div>
+
+                        {/* Sender → Recipient */}
+                        <div className="flex items-center gap-2 mt-2.5 ml-9">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <User className="h-3 w-3" />
+                                <span className="font-medium text-foreground truncate max-w-[140px]">
+                                    {pkg.sender_name || 'N/A'}
+                                </span>
+                            </div>
+                            <ArrowRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <User className="h-3 w-3" />
+                                <span className="font-medium text-foreground truncate max-w-[140px]">
+                                    {pkg.recipient_name || 'N/A'}
+                                </span>
                             </div>
                         </div>
 
-                        <PackageActions
-                            pkg={pkg}
-                            tripStatus={tripStatus}
-                            onUnassignPackage={onUnassignPackage}
-                            onDeliverPackage={onDeliverPackage}
-                            onReceivePackage={onReceivePackage}
-                        />
+                        {/* Destination */}
+                        {pkg.destination_office_name && (
+                            <div className="flex items-center gap-1.5 mt-1.5 ml-9 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span className="font-medium text-foreground">{pkg.origin_office_name || '—'}</span>
+                                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
+                                <span className="font-semibold text-primary">{pkg.destination_office_name}</span>
+                            </div>
+                        )}
+
+                        {/* Items summary */}
+                        <div className="ml-9 mt-2.5">
+                            <div className="bg-muted/40 rounded-md px-3 py-2 border border-border/50">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                        Contenido
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-muted-foreground">
+                                        {pkg.total_items_count ?? 0} item{(pkg.total_items_count ?? 0) !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                                {pkg.items && pkg.items.length > 0 ? (
+                                    <div className="space-y-1">
+                                        {pkg.items.slice(0, 3).map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="flex justify-between items-center text-xs"
+                                            >
+                                                <span className="text-muted-foreground truncate pr-2">
+                                                    <span className="font-semibold text-foreground">
+                                                        {item.quantity}x
+                                                    </span>{' '}
+                                                    {item.description}
+                                                </span>
+                                                <span className="text-muted-foreground flex-shrink-0 tabular-nums">
+                                                    Bs. {(item.total_price ?? 0).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {pkg.items.length > 3 && (
+                                            <p className="text-[11px] text-primary font-medium italic pt-0.5">
+                                                +{pkg.items.length - 3} item{pkg.items.length - 3 !== 1 ? 's' : ''} más...
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                        Sin descripción disponible
+                                    </p>
+                                )}
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-border/50">
+                                    <span className="text-[11px] font-semibold text-muted-foreground">Total</span>
+                                    <span className="text-sm font-bold text-foreground tabular-nums">
+                                        Bs. {(pkg.total_amount ?? 0).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </Link>
             ))}
@@ -90,44 +210,53 @@ export function PackageListView({ packages, tripStatus, onUnassignPackage, onDel
     )
 }
 
-/* ─── Cards View (new compact design) ─── */
+/* ─── Cards View ─── */
 
-export function PackageCardsView({ packages, tripStatus, onUnassignPackage, onDeliverPackage, onReceivePackage }: PackageViewProps) {
+export function PackageCardsView({
+    packages,
+    tripStatus,
+    onUnassignPackage,
+    onDeliverPackage,
+    onReceivePackage,
+}: PackageViewProps) {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {packages.map((pkg) => (
                 <Link
                     key={pkg.id}
                     to={`/packages/${pkg.id}`}
-                    className="group block rounded-xl border border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 overflow-hidden"
+                    className="group block rounded-xl border border-border hover:border-primary/30 bg-card hover:shadow-md transition-all duration-200 overflow-hidden"
                 >
                     {/* Card header */}
-                    <div className="px-4 pt-4 pb-3 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
+                    <div className="px-4 pt-4 pb-3 border-b border-border/50 bg-muted/15">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 transition-colors">
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
+                                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+                                    <Package className="h-4 w-4" />
                                 </div>
-                                <span className="text-sm font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+                                <span className="text-sm font-bold text-foreground tracking-tight">
                                     #{pkg.tracking_number}
                                 </span>
                             </div>
-                            <span className={cn(
-                                'px-2 py-0.5 text-[11px] font-semibold rounded-full',
-                                getStatusBg(pkg.status),
-                                getStatusText(pkg.status)
-                            )}>
-                                {getStatusLabel(pkg.status)}
+                            <span
+                                className={cn(
+                                    'inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full',
+                                    getPackageStatusBg(pkg.status),
+                                    getPackageStatusText(pkg.status),
+                                )}
+                            >
+                                <StatusDot status={pkg.status} />
+                                {getPackageStatusLabel(pkg.status)}
                             </span>
                         </div>
                         {pkg.payment_status && (
-                            <span className={cn(
-                                'inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full border',
-                                getPaymentStatusBg(pkg.payment_status),
-                                getPaymentStatusTextClass(pkg.payment_status)
-                            )}>
+                            <span
+                                className={cn(
+                                    'inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full border',
+                                    getPaymentStatusBg(pkg.payment_status),
+                                    getPaymentStatusTextClass(pkg.payment_status),
+                                )}
+                            >
                                 {getPaymentStatusLabel(pkg.payment_status)}
                             </span>
                         )}
@@ -135,36 +264,57 @@ export function PackageCardsView({ packages, tripStatus, onUnassignPackage, onDe
 
                     {/* Card body */}
                     <div className="px-4 py-3 space-y-3">
-                        {/* Sender / Recipient */}
+                        {pkg.destination_office_name && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span className="font-medium text-foreground">{pkg.origin_office_name || '—'}</span>
+                                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
+                                <span className="font-semibold text-primary">{pkg.destination_office_name}</span>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-3">
                             <div className="min-w-0">
-                                <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">Remitente</p>
-                                <p className="text-sm font-medium text-gray-800 truncate">{pkg.sender_name || 'N/A'}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
+                                    Remitente
+                                </p>
+                                <p className="text-sm font-medium text-foreground truncate">
+                                    {pkg.sender_name || 'N/A'}
+                                </p>
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">Destinatario</p>
-                                <p className="text-sm font-medium text-gray-800 truncate">{pkg.recipient_name || 'N/A'}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
+                                    Destinatario
+                                </p>
+                                <p className="text-sm font-medium text-foreground truncate">
+                                    {pkg.recipient_name || 'N/A'}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Items summary */}
-                        <div className="bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
-                            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1">
-                                Contenido · {pkg.total_items_count || 0} items
+                        <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/50">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                                Contenido · {pkg.total_items_count ?? 0} item{(pkg.total_items_count ?? 0) !== 1 ? 's' : ''}
                             </p>
-                            <p className="text-xs text-gray-600 line-clamp-2">
+                            <p className="text-xs text-muted-foreground line-clamp-2">
                                 {pkg.items && pkg.items.length > 0
-                                    ? pkg.items.map((item) => `${item.quantity}x ${item.description}`).join(', ')
+                                    ? pkg.items
+                                          .map((item) => `${item.quantity}x ${item.description}`)
+                                          .join(', ')
                                     : 'Sin descripción'}
                             </p>
                         </div>
                     </div>
 
                     {/* Card footer */}
-                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                    <div className="px-4 py-3 border-t border-border/50 bg-muted/10 flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Total</p>
-                            <p className="text-base font-bold text-indigo-700">Bs. {(pkg.total_amount || 0).toFixed(2)}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                Total
+                            </p>
+                            <p className="text-base font-bold text-foreground tabular-nums">
+                                Bs. {(pkg.total_amount ?? 0).toFixed(2)}
+                            </p>
                         </div>
                         <PackageActions
                             pkg={pkg}
@@ -192,11 +342,14 @@ interface PackageActionsProps {
     compact?: boolean
 }
 
-function PackageActions({ pkg, tripStatus, onUnassignPackage, onDeliverPackage, onReceivePackage, compact }: PackageActionsProps) {
-    const btnBase = compact
-        ? 'text-xs font-medium px-2 py-1 rounded-md transition-colors border flex items-center gap-1'
-        : 'text-sm font-medium px-2 py-1 rounded hover:bg-opacity-10 transition-colors border flex items-center gap-1'
-
+function PackageActions({
+    pkg,
+    tripStatus,
+    onUnassignPackage,
+    onDeliverPackage,
+    onReceivePackage,
+    compact,
+}: PackageActionsProps) {
     const hasActions =
         (pkg.status === 'in_transit' && tripStatus === 'arrived') ||
         pkg.status === 'arrived_at_destination' ||
@@ -205,33 +358,57 @@ function PackageActions({ pkg, tripStatus, onUnassignPackage, onDeliverPackage, 
     if (!hasActions) return null
 
     return (
-        <div className={cn('flex items-center gap-2', !compact && 'ml-3 flex-shrink-0')}>
+        <div className={cn('flex items-center gap-1.5', !compact && 'ml-2 flex-shrink-0')}>
             {pkg.status === 'in_transit' && tripStatus === 'arrived' && (
-                <button
-                    onClick={(e) => { e.preventDefault(); onReceivePackage?.(pkg.id) }}
-                    className={cn(btnBase, 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200')}
+                <Button
+                    size={compact ? 'xs' : 'sm'}
+                    variant="outline"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        onReceivePackage?.(pkg.id)
+                    }}
+                    className={cn(
+                        'gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800',
+                        compact && 'text-[11px]',
+                    )}
                 >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <FileCheck className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
                     {!compact && 'Marcar Recibido'}
-                </button>
+                </Button>
             )}
             {pkg.status === 'arrived_at_destination' && (
-                <button
-                    onClick={(e) => { e.preventDefault(); onDeliverPackage?.(pkg.id) }}
-                    className={cn(btnBase, 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 border-indigo-200')}
+                <Button
+                    size={compact ? 'xs' : 'sm'}
+                    variant="outline"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        onDeliverPackage?.(pkg.id)
+                    }}
+                    className={cn(
+                        'gap-1 border-primary/30 text-primary hover:bg-primary/5',
+                        compact && 'text-[11px]',
+                    )}
                 >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <Truck className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
                     {!compact && 'Entregar'}
-                </button>
+                </Button>
             )}
             {pkg.status === 'assigned_to_trip' && (
-                <button
-                    onClick={(e) => { e.preventDefault(); onUnassignPackage?.(pkg.id) }}
-                    className={cn(btnBase, 'text-red-600 hover:text-red-800 hover:bg-red-50 border-red-200')}
+                <Button
+                    size={compact ? 'xs' : 'sm'}
+                    variant="outline"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        onUnassignPackage?.(pkg.id)
+                    }}
+                    className={cn(
+                        'gap-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800',
+                        compact && 'text-[11px]',
+                    )}
                 >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <Trash2 className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
                     {!compact && 'Quitar del viaje'}
-                </button>
+                </Button>
             )}
         </div>
     )
