@@ -3,10 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
-import { Check, Truck, Bus, Box, AlertCircle, Archive, ArrowRight } from 'lucide-react'
+import { Check, Truck, Bus, Box, AlertCircle, Archive, ArrowRight, Printer } from 'lucide-react'
 import { getPackageStatusLabel as getStatusLabel } from '@/lib/package-status'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
+import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import PackageStakeholders from '@/components/packages/PackageStakeholders'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,7 @@ export function Component() {
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showReceptionModal, setShowReceptionModal] = useState(false)
+  const [showReceiptModal, setShowReceiptModal] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -138,6 +140,13 @@ export function Component() {
                   Editar Encomienda
                 </button>
               )}
+              <button
+                onClick={() => setShowReceiptModal(true)}
+                className="px-5 py-2.5 text-sm font-semibold rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <Printer size={18} />
+                Ver Boleta
+              </button>
                {currentPackage.status === 'in_transit' && currentPackage.trip?.status === 'arrived' && (
                 <button
                   onClick={() => setShowReceptionModal(true)}
@@ -359,51 +368,6 @@ export function Component() {
           {/* RIGHT COLUMN */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             
-            {/* Assigned Trip */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-[3px] border-[#932720] border-y border-r border-y-gray-100 border-r-gray-100">
-              <div className="p-6">
-                 <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#1e293b] mb-1">Viaje Asignado</p>
-                      <h3 className="text-2xl font-black text-[#1e293b]">{currentPackage.trip ? `Viaje #${currentPackage.trip.id}` : 'No Asignado'}</h3>
-                    </div>
-                    <Bus className="w-6 h-6 text-[#932720]" />
-                 </div>
-
-                 {currentPackage.trip ? (
-                   <div className="space-y-4 mb-6">
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                        <span className="text-[13px] text-gray-500">Chofer</span>
-                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.driver?.firstname || 'Sin Asignar'} {currentPackage.trip.driver?.lastname || ''}</span>
-                      </div>
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                        <span className="text-[13px] text-gray-500">Asistente</span>
-                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.assistant?.firstname || 'Sin Asignar'} {currentPackage.trip.assistant?.lastname || ''}</span>
-                      </div>
-                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                        <span className="text-[13px] text-gray-500">Placa / Bus</span>
-                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.bus?.license_plate || 'Sin Asignar'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-[13px] text-gray-500">Fecha Llegada Est.</span>
-                        <span className="text-[13px] font-bold text-[#932720]">{formatDateTime(currentPackage.trip.arrival_date || currentPackage.trip.trip_datetime, false)}</span>
-                      </div>
-                   </div>
-                 ) : (
-                   <div className="py-8 text-center text-gray-400 italic mb-2">No hay viaje asignado temporalmente.</div>
-                 )}
-
-                 {currentPackage.trip && (
-                    <Link
-                      to={`/trips/${currentPackage.trip.id}`}
-                      className="block w-full text-center py-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#1e293b] text-[11px] font-bold tracking-widest rounded-lg transition-colors uppercase"
-                    >
-                      Ver todos los detalles del Viaje
-                    </Link>
-                 )}
-              </div>
-            </div>
-
             {/* Commercial Value */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                <p className="text-[10px] font-bold uppercase tracking-widest text-[#1e293b] mb-4">Valor Pagado</p>
@@ -453,6 +417,51 @@ export function Component() {
               </div>
             </div>
 
+            {/* Assigned Trip */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-[3px] border-[#932720] border-y border-r border-y-gray-100 border-r-gray-100">
+              <div className="p-6">
+                 <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#1e293b] mb-1">Viaje Asignado</p>
+                      <h3 className="text-2xl font-black text-[#1e293b]">{currentPackage.trip ? `Viaje #${currentPackage.trip.id}` : 'No Asignado'}</h3>
+                    </div>
+                    <Bus className="w-6 h-6 text-[#932720]" />
+                 </div>
+
+                 {currentPackage.trip ? (
+                   <div className="space-y-4 mb-6">
+                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <span className="text-[13px] text-gray-500">Chofer</span>
+                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.driver?.firstname || 'Sin Asignar'} {currentPackage.trip.driver?.lastname || ''}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <span className="text-[13px] text-gray-500">Asistente</span>
+                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.assistant?.firstname || 'Sin Asignar'} {currentPackage.trip.assistant?.lastname || ''}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <span className="text-[13px] text-gray-500">Placa / Bus</span>
+                        <span className="text-[13px] font-bold text-[#1e293b]">{currentPackage.trip.bus?.license_plate || 'Sin Asignar'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[13px] text-gray-500">Fecha Llegada Est.</span>
+                        <span className="text-[13px] font-bold text-[#932720]">{formatDateTime(currentPackage.trip.arrival_date || currentPackage.trip.trip_datetime, false)}</span>
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="py-8 text-center text-gray-400 italic mb-2">No hay viaje asignado temporalmente.</div>
+                 )}
+
+                 {currentPackage.trip && (
+                    <Link
+                      to={`/trips/${currentPackage.trip.id}`}
+                      className="block w-full text-center py-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#1e293b] text-[11px] font-bold tracking-widest rounded-lg transition-colors uppercase"
+                    >
+                      Ver todos los detalles del Viaje
+                    </Link>
+                 )}
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -470,6 +479,12 @@ export function Component() {
         packageData={currentPackage}
         onClose={() => setShowReceptionModal(false)}
         onConfirm={onReceivePackageConfirm}
+      />
+
+      <PackageReceiptModal
+        show={showReceiptModal}
+        packageData={currentPackage}
+        onClose={() => setShowReceiptModal(false)}
       />
     </div>
   )
