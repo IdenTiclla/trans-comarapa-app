@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
 import { apiFetch } from '@/lib/api'
+import { getPackageDestination } from '@/lib/package-status'
 
 function formatDate(dateString: string) {
   if (!dateString) return ''
@@ -30,6 +31,7 @@ interface TripPackage {
   tracking_number?: string
   sender_name?: string
   recipient_name?: string
+  destination_office_name?: string
   description?: string
   items?: PackageItem[]
   payment_status?: string
@@ -553,6 +555,7 @@ export function Component() {
                         <th>Remitente</th>
                         <th>Descripción Encomienda</th>
                         <th>Destinatario</th>
+                        <th>Destino</th>
                         <th className="col-est">Estado</th>
                         <th className="col-amt">Bs.</th>
                       </tr>
@@ -567,6 +570,7 @@ export function Component() {
                           <td>{pkg.sender_name || '—'}</td>
                           <td className="col-desc">{getDescription(pkg)}</td>
                           <td>{pkg.recipient_name || '—'}</td>
+                          <td>{getPackageDestination(pkg, trip)}</td>
                           <td className="col-est">
                             {isPaid(pkg.payment_status)
                               ? <span className="badge-paid">Pagado</span>

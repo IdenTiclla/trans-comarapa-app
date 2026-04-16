@@ -535,6 +535,10 @@ class PackageService:
                 joinedload(Package.sender),
                 joinedload(Package.recipient),
                 joinedload(Package.items),
+                joinedload(Package.trip).joinedload(Trip.route).joinedload(Route.origin_location),
+                joinedload(Package.trip).joinedload(Trip.route).joinedload(Route.destination_location),
+                joinedload(Package.origin_office),
+                joinedload(Package.destination_office),
             )
             .distinct()
         )
@@ -567,10 +571,8 @@ class PackageService:
             payment_method=pkg.payment_method,
             origin_office_id=pkg.origin_office_id,
             destination_office_id=pkg.destination_office_id,
-            origin_office_name=pkg.origin_office.name if pkg.origin_office else None,
-            destination_office_name=pkg.destination_office.name
-            if pkg.destination_office
-            else None,
+            origin_office_name=pkg.origin_office.name if pkg.origin_office else (pkg.trip.route.origin_location.name if pkg.trip and pkg.trip.route else None),
+            destination_office_name=pkg.destination_office.name if pkg.destination_office else (pkg.trip.route.destination_location.name if pkg.trip and pkg.trip.route else None),
             created_at=pkg.created_at,
             items=items_preview,
         )

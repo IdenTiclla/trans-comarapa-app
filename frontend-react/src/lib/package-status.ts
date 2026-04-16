@@ -76,3 +76,33 @@ export const PACKAGE_PAYMENT_STATUS_VALUES = {
     PAID_ON_SEND: 'paid_on_send',
     COLLECT_ON_DELIVERY: 'collect_on_delivery',
 } as const
+
+// ── Origin & Destination resolution ───────────────────────────────────────────
+
+export function getPackageDestination(pkg: any, trip?: any): string {
+    if (!pkg) return 'Destino'
+    return pkg.destination_office?.name ||
+        pkg.destination_office_name ||
+        pkg.destination ||
+        pkg.recipient?.branch?.name ||
+        pkg.recipient?.office?.name ||
+        pkg.trip?.route?.destination_location?.name ||
+        pkg.trip?.route?.destination ||
+        trip?.route?.destination?.name ||
+        trip?.route?.destination ||
+        'Destino'
+}
+
+export function getPackageOrigin(pkg: any, trip?: any): string {
+    if (!pkg) return 'Origen'
+    return pkg.origin_office?.name ||
+        pkg.origin_office_name ||
+        pkg.origin ||
+        pkg.sender?.branch?.name ||
+        pkg.sender?.office?.name ||
+        pkg.trip?.route?.origin_location?.name ||
+        pkg.trip?.route?.origin ||
+        trip?.route?.origin?.name ||
+        trip?.route?.origin ||
+        'Origen'
+}

@@ -1100,6 +1100,9 @@ def seed_db():
         
         db.commit()
 
+        # Crear mapa de location_id -> office_id para asignación de encomiendas
+        location_to_office = {office.location_id: office.id for office in offices.values()}
+
         # --- Package Seeding and Initial State History ---
         # Nuevos estados: registered_at_office, assigned_to_trip, in_transit, arrived_at_destination, delivered
         all_packages = [] 
@@ -1153,7 +1156,9 @@ def seed_db():
                     notes=f"Envío 2025: Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname} - Servicio premium",
                     status=current_initial_package_state, sender_id=sender.id, recipient_id=recipient.id,
                     trip_id=trip_item.id, secretary_id=selected_secretary.id, created_at=package_created_at,
-                    updated_at=package_created_at
+                    updated_at=package_created_at,
+                    origin_office_id=location_to_office.get(trip_item.route.origin_location_id),
+                    destination_office_id=location_to_office.get(trip_item.route.destination_location_id)
                 )
                 db.add(package)
                 db.flush()
@@ -1188,13 +1193,20 @@ def seed_db():
             package_created_at = now - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23))
             selected_secretary = random.choice(secretaries)
 
+            # Para paquetes no asignados, usamos la oficina del secretario como origen 
+            # y una oficina aleatoria como destino
+            pkg_origin_office_id = selected_secretary.office_id
+            pkg_dest_office_id = random.choice([off.id for off in offices.values() if off.id != pkg_origin_office_id])
+
             package = Package(
                 tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
                 total_declared_value=round(random.uniform(50.0, 500.0), 2),
-                notes=f"Encomienda pendiente de asignación - {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname}",
+                notes=f"Encomienda pendiente de asignación - {sender.firstname} {sender.lastname} for {recipient.firstname} {recipient.lastname}",
                 status="registered_at_office", sender_id=sender.id, recipient_id=recipient.id,
                 trip_id=None, secretary_id=selected_secretary.id, created_at=package_created_at,
-                updated_at=package_created_at
+                updated_at=package_created_at,
+                origin_office_id=pkg_origin_office_id,
+                destination_office_id=pkg_dest_office_id
             )
             db.add(package)
             db.flush()

@@ -16,6 +16,8 @@ import {
     getPaymentStatusLabel,
     getPaymentStatusBg,
     getPaymentStatusTextClass,
+    getPackageDestination,
+    getPackageOrigin,
 } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 
@@ -95,6 +97,10 @@ export function PackageListView({
                                         <span className="text-sm font-bold text-foreground tracking-tight">
                                             #{pkg.tracking_number}
                                         </span>
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <MapPin className="h-3 w-3" />
+                                            {getPackageDestination(pkg)}
+                                        </span>
                                     </div>
                                     <span
                                         className={cn(
@@ -146,14 +152,12 @@ export function PackageListView({
                         </div>
 
                         {/* Destination */}
-                        {pkg.destination_office_name && (
-                            <div className="flex items-center gap-1.5 mt-1.5 ml-9 text-xs text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                <span className="font-medium text-foreground">{pkg.origin_office_name || '—'}</span>
-                                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
-                                <span className="font-semibold text-primary">{pkg.destination_office_name}</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-1.5 mt-1.5 ml-9 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            <span className="font-medium text-foreground">{getPackageOrigin(pkg)}</span>
+                            <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
+                            <span className="font-semibold text-primary">{getPackageDestination(pkg)}</span>
+                        </div>
 
                         {/* Items summary */}
                         <div className="ml-9 mt-2.5">
@@ -237,6 +241,10 @@ export function PackageCardsView({
                                 <span className="text-sm font-bold text-foreground tracking-tight">
                                     #{pkg.tracking_number}
                                 </span>
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    <MapPin className="h-2.5 w-2.5" />
+                                    {getPackageDestination(pkg)}
+                                </span>
                             </div>
                             <span
                                 className={cn(
@@ -264,14 +272,12 @@ export function PackageCardsView({
 
                     {/* Card body */}
                     <div className="px-4 py-3 space-y-3">
-                        {pkg.destination_office_name && (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                <MapPin className="h-3 w-3 flex-shrink-0" />
-                                <span className="font-medium text-foreground">{pkg.origin_office_name || '—'}</span>
-                                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
-                                <span className="font-semibold text-primary">{pkg.destination_office_name}</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <MapPin size={12} />
+                            <span className="font-medium text-foreground/80">{getPackageOrigin(pkg)}</span>
+                            <ArrowRight size={10} className="text-muted-foreground/40" />
+                            <span className="font-bold text-primary">{getPackageDestination(pkg)}</span>
+                        </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="min-w-0">

@@ -2,7 +2,7 @@ import React from 'react'
 import PackageCard from './PackageCard'
 import SkeletonLoader from '@/components/common/SkeletonLoader'
 import EmptyState from '@/components/common/EmptyState'
-import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass } from '@/lib/package-status'
+import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass, getPackageOrigin, getPackageDestination } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 
 interface PackageCardListProps {
@@ -133,11 +133,11 @@ export default function PackageCardList({
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div className="flex items-center gap-1">
-                                        <span>{pkg.origin_office_name || 'N/A'}</span>
+                                        <span>{getPackageOrigin(pkg)}</span>
                                         <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                         </svg>
-                                        <span>{pkg.destination_office_name || 'N/A'}</span>
+                                        <span>{getPackageDestination(pkg)}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

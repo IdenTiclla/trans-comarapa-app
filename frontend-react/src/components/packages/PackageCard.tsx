@@ -1,4 +1,4 @@
-import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass } from '@/lib/package-status'
+import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusTextClass, getPackageOrigin, getPackageDestination } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -61,13 +61,11 @@ export default function PackageCard({
                 </div>
 
                 <div className="p-4 space-y-4">
-                    {(pkg.origin_office_name || pkg.destination_office_name) && (
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-gray-900">{pkg.origin_office_name || 'Origen'}</span>
-                            <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            <span className="font-medium text-gray-900">{pkg.destination_office_name || 'Destino'}</span>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="font-medium text-gray-900">{getPackageOrigin(pkg)}</span>
+                        <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="font-medium text-gray-900">{getPackageDestination(pkg)}</span>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>

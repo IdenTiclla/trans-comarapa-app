@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { packageService } from '@/services/package.service'
 import FormInput from '@/components/forms/FormInput'
 import { cn } from '@/lib/utils'
+import { getPackageDestination } from '@/lib/package-status'
 
 interface PackageAssignModalProps {
     show: boolean
@@ -192,7 +193,9 @@ export default function PackageAssignModal({
                                             </div>
                                             <div className="flex items-center text-xs text-gray-500 mt-1 space-x-3">
                                                 <span>{`\uD83D\uDCE4`} {pkg.sender_name || 'N/A'}</span>
-                                                <span>→</span>
+                                                <span className="text-gray-300">|</span>
+                                                <span className="text-indigo-600 font-medium">{getPackageDestination(pkg)}</span>
+                                                <span className="text-gray-300">→</span>
                                                 <span>{`\uD83D\uDCE5`} {pkg.recipient_name || 'N/A'}</span>
                                             </div>
                                             <div className="text-xs text-gray-400 mt-0.5">
