@@ -92,7 +92,7 @@ export const router = createBrowserRouter([
 
           // Clients & Bookings
           { path: '/clients', lazy: () => import('@/pages/clients/ClientsIndexPage') },
-          { path: '/bookings', lazy: () => import('@/pages/BookingsPage') },
+          { path: '/tickets', lazy: () => import('@/pages/tickets/TicketsIndexPage') },
         ],
       },
     ],

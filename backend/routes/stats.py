@@ -77,7 +77,7 @@ class DashboardStats(BaseModel):
     trips: TripStats
 
 
-class BookingsStats(BaseModel):
+class TicketsSummaryStats(BaseModel):
     confirmed: int
     pending: int
     cancelled: int
@@ -385,8 +385,8 @@ async def get_dashboard_stats(
     return {"tickets": ticket_stats, "packages": package_stats, "trips": trip_stats}
 
 
-@router.get("/bookings/stats", response_model=BookingsStats)
-async def get_bookings_stats(
+@router.get("/tickets/summary-stats", response_model=TicketsSummaryStats)
+async def get_tickets_summary_stats(
     period: str = Query(
         "today",
         description="Período para las estadísticas: today, yesterday, week, month, year",
@@ -394,7 +394,7 @@ async def get_bookings_stats(
     db: Session = Depends(get_db),
 ):
     """
-    Obtener estadísticas específicas para la página de bookings
+    Obtener estadísticas específicas para la página de tickets
 
     - **period**: Período para las estadísticas (today, yesterday, week, month, year)
 

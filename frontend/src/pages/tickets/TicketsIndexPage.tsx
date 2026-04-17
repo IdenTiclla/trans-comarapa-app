@@ -146,7 +146,7 @@ export function Component() {
         ticketService.getAll({ skip: 0, limit: 10000 }),
         clientService.getAll({ skip: 0, limit: 10000 }),
         tripService.getAll({ upcoming: true }),
-        (statsService.getBookingsStatsComparison() as Promise<any>).catch(() => null),
+        (statsService.getTicketsStatsComparison() as Promise<any>).catch(() => null),
       ])
 
       setTickets((ticketsRes as Ticket[]) || [])

@@ -94,8 +94,8 @@ export const statsService = {
         return fetchPeriodStats('/stats/clients/feedback', period)
     },
 
-    getBookingsStats(period = 'today') {
-        return fetchPeriodStats('/stats/bookings/stats', period)
+    getTicketsSummaryStats(period = 'today') {
+        return fetchPeriodStats('/stats/tickets/summary-stats', period)
     },
 
     // === Non-period stats ===
@@ -134,10 +134,10 @@ export const statsService = {
 
     // === Bookings comparison ===
 
-    async getBookingsStatsComparison() {
+    async getTicketsStatsComparison() {
         const [today, yesterday] = await Promise.all([
-            statsService.getBookingsStats('today'),
-            statsService.getBookingsStats('yesterday'),
+            statsService.getTicketsSummaryStats('today'),
+            statsService.getTicketsSummaryStats('yesterday'),
         ])
 
         const pct = (a: number, b: number) => (b === 0 ? (a > 0 ? 100 : 0) : Math.round(((a - b) / b) * 100))

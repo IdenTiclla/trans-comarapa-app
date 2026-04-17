@@ -31,7 +31,6 @@ const ROUTE_LABELS: Record<string, string> = {
   'pending-collections': 'Pendientes',
   tickets: 'Boletos',
   clients: 'Clientes',
-  bookings: 'Boletos',
   reports: 'Reportes',
   profile: 'Perfil',
   confirmation: 'Confirmación',

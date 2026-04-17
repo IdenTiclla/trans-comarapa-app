@@ -76,7 +76,7 @@ const SECRETARY_NAV: NavGroup[] = [
     title: 'Operaciones',
     items: [
       { to: '/trips', label: 'Viajes', icon: MapPin },
-      { to: '/bookings', label: 'Boletos', icon: Ticket },
+      { to: '/tickets', label: 'Boletos', icon: Ticket },
       { to: '/packages', label: 'Encomiendas', icon: Package },
     ],
   },
