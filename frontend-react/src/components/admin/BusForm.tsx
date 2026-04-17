@@ -4,7 +4,9 @@ import type { SeatPos } from './SeatLayoutEditor'
 import { cn } from '@/lib/utils'
 import { ownerService } from '@/services/owner.service'
 import { Button } from '@/components/ui/button'
-import { X, LayoutGrid, ChevronRight, Loader2, AlertTriangle, ChevronLeft } from 'lucide-react'
+import { X, LayoutGrid, ChevronRight, Loader2, AlertTriangle, ChevronLeft, Bus as BusIcon, Info, Map as MapIcon } from 'lucide-react'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
 
 interface Owner {
     id: number
@@ -192,48 +194,67 @@ export default function BusForm({
     const totalSeatCount = seats.length
 
     return (
-        <div className={cn("bg-card rounded-xl shadow-2xl border w-full max-h-[90vh] overflow-y-auto", currentStep === 2 ? 'max-w-4xl' : 'max-w-md')}>
-            <div className="px-6 py-4 border-b border-gray-200">
+        <div className={cn("bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-h-[90vh] overflow-hidden flex flex-col", currentStep === 2 ? 'max-w-5xl' : 'max-w-md')}>
+            <div className="px-6 py-5 bg-gradient-to-r from-gray-900 to-gray-800 shrink-0">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                            {isEditing ? 'Editar Bus' : 'Nuevo Bus'}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Paso {currentStep} de 2: {currentStep === 1 ? 'Datos Básicos' : 'Planilla de Asientos'}
-                        </p>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/10 rounded-xl">
+                            <BusIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white tracking-tight">
+                                {isEditing ? 'Editar Bus' : 'Nuevo Bus'}
+                            </h3>
+                            <p className="text-gray-400 text-xs font-medium">
+                                Paso {currentStep} de 2: {currentStep === 1 ? 'Datos Básicos' : 'Planilla de Asientos'}
+                            </p>
+                        </div>
                     </div>
-                    <button onClick={onCancel} className="text-gray-400 hover:text-gray-500">
-                        <X className="h-6 w-6" />
+                    <button onClick={onCancel} className="text-gray-400 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all">
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <div className="mt-4">
-                    <div className="flex items-center">
+                <div className="mt-6 flex items-center justify-center">
+                    <div className="flex items-center w-full max-w-xs justify-between relative">
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -translate-y-1/2 z-0"></div>
+                        
                         <button
                             type="button"
                             onClick={() => setCurrentStep(1)}
-                            className="flex items-center focus:outline-none"
+                            className="relative z-10 group"
                             disabled={loading}
                         >
-                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-gray-200 text-gray-600')}>
-                                1
+                            <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300",
+                                currentStep >= 1 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500'
+                            )}>
+                                <Info className="w-5 h-5" />
                             </div>
-                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 1 ? 'text-primary' : 'text-gray-500')}>
+                            <span className={cn(
+                                "absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors",
+                                currentStep >= 1 ? 'text-primary' : 'text-gray-500'
+                            )}>
                                 Datos
                             </span>
                         </button>
-                        <div className={cn("w-16 h-0.5 mx-3", currentStep >= 2 ? 'bg-primary' : 'bg-gray-200')}></div>
+
                         <button
                             type="button"
                             onClick={goToStep2}
-                            className="flex items-center focus:outline-none"
+                            className="relative z-10 group"
                             disabled={loading || !canGoToStep2}
                         >
-                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors", currentStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-gray-200 text-gray-600')}>
-                                2
+                            <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300",
+                                currentStep >= 2 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500'
+                            )}>
+                                <MapIcon className="w-5 h-5" />
                             </div>
-                            <span className={cn("ml-2 text-sm font-medium", currentStep >= 2 ? 'text-primary' : 'text-gray-500')}>
+                            <span className={cn(
+                                "absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors",
+                                currentStep >= 2 ? 'text-primary' : 'text-gray-500'
+                            )}>
                                 Planilla
                             </span>
                         </button>
@@ -242,120 +263,87 @@ export default function BusForm({
             </div>
 
             {currentStep === 1 && (
-                <form onSubmit={handleStep1Submit} className="px-6 py-4 space-y-4">
-                    <div>
-                        <label htmlFor="license_plate" className="block text-sm font-medium text-gray-700">
-                            Placa <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="license_plate"
-                            value={form.license_plate}
-                            onChange={(e) => setForm({ ...form, license_plate: e.target.value })}
-                            type="text"
-                            required
-                            maxLength={10}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm uppercase"
-                            placeholder="Ej: 2312ABX"
-                        />
-                        {errors.license_plate && <p className="mt-1 text-sm text-red-600">{errors.license_plate}</p>}
-                    </div>
+                <form onSubmit={handleStep1Submit} className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
+                    <FormInput
+                        label="Placa *"
+                        id="license_plate"
+                        value={form.license_plate}
+                        onChange={(e) => setForm({ ...form, license_plate: e.target.value.toUpperCase() })}
+                        required
+                        maxLength={10}
+                        placeholder="Ej: 2312ABX"
+                        error={errors.license_plate}
+                    />
 
-                    <div>
-                        <label htmlFor="model" className="block text-sm font-medium text-gray-700">
-                            Modelo <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="model"
-                            value={form.model}
-                            onChange={(e) => setForm({ ...form, model: e.target.value })}
-                            type="text"
-                            required
-                            maxLength={100}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
-                            placeholder="Ej: Sprinter 515"
-                        />
-                        {errors.model && <p className="mt-1 text-sm text-red-600">{errors.model}</p>}
-                    </div>
+                    <FormInput
+                        label="Modelo *"
+                        id="model"
+                        value={form.model}
+                        onChange={(e) => setForm({ ...form, model: e.target.value })}
+                        required
+                        maxLength={100}
+                        placeholder="Ej: Sprinter 515"
+                        error={errors.model}
+                    />
 
-                    <div>
-                        <label htmlFor="brand" className="block text-sm font-medium text-gray-700">Marca</label>
-                        <input
-                            id="brand"
-                            value={form.brand}
-                            onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                            type="text"
-                            maxLength={50}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
-                            placeholder="Ej: Mercedes-Benz"
-                        />
-                    </div>
+                    <FormInput
+                        label="Marca"
+                        id="brand"
+                        value={form.brand}
+                        onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                        maxLength={50}
+                        placeholder="Ej: Mercedes-Benz"
+                    />
 
-                    <div>
-                        <label htmlFor="color" className="block text-sm font-medium text-gray-700">Color</label>
-                        <select
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormSelect
+                            label="Color"
                             id="color"
                             value={form.color}
-                            onChange={(e) => setForm({ ...form, color: e.target.value })}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
-                        >
-                            <option value="">Seleccionar color</option>
-                            {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
+                            onChange={(val) => setForm({ ...form, color: val })}
+                            options={COLORS.map(c => ({ label: c, value: c }))}
+                            placeholder="Seleccionar..."
+                        />
 
-                    <div>
-                        <label htmlFor="floors" className="block text-sm font-medium text-gray-700">
-                            Número de Pisos <span className="text-red-500">*</span>
-                        </label>
-                        <select
+                        <FormSelect
+                            label="Pisos *"
                             id="floors"
                             value={form.floors}
-                            onChange={(e) => setForm({ ...form, floors: parseInt(e.target.value) })}
+                            onChange={(val) => setForm({ ...form, floors: Number(val) })}
                             required
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm"
-                        >
-                            <option value={1}>1 Piso</option>
-                            <option value={2}>2 Pisos</option>
-                        </select>
-                        <p className="mt-1 text-xs text-gray-500">
-                            La capacidad se calculará automáticamente basada en la planilla de asientos.
-                        </p>
+                            options={[
+                                { label: '1 Piso', value: 1 },
+                                { label: '2 Pisos', value: 2 }
+                            ]}
+                        />
                     </div>
 
-                    <div>
-                        <label htmlFor="owner_id" className="block text-sm font-medium text-gray-700">
-                            Dueño del Bus
-                        </label>
-                        <select
-                            id="owner_id"
-                            value={form.owner_id || ''}
-                            onChange={(e) => setForm({ ...form, owner_id: e.target.value ? parseInt(e.target.value) : null })}
-                            disabled={loadingOwners}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-primary sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                            <option value="">Sin dueño asignado</option>
-                            {owners.map(owner => (
-                                <option key={owner.id} value={owner.id}>
-                                    {owner.firstname} {owner.lastname}{owner.phone ? ` - ${owner.phone}` : ''}
-                                </option>
-                            ))}
-                        </select>
-                        {loadingOwners && (
-                            <p className="mt-1 text-xs text-gray-500">Cargando dueños...</p>
-                        )}
-                    </div>
+                    <FormSelect
+                        label="Dueño del Bus"
+                        id="owner_id"
+                        value={form.owner_id || ''}
+                        onChange={(val) => setForm({ ...form, owner_id: val ? Number(val) : null })}
+                        disabled={loadingOwners}
+                        options={owners.map(owner => ({
+                            label: `${owner.firstname} ${owner.lastname}${owner.phone ? ` - ${owner.phone}` : ''}`,
+                            value: owner.id
+                        }))}
+                        placeholder="Sin dueño asignado"
+                    />
+                    {loadingOwners && <p className="text-[10px] text-primary animate-pulse font-bold uppercase tracking-widest">Cargando dueños...</p>}
 
                     {isEditing && (
-                        <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700">Capacidad actual</p>
-                                    <p className="text-2xl font-bold text-primary">{form.capacity} asientos</p>
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Capacidad actual</p>
+                                    <p className="text-2xl font-black text-gray-900">{form.capacity} asientos</p>
                                 </div>
                                 <Button
                                     type="button"
                                     variant="outline"
                                     onClick={goToStep2}
+                                    className="rounded-xl border-primary/20 text-primary hover:bg-primary/10"
                                 >
                                     <LayoutGrid className="h-4 w-4 mr-2" />
                                     Editar Planilla
@@ -364,12 +352,13 @@ export default function BusForm({
                         </div>
                     )}
 
-                    <div className="pt-4 flex justify-end gap-3 border-t border-gray-200">
+                    <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onCancel}
                             disabled={loading}
+                            className="rounded-xl px-6 h-12 font-bold"
                         >
                             Cancelar
                         </Button>
@@ -377,16 +366,17 @@ export default function BusForm({
                             <Button
                                 type="submit"
                                 disabled={loading}
+                                className="rounded-xl px-6 h-12 font-bold shadow-lg shadow-primary/20"
                             >
-                                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                Actualizar
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Actualizar'}
                             </Button>
                         ) : (
                             <Button
                                 type="submit"
                                 disabled={loading}
+                                className="rounded-xl px-6 h-12 font-bold shadow-lg shadow-primary/20"
                             >
-                                Siguiente: Diseñar Planilla
+                                Siguiente
                                 <ChevronRight className="h-4 w-4 ml-2" />
                             </Button>
                         )}

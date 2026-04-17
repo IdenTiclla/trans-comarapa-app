@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { packageService } from '@/services/package.service'
 import FormInput from '@/components/forms/FormInput'
+import FormCheckbox from '@/components/forms/FormCheckbox'
 import { cn } from '@/lib/utils'
 import { getPackageDestination } from '@/lib/package-status'
 
@@ -158,15 +159,11 @@ export default function PackageAssignModal({
                         ) : (
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={allSelected}
-                                            onChange={toggleSelectAll}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                        />
-                                        <span className="ml-2 text-sm font-medium text-gray-700">Seleccionar todo ({filteredPackages.length})</span>
-                                    </label>
+                                    <FormCheckbox
+                                        checked={allSelected}
+                                        onChange={toggleSelectAll}
+                                        label={`Seleccionar todo (${filteredPackages.length})`}
+                                    />
                                     <span className="text-sm text-gray-500">{selectedIds.length} seleccionadas</span>
                                 </div>
 
@@ -179,12 +176,9 @@ export default function PackageAssignModal({
                                         )}
                                         onClick={() => toggleSelect(pkg.id)}
                                     >
-                                        <input
-                                            type="checkbox"
+                                        <FormCheckbox
                                             checked={selectedIds.includes(pkg.id)}
                                             onChange={() => toggleSelect(pkg.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 flex-shrink-0"
                                         />
                                         <div className="ml-3 flex-1 min-w-0">
                                             <div className="flex items-center justify-between">

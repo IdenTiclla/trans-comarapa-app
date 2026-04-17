@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { User, Mail, Phone } from 'lucide-react'
+import FormInput from '@/components/forms/FormInput'
 
 export function Component() {
   const { user, userFullName, userInitials, userRole, updateProfile, loading } = useAuth()
@@ -74,19 +75,23 @@ export function Component() {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Nombre</label>
-              <input type="text" value={formData.firstname} onChange={(e) => setFormData({ ...formData, firstname: e.target.value })} className="w-full rounded-lg border-border shadow-sm focus:border-primary focus:ring-primary bg-background text-foreground" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Apellido</label>
-              <input type="text" value={formData.lastname} onChange={(e) => setFormData({ ...formData, lastname: e.target.value })} className="w-full rounded-lg border-border shadow-sm focus:border-primary focus:ring-primary bg-background text-foreground" />
-            </div>
+            <FormInput
+              label="Nombre"
+              value={formData.firstname}
+              onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+            />
+            <FormInput
+              label="Apellido"
+              value={formData.lastname}
+              onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+            />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full rounded-lg border-border shadow-sm focus:border-primary focus:ring-primary bg-background text-foreground" />
-          </div>
+          <FormInput
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={saving || loading}>
               {saving ? 'Guardando...' : 'Guardar Cambios'}

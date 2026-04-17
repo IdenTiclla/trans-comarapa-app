@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import FormCheckbox from '@/components/forms/FormCheckbox'
 
 interface UserFormProps {
     user?: any
@@ -203,39 +204,31 @@ export default function UserForm({
                             Información de Cuenta
                         </h4>
 
-                        <div className="relative">
-                            <FormInput
-                                id="username"
-                                label="Nombre de Usuario"
-                                value={form.username}
-                                onChange={(e) => handleChange('username', e.target.value)}
-                                type="text"
-                                error={errors.username}
-                                className="pl-8"
-                            />
-                            <div className="absolute top-[34px] left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-gray-500">@</span>
-                            </div>
-                        </div>
+                        <FormInput
+                            id="username"
+                            label="Nombre de Usuario"
+                            value={form.username}
+                            onChange={(e) => handleChange('username', e.target.value)}
+                            type="text"
+                            error={errors.username}
+                            leftIcon={<span className="text-gray-500">@</span>}
+                        />
 
-                        <div className="relative">
-                            <FormInput
-                                id="email"
-                                label="Correo Electrónico"
-                                value={form.email}
-                                onChange={(e) => handleChange('email', e.target.value)}
-                                type="email"
-                                error={errors.email}
-                                className="pl-8"
-                            />
-                            <div className="absolute top-[34px] left-0 pl-2.5 flex items-center pointer-events-none">
+                        <FormInput
+                            id="email"
+                            label="Correo Electrónico"
+                            value={form.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                            type="email"
+                            error={errors.email}
+                            leftIcon={
                                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                            </div>
-                        </div>
+                            }
+                        />
 
-                        <div className="relative">
+                        <div className="space-y-1">
                             <FormInput
                                 id="password"
                                 label={isEditing ? 'Contraseña (dejar en blanco para mantener la actual)' : 'Contraseña'}
@@ -243,27 +236,25 @@ export default function UserForm({
                                 onChange={(e) => handleChange('password', e.target.value)}
                                 type="password"
                                 error={errors.password}
-                                className="pl-8 pr-12"
+                                leftIcon={
+                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                }
                             />
-                            <div className="absolute top-[34px] left-0 pl-2.5 flex items-center pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
                             {form.password && (
-                                <div className="absolute top-[38px] right-0 pr-3 flex items-center">
-                                    <div className="h-1 w-10 rounded-full overflow-hidden bg-gray-200">
+                                <div className="mt-2">
+                                    <div className="h-1.5 w-full rounded-full overflow-hidden bg-gray-100">
                                         <div
                                             className={`h-full transition-all duration-300 ${passwordStrengthClass}`}
                                             style={{ width: `${passwordStrength * 10}%` }}
                                         ></div>
                                     </div>
+                                    <p className="mt-1.5 text-xs text-gray-500 flex justify-between">
+                                        <span>Seguridad de contraseña</span>
+                                        <span className={passwordStrengthTextClass + " font-medium"}>{passwordStrengthText}</span>
+                                    </p>
                                 </div>
-                            )}
-                            {form.password && !errors.password && (
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Fortaleza: <span className={passwordStrengthTextClass}>{passwordStrengthText}</span>
-                                </p>
                             )}
                         </div>
                     </div>
@@ -291,28 +282,20 @@ export default function UserForm({
                             />
                         </div>
 
-                        <div className="flex flex-col gap-4 mt-6">
-                            <div className="flex items-center">
-                                <input
-                                    id="is_active"
-                                    type="checkbox"
-                                    checked={form.is_active}
-                                    onChange={(e) => handleChange('is_active', e.target.checked)}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors duration-200"
-                                />
-                                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">Usuario Activo</label>
-                            </div>
+                        <div className="flex flex-col gap-2 mt-2">
+                            <FormCheckbox
+                                id="is_active"
+                                checked={form.is_active}
+                                onChange={(checked) => handleChange('is_active', checked)}
+                                label="Usuario Activo"
+                            />
 
-                            <div className="flex items-center">
-                                <input
-                                    id="is_admin"
-                                    type="checkbox"
-                                    checked={form.is_admin}
-                                    onChange={(e) => handleChange('is_admin', e.target.checked)}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors duration-200"
-                                />
-                                <label htmlFor="is_admin" className="ml-2 block text-sm text-gray-700">Permisos de Administrador</label>
-                            </div>
+                            <FormCheckbox
+                                id="is_admin"
+                                checked={form.is_admin}
+                                onChange={(checked) => handleChange('is_admin', checked)}
+                                label="Permisos de Administrador"
+                            />
                         </div>
                     </div>
                 </div>

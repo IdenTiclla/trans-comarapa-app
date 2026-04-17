@@ -16,6 +16,7 @@ import ClientModal from '@/components/clients/ClientModal'
 import ClientViewModal from '@/components/clients/ClientViewModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ViewToggle } from '@/components/ui/view-toggle'
 import { Users, Plus, Search, Download, BarChart3, LayoutGrid, List } from 'lucide-react'
 
 export function Component() {
@@ -248,12 +249,14 @@ export function Component() {
                     </div>
                     <div className="flex items-center space-x-2">
                         <div className="flex bg-muted/50 rounded-lg p-1">
-                            <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-colors duration-200 ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`} aria-label="Vista en cuadrícula">
-                                <LayoutGrid className="h-4 w-4" />
-                            </button>
-                            <button onClick={() => setViewMode('table')} className={`p-2 rounded-md transition-colors duration-200 ${viewMode === 'table' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`} aria-label="Vista en tabla">
-                                <List className="h-4 w-4" />
-                            </button>
+                            <ViewToggle
+                                value={viewMode}
+                                onChange={(val) => setViewMode(val as 'grid' | 'table')}
+                                options={[
+                                    { value: 'grid', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista en cuadrícula' },
+                                    { value: 'table', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista en tabla' }
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>

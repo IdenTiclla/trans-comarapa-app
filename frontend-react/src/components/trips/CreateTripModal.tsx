@@ -8,6 +8,7 @@ import { fetchSecretaries, selectSecretaries } from '@/store/secretary.slice'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { X, Loader2, MapPin, Clock } from 'lucide-react'
+import FormSelect from '@/components/forms/FormSelect'
 
 interface CreateTripModalProps {
   open: boolean
@@ -137,56 +138,36 @@ export default function CreateTripModal({
 
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Bus <span className="text-destructive">*</span>
-            </label>
-            {busLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                Cargando buses...
-              </div>
-            ) : (
-              <select
-                value={busId}
-                onChange={(e) => setBusId(e.target.value)}
-                className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
-              >
-                <option value="">Seleccionar bus...</option>
-                {busOptions.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            )}
-          </div>
+          {busLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Cargando buses...
+            </div>
+          ) : (
+            <FormSelect
+              label="Bus *"
+              value={busId}
+              onChange={(val) => setBusId(val)}
+              options={busOptions}
+              placeholder="Seleccionar bus..."
+            />
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Conductor</label>
-            <select
-              value={driverId}
-              onChange={(e) => setDriverId(e.target.value)}
-              className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
-            >
-              <option value="">Sin asignar</option>
-              {driverOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+            label="Conductor"
+            value={driverId}
+            onChange={(val) => setDriverId(val)}
+            options={driverOptions}
+            placeholder="Sin asignar"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Asistente</label>
-            <select
-              value={assistantId}
-              onChange={(e) => setAssistantId(e.target.value)}
-              className="w-full rounded-md border border-input px-3 py-2 text-sm bg-background focus:ring-2 focus:ring-ring focus:border-ring"
-            >
-              <option value="">Sin asignar</option>
-              {assistantOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+          <FormSelect
+            label="Asistente"
+            value={assistantId}
+            onChange={(val) => setAssistantId(val)}
+            options={assistantOptions}
+            placeholder="Sin asignar"
+          />
         </div>
 
         {/* Footer */}

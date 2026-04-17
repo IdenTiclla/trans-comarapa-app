@@ -4,6 +4,7 @@ import type { OfficeFinancialSummary, FinancialTotals, OfficeCollection } from '
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import FormDatePicker from '@/components/forms/FormDatePicker'
 import { DollarSign, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 
 function formatCurrency(value: number): string {
@@ -53,13 +54,11 @@ export function Component() {
   return (
     <div className="w-full space-y-6">
       <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Fecha:</label>
-          <input
-            type="date"
+        <div className="w-64">
+          <FormDatePicker
+            label="Fecha del reporte"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={(date) => setSelectedDate(date ? date.toISOString().split('T')[0] : '')}
           />
         </div>
       </div>

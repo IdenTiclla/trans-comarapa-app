@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ViewToggle } from '@/components/ui/view-toggle'
 import { cn } from '@/lib/utils'
 import { PackageListView, PackageCardsView } from './TripPackageViews'
 import type { TripPackage } from './TripPackageViews'
@@ -56,33 +57,15 @@ export default function TripPackagesSection({
                     </div>
                     <div className="flex items-center gap-2">
                         {tripPackages.length > 0 && (
-                            <div className="hidden sm:flex items-center bg-muted/60 rounded-lg border border-border p-0.5">
-                                <button
-                                    id="btn-view-list"
-                                    onClick={() => setViewMode('list')}
-                                    className={cn(
-                                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
-                                        viewMode === 'list'
-                                            ? 'bg-card text-foreground shadow-sm border border-border'
-                                            : 'text-muted-foreground hover:text-foreground',
-                                    )}
-                                >
-                                    <List className="h-3.5 w-3.5" />
-                                    Lista
-                                </button>
-                                <button
-                                    id="btn-view-cards"
-                                    onClick={() => setViewMode('cards')}
-                                    className={cn(
-                                        'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
-                                        viewMode === 'cards'
-                                            ? 'bg-card text-foreground shadow-sm border border-border'
-                                            : 'text-muted-foreground hover:text-foreground',
-                                    )}
-                                >
-                                    <LayoutGrid className="h-3.5 w-3.5" />
-                                    Tarjetas
-                                </button>
+                            <div className="hidden sm:flex items-center">
+                                <ViewToggle
+                                    value={viewMode}
+                                    onChange={(val) => setViewMode(val as ViewMode)}
+                                    options={[
+                                        { value: 'list', icon: <List className="h-3.5 w-3.5" />, label: 'Lista', ariaLabel: 'Vista de lista' },
+                                        { value: 'cards', icon: <LayoutGrid className="h-3.5 w-3.5" />, label: 'Tarjetas', ariaLabel: 'Vista de tarjetas' }
+                                    ]}
+                                />
                             </div>
                         )}
                         {canAssign && (
@@ -154,31 +137,15 @@ export default function TripPackagesSection({
                     <div className="space-y-3">
                         {/* Mobile view toggle */}
                         <div className="flex sm:hidden items-center justify-end">
-                            <div className="flex items-center bg-muted/60 rounded-lg border border-border p-0.5">
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={cn(
-                                        'p-1.5 rounded-md transition-all',
-                                        viewMode === 'list'
-                                            ? 'bg-card text-foreground shadow-sm border border-border'
-                                            : 'text-muted-foreground',
-                                    )}
-                                    title="Vista de lista"
-                                >
-                                    <List className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('cards')}
-                                    className={cn(
-                                        'p-1.5 rounded-md transition-all',
-                                        viewMode === 'cards'
-                                            ? 'bg-card text-foreground shadow-sm border border-border'
-                                            : 'text-muted-foreground',
-                                    )}
-                                    title="Vista de tarjetas"
-                                >
-                                    <LayoutGrid className="h-4 w-4" />
-                                </button>
+                            <div className="flex items-center">
+                                <ViewToggle
+                                    value={viewMode}
+                                    onChange={(val) => setViewMode(val as ViewMode)}
+                                    options={[
+                                        { value: 'list', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista de lista' },
+                                        { value: 'cards', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista de tarjetas' }
+                                    ]}
+                                />
                             </div>
                         </div>
 

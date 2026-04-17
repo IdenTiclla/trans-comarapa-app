@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api'
 import { useClientSearch } from '@/hooks/use-client-search'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import FormCheckbox from '@/components/forms/FormCheckbox'
 import PackageReceiptModal from './PackageReceiptModal'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -482,12 +483,15 @@ export default function PackageRegistrationModal({
                                         {senderSearch.clientType === 'existing' ? (
                                             <div className="flex-1 flex flex-col relative w-full h-full min-h-[140px]">
                                                 <div className="mb-2">
-                                                    <input
+                                                    <FormInput
                                                         value={senderSearch.clientSearchQuery}
                                                         onChange={(e) => senderSearch.searchClients(e.target.value)}
-                                                        type="text"
-                                                        className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-2 border"
                                                         placeholder="Buscar por nombre, apellido o CI..."
+                                                        leftIcon={
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                            </svg>
+                                                        }
                                                     />
                                                 </div>
 
@@ -525,22 +529,29 @@ export default function PackageRegistrationModal({
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-2 gap-3 h-full min-h-[140px] items-start">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Nombres *</label>
-                                                    <input value={newSenderForm.firstname} onChange={e => setNewSenderForm(p => ({ ...p, firstname: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Apellidos *</label>
-                                                    <input value={newSenderForm.lastname} onChange={e => setNewSenderForm(p => ({ ...p, lastname: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">CI/Doc *</label>
-                                                    <input value={newSenderForm.document_id} onChange={e => setNewSenderForm(p => ({ ...p, document_id: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
-                                                    <input value={newSenderForm.phone} onChange={e => setNewSenderForm(p => ({ ...p, phone: e.target.value }))} className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 px-3 py-1.5 border" />
-                                                </div>
+                                                <FormInput
+                                                    label="Nombres *"
+                                                    value={newSenderForm.firstname}
+                                                    onChange={e => setNewSenderForm(p => ({ ...p, firstname: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="Apellidos *"
+                                                    value={newSenderForm.lastname}
+                                                    onChange={e => setNewSenderForm(p => ({ ...p, lastname: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="CI/Doc *"
+                                                    value={newSenderForm.document_id}
+                                                    onChange={e => setNewSenderForm(p => ({ ...p, document_id: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="Teléfono"
+                                                    value={newSenderForm.phone}
+                                                    onChange={e => setNewSenderForm(p => ({ ...p, phone: e.target.value }))}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -580,12 +591,15 @@ export default function PackageRegistrationModal({
                                         {recipientSearch.clientType === 'existing' ? (
                                             <div className="flex-1 flex flex-col relative w-full h-full min-h-[140px]">
                                                 <div className="mb-2">
-                                                    <input
+                                                    <FormInput
                                                         value={recipientSearch.clientSearchQuery}
                                                         onChange={(e) => recipientSearch.searchClients(e.target.value)}
-                                                        type="text"
-                                                        className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-2 border"
                                                         placeholder="Buscar por nombre, apellido o CI..."
+                                                        leftIcon={
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                            </svg>
+                                                        }
                                                     />
                                                 </div>
 
@@ -623,22 +637,29 @@ export default function PackageRegistrationModal({
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-2 gap-3 h-full min-h-[140px] items-start">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Nombres *</label>
-                                                    <input value={newRecipientForm.firstname} onChange={e => setNewRecipientForm(p => ({ ...p, firstname: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Apellidos *</label>
-                                                    <input value={newRecipientForm.lastname} onChange={e => setNewRecipientForm(p => ({ ...p, lastname: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">CI/Doc *</label>
-                                                    <input value={newRecipientForm.document_id} onChange={e => setNewRecipientForm(p => ({ ...p, document_id: e.target.value }))} required className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5 border" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono</label>
-                                                    <input value={newRecipientForm.phone} onChange={e => setNewRecipientForm(p => ({ ...p, phone: e.target.value }))} className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 px-3 py-1.5 border" />
-                                                </div>
+                                                <FormInput
+                                                    label="Nombres *"
+                                                    value={newRecipientForm.firstname}
+                                                    onChange={e => setNewRecipientForm(p => ({ ...p, firstname: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="Apellidos *"
+                                                    value={newRecipientForm.lastname}
+                                                    onChange={e => setNewRecipientForm(p => ({ ...p, lastname: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="CI/Doc *"
+                                                    value={newRecipientForm.document_id}
+                                                    onChange={e => setNewRecipientForm(p => ({ ...p, document_id: e.target.value }))}
+                                                    required
+                                                />
+                                                <FormInput
+                                                    label="Teléfono"
+                                                    value={newRecipientForm.phone}
+                                                    onChange={e => setNewRecipientForm(p => ({ ...p, phone: e.target.value }))}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -658,15 +679,11 @@ export default function PackageRegistrationModal({
                                             Aviso Legal: La empresa no se responsabiliza de mercancía que no coincida con el contenido declarado. Sin reclamo pasados los 30 días.
                                         </div>
                                         <div className="flex-1 bg-white rounded-lg p-3 border border-gray-200 flex items-center">
-                                            <label className="flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={packageData.received_confirmation}
-                                                    onChange={(e) => setPackageData(prev => ({ ...prev, received_confirmation: e.target.checked }))}
-                                                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                                                />
-                                                <span className="ml-2 text-xs font-medium text-gray-900 leading-tight">El cliente declara que el contenido es lícito y RECIBE CONFORME su comprobante.</span>
-                                            </label>
+                                            <FormCheckbox
+                                                checked={packageData.received_confirmation}
+                                                onChange={(checked) => setPackageData(prev => ({ ...prev, received_confirmation: checked }))}
+                                                label="El cliente declara que el contenido es lícito y RECIBE CONFORME su comprobante."
+                                            />
                                         </div>
                                     </div>
 
@@ -696,30 +713,30 @@ export default function PackageRegistrationModal({
                                                         {packageData.items.map((item, index) => (
                                                             <tr key={index} className="group">
                                                                 <td className="px-2 py-1.5 align-top">
-                                                                    <input
+                                                                    <FormInput
                                                                         type="number"
                                                                         value={item.quantity}
                                                                         onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
                                                                         min="1"
-                                                                        className="w-12 px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-center"
+                                                                        className="w-16 text-center py-1 text-sm h-9"
                                                                     />
                                                                 </td>
                                                                 <td className="px-2 py-1.5 align-top w-full">
-                                                                    <input
+                                                                    <FormInput
                                                                         type="text"
                                                                         value={item.description}
                                                                         onChange={(e) => updateItem(index, 'description', e.target.value)}
                                                                         placeholder="Ej: Ropa"
-                                                                        className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all border"
+                                                                        className="w-full text-sm h-9"
                                                                     />
                                                                 </td>
                                                                 <td className="px-2 py-1.5 align-top">
-                                                                    <input
+                                                                    <FormInput
                                                                         type="number"
                                                                         value={item.unit_price}
                                                                         onChange={(e) => updateItem(index, 'unit_price', Number(e.target.value))}
                                                                         min="0" step="0.5"
-                                                                        className="w-16 px-2 py-1 text-sm bg-white border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all text-right border"
+                                                                        className="w-20 text-right text-sm h-9"
                                                                     />
                                                                 </td>
                                                                 <td className="px-2 py-1.5 text-right align-middle">

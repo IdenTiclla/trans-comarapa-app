@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import FormInput from '@/components/forms/FormInput'
+import { Plus, Minus, RotateCcw, Save, Grid3X3, Info, ChevronUp, ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface SeatPos {
     seat_number: number
@@ -158,178 +162,171 @@ export default function SeatLayoutEditor({
     }
 
     return (
-        <div className="seat-layout-editor select-none">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="rows" className="text-sm font-medium text-gray-700">Filas:</label>
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                onClick={decrementRows}
-                                disabled={rows <= 1}
-                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-md bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                                </svg>
-                            </button>
-                            <input
-                                id="rows"
-                                value={rows}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value) || 1
-                                    if (val >= 1 && val <= 20) {
-                                        setRows(val)
-                                        onRowsChange?.(val)
-                                    }
-                                }}
-                                type="number"
-                                min="1"
-                                max="20"
-                                className="w-12 h-8 px-2 py-1 border-t border-b border-gray-300 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            <button
-                                type="button"
-                                onClick={incrementRows}
-                                disabled={rows >= 20}
-                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-r-md bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                            </button>
+        <div className="seat-layout-editor select-none flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-6 p-6 bg-gray-50/50 border-b border-gray-100">
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dimensiones</label>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={decrementRows}
+                                    disabled={rows <= 1}
+                                    className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
+                                >
+                                    <Minus className="w-4 h-4" />
+                                </Button>
+                                <div className="w-12 text-center font-bold text-gray-900 border-x border-gray-100">
+                                    {rows}
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={incrementRows}
+                                    disabled={rows >= 20}
+                                    className="h-8 w-8 rounded-lg hover:bg-emerald-50 hover:text-emerald-500 transition-colors"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Filas</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={fillAll}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        className="rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 font-bold"
                     >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                        </svg>
-                        Llenar Todo
-                    </button>
-                    <button
-                        type="button"
+                        <Grid3X3 className="w-4 h-4 mr-2" />
+                        Llenar Planilla
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={clearAll}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
                     >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Limpiar Todo
-                    </button>
-                </div>
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Vaciar Todo
+                    </Button>
 
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-100 rounded-md">
-                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span className="text-sm font-medium text-indigo-700">Asientos: {seatCount}</span>
+                    <div className="h-10 w-px bg-gray-100 mx-1"></div>
+
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Capacidad Total</span>
+                        <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/5 border border-primary/10 rounded-xl">
+                            <span className="text-xl font-black text-primary tracking-tight">{seatCount}</span>
+                            <span className="text-[10px] font-bold text-primary/60 uppercase">Asientos</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-700">
-                    <span className="font-medium">Instrucciones:</span> Haz click en una celda vacia para agregar un asiento, o click en un asiento existente para eliminarlo.
-                </p>
-            </div>
+            <div className="p-6">
+                <div className="mb-6 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex items-start gap-4">
+                    <div className="p-2 bg-blue-100 rounded-xl">
+                        <Info className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <p className="text-sm text-blue-700 leading-relaxed">
+                        <span className="font-bold underline decoration-blue-200 decoration-2 underline-offset-4">Edición de Mapa:</span> Haz click en una celda vacía para agregar un asiento, o sobre un asiento existente para eliminarlo. Los números se ajustarán automáticamente.
+                    </p>
+                </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex-1">
-                    <div className="bg-white border-2 border-gray-200 rounded-lg p-4 overflow-x-auto">
-                        <div className="text-center mb-4">
-                            <div className="inline-flex items-center px-4 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                </svg>
+                <div className="flex flex-col items-center">
+                    <div className="bg-white border text-center rounded-3xl p-8 shadow-inner bg-gray-50/30">
+                        <div className="mb-10 flex flex-col items-center justify-center gap-2">
+                             <div className="px-6 py-2 bg-gray-900 text-white rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase shadow-xl flex items-center gap-3">
+                                <ChevronUp className="w-4 h-4 text-primary" />
                                 FRENTE DEL BUS
-                            </div>
+                             </div>
+                             <div className="w-48 h-2 bg-gray-200 rounded-full mt-4"></div>
                         </div>
 
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-4">
                             {Array.from({ length: rows }, (_, i) => i + 1).map(row => (
-                                <div key={row} className="flex items-center gap-1">
-                                    <span className="w-6 text-xs text-gray-400 text-right mr-2">{row}</span>
+                                <div key={row} className="flex items-center gap-3">
+                                    <div className="w-6 text-[10px] font-black text-gray-300 text-right uppercase tracking-tighter">{row}</div>
 
-                                    {[1, 2].map(col => {
-                                        const seat = getSeatAt(row, col)
-                                        return (
-                                            <div
-                                                key={`${row}-${col}`}
-                                                onClick={() => toggleSeat(row, col)}
-                                                className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center transition-all cursor-pointer select-none ${getCellClass(row, col)}`}
-                                            >
-                                                {seat ? (
-                                                    <div className="w-full h-full bg-indigo-600 rounded-lg flex items-center justify-center text-white font-medium text-sm hover:bg-indigo-700 transition-colors">
-                                                        {seat.seat_number}
-                                                    </div>
-                                                ) : (
-                                                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-
-                                    <div className="w-8 h-12 flex items-center justify-center">
-                                        <div className="w-1 h-full bg-gray-200 rounded-full"></div>
+                                    <div className="flex gap-2">
+                                        {[1, 2].map(col => {
+                                            const seat = getSeatAt(row, col)
+                                            return (
+                                                <div
+                                                    key={`${row}-${col}`}
+                                                    onClick={() => toggleSeat(row, col)}
+                                                    className={cn(
+                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none",
+                                                        seat 
+                                                            ? "bg-primary text-white shadow-lg shadow-primary/30 border-b-4 border-primary-dark active:border-b-0 active:translate-y-1" 
+                                                            : "bg-white border-2 border-dashed border-gray-200 hover:border-primary/40 hover:bg-primary/5 text-gray-200 hover:text-primary transition-all active:scale-95"
+                                                    )}
+                                                >
+                                                    {seat ? (
+                                                        <span className="font-black text-sm">{seat.seat_number}</span>
+                                                    ) : (
+                                                        <Plus className="w-5 h-5 opacity-20" />
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
                                     </div>
 
-                                    {[3, 4].map(col => {
-                                        const seat = getSeatAt(row, col)
-                                        return (
-                                            <div
-                                                key={`${row}-${col}`}
-                                                onClick={() => toggleSeat(row, col)}
-                                                className={`w-12 h-12 border-2 rounded-lg flex items-center justify-center transition-all cursor-pointer select-none ${getCellClass(row, col)}`}
-                                            >
-                                                {seat ? (
-                                                    <div className="w-full h-full bg-indigo-600 rounded-lg flex items-center justify-center text-white font-medium text-sm hover:bg-indigo-700 transition-colors">
-                                                        {seat.seat_number}
-                                                    </div>
-                                                ) : (
-                                                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
+                                    <div className="w-10 h-12 flex items-center justify-center mx-2">
+                                        <div className="w-1.5 h-full bg-gray-100 rounded-full border border-gray-50"></div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        {[3, 4].map(col => {
+                                            const seat = getSeatAt(row, col)
+                                            return (
+                                                <div
+                                                    key={`${row}-${col}`}
+                                                    onClick={() => toggleSeat(row, col)}
+                                                    className={cn(
+                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none",
+                                                        seat 
+                                                            ? "bg-primary text-white shadow-lg shadow-primary/30 border-b-4 border-primary-dark active:border-b-0 active:translate-y-1" 
+                                                            : "bg-white border-2 border-dashed border-gray-200 hover:border-primary/40 hover:bg-primary/5 text-gray-200 hover:text-primary transition-all active:scale-95"
+                                                    )}
+                                                >
+                                                    {seat ? (
+                                                        <span className="font-black text-sm">{seat.seat_number}</span>
+                                                    ) : (
+                                                        <Plus className="w-5 h-5 opacity-20" />
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="text-center mt-4">
-                            <div className="inline-flex items-center px-4 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                </svg>
+                        <div className="mt-12 flex flex-col items-center justify-center gap-2">
+                             <div className="w-48 h-2 bg-gray-200 rounded-full mb-4"></div>
+                             <div className="px-6 py-2 bg-gray-200 text-gray-500 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase flex items-center gap-3">
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
                                 PARTE TRASERA
-                            </div>
+                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-indigo-600 rounded"></div>
-                    <span>Asiento (click para quitar)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
-                        <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                <div className="mt-8 flex flex-wrap justify-center gap-8 text-[10px] font-black uppercase tracking-widest text-gray-400 pb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 bg-primary rounded-lg shadow-lg shadow-primary/20 border-b-2 border-primary-dark"></div>
+                        <span>Ocupado / Seleccionado</span>
                     </div>
-                    <span>Vacio (click para agregar)</span>
+                    <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 bg-white border-2 border-dashed border-gray-200 rounded-lg"></div>
+                        <span>Pasillo / Disponible</span>
+                    </div>
                 </div>
             </div>
         </div>

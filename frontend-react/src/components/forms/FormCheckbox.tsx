@@ -37,10 +37,11 @@ export default function FormCheckbox({
             required={required}
             onChange={(e) => onChange?.(e.target.checked)}
             className={cn(
-              'h-4 w-4 rounded transition-colors duration-200 cursor-pointer',
+              'h-5 w-5 rounded border-gray-300 text-primary transition-all duration-200 cursor-pointer',
+              'focus:ring-4 focus:ring-primary/10 focus:ring-offset-0',
               error
-                ? 'border-red-300 text-red-600 focus:ring-red-500'
-                : 'border-gray-300 text-blue-600 focus:ring-blue-500',
+                ? 'border-red-300 text-red-600 focus:ring-red-500/10'
+                : 'bg-gray-50/50 hover:border-primary/50',
               disabled && 'bg-gray-100 cursor-not-allowed opacity-50'
             )}
           />

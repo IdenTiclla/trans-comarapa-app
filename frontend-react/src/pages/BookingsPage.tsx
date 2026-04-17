@@ -9,6 +9,11 @@ import { clientService } from '@/services/client.service'
 import { tripService } from '@/services/trip.service'
 import { apiFetch } from '@/lib/api'
 import { toast } from 'sonner'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
+import FormDatePicker from '@/components/forms/FormDatePicker'
+import { ViewToggle } from '@/components/ui/view-toggle'
+import { LayoutGrid, List } from 'lucide-react'
 
 interface Ticket {
   id: number
@@ -464,16 +469,15 @@ export function Component() {
       <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <input
-              type="text"
+            <FormInput
               placeholder="Buscar por ID, cliente, viaje..."
-              className="px-4 py-2 border rounded-xl"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
             />
             <button
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="px-4 py-2 border rounded-xl bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+              className="px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 text-sm font-medium transition-all"
             >
               Filtros Avanzados {activeFiltersCount > 0 && `(${activeFiltersCount})`}
             </button>
@@ -487,47 +491,49 @@ export function Component() {
         </div>
 
         {showAdvancedFilters && (
-          <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
-            <select
-              className="px-4 py-2 border rounded-xl"
+          <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <FormSelect
+              label="Estado"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">Todos los estados</option>
-              <option value="pending">Pendientes</option>
-              <option value="confirmed">Confirmados</option>
-              <option value="cancelled">Cancelados</option>
-              <option value="completed">Completados</option>
-            </select>
-            <input
-              type="date"
-              className="px-4 py-2 border rounded-xl"
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { label: 'Todos los estados', value: '' },
+                { label: 'Pendientes', value: 'pending' },
+                { label: 'Confirmados', value: 'confirmed' },
+                { label: 'Cancelados', value: 'cancelled' },
+                { label: 'Completados', value: 'completed' }
+              ]}
+            />
+            <FormDatePicker
+              label="Desde"
               value={dateFromFilter}
-              onChange={(e) => setDateFromFilter(e.target.value)}
+              onChange={(date) => setDateFromFilter(date ? date.toISOString().split('T')[0] : '')}
             />
-            <input
-              type="date"
-              className="px-4 py-2 border rounded-xl"
+            <FormDatePicker
+              label="Hasta"
               value={dateToFilter}
-              onChange={(e) => setDateToFilter(e.target.value)}
+              onChange={(date) => setDateToFilter(date ? date.toISOString().split('T')[0] : '')}
             />
-            <select
-              className="px-4 py-2 border rounded-xl"
+            <FormSelect
+              label="Método pago"
               value={paymentMethodFilter}
-              onChange={(e) => setPaymentMethodFilter(e.target.value)}
-            >
-              <option value="">Todos los pagos</option>
-              <option value="cash">Efectivo</option>
-              <option value="card">Tarjeta</option>
-              <option value="transfer">Transferencia</option>
-              <option value="qr">QR</option>
-            </select>
-            <button
-              onClick={clearAllFilters}
-              className="px-4 py-2 border rounded-xl bg-gray-100 font-medium"
-            >
-              Limpiar
-            </button>
+              onChange={(val) => setPaymentMethodFilter(val)}
+              options={[
+                { label: 'Todos los pagos', value: '' },
+                { label: 'Efectivo', value: 'cash' },
+                { label: 'Tarjeta', value: 'card' },
+                { label: 'Transferencia', value: 'transfer' },
+                { label: 'QR', value: 'qr' }
+              ]}
+            />
+            <div className="flex flex-col justify-end h-full">
+              <button
+                onClick={clearAllFilters}
+                className="w-full px-4 min-h-[48px] border border-gray-200 rounded-xl bg-gray-100/50 text-sm font-medium hover:bg-gray-200/50 transition-all text-gray-700"
+              >
+                Limpiar
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -540,18 +546,14 @@ export function Component() {
             Exportar
           </button>
           <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-white shadow' : 'text-gray-600'}`}
-            >
-              Cards
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`p-2 rounded-md ${viewMode === 'table' ? 'bg-white shadow' : 'text-gray-600'}`}
-            >
-              Tabla
-            </button>
+            <ViewToggle
+              value={viewMode}
+              onChange={(val) => setViewMode(val as 'cards' | 'table')}
+              options={[
+                { value: 'cards', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista en tarjetas' },
+                { value: 'table', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista en tabla' }
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -561,7 +563,7 @@ export function Component() {
       ) : filteredTickets.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg">No hay boletos</div>
       ) : viewMode === 'table' ? (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-white rounded-2xl shadow-sm overflow-x-auto mb-6">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -683,102 +685,80 @@ export function Component() {
               </h3>
             </div>
             <form onSubmit={submitTicketForm} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Viaje</label>
-                <select
-                  required
-                  value={ticketForm.trip_id}
-                  onChange={(e) => setTicketForm({ ...ticketForm, trip_id: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="">Seleccionar viaje...</option>
-                  {availableTrips.map((trip) => (
-                    <option key={trip.id} value={trip.id}>
-                      {trip.route?.origin} → {trip.route?.destination} - {formatDate(trip.trip_datetime || '')}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormSelect
+                label="Viaje"
+                required
+                value={ticketForm.trip_id}
+                onChange={(val) => setTicketForm({ ...ticketForm, trip_id: val })}
+                options={availableTrips.map((trip) => ({
+                  label: `${trip.route?.origin} → ${trip.route?.destination} - ${formatDate(trip.trip_datetime || '')}`,
+                  value: trip.id
+                }))}
+                placeholder="Seleccionar viaje..."
+              />
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Cliente</label>
-                <select
-                  required
-                  value={ticketForm.client_id}
-                  onChange={(e) => setTicketForm({ ...ticketForm, client_id: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="">Seleccionar cliente...</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.firstname} {c.lastname}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormSelect
+                label="Cliente"
+                required
+                value={ticketForm.client_id}
+                onChange={(val) => setTicketForm({ ...ticketForm, client_id: val })}
+                options={clients.map((c) => ({
+                  label: `${c.firstname} ${c.lastname}`,
+                  value: c.id
+                }))}
+                placeholder="Seleccionar cliente..."
+              />
 
               {ticketForm.trip_id && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Asiento</label>
-                  <select
-                    required
-                    value={ticketForm.seat_id}
-                    onChange={(e) => setTicketForm({ ...ticketForm, seat_id: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                  >
-                    <option value="">Seleccionar asiento...</option>
-                    {availableSeats.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        Asiento {s.seat_number} ({s.deck})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <FormSelect
+                  label="Asiento"
+                  required
+                  value={ticketForm.seat_id}
+                  onChange={(val) => setTicketForm({ ...ticketForm, seat_id: val })}
+                  options={availableSeats.map((s) => ({
+                    label: `Asiento ${s.seat_number} (${s.deck})`,
+                    value: s.id
+                  }))}
+                  placeholder="Seleccionar asiento..."
+                />
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Estado</label>
-                  <select
-                    required
-                    value={ticketForm.state}
-                    onChange={(e) => setTicketForm({ ...ticketForm, state: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                  >
-                    <option value="pending">Pendiente</option>
-                    <option value="confirmed">Confirmado</option>
-                    <option value="cancelled">Cancelado</option>
-                    <option value="completed">Completado</option>
-                  </select>
-                </div>
+                <FormSelect
+                  label="Estado"
+                  required
+                  value={ticketForm.state}
+                  onChange={(val) => setTicketForm({ ...ticketForm, state: val })}
+                  options={[
+                    { label: 'Pendiente', value: 'pending' },
+                    { label: 'Confirmado', value: 'confirmed' },
+                    { label: 'Cancelado', value: 'cancelled' },
+                    { label: 'Completado', value: 'completed' }
+                  ]}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Precio</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={ticketForm.price}
-                    onChange={(e) => setTicketForm({ ...ticketForm, price: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                </div>
+                <FormInput
+                  label="Precio"
+                  type="number"
+                  step="0.01"
+                  required
+                  value={ticketForm.price}
+                  onChange={(e) => setTicketForm({ ...ticketForm, price: parseFloat(e.target.value) })}
+                />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Método de Pago</label>
-                <select
-                  value={ticketForm.payment_method}
-                  onChange={(e) => setTicketForm({ ...ticketForm, payment_method: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="">Ninguno</option>
-                  <option value="cash">Efectivo</option>
-                  <option value="card">Tarjeta</option>
-                  <option value="transfer">Transferencia</option>
-                  <option value="qr">QR</option>
-                </select>
-              </div>
+              <FormSelect
+                label="Método de Pago"
+                value={ticketForm.payment_method}
+                onChange={(val) => setTicketForm({ ...ticketForm, payment_method: val })}
+                options={[
+                  { label: 'Sin especificar', value: '' },
+                  { label: 'Efectivo', value: 'cash' },
+                  { label: 'Tarjeta', value: 'card' },
+                  { label: 'Transferencia', value: 'transfer' },
+                  { label: 'QR', value: 'qr' }
+                ]}
+              />
 
               <div className="pt-4 flex justify-end gap-3 border-t">
                 <button

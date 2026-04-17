@@ -1,4 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
+import FormCheckbox from '@/components/forms/FormCheckbox'
 
 interface Filters {
     search?: string
@@ -162,14 +165,12 @@ export default function ClientFilters({ initialFilters = {}, onFilterChange, onS
                     )}
                 </div>
                 <div className="flex items-center flex-wrap gap-3">
-                    <div className="flex items-center bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => setAutoApply(!autoApply)}>
-                        <input
-                            type="checkbox"
+                    <div className="flex items-center bg-gray-50 rounded-lg px-3 pt-3 pb-0 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => setAutoApply(!autoApply)}>
+                        <FormCheckbox
                             checked={autoApply}
-                            onChange={(e) => setAutoApply(e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                            onChange={(checked) => setAutoApply(checked)}
+                            label="Aplicar automáticamente"
                         />
-                        <label className="ml-2 block text-sm font-medium text-gray-700 cursor-pointer">Aplicar automáticamente</label>
                     </div>
                     <button
                         onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -183,82 +184,61 @@ export default function ClientFilters({ initialFilters = {}, onFilterChange, onS
                 </div>
             </div>
 
-            <div className="mb-5">
-                <div className="relative rounded-lg shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <div className="mb-1">
+                <FormInput
+                    value={filters.search}
+                    onChange={(e) => handleSearchInput(e.target.value)}
+                    placeholder="Buscar cliente por nombre, CI o teléfono..."
+                    className="py-3 bg-gray-50 shadow-sm transition-colors duration-200 focus:bg-white"
+                    leftIcon={
                         <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                         </svg>
-                    </div>
-                    <input
-                        type="text"
-                        value={filters.search}
-                        onChange={(e) => handleSearchInput(e.target.value)}
-                        placeholder="Buscar cliente por nombre, CI o teléfono..."
-                        className="pl-12 py-3 block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-colors duration-200"
-                    />
-                </div>
+                    }
+                />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
-                    <div className="relative">
-                        <select
-                            value={filters.city}
-                            onChange={(e) => handleFilterChange('city', e.target.value)}
-                            className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-8 py-2.5 transition-colors focus:bg-white"
-                        >
-                            <option value="">Todas</option>
-                            {CITIES.map(city => <option key={city} value={city}>{city}</option>)}
-                        </select>
-                        {filters.city && (
-                            <button onClick={() => clearFilter('city')} className="absolute inset-y-0 right-8 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        )}
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-1">
+                <FormSelect
+                    label="Ciudad"
+                    value={filters.city}
+                    onChange={(val) => handleFilterChange('city', val)}
+                    options={[
+                        { label: 'Todas', value: '' },
+                        ...CITIES.map(city => ({ label: city, value: city }))
+                    ]}
+                    clearable
+                    onClear={() => clearFilter('city')}
+                    className="py-2.5 bg-gray-50 shadow-sm focus:bg-white"
+                />
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Cliente</label>
-                    <div className="relative">
-                        <select
-                            value={filters.is_minor}
-                            onChange={(e) => handleFilterChange('is_minor', e.target.value)}
-                            className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-8 py-2.5 transition-colors focus:bg-white"
-                        >
-                            <option value="">Todos</option>
-                            <option value="false">Adultos</option>
-                            <option value="true">Menores de edad</option>
-                        </select>
-                        {filters.is_minor !== '' && (
-                            <button onClick={() => clearFilter('is_minor')} className="absolute inset-y-0 right-8 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <FormSelect
+                    label="Tipo de Cliente"
+                    value={filters.is_minor}
+                    onChange={(val) => handleFilterChange('is_minor', val)}
+                    options={[
+                        { label: 'Todos', value: '' },
+                        { label: 'Adultos', value: 'false' },
+                        { label: 'Menores de edad', value: 'true' }
+                    ]}
+                    clearable
+                    onClear={() => clearFilter('is_minor')}
+                    className="py-2.5 bg-gray-50 shadow-sm focus:bg-white"
+                />
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-                    <div className="relative">
-                        <select
-                            value={filters.status}
-                            onChange={(e) => handleFilterChange('status', e.target.value)}
-                            className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-8 py-2.5 transition-colors focus:bg-white"
-                        >
-                            <option value="active">Activos</option>
-                            <option value="all">Todos</option>
-                            <option value="inactive">Inactivos</option>
-                        </select>
-                        {filters.status !== 'active' && (
-                            <button onClick={() => clearFilter('status')} className="absolute inset-y-0 right-8 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <FormSelect
+                    label="Estado"
+                    value={filters.status}
+                    onChange={(val) => handleFilterChange('status', val)}
+                    options={[
+                        { label: 'Activos', value: 'active' },
+                        { label: 'Todos', value: 'all' },
+                        { label: 'Inactivos', value: 'inactive' }
+                    ]}
+                    clearable
+                    onClear={() => clearFilter('status')}
+                    className="py-2.5 bg-gray-50 shadow-sm focus:bg-white"
+                />
             </div>
 
             {showAdvancedFilters && (
@@ -269,50 +249,48 @@ export default function ClientFilters({ initialFilters = {}, onFilterChange, onS
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de registro</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de registro</label>
                             <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1 font-medium">Desde</label>
-                                    <input
-                                        type="date"
-                                        value={filters.dateFrom}
-                                        onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                                        className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 focus:bg-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1 font-medium">Hasta</label>
-                                    <input
-                                        type="date"
-                                        value={filters.dateTo}
-                                        onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                                        className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 focus:bg-white"
-                                    />
-                                </div>
+                                <FormInput
+                                    label="Desde"
+                                    type="date"
+                                    value={filters.dateFrom}
+                                    onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                                    className="py-2 bg-gray-50 shadow-sm focus:bg-white"
+                                />
+                                <FormInput
+                                    label="Hasta"
+                                    type="date"
+                                    value={filters.dateTo}
+                                    onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                                    className="py-2 bg-gray-50 shadow-sm focus:bg-white"
+                                />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
                             <div className="grid grid-cols-2 gap-3">
-                                <select
+                                <FormSelect
                                     value={sortBy}
-                                    onChange={(e) => handleSortChange(e.target.value, sortDirection)}
-                                    className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5 focus:bg-white"
-                                >
-                                    <option value="created_at">Fecha de registro</option>
-                                    <option value="name">Nombre</option>
-                                    <option value="document_id">Documento</option>
-                                    <option value="city">Ciudad</option>
-                                </select>
-                                <select
+                                    onChange={(val) => handleSortChange(val, sortDirection)}
+                                    options={[
+                                        { label: 'Fecha de registro', value: 'created_at' },
+                                        { label: 'Nombre', value: 'name' },
+                                        { label: 'Documento', value: 'document_id' },
+                                        { label: 'Ciudad', value: 'city' }
+                                    ]}
+                                    className="py-2.5 bg-gray-50 shadow-sm focus:bg-white"
+                                />
+                                <FormSelect
                                     value={sortDirection}
-                                    onChange={(e) => handleSortChange(sortBy, e.target.value)}
-                                    className="block w-full rounded-lg border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5 focus:bg-white"
-                                >
-                                    <option value="desc">Descendente</option>
-                                    <option value="asc">Ascendente</option>
-                                </select>
+                                    onChange={(val) => handleSortChange(sortBy, val)}
+                                    options={[
+                                        { label: 'Descendente', value: 'desc' },
+                                        { label: 'Ascendente', value: 'asc' }
+                                    ]}
+                                    className="py-2.5 bg-gray-50 shadow-sm focus:bg-white"
+                                />
                             </div>
                         </div>
                     </div>

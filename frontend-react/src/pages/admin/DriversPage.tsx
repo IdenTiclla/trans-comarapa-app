@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { driverService } from '@/services/driver.service'
 import { toast } from 'sonner'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
+import FormDatePicker from '@/components/forms/FormDatePicker'
 
 interface Driver {
   id: number
@@ -168,27 +171,34 @@ export function Component() {
               <p className="text-sm text-gray-500 mb-4">Chofer: {editing.firstname} {editing.lastname}</p>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nº de Licencia</label>
-                  <input type="text" value={formData.license_number} onChange={(e) => setFormData({ ...formData, license_number: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="Ej: 1234567-A" />
-                </div>
+                <FormInput
+                  label="Nº de Licencia"
+                  value={formData.license_number}
+                  onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
+                  placeholder="Ej: 1234567-A"
+                />
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                    <input type="text" value={formData.license_type} onChange={(e) => setFormData({ ...formData, license_type: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="Ej: C" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
-                    <input type="date" value={formData.license_expiry} onChange={(e) => setFormData({ ...formData, license_expiry: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
-                  </div>
+                  <FormInput
+                    label="Categoría"
+                    value={formData.license_type}
+                    onChange={(e) => setFormData({ ...formData, license_type: e.target.value })}
+                    placeholder="Ej: C"
+                  />
+                  <FormDatePicker
+                    label="Fecha de Vencimiento"
+                    value={formData.license_expiry}
+                    onChange={(val) => setFormData({ ...formData, license_expiry: val })}
+                  />
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                    <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
-                        <option value="active">Activo</option>
-                        <option value="inactive">Inactivo</option>
-                    </select>
-                </div>
+                <FormSelect
+                  label="Estado"
+                  value={formData.status}
+                  onChange={(val) => setFormData({ ...formData, status: val })}
+                  options={[
+                    { label: 'Activo', value: 'active' },
+                    { label: 'Inactivo', value: 'inactive' }
+                  ]}
+                />
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm">

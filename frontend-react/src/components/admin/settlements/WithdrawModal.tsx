@@ -17,6 +17,10 @@ import {
 } from '@/components/ui/select'
 import type { TripFinancial } from '@/hooks/use-owner-settlements'
 import { fmt } from './settlement-utils'
+import FormSelect from '@/components/forms/FormSelect'
+import FormInput from '@/components/forms/FormInput'
+import { Wallet, Building2, Ticket, Package, History, ArrowRightCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Props {
     isOpen: boolean
@@ -59,119 +63,144 @@ export function WithdrawModal({ isOpen, onOpenChange, tripsWithBalance, processi
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Iniciar Retiro</DialogTitle>
-                    <DialogDescription>Selecciona un viaje y oficina con saldo disponible.</DialogDescription>
+            <DialogContent className="sm:max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-br from-gray-900 via-gray-800 to-navy-900 text-white">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="p-2 bg-white/10 rounded-xl">
+                            <Wallet className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <DialogTitle className="text-xl font-black tracking-tight">Iniciar Retiro</DialogTitle>
+                    </div>
+                    <DialogDescription className="text-gray-400 font-medium">
+                        Selecciona un viaje y oficina para procesar la liquidación.
+                    </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Trip Selector */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Viaje</label>
-                        <SelectRoot value={selectedTrip} onValueChange={(v) => {
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <FormSelect
+                        label="Seleccionar Viaje"
+                        value={selectedTrip}
+                        onChange={(v) => {
                             setSelectedTrip(v)
                             setSelectedOffice('')
                             setAmount('0.00')
-                        }}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Selecciona un viaje" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tripsWithBalance.map(t => (
-                                    <SelectItem key={t.trip_id} value={String(t.trip_id)}>
-                                        #{t.trip_id} · {t.route_name} · {t.bus_plate} (Disp: {fmt(t.available_balance)})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </SelectRoot>
-                    </div>
+                        }}
+                        required
+                        options={tripsWithBalance.map(t => ({
+                            label: `#${t.trip_id} · ${t.route_name} · ${t.bus_plate} (Disp: ${fmt(t.available_balance)})`,
+                            value: String(t.trip_id)
+                        }))}
+                        placeholder="Buscar viaje..."
+                    />
 
-                    {/* Office Selector */}
                     {tripData && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Oficina</label>
-                            <SelectRoot value={selectedOffice} onValueChange={(v) => {
+                        <FormSelect
+                            label="Oficina de Retiro"
+                            value={selectedOffice}
+                            onChange={(v) => {
                                 setSelectedOffice(v)
                                 const off = tripData.office_breakdown.find(o => o.office_id === Number(v))
                                 setAmount(off?.available.toFixed(2) ?? '0.00')
-                            }}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Selecciona una oficina" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {tripData.office_breakdown.filter(o => o.available > 0).map(o => (
-                                        <SelectItem key={o.office_id} value={String(o.office_id)}>
-                                            {o.office_name} (Disp: {fmt(o.available)})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </SelectRoot>
-                        </div>
+                            }}
+                            required
+                            options={tripData.office_breakdown
+                                .filter(o => o.available > 0)
+                                .map(o => ({
+                                    label: `${o.office_name} (Sald: ${fmt(o.available)})`,
+                                    value: String(o.office_id)
+                                }))
+                            }
+                            placeholder="Seleccionar oficina..."
+                        />
                     )}
 
-                    {/* Office details summary */}
                     {officeData && (
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 space-y-1 text-xs">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Boletos</span>
-                                <span className="tabular-nums">{fmt(officeData.tickets_amount)}</span>
+                        <div className="bg-gray-50/80 rounded-2xl border border-gray-100 p-4 space-y-3 shadow-inner">
+                            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">
+                                <span>Resumen de Saldos</span>
+                                <Building2 className="w-3 h-3" />
                             </div>
-                            {officeData.packages_paid_amount > 0 && (
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Enc. pagadas</span>
-                                    <span className="tabular-nums">{fmt(officeData.packages_paid_amount)}</span>
+                            
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2 text-gray-600 text-sm font-medium">
+                                        <Ticket className="w-3.5 h-3.5 opacity-40" />
+                                        <span>Boletos</span>
+                                    </div>
+                                    <span className="font-bold text-gray-900">{fmt(officeData.tickets_amount)}</span>
                                 </div>
-                            )}
-                            {officeData.packages_collected_amount > 0 && (
-                                <div className="flex justify-between">
-                                    <span className="text-emerald-600">Enc. cobradas</span>
-                                    <span className="tabular-nums">{fmt(officeData.packages_collected_amount)}</span>
-                                </div>
-                            )}
-                            {officeData.withdrawn_amount > 0 && (
-                                <div className="flex justify-between text-red-500">
-                                    <span>Ya retirado</span>
-                                    <span className="tabular-nums">-{fmt(officeData.withdrawn_amount)}</span>
-                                </div>
-                            )}
-                            <div className="border-t pt-1 flex justify-between font-semibold text-comarapa-dark">
-                                <span>Disponible</span>
-                                <span className="tabular-nums">{fmt(officeData.available)}</span>
+                                
+                                {officeData.packages_paid_amount > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-gray-600 text-sm font-medium">
+                                            <Package className="w-3.5 h-3.5 opacity-40" />
+                                            <span>Encomiendas pagadas</span>
+                                        </div>
+                                        <span className="font-bold text-gray-900">{fmt(officeData.packages_paid_amount)}</span>
+                                    </div>
+                                )}
+                                
+                                {officeData.packages_collected_amount > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-emerald-600 text-sm font-bold">
+                                            <ArrowRightCircle className="w-3.5 h-3.5" />
+                                            <span>Cobros en destino</span>
+                                        </div>
+                                        <span className="font-black text-emerald-600">{fmt(officeData.packages_collected_amount)}</span>
+                                    </div>
+                                )}
+                                
+                                {officeData.withdrawn_amount > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-red-500 text-sm font-bold">
+                                            <History className="w-3.5 h-3.5" />
+                                            <span>Ya retirado</span>
+                                        </div>
+                                        <span className="font-black text-red-500">-{fmt(officeData.withdrawn_amount)}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Neto Disponible</span>
+                                <span className="text-xl font-black text-gray-900 tracking-tight">{fmt(officeData.available)}</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Amount input */}
                     {officeData && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Monto a Retirar (Bs.)</label>
-                            <input
-                                type="text"
-                                inputMode="decimal"
-                                pattern="^\d+(\.\d{0,2})?$"
-                                required
-                                value={amount}
-                                onChange={e => {
-                                    const val = e.target.value
-                                    if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setAmount(val)
-                                }}
-                                onBlur={() => {
-                                    const num = parseFloat(amount)
-                                    if (!isNaN(num) && num > 0) setAmount(num.toFixed(2))
-                                }}
-                                className="w-full text-lg rounded-lg border border-gray-300 px-4 py-2.5 focus:border-comarapa-medium focus:ring-2 focus:ring-comarapa-light/30 transition-shadow outline-none font-medium text-gray-900"
-                            />
-                        </div>
+                        <FormInput
+                            label="Monto a Retirar (Bs.)"
+                            id="withdraw-amount"
+                            type="text"
+                            inputMode="decimal"
+                            value={amount}
+                            onChange={(e) => {
+                                const val = e.target.value
+                                if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setAmount(val)
+                            }}
+                            onBlur={() => {
+                                const num = parseFloat(amount)
+                                if (!isNaN(num) && num > 0) setAmount(num.toFixed(2))
+                            }}
+                            required
+                            className="text-2xl font-black text-primary text-center tracking-tighter"
+                        />
                     )}
 
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                    <DialogFooter className="bg-gray-50 px-6 py-4 flex gap-3">
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => handleOpenChange(false)}
+                            className="rounded-xl font-bold flex-1 h-12"
+                        >
                             Cancelar
                         </Button>
                         <Button
                             type="submit"
                             disabled={processing || !selectedOffice}
-                            className="bg-comarapa-dark hover:bg-navy-800"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex-1 h-12 shadow-lg shadow-emerald-200"
                         >
                             {processing ? 'Procesando...' : 'Confirmar Retiro'}
                         </Button>

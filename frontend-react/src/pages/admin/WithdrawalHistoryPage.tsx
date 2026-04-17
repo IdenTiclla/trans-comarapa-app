@@ -5,7 +5,8 @@ import { toast } from 'sonner'
 import { API_BASE_URL } from '@/lib/constants'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Download, Loader2 } from 'lucide-react'
+import { Download, Loader2, Filter } from 'lucide-react'
+import FormDatePicker from '@/components/forms/FormDatePicker'
 
 function formatCurrency(value: number): string {
   return `Bs. ${value.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
@@ -69,27 +70,24 @@ export function Component() {
     <div className="w-full space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Desde</label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+        <div className="flex items-end gap-3">
+          <FormDatePicker
+            label="Desde"
+            value={dateFrom}
+            onChange={(date) => setDateFrom(date ? date.toISOString().split('T')[0] : '')}
+          />
+          <FormDatePicker
+            label="Hasta"
+            value={dateTo}
+            onChange={(date) => setDateTo(date ? date.toISOString().split('T')[0] : '')}
+          />
+          <div className="flex flex-col justify-end h-full">
+            <Button variant="outline" size="sm" onClick={fetchWithdrawals} className="mb-[1.5px] h-12 rounded-xl">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtrar
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Hasta</label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <Button variant="outline" size="sm" onClick={fetchWithdrawals}>
-            Filtrar
-          </Button>
+        </div>
         </div>
         <Button onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />

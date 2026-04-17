@@ -4,6 +4,8 @@ import { fetchOffices, createOffice, updateOffice, deleteOffice, selectOffices, 
 import { fetchLocations, selectLocations } from '@/store/location.slice'
 import { toast } from 'sonner'
 import type { Office } from '@/types/office'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
 
 interface Location { id: number; name: string;[key: string]: unknown }
 
@@ -151,31 +153,45 @@ export function Component() {
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">{editing ? 'Editar Oficina' : 'Nueva Oficina'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Ej. Oficina Central" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
-                <select value={formData.location_id} onChange={(e) => setFormData({ ...formData, location_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                  <option value={0}>Seleccionar ubicación</option>
-                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-              </div>
+              <FormInput
+                label="Nombre"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                placeholder="Ej. Oficina Central"
+              />
+              
+              <FormSelect
+                label="Ubicación"
+                value={formData.location_id}
+                onChange={(val) => setFormData({ ...formData, location_id: Number(val) })}
+                required
+                options={locations.map(l => ({ label: l.name, value: l.id }))}
+                placeholder="Seleccionar ubicación"
+              />
+
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                  <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm" placeholder="Opcional" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm" placeholder="Opcional" />
-                </div>
+                <FormInput
+                  label="Teléfono"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Opcional"
+                />
+                <FormInput
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Opcional"
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Encargado</label>
-                <input type="text" value={formData.manager_name} onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })} className="w-full rounded-lg border-gray-300 shadow-sm" placeholder="Opcional" />
-              </div>
+
+              <FormInput
+                label="Encargado"
+                value={formData.manager_name}
+                onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
+                placeholder="Opcional"
+              />
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Cancelar</button>

@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react'
 import { locationService } from '@/services/location.service'
 import { Button } from '@/components/ui/button'
-import { X, Plus, Clock, Eye, EyeOff, Trash2, Loader2 } from 'lucide-react'
+import { X, Plus, Clock, Eye, EyeOff, Trash2, Loader2, MapPinned, Route as RouteIcon } from 'lucide-react'
+import FormSelect from '@/components/forms/FormSelect'
+import FormInput from '@/components/forms/FormInput'
+import { cn } from '@/lib/utils'
 
 interface RouteFormProps {
     route?: any
@@ -180,133 +182,126 @@ export default function RouteForm({
     }
 
     return (
-        <div className="bg-card rounded-xl shadow-2xl border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-5 bg-gradient-to-br from-gray-900 via-gray-800 to-navy-900 border-b border-white/10 text-white shrink-0">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {isEditing ? 'Editar Ruta' : 'Nueva Ruta'}
-                    </h3>
-                    <button onClick={onCancel} className="text-gray-400 hover:text-gray-500">
-                        <X className="h-6 w-6" />
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/10 rounded-xl">
+                            <RouteIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold tracking-tight">
+                                {isEditing ? 'Editar Ruta' : 'Nueva Ruta'}
+                            </h3>
+                            <p className="text-gray-400 text-xs font-medium">Configura el itinerario y precios</p>
+                        </div>
+                    </div>
+                    <button onClick={onCancel} className="text-gray-400 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all">
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-                <div>
-                    <label htmlFor="origin" className="block text-sm font-medium text-gray-700">Origen</label>
-                    <select
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-4">
+                    <FormSelect
+                        label="Origen"
                         id="origin"
                         value={form.origin_location_id}
-                        onChange={(e) => setForm({ ...form, origin_location_id: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
+                        onChange={(val) => setForm({ ...form, origin_location_id: String(val) })}
                         required
-                    >
-                        <option value="" disabled>Seleccionar origen</option>
-                        {availableOrigins.map(loc => (
-                            <option key={loc.id} value={loc.id}>
-                                {loc.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        options={availableOrigins.map(loc => ({
+                            label: loc.name,
+                            value: loc.id
+                        }))}
+                        placeholder="Seleccionar..."
+                    />
 
-                <div>
-                    <label htmlFor="destination" className="block text-sm font-medium text-gray-700">Destino</label>
-                    <select
+                    <FormSelect
+                        label="Destino"
                         id="destination"
                         value={form.destination_location_id}
-                        onChange={(e) => setForm({ ...form, destination_location_id: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
+                        onChange={(val) => setForm({ ...form, destination_location_id: String(val) })}
                         required
-                    >
-                        <option value="" disabled>Seleccionar destino</option>
-                        {availableDestinations.map(loc => (
-                            <option key={loc.id} value={loc.id}>
-                                {loc.name}
-                            </option>
-                        ))}
-                    </select>
-                    {sameLocationError && (
-                        <p className="mt-1 text-sm text-red-600">El origen y destino deben ser diferentes</p>
-                    )}
+                        options={availableDestinations.map(loc => ({
+                            label: loc.name,
+                            value: loc.id
+                        }))}
+                        placeholder="Seleccionar..."
+                        error={sameLocationError ? 'Origen y destino deben ser diferentes' : undefined}
+                    />
                 </div>
 
-                <div>
-                    <label htmlFor="distance" className="block text-sm font-medium text-gray-700">Distancia (km)</label>
-                    <input
+                <div className="grid grid-cols-3 gap-3">
+                    <FormInput
+                        label="Distancia (km)"
                         id="distance"
                         type="number"
                         value={form.distance}
                         onChange={(e) => setForm({ ...form, distance: e.target.value })}
                         step="0.1"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Duración (horas)</label>
-                    <input
+                    <FormInput
+                        label="Duración (hrs)"
                         id="duration"
                         type="number"
                         value={form.duration}
                         onChange={(e) => setForm({ ...form, duration: e.target.value })}
                         step="0.5"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="price" className="block text-sm font-medium text-gray-700">Precio (Bs.)</label>
-                    <input
+                    <FormInput
+                        label="Precio (Bs.)"
                         id="price"
                         type="number"
                         value={form.price}
                         onChange={(e) => setForm({ ...form, price: e.target.value })}
                         step="0.5"
                         min="0.1"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                         required
                     />
                 </div>
 
-                <div className="border-t border-gray-200 pt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Horarios de Salida
-                    </label>
+                <div className="border-t border-gray-100 pt-5">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Clock className="w-4 h-4 text-primary" />
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                            Horarios de Salida
+                        </label>
+                    </div>
 
-                    <div className="flex gap-2 items-end mb-3">
+                    <div className="flex gap-2 items-end mb-4">
                         <div className="flex-1">
-                            <input
+                            <FormInput
                                 type="time"
+                                label=""
                                 value={newScheduleTime}
                                 onChange={(e) => setNewScheduleTime(e.target.value)}
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-ring sm:text-sm"
                                 placeholder="HH:MM"
+                                className="h-12"
                             />
                         </div>
                         <Button
                             type="button"
-                            size="sm"
                             onClick={addLocalSchedule}
                             disabled={!newScheduleTime}
+                            className="h-12 rounded-xl font-bold px-4"
                         >
                             <Plus className="h-4 w-4 mr-1" />
-                            Agregar
+                            Añadir
                         </Button>
                     </div>
                     {scheduleError && (
-                        <p className="mb-2 text-sm text-red-600">{scheduleError}</p>
+                        <p className="mb-3 text-xs font-bold text-red-500 bg-red-50 p-2 rounded-lg border border-red-100 animate-in shake-in-1">{scheduleError}</p>
                     )}
 
                     {localSchedules.length === 0 ? (
-                        <div className="text-center py-4 bg-muted/50 rounded-lg border border-dashed border-gray-300">
-                            <Clock className="mx-auto h-8 w-8 text-gray-400" />
-                            <p className="mt-1 text-sm text-gray-500">Sin horarios configurados</p>
+                        <div className="text-center py-6 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                            <Clock className="mx-auto h-8 w-8 text-gray-300 mb-2" />
+                            <p className="text-xs font-bold text-gray-400 tracking-wider uppercase">Sin horarios configurados</p>
                         </div>
                     ) : (
                         <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -354,26 +349,28 @@ export default function RouteForm({
                     )}
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-2">
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         onClick={onCancel}
                         disabled={loading}
+                        className="rounded-xl font-bold px-6 h-12 hover:bg-gray-50"
                     >
                         Cancelar
                     </Button>
                     <Button
                         type="submit"
                         disabled={loading || sameLocationError}
+                        className="rounded-xl font-bold px-10 h-12 shadow-lg shadow-primary/20"
                     >
                         {loading ? (
-                            <span className="inline-flex items-center">
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Guardando...
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>Guardando...</span>
+                            </div>
                         ) : (
-                            <span>{isEditing ? 'Actualizar' : 'Crear'}</span>
+                            <span>{isEditing ? 'Actualizar Ruta' : 'Crear Ruta'}</span>
                         )}
                     </Button>
                 </div>

@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
 
 interface Location { id: number; name: string;[key: string]: unknown }
 interface RouteData {
@@ -140,33 +142,44 @@ export function Component() {
             <CardContent className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">{editing ? 'Editar Ruta' : 'Nueva Ruta'}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Origen</label>
-                  <select value={formData.origin_location_id} onChange={(e) => setFormData({ ...formData, origin_location_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-ring">
-                    <option value={0}>Seleccionar origen</option>
-                    {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Destino</label>
-                  <select value={formData.destination_location_id} onChange={(e) => setFormData({ ...formData, destination_location_id: Number(e.target.value) })} required className="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-ring">
-                    <option value={0}>Seleccionar destino</option>
-                    {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                  </select>
-                </div>
+                <FormSelect
+                  label="Origen"
+                  value={formData.origin_location_id}
+                  onChange={(val) => setFormData({ ...formData, origin_location_id: Number(val) })}
+                  required
+                  options={locations.map(l => ({ label: l.name, value: l.id }))}
+                  placeholder="Seleccionar origen"
+                />
+                <FormSelect
+                  label="Destino"
+                  value={formData.destination_location_id}
+                  onChange={(val) => setFormData({ ...formData, destination_location_id: Number(val) })}
+                  required
+                  options={locations.map(l => ({ label: l.name, value: l.id }))}
+                  placeholder="Seleccionar destino"
+                />
                 <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Distancia (km)</label>
-                    <input type="number" step="0.1" value={formData.distance} onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Duración (hrs)</label>
-                    <input type="number" step="0.1" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio (Bs)</label>
-                    <input type="number" step="0.1" value={formData.price} onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} className="w-full rounded-lg border-gray-300 shadow-sm" />
-                  </div>
+                  <FormInput
+                    label="Distancia (km)"
+                    type="number"
+                    step="0.1"
+                    value={formData.distance}
+                    onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })}
+                  />
+                  <FormInput
+                    label="Duración (hrs)"
+                    type="number"
+                    step="0.1"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
+                  />
+                  <FormInput
+                    label="Precio (Bs)"
+                    type="number"
+                    step="0.1"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                  />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                   <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>

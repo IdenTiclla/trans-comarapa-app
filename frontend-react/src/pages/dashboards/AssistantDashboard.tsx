@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import FormCheckbox from '@/components/forms/FormCheckbox'
+import { Clock, Users, Package, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface Passenger {
   ticket_id: number
@@ -135,18 +138,22 @@ export function Component() {
   return (
     <div className="w-full">
       <div className="flex justify-end gap-2 px-2 sm:px-4 lg:px-6 pt-4">
-        <button
+        <Button
+          variant={filter === 'active' ? 'default' : 'outline'}
+          size="sm"
           onClick={() => setFilter('active')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'active' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className="rounded-xl"
         >
           Activos
-        </button>
-        <button
+        </Button>
+        <Button
+          variant={filter === 'all' ? 'default' : 'outline'}
+          size="sm"
           onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className="rounded-xl"
         >
           Todos
-        </button>
+        </Button>
       </div>
 
       <div className="w-full px-2 sm:px-4 lg:px-6 py-4 space-y-6">
@@ -226,12 +233,14 @@ export function Component() {
 
 function KpiCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">{icon}</span>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:border-primary/20 transition-all duration-300">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-2xl">
+          {icon}
+        </div>
         <div>
-          <div className="text-xl font-bold text-gray-900">{value}</div>
-          <div className="text-xs text-gray-500">{label}</div>
+          <div className="text-2xl font-black text-gray-900 tracking-tight">{value}</div>
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{label}</div>
         </div>
       </div>
     </div>
@@ -330,14 +339,24 @@ function TripCard({
 
       {/* Transition button */}
       {transition && (
-        <div className="px-4 pb-3">
-          <button
+        <div className="px-4 pb-4">
+          <Button
             onClick={handleTransitionClick}
             disabled={transitioning === trip.id}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${transition.color} disabled:opacity-50`}
+            className={cn("w-full h-11 rounded-xl text-sm font-bold shadow-lg transition-all duration-300 active:scale-[0.98]", transition.color)}
           >
-            {transitioning === trip.id ? 'Actualizando...' : transition.label}
-          </button>
+            {transitioning === trip.id ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Actualizando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>{transition.label}</span>
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            )}
+          </Button>
         </div>
       )}
 
@@ -464,21 +483,42 @@ function TripCard({
                       </div>
                     </div>
                     {trip.passengers.map(p => (
-                      <label
+                      <div
                         key={p.ticket_id}
-                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${checked.has(p.ticket_id) ? 'bg-primary/5 border-primary/30' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                        onClick={() => toggleCheck(p.ticket_id)}
+                        className={cn(
+                          "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-300",
+                          checked.has(p.ticket_id) 
+                            ? "bg-primary/5 border-primary/20 shadow-sm" 
+                            : "bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                        )}
                       >
-                        <input
-                          type="checkbox"
+                        <FormCheckbox
                           checked={checked.has(p.ticket_id)}
                           onChange={() => toggleCheck(p.ticket_id)}
-                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/50"
+                          label=""
+                          id={`check-${p.ticket_id}`}
                         />
-                        <span className="font-medium text-gray-900 w-10">#{p.seat_number}</span>
-                        <span className={`flex-1 ${checked.has(p.ticket_id) ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                          {p.client_name}
-                        </span>
-                      </label>
+                        <div className="flex flex-1 items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
+                              checked.has(p.ticket_id) ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-500"
+                            )}>
+                              #{p.seat_number}
+                            </div>
+                            <span className={cn(
+                              "font-bold transition-all duration-300",
+                              checked.has(p.ticket_id) ? "text-gray-400 line-through" : "text-gray-900"
+                            )}>
+                              {p.client_name}
+                            </span>
+                          </div>
+                          {checked.has(p.ticket_id) && (
+                            <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in duration-300" />
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { login, clearError, selectAuthLoading, selectAuthError } from '@/store/auth.slice'
 import { DASHBOARD_PATHS, type Role } from '@/lib/constants'
+import FormInput from '@/components/forms/FormInput'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -118,76 +119,45 @@ export function Component() {
         </header>
 
         <form onSubmit={handleLogin} className="space-y-5" noValidate>
-          {/* Email */}
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-              Correo Electrónico
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              </div>
-              <input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                autoFocus
-                className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none ${emailInputClass}`}
-                placeholder="usuario@transcomarapa.com"
-                value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                onBlur={validateEmail}
-                aria-invalid={!!emailError}
-                aria-describedby={emailError ? 'email-error' : undefined}
-              />
-              {email && !emailError && emailRegex.test(email) && (
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-                  <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
-            </div>
-            {emailError && (
-              <p id="email-error" className="text-sm text-red-500 flex items-center gap-1" role="alert">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {emailError}
-              </p>
-            )}
-          </div>
+          <FormInput
+            id="email"
+            label="Correo Electrónico"
+            type="email"
+            required
+            autoComplete="email"
+            autoFocus
+            placeholder="usuario@transcomarapa.com"
+            value={email}
+            onChange={(e) => handleEmailChange(e.target.value)}
+            onBlur={validateEmail}
+            error={emailError}
+            leftIcon={
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+              </svg>
+            }
+          />
 
-          {/* Password */}
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-              Contraseña
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none ${passwordInputClass}`}
-                placeholder="Ingresa tu contraseña"
-                value={password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                onBlur={validatePassword}
-                aria-invalid={!!passwordError}
-                aria-describedby={passwordError ? 'password-error' : undefined}
-              />
+          <FormInput
+            id="password"
+            label="Contraseña"
+            type={showPassword ? 'text' : 'password'}
+            required
+            autoComplete="current-password"
+            placeholder="Ingresa tu contraseña"
+            value={password}
+            onChange={(e) => handlePasswordChange(e.target.value)}
+            onBlur={validatePassword}
+            error={passwordError}
+            leftIcon={
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            }
+            rightIcon={
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                className="flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
@@ -202,16 +172,8 @@ export function Component() {
                   </svg>
                 )}
               </button>
-            </div>
-            {passwordError && (
-              <p id="password-error" className="text-sm text-red-500 flex items-center gap-1" role="alert">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {passwordError}
-              </p>
-            )}
-          </div>
+            }
+          />
 
           {/* Server Error */}
           {serverError && (

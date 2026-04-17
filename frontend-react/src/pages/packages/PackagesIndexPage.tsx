@@ -6,12 +6,14 @@ import { fetchPackages, deletePackage } from '@/store/package.slice'
 import { debounce } from 'lodash'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import FormDatePicker from '@/components/forms/FormDatePicker'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageCardList from '@/components/packages/PackageCardList'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { ViewToggle } from '@/components/ui/view-toggle'
 import { Package, Search, Clock, BarChart3, Plus, LayoutGrid, List, AlertCircle } from 'lucide-react'
 
 export function Component() {
@@ -280,45 +282,33 @@ export function Component() {
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="search" className="block text-sm font-medium text-muted-foreground mb-2">Buscar</label>
-              <div className="relative">
-                <FormInput
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Buscar por remitente, destinatario, código..."
-                />
-                <Search className="w-4 h-4 absolute right-3 top-2.5 text-muted-foreground" />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="status-filter" className="block text-sm font-medium text-muted-foreground mb-2">Estado</label>
-              <FormSelect
-                id="status-filter"
-                value={statusFilter}
-                onChange={(val) => { setStatusFilter(val); applyFilters() }}
-                options={statusOptions}
-              />
-            </div>
-            <div>
-              <label htmlFor="date-from" className="block text-sm font-medium text-muted-foreground mb-2">Fecha desde</label>
-              <FormInput
-                type="date"
-                id="date-from"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); applyFilters() }}
-              />
-            </div>
-            <div>
-              <label htmlFor="date-to" className="block text-sm font-medium text-muted-foreground mb-2">Fecha hasta</label>
-              <FormInput
-                type="date"
-                id="date-to"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); applyFilters() }}
-              />
-            </div>
+            <FormInput
+              label="Buscar"
+              id="search"
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Remitente, destinatario, código..."
+              leftIcon={<Search className="w-4 h-4" />}
+            />
+            <FormSelect
+              label="Estado"
+              id="status-filter"
+              value={statusFilter}
+              onChange={(val) => { setStatusFilter(val); applyFilters() }}
+              options={statusOptions}
+            />
+            <FormDatePicker
+              label="Fecha desde"
+              id="date-from"
+              value={dateFrom}
+              onChange={(date) => { setDateFrom(date ? date.toISOString().split('T')[0] : ''); applyFilters() }}
+            />
+            <FormDatePicker
+              label="Fecha hasta"
+              id="date-to"
+              value={dateTo}
+              onChange={(date) => { setDateTo(date ? date.toISOString().split('T')[0] : ''); applyFilters() }}
+            />
           </div>
         </CardContent>
       </Card>
@@ -348,23 +338,15 @@ export function Component() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'outline' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              aria-label="Vista en cuadrícula"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'outline' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              aria-label="Vista en tabla"
-            >
-              <List className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-1">
+            <ViewToggle
+                value={viewMode}
+                onChange={(val) => setViewMode(val as 'grid' | 'table')}
+                options={[
+                    { value: 'grid', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista en cuadrícula' },
+                    { value: 'table', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista en tabla' }
+                ]}
+            />
           </div>
         </div>
 
