@@ -50,16 +50,16 @@ services:
         reservations:
           memory: 256M
 
-  # Frontend (Nuxt.js)
+  # Frontend (React/Vite)
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-react
       target: production
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
       - NODE_ENV=production
     depends_on:
       - backend

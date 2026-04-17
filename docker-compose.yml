@@ -69,26 +69,6 @@ services:
     networks:
       - trans-comarapa-network
 
-  # Frontend (Nuxt.js) - Legacy
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     target: ${FRONTEND_TARGET:-development}
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3001:3000"
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - NUXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
-  #     - NODE_ENV=${NODE_ENV:-development}
-  #     - TZ=America/La_Paz
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - trans-comarapa-network
-
   # Frontend React (Vite)
   frontend:
     build:
