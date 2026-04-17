@@ -13,7 +13,7 @@
 - **Cache:** Redis 7 (token blacklist only)
 - **Package manager:** uv
 
-### Frontend (Active) - React
+### Frontend - React
 - **Runtime:** Node.js 18+
 - **Framework:** React 19 + TypeScript
 - **Build:** Vite
@@ -22,17 +22,11 @@
 - **Styling:** Tailwind CSS + shadcn/ui components
 - **Notifications:** sonner (toast)
 - **HTTP:** Custom `apiFetch` wrapper (`lib/api.ts`)
-- **Port:** 3001
-
-### Frontend (Legacy) - Nuxt
-- **Framework:** Nuxt 3 + Vue 3 (Composition API)
-- **State:** Pinia
 - **Port:** 3000
-- **Status:** Reference only, no active development
 
 ### Infrastructure
 - **Containerization:** Docker + Docker Compose
-- **Services:** db (:3308), redis (:6379), backend (:8000), frontend (:3000), frontend-react (:3001)
+- **Services:** db (:3308), redis (:6379), backend (:8000), frontend (:3000)
 
 ## Layered Architecture
 
@@ -149,7 +143,6 @@ trans-comarapa-app/
 │   ├── router/             # Routes + guards
 │   ├── lib/                # Utilities (apiFetch, constants)
 │   └── types/              # TypeScript interfaces
-├── frontend/               # Legacy Nuxt app (reference only)
 ├── docs/                   # Documentation + diagrams + plans
 └── .agents/                # AI agent rules, skills, workflows
 ```
