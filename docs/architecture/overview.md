@@ -133,16 +133,7 @@ trans-comarapa-app/
 │   ├── db/                 # Database config, seed scripts, migrations
 │   ├── alembic/            # Migration versions
 │   └── tests/              # Pytest test suite
-├── frontend-react/src/
-│   ├── pages/              # Route pages (lazy-loaded)
-│   ├── components/         # UI components (ui/, forms/, seats/, etc.)
-│   ├── services/           # API service modules (18 services)
-│   ├── store/              # Redux slices (13 slices)
-│   ├── hooks/              # Custom hooks (6 hooks)
-│   ├── layouts/            # Page layouts (Default, Login, Print, Auth)
-│   ├── router/             # Routes + guards
-│   ├── lib/                # Utilities (apiFetch, constants)
-│   └── types/              # TypeScript interfaces
+├── frontend/               # React + Vite application (Source: src/)
 ├── docs/                   # Documentation + diagrams + plans
 └── .agents/                # AI agent rules, skills, workflows
 ```

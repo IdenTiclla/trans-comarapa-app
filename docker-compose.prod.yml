@@ -53,7 +53,7 @@ services:
   # Frontend (React/Vite)
   frontend:
     build:
-      context: ./frontend-react
+      context: ./frontend
       target: production
     restart: unless-stopped
     ports:

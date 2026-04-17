@@ -72,13 +72,13 @@ services:
   # Frontend React (Vite)
   frontend:
     build:
-      context: ./frontend-react
+      context: ./frontend
       target: ${FRONTEND_TARGET:-development}
     restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend-react:/app
+      - ./frontend:/app
       - /app/node_modules
     environment:
       - VITE_API_BASE_URL=http://localhost:8000/api/v1
