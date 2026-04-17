@@ -38,3 +38,6 @@ docs/auth_consolidated_plan.md
 
 # Educational documents
 educational_docs/
+
+# playwright-cli
+.playwright-cli/
