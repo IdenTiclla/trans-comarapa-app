@@ -49,4 +49,8 @@ export const ticketService = {
             body: { state: 'confirmed' },
         })
     },
+
+    cancel(ticketId: number) {
+        return apiFetch(`${RESOURCE_URL}/${ticketId}/cancel`, { method: 'PUT' })
+    },
 }

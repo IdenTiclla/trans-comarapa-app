@@ -89,6 +89,7 @@ export const router = createBrowserRouter([
 
           // Tickets
           { path: '/tickets/confirmation', lazy: () => import('@/pages/tickets/TicketConfirmationPage') },
+          { path: '/tickets/:id', lazy: () => import('@/pages/tickets/TicketDetailPage') },
 
           // Clients & Bookings
           { path: '/clients', lazy: () => import('@/pages/clients/ClientsIndexPage') },

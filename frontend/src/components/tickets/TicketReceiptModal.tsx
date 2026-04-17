@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import TicketDisplay from './TicketDisplay'
 
 interface TicketReceiptModalProps {
@@ -5,10 +6,11 @@ interface TicketReceiptModalProps {
     tickets: any[]
     trip: any
     onClose: () => void
+    autoPrint?: boolean
 }
 
-export default function TicketReceiptModal({ show, tickets, trip, onClose }: TicketReceiptModalProps) {
-    if (!show || tickets.length === 0) return null
+export default function TicketReceiptModal({ show, tickets, trip, onClose, autoPrint = false }: TicketReceiptModalProps) {
+    const autoPrintedRef = useRef(false)
 
     const printReceipt = () => {
         const printContent = document.getElementById('ticket-receipt-content')
@@ -48,6 +50,20 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose }: Tic
             printWindow.close()
         }, 300)
     }
+
+    useEffect(() => {
+        if (!show) {
+            autoPrintedRef.current = false
+            return
+        }
+        if (autoPrint && !autoPrintedRef.current && tickets.length > 0) {
+            autoPrintedRef.current = true
+            const timer = setTimeout(() => printReceipt(), 200)
+            return () => clearTimeout(timer)
+        }
+    }, [show, autoPrint, tickets.length])
+
+    if (!show || tickets.length === 0) return null
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 modal-overlay-bokeh backdrop-blur-sm transition-all duration-300 opacity-100">

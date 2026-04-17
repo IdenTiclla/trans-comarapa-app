@@ -225,8 +225,8 @@ export function useTripDetailPage(tripId: number) {
     const [showTicketSaleModal, setShowTicketSaleModal] = useState(false)
     const [saleActionType, setSaleActionType] = useState<'sell' | 'reserve'>('sell')
     const [selectedSeatsForSale, setSelectedSeatsForSale] = useState<any[]>([])
-    const [showTicketModal, setShowTicketModal] = useState(false)
-    const [selectedTicketForView, setSelectedTicketForView] = useState<any>(null)
+    const [showTicketPreview, setShowTicketPreview] = useState(false)
+    const [ticketForPreview, setTicketForPreview] = useState<any>(null)
 
     // ── Confirm sale modal ────────────────────────────────────────────────
     const [showConfirmSaleModal, setShowConfirmSaleModal] = useState(false)
@@ -321,11 +321,15 @@ export function useTripDetailPage(tripId: number) {
         setSeatMapKey(prev => prev + 1)
     }
 
-    const handleViewDetails = (seat: any) => {
-        const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number)
+    const findTicketBySeat = (seat: any) => {
+        return soldTickets.find(t => t.seat?.seat_number === seat.number) || null
+    }
+
+    const handlePreviewTicket = (seat: any) => {
+        const ticket = findTicketBySeat(seat)
         if (ticket) {
-            setSelectedTicketForView(ticket)
-            setShowTicketModal(true)
+            setTicketForPreview(ticket)
+            setShowTicketPreview(true)
         }
     }
 
@@ -564,14 +568,6 @@ export function useTripDetailPage(tripId: number) {
             onCreated: handleTicketCreated,
         },
 
-        // Ticket view
-        ticketView: {
-            show: showTicketModal,
-            ticket: selectedTicketForView,
-            open: handleViewDetails,
-            close: () => { setShowTicketModal(false); setSelectedTicketForView(null) },
-        },
-
         // Confirm sale
         confirmSale: {
             show: showConfirmSaleModal,
@@ -592,11 +588,21 @@ export function useTripDetailPage(tripId: number) {
 
         // Seat map event handlers
         seatMapHandlers: {
-            onViewDetails: handleViewDetails,
             onCancelReservation: handleCancelReservation,
             onConfirmSale: handleConfirmSale,
             onChangeSeat: handleChangeSeat,
+            onPreviewTicket: handlePreviewTicket,
         },
+
+        // Ticket preview (printable receipt)
+        ticketPreview: {
+            show: showTicketPreview,
+            ticket: ticketForPreview,
+            open: (ticket: any) => { setTicketForPreview(ticket); setShowTicketPreview(true) },
+            close: () => { setShowTicketPreview(false); setTicketForPreview(null) },
+        },
+
+        findTicketBySeat,
 
         // Packages
         packages: {

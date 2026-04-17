@@ -19,7 +19,6 @@ import { clientService } from '@/services/client.service'
 import { ticketService } from '@/services/ticket.service'
 import { tripService } from '@/services/trip.service'
 import { packageService, PACKAGE_STATUS_LABELS } from '@/services/package.service'
-import TicketModal from '@/components/tickets/TicketModal'
 import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import ClientViewModal from '@/components/clients/ClientViewModal'
 import { useNavigate } from 'react-router'
@@ -99,7 +98,6 @@ export default function QuickSearch() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null)
-  const [selectedTrip, setSelectedTrip] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -249,15 +247,11 @@ export default function QuickSearch() {
     }
     
     if (item.category === 'ticket') {
-      try {
-        const tripData = await tripService.getById(item.data.trip_id)
-        setSelectedTrip(tripData)
-      } catch {
-        setError('Error al cargar el viaje')
-        return
-      }
+      setOpen(false)
+      navigate(`/tickets/${item.id}`)
+      return
     }
-    
+
     if (item.category === 'package') {
       try {
         const fullPackageData = await packageService.getById(item.id)
@@ -283,7 +277,6 @@ export default function QuickSearch() {
   const handleDetailClose = useCallback(() => {
     setShowDetailModal(false)
     setSelectedItem(null)
-    setSelectedTrip(null)
   }, [])
 
   const categoryInfo = useMemo(
@@ -451,13 +444,6 @@ export default function QuickSearch() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <TicketModal
-        show={showDetailModal && selectedItem?.category === 'ticket'}
-        ticket={selectedItem?.data}
-        trip={selectedTrip}
-        onClose={handleDetailClose}
-      />
 
       <PackageReceiptModal
         show={showDetailModal && selectedItem?.category === 'package'}

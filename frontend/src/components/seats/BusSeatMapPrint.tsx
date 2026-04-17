@@ -29,9 +29,10 @@ interface BusSeatMapPrintProps {
     onSelectionChange?: (seats: any[]) => void
     onCancelReservation?: (seat: any) => void
     onConfirmSale?: (seat: any) => void
-    onViewDetails?: (seat: any) => void
     onChangeSeat?: (seat: any) => void
     onRescheduleTrip?: (seat: any) => void
+    onGoToTicketPage?: (seat: any) => void
+    onPreviewTicket?: (seat: any) => void
     seatChangeMode?: boolean
     controlledSelectedIds?: number[]
 }
@@ -52,9 +53,10 @@ export default function BusSeatMapPrint({
     onSelectionChange,
     onCancelReservation,
     onConfirmSale,
-    onViewDetails,
     onChangeSeat,
     onRescheduleTrip,
+    onGoToTicketPage,
+    onPreviewTicket,
     seatChangeMode = false,
     controlledSelectedIds
 }: BusSeatMapPrintProps) {
@@ -286,10 +288,6 @@ export default function BusSeatMapPrint({
                 position={contextMenuPosition}
                 selectedSeat={selectedSeatForContext}
                 enableContextMenu={enableContextMenu}
-                onViewDetails={() => {
-                    if (selectedSeatForContext && onViewDetails) onViewDetails(selectedSeatForContext)
-                    closeContext()
-                }}
                 onCancelReservation={() => {
                     if (selectedSeatForContext && onCancelReservation) onCancelReservation(selectedSeatForContext)
                     closeContext()
@@ -306,6 +304,14 @@ export default function BusSeatMapPrint({
                     if (selectedSeatForContext && onRescheduleTrip) onRescheduleTrip(selectedSeatForContext)
                     closeContext()
                 }}
+                onGoToTicketPage={onGoToTicketPage ? () => {
+                    if (selectedSeatForContext) onGoToTicketPage(selectedSeatForContext)
+                    closeContext()
+                } : undefined}
+                onPreviewTicket={onPreviewTicket ? () => {
+                    if (selectedSeatForContext) onPreviewTicket(selectedSeatForContext)
+                    closeContext()
+                } : undefined}
             />
         </div>
     )

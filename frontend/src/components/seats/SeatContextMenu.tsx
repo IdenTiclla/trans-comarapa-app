@@ -3,11 +3,12 @@ interface SeatContextMenuProps {
     position: { x: number, y: number }
     selectedSeat: any
     enableContextMenu?: boolean
-    onViewDetails: () => void
     onCancelReservation: () => void
     onConfirmSale: () => void
     onChangeSeat: () => void
     onRescheduleTrip: () => void
+    onGoToTicketPage?: () => void
+    onPreviewTicket?: () => void
 }
 
 export default function SeatContextMenu({
@@ -15,11 +16,12 @@ export default function SeatContextMenu({
     position,
     selectedSeat,
     enableContextMenu = false,
-    onViewDetails,
     onCancelReservation,
     onConfirmSale,
     onChangeSeat,
-    onRescheduleTrip
+    onRescheduleTrip,
+    onGoToTicketPage,
+    onPreviewTicket
 }: SeatContextMenuProps) {
     if (!visible || !enableContextMenu) return null
 
@@ -34,12 +36,24 @@ export default function SeatContextMenu({
             </div>
 
             {(selectedSeat?.status === 'reserved' || selectedSeat?.occupied || selectedSeat?.status === 'occupied') && (
-                <button
-                    onClick={onViewDetails}
-                    className="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                    Ver detalles
-                </button>
+                <>
+                    {onPreviewTicket && (
+                        <button
+                            onClick={onPreviewTicket}
+                            className="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                            Previsualizar boleto
+                        </button>
+                    )}
+                    {onGoToTicketPage && (
+                        <button
+                            onClick={onGoToTicketPage}
+                            className="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                            Ir al boleto
+                        </button>
+                    )}
+                </>
             )}
 
             {selectedSeat?.status === 'reserved' && (

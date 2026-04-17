@@ -5,10 +5,6 @@ import QuickSearch from '@/components/dashboard/QuickSearch'
 
 import '@testing-library/jest-dom/vitest'
 
-vi.mock('@/components/tickets/TicketModal', () => ({
-  default: ({ show }: { show: boolean }) => (show ? <div>Ticket Modal</div> : null),
-}))
-
 vi.mock('@/components/packages/PackageReceiptModal', () => ({
   default: ({ show }: { show: boolean }) => (show ? <div>Package Modal</div> : null),
 }))

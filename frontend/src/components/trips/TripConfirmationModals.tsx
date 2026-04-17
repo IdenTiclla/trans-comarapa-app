@@ -1,4 +1,3 @@
-import TicketModal from '@/components/tickets/TicketModal'
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 
 interface DispatchState {
@@ -41,12 +40,6 @@ interface TicketSaleState {
     onCreated: () => void
 }
 
-interface TicketViewState {
-    show: boolean
-    ticket: any
-    close: () => void
-}
-
 interface Props {
     trip: any
     dispatch: DispatchState
@@ -54,10 +47,9 @@ interface Props {
     confirmSale: ConfirmSaleState
     seatChange: SeatChangeState
     ticketSale: TicketSaleState
-    ticketView: TicketViewState
 }
 
-export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, seatChange, ticketSale, ticketView }: Props) {
+export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, seatChange, ticketSale }: Props) {
     return (
         <>
             {/* Dispatch Modal */}
@@ -101,17 +93,6 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                 onClose={ticketSale.close}
                 onTicketCreated={ticketSale.onCreated}
             />
-
-            {/* Ticket Detail Modal */}
-            {ticketView.show && ticketView.ticket && (
-                <TicketModal
-                    show={ticketView.show}
-                    ticket={ticketView.ticket}
-                    trip={trip}
-                    modalType="details"
-                    onClose={ticketView.close}
-                />
-            )}
 
             {/* Confirm Sale Modal */}
             {confirmSale.show && confirmSale.ticket && (

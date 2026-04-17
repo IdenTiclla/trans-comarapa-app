@@ -598,6 +598,9 @@ export function Component() {
                     {formatCurrency(t.price)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onClick={() => navigate(`/tickets/${t.id}`)} className="text-gray-700 hover:text-gray-900 mx-2">
+                      Ver
+                    </button>
                     <button onClick={() => handleEditTicket(t)} className="text-indigo-600 hover:text-indigo-900 mx-2">
                       Editar
                     </button>
@@ -632,6 +635,12 @@ export function Component() {
                 <span className="font-bold text-gray-900">{formatCurrency(t.price)}</span>
               </div>
               <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => navigate(`/tickets/${t.id}`)}
+                  className="flex-1 py-1 bg-gray-50 text-gray-700 rounded text-sm hover:bg-gray-100"
+                >
+                  Ver
+                </button>
                 <button
                   onClick={() => handleEditTicket(t)}
                   className="flex-1 py-1 bg-indigo-50 text-indigo-600 rounded text-sm hover:bg-indigo-100"

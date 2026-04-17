@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useParams, Link } from 'react-router'
+import { useParams, Link, useNavigate } from 'react-router'
 import { useAppSelector } from '@/store'
 import { selectUser } from '@/store/auth.slice'
 import { useTripDetailPage } from '@/hooks/use-trip-detail-page'
@@ -13,12 +13,14 @@ import PackageAssignModal from '@/components/packages/PackageAssignModal'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
+import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
 import { Send, Check, FileText, Package } from 'lucide-react'
 
 export function Component() {
   const { id } = useParams()
   const tripId = Number(id)
+  const navigate = useNavigate()
 
   const currentUser = useAppSelector(selectUser)
   const page = useTripDetailPage(tripId)
@@ -29,24 +31,23 @@ export function Component() {
   const shortcuts = useMemo(() => ({
     'escape': () => {
       page.ticketSale.close()
-      page.ticketView.close()
       if (seatChange.mode) seatChange.cancel()
     },
     'enter': () => {
       if (seatChange.showConfirm) seatChange.confirm()
     },
     'v': () => {
-      if (!page.ticketSale.show && !page.ticketView.show && seatMap.selectedSeats.length > 0) {
+      if (!page.ticketSale.show && seatMap.selectedSeats.length > 0) {
         page.ticketSale.open(seatMap.selectedSeats)
       }
     },
     'r': () => {
-      if (!page.ticketSale.show && !page.ticketView.show && seatMap.selectedSeats.length > 0) {
+      if (!page.ticketSale.show && seatMap.selectedSeats.length > 0) {
         page.ticketSale.openReserve(seatMap.selectedSeats)
       }
     },
     'c': () => {
-      if (!page.ticketSale.show && !page.ticketView.show) {
+      if (!page.ticketSale.show) {
         floatPanel.onClearSelection()
       }
     },
@@ -163,10 +164,14 @@ export function Component() {
             seatChangeMode={seatChange.mode}
             controlledSelectedIds={seatMap.controlledIds}
             onSelectionChange={seatMap.onSelectionChange}
-            onViewDetails={page.seatMapHandlers.onViewDetails}
             onCancelReservation={page.seatMapHandlers.onCancelReservation}
             onConfirmSale={page.seatMapHandlers.onConfirmSale}
             onChangeSeat={page.seatMapHandlers.onChangeSeat}
+            onPreviewTicket={page.seatMapHandlers.onPreviewTicket}
+            onGoToTicketPage={(seat: any) => {
+              const ticket = page.findTicketBySeat(seat)
+              if (ticket) navigate(`/tickets/${ticket.id}`)
+            }}
           />
 
           <TripPackagesSection
@@ -201,7 +206,6 @@ export function Component() {
         confirmSale={page.confirmSale}
         seatChange={page.seatChange}
         ticketSale={page.ticketSale}
-        ticketView={page.ticketView}
       />
 
       {/* Package Modals */}
@@ -229,6 +233,14 @@ export function Component() {
         tripId={tripId}
         onClose={page.packages.registrationModal.close}
         onPackageRegistered={page.packages.registrationModal.onRegistered}
+      />
+
+      {/* Ticket Preview (printable receipt) */}
+      <TicketReceiptModal
+        show={page.ticketPreview.show}
+        tickets={page.ticketPreview.ticket ? [page.ticketPreview.ticket] : []}
+        trip={trip}
+        onClose={page.ticketPreview.close}
       />
     </div>
   )
