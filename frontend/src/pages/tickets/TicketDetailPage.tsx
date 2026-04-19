@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
 
 const formatCurrency = (amount: number | undefined | null) =>
   new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount ?? 0)
@@ -326,65 +327,44 @@ export function Component() {
                 <p className="text-sm text-gray-500 italic">Sin información del viaje.</p>
               )}
             </div>
-
-            {/* Financial */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2 mb-5">
-                Información Financiera
-              </h3>
-              <div className="space-y-3">
-                {basePrice !== undefined && basePrice !== totalPrice && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Tarifa base</span>
-                    <span className="font-semibold text-gray-900">{formatCurrency(basePrice)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Método de pago</span>
-                  <span className="font-semibold text-gray-900">
-                    {ticket.payment_method ? PAYMENT_METHOD[ticket.payment_method] ?? ticket.payment_method : '—'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Emitido por</span>
-                  <span className="font-semibold text-gray-900">{secretaryName}</span>
-                </div>
-                <div className="pt-4 mt-2 border-t border-gray-100 flex justify-between items-end">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Total</span>
-                  <span className="text-3xl font-bold tracking-tight text-gray-900">
-                    {formatCurrency(totalPrice)}
-                  </span>
-                </div>
-              </div>
-            </div>
           </section>
 
           {/* Sidebar */}
           <aside className="lg:col-span-4 space-y-6">
-            {/* Status / Metadata */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-4">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2">
-                Estado del Boleto
+            {/* Payment Summary (Parcel-style) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-4">Valor Pagado</p>
+              <h3 className="text-[40px] font-bold text-gray-900 leading-none mb-1 tracking-tight">
+                {formatCurrency(totalPrice)}
               </h3>
-              <div className="flex flex-col items-center text-center py-3">
-                <span
-                  className={cn(
-                    'px-3 py-1.5 text-xs font-bold uppercase tracking-widest rounded ring-1',
-                    stateInfo.className,
-                  )}
-                >
-                  {stateInfo.label}
-                </span>
-              </div>
-              <div className="space-y-3 text-sm pt-2 border-t border-gray-100">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Creado</span>
-                  <span className="font-medium text-gray-900">{formatDateTime(ticket.created_at)}</span>
+              <p className="text-[11px] text-gray-500 mb-6">Monto total del servicio</p>
+
+              <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-700 uppercase tracking-tighter">Estado</span>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 font-bold uppercase tracking-widest rounded ring-1 scale-90 origin-right',
+                      stateInfo.className,
+                    )}
+                  >
+                    {stateInfo.label}
+                  </span>
                 </div>
-                {ticket.updated_at && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Actualizado</span>
-                    <span className="font-medium text-gray-900">{formatDateTime(ticket.updated_at)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-700">Método de pago</span>
+                  <span className="text-xs font-bold text-gray-900">
+                    {ticket.payment_method ? PAYMENT_METHOD[ticket.payment_method] ?? ticket.payment_method : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-700">Emitido por</span>
+                  <span className="text-xs font-bold text-gray-900">{secretaryName}</span>
+                </div>
+                {basePrice !== undefined && basePrice !== totalPrice && (
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200/50">
+                    <span className="text-xs font-bold text-gray-700">Tarifa Base</span>
+                    <span className="text-xs font-bold text-gray-500 line-through">{formatCurrency(basePrice)}</span>
                   </div>
                 )}
               </div>
@@ -429,29 +409,8 @@ export function Component() {
               )}
             </div>
 
-            {/* Bus */}
-            {trip?.bus && (
-              <div className="bg-primary text-white p-6 rounded-xl overflow-hidden relative">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">
-                  Vehículo Asignado
-                </p>
-                <h4 className="text-xl font-bold mb-4">{trip.bus.license_plate || '—'}</h4>
-                <div className="flex gap-6">
-                  {trip.bus.capacity !== undefined && (
-                    <div>
-                      <p className="text-[9px] uppercase font-bold opacity-70">Capacidad</p>
-                      <p className="text-sm font-bold">{trip.bus.capacity} asientos</p>
-                    </div>
-                  )}
-                  {trip.bus.model && (
-                    <div>
-                      <p className="text-[9px] uppercase font-bold opacity-70">Modelo</p>
-                      <p className="text-sm font-bold">{trip.bus.model}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Trip */}
+            <AssignedTripCard pkg={{ trip }} />
           </aside>
         </div>
       </div>

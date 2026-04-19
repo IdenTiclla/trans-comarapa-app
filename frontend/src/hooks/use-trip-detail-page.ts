@@ -1,22 +1,20 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
-import { selectUser } from '@/store/auth.slice'
 import { fetchDrivers, selectDrivers } from '@/store/driver.slice'
 import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import { tripService } from '@/services/trip.service'
-import { seatService, type LockedSeatInfo } from '@/services/seat.service'
+import { seatService } from '@/services/seat.service'
 import { apiFetch } from '@/lib/api'
-import { API_BASE_URL } from '@/lib/constants'
 import { useTripDetails } from '@/hooks/use-trip-details'
+import { useTripSeatLocks } from '@/hooks/use-trip-seat-locks'
+import { useTripPackagesPanel } from '@/hooks/use-trip-packages-panel'
+import { useTripStaffEditor } from '@/hooks/use-trip-staff-editor'
 import { toast } from 'sonner'
 
 function showNotification(type: 'success' | 'error', title: string, message: string) {
-    if (type === 'success') {
-        toast.success(title, { description: message })
-    } else {
-        toast.error(title, { description: message })
-    }
+    if (type === 'success') toast.success(title, { description: message })
+    else toast.error(title, { description: message })
 }
 
 export function useTripDetailPage(tripId: number) {
@@ -27,131 +25,10 @@ export function useTripDetailPage(tripId: number) {
     const error = useAppSelector(selectTripError)
     const drivers = useAppSelector(selectDrivers) as any[]
     const assistants = useAppSelector(selectAssistants) as any[]
-    const currentUser = useAppSelector(selectUser)
 
     const { soldTickets, reservedSeatNumbers, fetchSoldTickets, formatDate } = useTripDetails()
-
-    // ── Packages ──────────────────────────────────────────────────────────
-    const [tripPackages, setTripPackages] = useState<any[]>([])
-    const [loadingPackages, setLoadingPackages] = useState(false)
-
-    const fetchPackages = useCallback(async (tId: number) => {
-        setLoadingPackages(true)
-        try {
-            const data = await apiFetch(`/packages/by-trip/${tId}`)
-            setTripPackages(Array.isArray(data) ? data : [])
-        } catch { setTripPackages([]) }
-        finally { setLoadingPackages(false) }
-    }, [])
-
-    // ── Seat locks (real-time via WebSocket) ────────────────────────────
-    const [lockedSeats, setLockedSeats] = useState<LockedSeatInfo[]>([])
-    const wsRef = useRef<WebSocket | null>(null)
-    const wsReconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-    const fetchLockedSeats = useCallback(async (tId: number) => {
-        try {
-            const data = await seatService.getLockedSeats(tId)
-            setLockedSeats(Array.isArray(data) ? data : [])
-        } catch {
-            setLockedSeats([])
-        }
-    }, [])
-
-    // WebSocket connection for real-time lock updates (with polling fallback)
-    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-    useEffect(() => {
-        if (!tripId || !currentUser?.id) return
-
-        let cancelled = false
-
-        function startPolling() {
-            if (pollRef.current || cancelled) return
-            pollRef.current = setInterval(() => fetchLockedSeats(tripId), 3000)
-        }
-
-        function stopPolling() {
-            if (pollRef.current) {
-                clearInterval(pollRef.current)
-                pollRef.current = null
-            }
-        }
-
-        function connect() {
-            if (cancelled) return
-
-            // Derive WS URL from API_BASE_URL (e.g. http://localhost:8000/api/v1 -> ws://localhost:8000/api/v1)
-            const wsBase = API_BASE_URL.replace(/^http/, 'ws')
-            const wsUrl = `${wsBase}/seats/ws/${tripId}?user_id=${currentUser!.id}`
-
-            let ws: WebSocket
-            try {
-                ws = new WebSocket(wsUrl)
-            } catch {
-                // WebSocket constructor failed — fall back to polling
-                startPolling()
-                return
-            }
-            wsRef.current = ws
-            let wsConnected = false
-
-            ws.onopen = () => {
-                wsConnected = true
-                // Stop polling fallback if it was running
-                stopPolling()
-            }
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data)
-                    if (data.type === 'seat_locks_updated' && data.locks) {
-                        setLockedSeats(data.locks)
-                    }
-                } catch { /* ignore non-JSON messages like "pong" */ }
-            }
-
-            ws.onclose = () => {
-                wsRef.current = null
-                if (!cancelled) {
-                    // If WS never connected, fall back to polling
-                    if (!wsConnected) {
-                        startPolling()
-                    } else {
-                        // Reconnect after 3 seconds
-                        wsReconnectRef.current = setTimeout(connect, 3000)
-                    }
-                }
-            }
-
-            ws.onerror = () => {
-                ws.close()
-            }
-
-            // Send ping every 30s to keep connection alive
-            const pingInterval = setInterval(() => {
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.send('ping')
-                }
-            }, 30000)
-
-            ws.addEventListener('close', () => clearInterval(pingInterval))
-        }
-
-        // Initial HTTP fetch for immediate state, then connect WS
-        fetchLockedSeats(tripId)
-        connect()
-
-        return () => {
-            cancelled = true
-            stopPolling()
-            if (wsReconnectRef.current) clearTimeout(wsReconnectRef.current)
-            if (wsRef.current) {
-                wsRef.current.close()
-                wsRef.current = null
-            }
-        }
-    }, [tripId, currentUser?.id, fetchLockedSeats])
+    const { lockedSeats, fetchLockedSeats } = useTripSeatLocks(tripId)
+    const { fetchPackages, panel: packagesPanel } = useTripPackagesPanel(tripId)
 
     // ── Global refresh ────────────────────────────────────────────────────
     const refreshTrip = useCallback(() => {
@@ -160,6 +37,8 @@ export function useTripDetailPage(tripId: number) {
         fetchPackages(tripId)
         fetchLockedSeats(tripId)
     }, [dispatch, tripId, fetchSoldTickets, fetchPackages, fetchLockedSeats])
+
+    const staff = useTripStaffEditor(tripId, trip, refreshTrip)
 
     // ── Dispatch / Finish modals ──────────────────────────────────────────
     const [showDispatchModal, setShowDispatchModal] = useState(false)
@@ -191,36 +70,6 @@ export function useTripDetailPage(tripId: number) {
         } finally { setFinishing(false) }
     }
 
-    // ── Staff editors ─────────────────────────────────────────────────────
-    const [editingDriver, setEditingDriver] = useState(false)
-    const [editingAssistant, setEditingAssistant] = useState(false)
-    const [selectedDriverId, setSelectedDriverId] = useState<string>('')
-    const [selectedAssistantId, setSelectedAssistantId] = useState<string>('')
-    const [savingDriver, setSavingDriver] = useState(false)
-    const [savingAssistant, setSavingAssistant] = useState(false)
-
-    const saveDriver = async () => {
-        setSavingDriver(true)
-        try {
-            await apiFetch(`/trips/${tripId}`, { method: 'PUT', body: { driver_id: selectedDriverId ? Number(selectedDriverId) : null } })
-            setEditingDriver(false)
-            showNotification('success', 'Conductor actualizado', 'El conductor ha sido actualizado.')
-            refreshTrip()
-        } catch { showNotification('error', 'Error', 'No se pudo actualizar el conductor.') }
-        finally { setSavingDriver(false) }
-    }
-
-    const saveAssistant = async () => {
-        setSavingAssistant(true)
-        try {
-            await apiFetch(`/trips/${tripId}`, { method: 'PUT', body: { assistant_id: selectedAssistantId ? Number(selectedAssistantId) : null } })
-            setEditingAssistant(false)
-            showNotification('success', 'Asistente actualizado', 'El asistente ha sido actualizado.')
-            refreshTrip()
-        } catch { showNotification('error', 'Error', 'No se pudo actualizar el asistente.') }
-        finally { setSavingAssistant(false) }
-    }
-
     // ── Ticket sale/view modals ───────────────────────────────────────────
     const [showTicketSaleModal, setShowTicketSaleModal] = useState(false)
     const [saleActionType, setSaleActionType] = useState<'sell' | 'reserve'>('sell')
@@ -233,20 +82,10 @@ export function useTripDetailPage(tripId: number) {
     const [ticketToConfirm, setTicketToConfirm] = useState<any>(null)
     const [confirmingSale, setConfirmingSale] = useState(false)
 
-    const executeConfirmSale = async () => {
-        if (!ticketToConfirm) return
-        setConfirmingSale(true)
-        try {
-            await apiFetch(`/tickets/${ticketToConfirm.id}`, { method: 'PUT', body: { state: 'confirmed' } })
-            showNotification('success', 'Venta confirmada', 'La reserva ha sido confirmada como venta.')
-            refreshTrip()
-            setSeatMapKey(prev => prev + 1)
-            setShowConfirmSaleModal(false)
-            setTicketToConfirm(null)
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo confirmar la venta.')
-        } finally { setConfirmingSale(false) }
-    }
+    // ── Seat map / selection ──────────────────────────────────────────────
+    const [seatMapKey, setSeatMapKey] = useState(0)
+    const [currentSelectedSeats, setCurrentSelectedSeats] = useState<any[]>([])
+    const [controlledSeatIds, setControlledSeatIds] = useState<number[]>([])
 
     // ── Seat change ───────────────────────────────────────────────────────
     const [seatChangeMode, setSeatChangeMode] = useState(false)
@@ -278,13 +117,22 @@ export function useTripDetailPage(tripId: number) {
         } finally { setSeatChangeLoading(false) }
     }, [seatChangeTicket, newSelectedSeat, refreshTrip, cancelSeatChange])
 
-    // ── Seat map / selection ──────────────────────────────────────────────
-    const [seatMapKey, setSeatMapKey] = useState(0)
-    const [currentSelectedSeats, setCurrentSelectedSeats] = useState<any[]>([])
-    const [controlledSeatIds, setControlledSeatIds] = useState<number[]>([])
+    const executeConfirmSale = async () => {
+        if (!ticketToConfirm) return
+        setConfirmingSale(true)
+        try {
+            await apiFetch(`/tickets/${ticketToConfirm.id}`, { method: 'PUT', body: { state: 'confirmed' } })
+            showNotification('success', 'Venta confirmada', 'La reserva ha sido confirmada como venta.')
+            refreshTrip()
+            setSeatMapKey(prev => prev + 1)
+            setShowConfirmSaleModal(false)
+            setTicketToConfirm(null)
+        } catch (err: any) {
+            showNotification('error', 'Error', err?.message || 'No se pudo confirmar la venta.')
+        } finally { setConfirmingSale(false) }
+    }
 
     const handleClearSelection = useCallback(() => {
-        // Unlock all currently selected seats
         if (currentSelectedSeats.length > 0) {
             seatService.unlockSeats(tripId, currentSelectedSeats.map(s => s.id)).catch(() => {})
         }
@@ -315,15 +163,12 @@ export function useTripDetailPage(tripId: number) {
     const handleTicketCreated = () => {
         setShowTicketSaleModal(false)
         refreshTrip()
-        // Locks are released by the backend on ticket creation, just clear local state
         setCurrentSelectedSeats([])
         setControlledSeatIds([])
         setSeatMapKey(prev => prev + 1)
     }
 
-    const findTicketBySeat = (seat: any) => {
-        return soldTickets.find(t => t.seat?.seat_number === seat.number) || null
-    }
+    const findTicketBySeat = (seat: any) => soldTickets.find(t => t.seat?.seat_number === seat.number) || null
 
     const handlePreviewTicket = (seat: any) => {
         const ticket = findTicketBySeat(seat)
@@ -369,21 +214,16 @@ export function useTripDetailPage(tripId: number) {
         const prevIds = new Set(currentSelectedSeats.map(s => s.id))
         const newIds = new Set(seats.map(s => s.id))
 
-        // Lock newly selected seats
         const added = seats.filter(s => !prevIds.has(s.id))
         for (const seat of added) {
             try {
                 await seatService.lockSeat(tripId, seat.id)
             } catch {
-                toast.error('No se pudo bloquear el asiento', {
-                    description: 'Otro usuario ya lo seleccionó.',
-                })
-                // Remove the seat that couldn't be locked
+                toast.error('No se pudo bloquear el asiento', { description: 'Otro usuario ya lo seleccionó.' })
                 seats = seats.filter(s => s.id !== seat.id)
             }
         }
 
-        // Unlock deselected seats
         const removed = currentSelectedSeats.filter(s => !newIds.has(s.id))
         if (removed.length > 0) {
             seatService.unlockSeats(tripId, removed.map(s => s.id)).catch(() => {})
@@ -391,79 +231,12 @@ export function useTripDetailPage(tripId: number) {
 
         setCurrentSelectedSeats(seats)
         setControlledSeatIds(seats.map(s => s.id))
-
-        // Refresh lock state
         fetchLockedSeats(tripId)
 
         if (seatChangeMode && seats.length === 1) {
             setNewSelectedSeat(seats[0])
             setShowSeatChangeConfirmModal(true)
         }
-    }
-
-    // ── Packages ──────────────────────────────────────────────────────────
-    const [showPackageAssignModal, setShowPackageAssignModal] = useState(false)
-    const [showPackageDeliveryModal, setShowPackageDeliveryModal] = useState(false)
-    const [showPackageReceptionModal, setShowPackageReceptionModal] = useState(false)
-    const [showPackageRegistrationModal, setShowPackageRegistrationModal] = useState(false)
-    const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<any>(null)
-    const [selectedPackageForReception, setSelectedPackageForReception] = useState<any>(null)
-
-    const handleUnassignPackage = async (packageId: number) => {
-        try {
-            await apiFetch(`/packages/${packageId}/unassign`, { method: 'POST' })
-            showNotification('success', 'Encomienda removida', 'La encomienda fue removida del viaje.')
-            fetchPackages(tripId)
-        } catch (err: any) { showNotification('error', 'Error', err?.message || 'No se pudo remover la encomienda.') }
-    }
-
-    const handleDeliverPackage = (packageId: number) => {
-        const pkg = tripPackages.find(p => p.id === packageId)
-        if (pkg) {
-            setSelectedPackageForDelivery(pkg)
-            setShowPackageDeliveryModal(true)
-        }
-    }
-
-    const handleReceivePackage = (packageId: number) => {
-        const pkg = tripPackages.find(p => p.id === packageId)
-        if (pkg) {
-            setSelectedPackageForReception(pkg)
-            setShowPackageReceptionModal(true)
-        }
-    }
-
-    const handlePackagesAssigned = () => {
-        fetchPackages(tripId)
-        showNotification('success', 'Encomiendas cargadas', 'Las encomiendas fueron asignadas al viaje.')
-    }
-
-    const handleDeliveryConfirm = () => {
-        setShowPackageDeliveryModal(false)
-        setSelectedPackageForDelivery(null)
-        fetchPackages(tripId)
-        showNotification('success', 'Encomienda entregada', 'La encomienda fue entregada correctamente.')
-    }
-
-    const handleReceptionConfirm = async (packageId: number) => {
-        try {
-            await apiFetch(`/packages/${packageId}/update-status`, {
-                method: 'PUT',
-                body: { new_status: 'arrived_at_destination' },
-            })
-            setShowPackageReceptionModal(false)
-            setSelectedPackageForReception(null)
-            fetchPackages(tripId)
-            showNotification('success', 'Encomienda recibida', 'La encomienda fue marcada como recibida en destino.')
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo actualizar el estado.')
-        }
-    }
-
-    const handlePackageRegistered = () => {
-        // No cerramos el modal aquí para permitir ver el recibo
-        // El modal se cerrará cuando el usuario haga clic en "Cerrar" en el recibo
-        fetchPackages(tripId)
     }
 
     // ── Derived state ─────────────────────────────────────────────────────
@@ -479,10 +252,7 @@ export function useTripDetailPage(tripId: number) {
         return { total, sold, reserved, available: Math.max(0, total - sold - reserved) }
     }, [trip, soldTickets])
 
-    // ── Effects ───────────────────────────────────────────────────────────
-    // Locks are auto-released by the backend when the WebSocket disconnects
-    // (on page refresh, navigation, or tab close)
-
+    // ── Initial load ──────────────────────────────────────────────────────
     useEffect(() => {
         dispatch(fetchTripById(tripId))
         dispatch(fetchDrivers({}))
@@ -491,15 +261,7 @@ export function useTripDetailPage(tripId: number) {
         fetchPackages(tripId)
     }, [dispatch, tripId, fetchSoldTickets, fetchPackages])
 
-    useEffect(() => {
-        if (trip) {
-            setSelectedDriverId(String(trip.driver?.id || ''))
-            setSelectedAssistantId(String(trip.assistant?.id || ''))
-        }
-    }, [trip])
-
     return {
-        // Trip data
         trip,
         loading,
         error,
@@ -509,11 +271,9 @@ export function useTripDetailPage(tripId: number) {
         formatDate,
         refreshTrip,
 
-        // Drivers / assistants data (for staff editor)
         drivers,
         assistants,
 
-        // Dispatch
         dispatch: {
             show: showDispatchModal,
             setShow: setShowDispatchModal,
@@ -522,7 +282,6 @@ export function useTripDetailPage(tripId: number) {
             canDispatch,
         },
 
-        // Finish
         finish: {
             show: showFinishModal,
             setShow: setShowFinishModal,
@@ -530,23 +289,8 @@ export function useTripDetailPage(tripId: number) {
             execute: executeFinish,
         },
 
-        // Staff
-        staff: {
-            editingDriver,
-            setEditingDriver,
-            editingAssistant,
-            setEditingAssistant,
-            selectedDriverId,
-            setSelectedDriverId,
-            selectedAssistantId,
-            setSelectedAssistantId,
-            savingDriver,
-            savingAssistant,
-            saveDriver,
-            saveAssistant,
-        },
+        staff,
 
-        // Seat change
         seatChange: {
             mode: seatChangeMode,
             ticket: seatChangeTicket,
@@ -557,7 +301,6 @@ export function useTripDetailPage(tripId: number) {
             cancel: cancelSeatChange,
         },
 
-        // Ticket sale
         ticketSale: {
             show: showTicketSaleModal,
             actionType: saleActionType,
@@ -568,7 +311,6 @@ export function useTripDetailPage(tripId: number) {
             onCreated: handleTicketCreated,
         },
 
-        // Confirm sale
         confirmSale: {
             show: showConfirmSaleModal,
             ticket: ticketToConfirm,
@@ -577,7 +319,6 @@ export function useTripDetailPage(tripId: number) {
             close: () => setShowConfirmSaleModal(false),
         },
 
-        // Seat map
         seatMap: {
             key: seatMapKey,
             selectedSeats: currentSelectedSeats,
@@ -586,7 +327,6 @@ export function useTripDetailPage(tripId: number) {
             onSelectionChange: handleSelectionChange,
         },
 
-        // Seat map event handlers
         seatMapHandlers: {
             onCancelReservation: handleCancelReservation,
             onConfirmSale: handleConfirmSale,
@@ -594,7 +334,6 @@ export function useTripDetailPage(tripId: number) {
             onPreviewTicket: handlePreviewTicket,
         },
 
-        // Ticket preview (printable receipt)
         ticketPreview: {
             show: showTicketPreview,
             ticket: ticketForPreview,
@@ -604,40 +343,8 @@ export function useTripDetailPage(tripId: number) {
 
         findTicketBySeat,
 
-        // Packages
-        packages: {
-            items: tripPackages,
-            loading: loadingPackages,
-            unassign: handleUnassignPackage,
-            deliver: handleDeliverPackage,
-            receive: handleReceivePackage,
-            openAssignModal: () => setShowPackageAssignModal(true),
-            assignModal: {
-                show: showPackageAssignModal,
-                close: () => setShowPackageAssignModal(false),
-                onAssigned: handlePackagesAssigned,
-            },
-            deliveryModal: {
-                show: showPackageDeliveryModal,
-                packageData: selectedPackageForDelivery,
-                close: () => { setShowPackageDeliveryModal(false); setSelectedPackageForDelivery(null) },
-                onConfirm: handleDeliveryConfirm,
-            },
-            receptionModal: {
-                show: showPackageReceptionModal,
-                packageData: selectedPackageForReception,
-                close: () => { setShowPackageReceptionModal(false); setSelectedPackageForReception(null) },
-                onConfirm: handleReceptionConfirm,
-            },
-            registrationModal: {
-                show: showPackageRegistrationModal,
-                open: () => setShowPackageRegistrationModal(true),
-                close: () => setShowPackageRegistrationModal(false),
-                onRegistered: handlePackageRegistered,
-            },
-        },
+        packages: packagesPanel,
 
-        // Float panel
         floatPanel: {
             onSellTicket: () => handleSellTicket(currentSelectedSeats),
             onReserveSeat: () => handleReserveSeat(currentSelectedSeats),

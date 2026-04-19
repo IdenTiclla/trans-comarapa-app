@@ -15,6 +15,7 @@ import ClientCardList from '@/components/clients/ClientCardList'
 import ClientModal from '@/components/clients/ClientModal'
 import ClientViewModal from '@/components/clients/ClientViewModal'
 import { Card, CardContent } from '@/components/ui/card'
+import { ClickableCard } from '@/components/ui/clickable-card'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
 import { Users, Plus, Search, Download, BarChart3, LayoutGrid, List } from 'lucide-react'
@@ -153,8 +154,12 @@ export function Component() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="cursor-pointer hover:border-primary/30 transition-colors" onClick={() => handleQuickAction('new-client')}>
-                    <CardContent className="p-4 lg:p-6">
+                <ClickableCard
+                    ariaLabel="Nuevo cliente: registrar cliente"
+                    onClick={() => handleQuickAction('new-client')}
+                    className="py-0 hover:border-primary/30"
+                >
+                    <div className="p-4 lg:p-6">
                         <div className="flex items-center space-x-3 lg:space-x-4">
                             <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-primary/10 rounded-xl flex-shrink-0">
                                 <Users className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
@@ -164,11 +169,15 @@ export function Component() {
                                 <p className="text-muted-foreground text-sm truncate">Registrar cliente</p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </ClickableCard>
 
-                <Card className="cursor-pointer hover:border-green-300 transition-colors" onClick={() => handleQuickAction('search-client')}>
-                    <CardContent className="p-4 lg:p-6">
+                <ClickableCard
+                    ariaLabel="Buscar cliente"
+                    onClick={() => handleQuickAction('search-client')}
+                    className="py-0 hover:border-green-300"
+                >
+                    <div className="p-4 lg:p-6">
                         <div className="flex items-center space-x-3 lg:space-x-4">
                             <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-xl flex-shrink-0">
                                 <Search className="h-5 w-5 lg:h-6 lg:w-6 text-green-700" />
@@ -178,11 +187,15 @@ export function Component() {
                                 <p className="text-muted-foreground text-sm truncate">Localizar información</p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </ClickableCard>
 
-                <Card className="cursor-pointer hover:border-purple-300 transition-colors" onClick={() => handleQuickAction('export-clients')}>
-                    <CardContent className="p-4 lg:p-6">
+                <ClickableCard
+                    ariaLabel="Exportar clientes"
+                    onClick={() => handleQuickAction('export-clients')}
+                    className="py-0 hover:border-purple-300"
+                >
+                    <div className="p-4 lg:p-6">
                         <div className="flex items-center space-x-3 lg:space-x-4">
                             <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-xl flex-shrink-0">
                                 <Download className="h-5 w-5 lg:h-6 lg:w-6 text-purple-700" />
@@ -192,11 +205,15 @@ export function Component() {
                                 <p className="text-muted-foreground text-sm truncate">Descargar datos</p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </ClickableCard>
 
-                <Card className="cursor-pointer hover:border-orange-300 transition-colors" onClick={() => handleQuickAction('reports')}>
-                    <CardContent className="p-4 lg:p-6">
+                <ClickableCard
+                    ariaLabel="Reportes de clientes"
+                    onClick={() => handleQuickAction('reports')}
+                    className="py-0 hover:border-orange-300"
+                >
+                    <div className="p-4 lg:p-6">
                         <div className="flex items-center space-x-3 lg:space-x-4">
                             <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 bg-orange-100 rounded-xl flex-shrink-0">
                                 <BarChart3 className="h-5 w-5 lg:h-6 lg:w-6 text-orange-700" />
@@ -206,8 +223,8 @@ export function Component() {
                                 <p className="text-muted-foreground text-sm truncate">Análisis de clientes</p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </ClickableCard>
             </div>
 
             <ClientFilters

@@ -1,82 +1,23 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import FormCheckbox from '@/components/forms/FormCheckbox'
-import { Clock, Users, Package, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react'
-
-interface Passenger {
-  ticket_id: number
-  seat_number: number | string
-  client_name: string
-  state: string
-}
-
-interface TripPackage {
-  id: number
-  tracking_number: string
-  sender_name: string
-  recipient_name: string
-  destination: string
-  status: string
-  payment_status: string
-  item_count: number
-}
-
-interface MyTrip {
-  id: number
-  trip_datetime: string
-  status: string
-  route: { origin: string; destination: string }
-  bus: { license_plate: string; model: string; brand: string } | null
-  total_seats: number
-  occupied_seats: number
-  available_seats: number
-  package_count: number
-  passengers: Passenger[]
-  packages?: TripPackage[]
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  scheduled: 'Programado',
-  boarding: 'Abordando',
-  departed: 'En camino',
-  arrived: 'Llegó',
-  cancelled: 'Cancelado',
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  scheduled: 'bg-blue-100 text-blue-800',
-  boarding: 'bg-yellow-100 text-yellow-800',
-  departed: 'bg-amber-100 text-amber-800',
-  arrived: 'bg-gray-100 text-gray-800',
-  cancelled: 'bg-red-100 text-red-800',
-}
-
-const TRANSITION_CONFIG: Record<string, { action: string; label: string; color: string; confirm?: boolean }> = {
-  scheduled: { action: 'start_boarding', label: 'Iniciar Abordaje', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
-  boarding: { action: 'depart', label: 'Partir', color: 'bg-amber-600 hover:bg-amber-700 text-white', confirm: true },
-  departed: { action: 'arrive', label: 'Llegamos', color: 'bg-gray-700 hover:bg-gray-800 text-white', confirm: true },
-}
-
-const PKG_STATUS_LABELS: Record<string, string> = {
-  registered: 'Registrado',
-  assigned_to_trip: 'Asignado',
-  in_transit: 'En tránsito',
-  arrived_at_destination: 'Llegó',
-  delivered: 'Entregado',
-}
+import { KpiCard } from '@/components/dashboards/assistant/KpiCard'
+import { TripCard } from '@/components/dashboards/assistant/TripCard'
+import { formatTime, formatDate } from '@/components/dashboards/assistant/constants'
+import type { MyTrip, TripTab } from '@/components/dashboards/assistant/types'
 
 export function Component() {
   const [trips, setTrips] = useState<MyTrip[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedTrip, setExpandedTrip] = useState<number | null>(null)
   const [filter, setFilter] = useState<'active' | 'all'>('active')
-  const [tab, setTab] = useState<'passengers' | 'packages' | 'checklist'>('passengers')
+  const [tab, setTab] = useState<TripTab>('passengers')
   const [transitioning, setTransitioning] = useState<number | null>(null)
 
   useEffect(() => {
     loadTrips()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter])
 
   async function loadTrips() {
@@ -85,7 +26,6 @@ export function Component() {
       const status = filter === 'active' ? 'scheduled,boarding,departed' : undefined
       const data = await tripService.getMyTrips(status ? { status } : undefined)
       setTrips(data)
-      // Clean up localStorage for arrived trips
       for (const trip of data) {
         if (trip.status === 'arrived' || trip.status === 'cancelled') {
           localStorage.removeItem(`boarding-checklist-${trip.id}`)
@@ -122,15 +62,6 @@ export function Component() {
     return trips.filter(t => new Date(t.trip_datetime).toDateString() !== today)
   }, [trips])
 
-  function formatTime(datetime: string) {
-    return new Date(datetime).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
-  }
-
-  function formatDate(datetime: string) {
-    return new Date(datetime).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' })
-  }
-
-  // KPI calculations
   const totalPassengers = todayTrips.reduce((sum, t) => sum + t.occupied_seats, 0)
   const totalPackages = todayTrips.reduce((sum, t) => sum + t.package_count, 0)
   const nextScheduled = todayTrips.find(t => t.status === 'scheduled')
@@ -157,7 +88,6 @@ export function Component() {
       </div>
 
       <div className="w-full px-2 sm:px-4 lg:px-6 py-4 space-y-6">
-        {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard label="Viajes Hoy" value={todayTrips.length} icon="🚌" />
           <KpiCard label="Pasajeros" value={totalPassengers} icon="👥" />
@@ -227,306 +157,6 @@ export function Component() {
           </>
         )}
       </div>
-    </div>
-  )
-}
-
-function KpiCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:border-primary/20 transition-all duration-300">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-2xl">
-          {icon}
-        </div>
-        <div>
-          <div className="text-2xl font-black text-gray-900 tracking-tight">{value}</div>
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{label}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TripCard({
-  trip,
-  expanded,
-  onToggle,
-  formatTime,
-  showDate,
-  formatDate,
-  tab,
-  onTabChange,
-  onTransition,
-  transitioning,
-}: {
-  trip: MyTrip
-  expanded: boolean
-  onToggle: () => void
-  formatTime: (d: string) => string
-  showDate?: boolean
-  formatDate?: (d: string) => string
-  tab: 'passengers' | 'packages' | 'checklist'
-  onTabChange: (t: 'passengers' | 'packages' | 'checklist') => void
-  onTransition: (tripId: number, action: string, label: string) => void
-  transitioning: number | null
-}) {
-  const transition = TRANSITION_CONFIG[trip.status]
-
-  // Checklist persistence with localStorage
-  const storageKey = `boarding-checklist-${trip.id}`
-
-  const [checked, setChecked] = useState<Set<number>>(() => {
-    try {
-      const stored = localStorage.getItem(storageKey)
-      return stored ? new Set(JSON.parse(stored)) : new Set()
-    } catch {
-      return new Set()
-    }
-  })
-
-  const toggleCheck = useCallback((ticketId: number) => {
-    setChecked(prev => {
-      const next = new Set(prev)
-      if (next.has(ticketId)) next.delete(ticketId)
-      else next.add(ticketId)
-      localStorage.setItem(storageKey, JSON.stringify([...next]))
-      return next
-    })
-  }, [storageKey])
-
-  function handleTransitionClick(e: React.MouseEvent) {
-    e.stopPropagation()
-    if (!transition) return
-    if (transition.confirm && !window.confirm(`¿Confirmar "${transition.label}"?`)) return
-    onTransition(trip.id, transition.action, transition.label)
-  }
-
-  const packages = trip.packages ?? []
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <button onClick={onToggle} className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-lg font-semibold text-gray-900">
-                {trip.route.origin} → {trip.route.destination}
-              </span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[trip.status] || 'bg-gray-100 text-gray-800'}`}>
-                {STATUS_LABELS[trip.status] || trip.status}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>{showDate && formatDate ? formatDate(trip.trip_datetime) + ' · ' : ''}{formatTime(trip.trip_datetime)}</span>
-              {trip.bus && <span>{trip.bus.brand} {trip.bus.model} · {trip.bus.license_plate}</span>}
-            </div>
-          </div>
-          <div className="flex items-center gap-4 ml-4">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{trip.occupied_seats}/{trip.total_seats}</div>
-              <div className="text-xs text-gray-500">pasajeros</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{trip.package_count}</div>
-              <div className="text-xs text-gray-500">encomiendas</div>
-            </div>
-            <svg className={`h-5 w-5 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </button>
-
-      {/* Transition button */}
-      {transition && (
-        <div className="px-4 pb-4">
-          <Button
-            onClick={handleTransitionClick}
-            disabled={transitioning === trip.id}
-            className={cn("w-full h-11 rounded-xl text-sm font-bold shadow-lg transition-all duration-300 active:scale-[0.98]", transition.color)}
-          >
-            {transitioning === trip.id ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Actualizando...</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span>{transition.label}</span>
-                <ChevronRight className="h-4 w-4" />
-              </div>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {expanded && (
-        <div className="border-t border-gray-100">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-100">
-            <button
-              onClick={() => onTabChange('passengers')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'passengers' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Pasajeros
-            </button>
-            <button
-              onClick={() => onTabChange('packages')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'packages' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Encomiendas
-            </button>
-            <button
-              onClick={() => onTabChange('checklist')}
-              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${tab === 'checklist' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Verificación
-            </button>
-          </div>
-
-          <div className="px-4 py-4">
-            {tab === 'passengers' && (
-              <>
-                {trip.passengers.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Sin pasajeros registrados.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 pr-4 font-medium text-gray-600">Asiento</th>
-                          <th className="text-left py-2 pr-4 font-medium text-gray-600">Pasajero</th>
-                          <th className="text-left py-2 font-medium text-gray-600">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {trip.passengers.map(p => (
-                          <tr key={p.ticket_id} className="border-b border-gray-50">
-                            <td className="py-2 pr-4 font-medium text-gray-900">{p.seat_number}</td>
-                            <td className="py-2 pr-4 text-gray-700">{p.client_name}</td>
-                            <td className="py-2">
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.state === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                {p.state === 'confirmed' ? 'Confirmado' : p.state === 'pending' ? 'Pendiente' : p.state}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-
-            {tab === 'packages' && (
-              <>
-                {packages.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Sin encomiendas en este viaje.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Tracking #</th>
-                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Remitente</th>
-                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Destinatario</th>
-                          <th className="text-left py-2 pr-3 font-medium text-gray-600">Estado</th>
-                          <th className="text-left py-2 font-medium text-gray-600">Pago</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {packages.map(pkg => (
-                          <tr key={pkg.id} className="border-b border-gray-50">
-                            <td className="py-2 pr-3 font-mono text-xs text-gray-900">{pkg.tracking_number}</td>
-                            <td className="py-2 pr-3 text-gray-700">{pkg.sender_name}</td>
-                            <td className="py-2 pr-3 text-gray-700">{pkg.recipient_name}</td>
-                            <td className="py-2 pr-3">
-                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {PKG_STATUS_LABELS[pkg.status] || pkg.status}
-                              </span>
-                            </td>
-                            <td className="py-2">
-                              {pkg.payment_status === 'collect_on_delivery' ? (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  Por cobrar
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Pagado
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-
-            {tab === 'checklist' && (
-              <>
-                {trip.passengers.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Sin pasajeros para verificar.</p>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-gray-600">
-                        {checked.size} de {trip.passengers.length} verificados
-                      </span>
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${trip.passengers.length > 0 ? (checked.size / trip.passengers.length) * 100 : 0}%` }}
-                        />
-                      </div>
-                    </div>
-                    {trip.passengers.map(p => (
-                      <div
-                        key={p.ticket_id}
-                        onClick={() => toggleCheck(p.ticket_id)}
-                        className={cn(
-                          "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-300",
-                          checked.has(p.ticket_id) 
-                            ? "bg-primary/5 border-primary/20 shadow-sm" 
-                            : "bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200"
-                        )}
-                      >
-                        <FormCheckbox
-                          checked={checked.has(p.ticket_id)}
-                          onChange={() => toggleCheck(p.ticket_id)}
-                          label=""
-                          id={`check-${p.ticket_id}`}
-                        />
-                        <div className="flex flex-1 items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
-                              checked.has(p.ticket_id) ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-500"
-                            )}>
-                              #{p.seat_number}
-                            </div>
-                            <span className={cn(
-                              "font-bold transition-all duration-300",
-                              checked.has(p.ticket_id) ? "text-gray-400 line-through" : "text-gray-900"
-                            )}>
-                              {p.client_name}
-                            </span>
-                          </div>
-                          {checked.has(p.ticket_id) && (
-                            <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in duration-300" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

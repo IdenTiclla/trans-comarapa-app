@@ -13,6 +13,7 @@ import PackageAssignModal from '@/components/packages/PackageAssignModal'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
+import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
 import { Send, Check, FileText, Package } from 'lucide-react'
@@ -176,12 +177,14 @@ export function Component() {
 
           <TripPackagesSection
             tripPackages={page.packages.items}
+            tripId={trip.id}
             isLoading={page.packages.loading}
             tripStatus={trip.status}
             onOpenAssignModal={page.packages.openAssignModal}
             onUnassignPackage={page.packages.unassign}
             onDeliverPackage={page.packages.deliver}
             onReceivePackage={page.packages.receive}
+            onShowReceipt={page.packages.showReceipt}
           />
         </div>
       </div>
@@ -233,6 +236,11 @@ export function Component() {
         tripId={tripId}
         onClose={page.packages.registrationModal.close}
         onPackageRegistered={page.packages.registrationModal.onRegistered}
+      />
+      <PackageReceiptModal
+        show={page.packages.receiptModal.show}
+        packageData={page.packages.receiptModal.packageData}
+        onClose={page.packages.receiptModal.close}
       />
 
       {/* Ticket Preview (printable receipt) */}

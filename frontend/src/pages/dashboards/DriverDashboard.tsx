@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { tripService } from '@/services/trip.service'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 interface Passenger {
@@ -238,8 +239,14 @@ function TripCard({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Card header */}
-      <button onClick={onToggle} className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors">
-        <div className="flex items-center justify-between">
+      <Button
+        variant="ghost"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-label={`Detalles del viaje ${trip.route.origin} a ${trip.route.destination}`}
+        className="h-auto w-full justify-start rounded-none px-4 py-4 text-left hover:bg-gray-50 whitespace-normal"
+      >
+        <div className="flex w-full items-center justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
               <span className="text-lg font-semibold text-gray-900">
@@ -270,7 +277,7 @@ function TripCard({
             </svg>
           </div>
         </div>
-      </button>
+      </Button>
 
       {/* Transition button */}
       {transition && (

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote } from 'lucide-react'
+import { Link } from 'react-router'
+import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
 import { cn } from '@/lib/utils'
@@ -8,24 +9,28 @@ import type { TripPackage } from './TripPackageViews'
 
 interface TripPackagesSectionProps {
     tripPackages: TripPackage[]
+    tripId?: number | string
     isLoading?: boolean
     tripStatus?: string
     onOpenAssignModal?: () => void
     onUnassignPackage?: (id: number) => void
     onDeliverPackage?: (id: number) => void
     onReceivePackage?: (id: number) => void
+    onShowReceipt?: (id: number) => void
 }
 
 type ViewMode = 'list' | 'cards'
 
 export default function TripPackagesSection({
     tripPackages = [],
+    tripId,
     isLoading = false,
     tripStatus = '',
     onOpenAssignModal,
     onUnassignPackage,
     onDeliverPackage,
     onReceivePackage,
+    onShowReceipt,
 }: TripPackagesSectionProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('list')
     const totalAmount = useMemo(
@@ -156,6 +161,7 @@ export default function TripPackagesSection({
                                 onUnassignPackage={onUnassignPackage}
                                 onDeliverPackage={onDeliverPackage}
                                 onReceivePackage={onReceivePackage}
+                                onShowReceipt={onShowReceipt}
                             />
                         ) : (
                             <PackageCardsView
@@ -164,6 +170,7 @@ export default function TripPackagesSection({
                                 onUnassignPackage={onUnassignPackage}
                                 onDeliverPackage={onDeliverPackage}
                                 onReceivePackage={onReceivePackage}
+                                onShowReceipt={onShowReceipt}
                             />
                         )}
                     </div>
