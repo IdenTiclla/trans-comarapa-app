@@ -6,7 +6,7 @@ import type { TripPackage } from './helpers'
 
 export function useTripManifest(tripId: number) {
   const dispatch = useAppDispatch()
-  const trip = useAppSelector(selectCurrentTrip) as any
+  const trip = useAppSelector(selectCurrentTrip) as Record<string, unknown> | null
   const loading = useAppSelector(selectTripLoading)
   const error = useAppSelector(selectTripError)
 
@@ -20,10 +20,10 @@ export function useTripManifest(tripId: number) {
       setPkgError(null)
       try {
         await dispatch(fetchTripById(tripId))
-        const data = await apiFetch(`/packages/by-trip/${tripId}`)
+        const data = await apiFetch(`/packages/by-trip/${tripId}`) as TripPackage[] | { items?: TripPackage[] }
         setPackages(Array.isArray(data) ? data : data?.items || [])
-      } catch (err: any) {
-        setPkgError(err?.message || 'Error al cargar el manifiesto.')
+      } catch (err) {
+        setPkgError(err instanceof Error ? err.message : 'Error al cargar el manifiesto.')
       } finally {
         setLoadingPkgs(false)
       }

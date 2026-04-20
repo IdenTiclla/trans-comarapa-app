@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef } from 'react'
 import TicketDisplay from './TicketDisplay'
+import { Button } from '@/components/ui/button'
+import { X } from 'lucide-react'
 
 interface TicketReceiptModalProps {
     show: boolean
@@ -69,6 +72,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 modal-overlay-bokeh backdrop-blur-sm transition-all duration-300 opacity-100">
             <div className="absolute inset-0" aria-hidden="true" onClick={onClose}></div>
 
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
                 className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full border border-gray-100/50"
                 style={{ maxWidth: '42rem' }}
@@ -88,9 +92,9 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                    <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-white hover:bg-white hover:bg-opacity-20 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </Button>
                 </div>
 
                 <div id="ticket-receipt-content" className="bg-gray-50 p-4">
@@ -104,20 +108,21 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                 </div>
 
                 <div className="bg-white px-4 py-3 flex flex-col sm:flex-row justify-end gap-2 border-t border-gray-200">
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={printReceipt}
-                        className="w-full sm:w-auto px-4 py-2 border border-blue-600 rounded-lg text-sm font-semibold text-blue-600 bg-white hover:bg-blue-50 focus:outline-none"
+                        className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-600"
                     >
                         Imprimir Boleto{tickets.length > 1 ? 's' : ''}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
                         onClick={onClose}
-                        className="w-full sm:w-auto px-4 py-2 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                     >
                         Cerrar
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

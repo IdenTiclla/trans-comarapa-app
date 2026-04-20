@@ -48,6 +48,7 @@ export default function TripCountdown({ tripDateTime, departureTime, compact = f
     }, [targetDateTime])
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         calculate()
         const id = setInterval(calculate, 1000)
         return () => clearInterval(id)

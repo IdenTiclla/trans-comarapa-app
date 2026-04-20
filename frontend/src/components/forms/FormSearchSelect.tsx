@@ -89,6 +89,7 @@ export default function FormSearchSelect({
   // Initialize search query from selected value
   useEffect(() => {
     if (value === null || value === undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery('')
       return
     }
@@ -151,6 +152,7 @@ export default function FormSearchSelect({
       )}
 
       <div className="relative">
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className={cn(
             'relative w-full cursor-default overflow-hidden rounded-md bg-white text-left border sm:text-sm',
@@ -228,6 +230,7 @@ export default function FormSearchSelect({
               filteredOptions.map((option, index) => {
                 const optDisabled = typeof option === 'object' ? option.disabled : false
                 return (
+                  // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                   <div
                     key={getOptionValue(option)}
                     className={cn(

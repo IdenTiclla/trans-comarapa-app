@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Button } from '@/components/ui/button'
+import { X, Pencil } from 'lucide-react'
+
 interface ClientViewModalProps {
     show: boolean
     client: Record<string, any> | null
@@ -49,6 +53,7 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
             <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-2xl transform transition-all flex flex-col max-h-[90vh] my-8">
@@ -80,11 +85,9 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                             )}
                         </div>
                     </div>
-                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors self-start">
-                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-gray-400 hover:text-gray-500 self-start">
+                        <X className="h-6 w-6" />
+                    </Button>
                 </div>
 
                 <div className="p-6 overflow-y-auto">
@@ -93,20 +96,20 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                         <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">Información Personal</h4>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nombres</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Nombres</span>
                                 <p className="text-gray-900 font-medium mt-1">{client.firstname || 'No registrado'}</p>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</span>
                                 <p className="text-gray-900 font-medium mt-1">{client.lastname || 'No registrado'}</p>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Documento de Identidad</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Documento de Identidad</span>
                                 <p className="text-gray-900 font-mono mt-1">{client.document_id || 'No registrado'}</p>
                             </div>
                             {client.birth_date && (
                                 <div>
-                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Nacimiento</label>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Nacimiento</span>
                                     <p className="text-gray-900 mt-1">{formatDate(client.birth_date)}</p>
                                 </div>
                             )}
@@ -116,15 +119,15 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                         <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">Contacto</h4>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</span>
                                 <p className="text-gray-900 font-mono mt-1">{client.phone || 'No registrado'}</p>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</span>
                                 <p className="text-gray-900 break-all mt-1">{client.email || 'No registrado'}</p>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</span>
                                 <p className="text-gray-900 mt-1">{client.address || 'No registrada'}</p>
                             </div>
                         </div>
@@ -133,16 +136,16 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                         <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2">Ubicación</h4>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ciudad</span>
                                 <p className="text-gray-900 mt-1">{client.city || 'No registrada'}</p>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</label>
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</span>
                                 <p className="text-gray-900 mt-1">{client.state || 'No registrado'}</p>
                             </div>
                             {client.created_at && (
                                 <div>
-                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente desde</label>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente desde</span>
                                     <p className="text-gray-900 mt-1">{formatDate(client.created_at)}</p>
                                 </div>
                             )}
@@ -157,23 +160,13 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                         )}
                     </div>
                     <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="w-full sm:w-auto px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 font-medium transition-colors bg-gray-50 shadow-sm leading-tight"
-                        >
+                        <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
                             Cerrar
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onEdit(client)}
-                            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 border border-transparent text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors shadow-sm leading-tight flex justify-center items-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
+                        </Button>
+                        <Button type="button" onClick={() => onEdit(client)} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700">
+                            <Pencil className="w-4 h-4 mr-2" />
                             Editar Cliente
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

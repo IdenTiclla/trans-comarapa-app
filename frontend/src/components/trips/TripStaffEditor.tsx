@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from '@/components/ui/button'
+import FormSelect from '@/components/forms/FormSelect'
 import { Check, User, Users } from 'lucide-react'
 
 interface StaffState {
@@ -36,9 +38,10 @@ function StaffDisplayCard({
 }) {
     const isEmpty = name === 'No asignado'
     return (
-        <button
+        <Button
+            variant="outline"
             onClick={onClick}
-            className="flex items-center gap-3 text-left w-full rounded-xl border border-border/60 px-4 py-3 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer"
+            className="flex items-center gap-3 text-left w-full h-auto rounded-xl border-border/60 px-4 py-3 hover:border-primary/40 hover:bg-primary/5 justify-start"
         >
             <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {icon}
@@ -49,7 +52,7 @@ function StaffDisplayCard({
                     {name}
                 </p>
             </div>
-        </button>
+        </Button>
     )
 }
 
@@ -73,17 +76,12 @@ function StaffEditCard({
     return (
         <div className="rounded-xl border-2 border-primary/30 bg-primary/5 px-4 py-3">
             <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-1.5">{label}</p>
-            <select
+            <FormSelect
                 value={selectedId}
-                onChange={(e) => onChangeId(e.target.value)}
-                className="w-full text-sm border border-input rounded-md py-1.5 px-2 bg-background focus:ring-2 focus:ring-ring focus:border-ring"
-                autoFocus
-            >
-                <option value="">Sin asignar</option>
-                {(options || []).map((o: any) => (
-                    <option key={o.id} value={o.id}>{o.firstname} {o.lastname}</option>
-                ))}
-            </select>
+                onChange={onChangeId}
+                placeholder="Sin asignar"
+                options={(options || []).map((o: any) => ({ value: String(o.id), label: `${o.firstname} ${o.lastname}` }))}
+            />
             <div className="flex gap-2 mt-2">
                 <Button size="sm" onClick={onSave} disabled={saving} className="flex-1 gap-1 h-7 text-xs">
                     {saving ? (

@@ -9,9 +9,22 @@ interface Pagination {
     itemsPerPage: number
 }
 
+interface PackageRecord {
+    id: number
+    [key: string]: unknown
+}
+
+interface PaginatedPackages {
+    items?: PackageRecord[]
+    packages?: PackageRecord[]
+    total?: number
+    pages?: number
+    page?: number
+}
+
 interface PackageState {
-    packages: any[]
-    currentPackage: any | null
+    packages: PackageRecord[]
+    currentPackage: PackageRecord | null
     loading: boolean
     error: string | null
     pagination: Pagination
@@ -78,7 +91,7 @@ const packageSlice = createSlice({
             .addCase(fetchPackages.pending, (s) => { s.loading = true; s.error = null })
             .addCase(fetchPackages.fulfilled, (s, a) => {
                 s.loading = false
-                const data = a.payload as any
+                const data = a.payload as PackageRecord[] | PaginatedPackages
                 if (Array.isArray(data)) {
                     s.packages = data
                     s.pagination.totalItems = data.length
@@ -92,17 +105,18 @@ const packageSlice = createSlice({
             .addCase(fetchPackages.rejected, (s, a) => { s.loading = false; s.error = a.payload as string })
             // fetchPackageById
             .addCase(fetchPackageById.pending, (s) => { s.loading = true; s.error = null })
-            .addCase(fetchPackageById.fulfilled, (s, a) => { s.loading = false; s.currentPackage = a.payload })
+            .addCase(fetchPackageById.fulfilled, (s, a) => { s.loading = false; s.currentPackage = a.payload as PackageRecord })
             .addCase(fetchPackageById.rejected, (s, a) => { s.loading = false; s.error = a.payload as string })
             // updatePackage
             .addCase(updatePackage.fulfilled, (s, a) => {
-                s.currentPackage = a.payload
-                const idx = s.packages.findIndex((p: any) => p.id === (a.payload as any).id)
-                if (idx !== -1) s.packages[idx] = a.payload
+                const payload = a.payload as PackageRecord
+                s.currentPackage = payload
+                const idx = s.packages.findIndex((p) => p.id === payload.id)
+                if (idx !== -1) s.packages[idx] = payload
             })
             // deletePackage
             .addCase(deletePackage.fulfilled, (s, a) => {
-                s.packages = s.packages.filter((p: any) => p.id !== a.payload)
+                s.packages = s.packages.filter((p) => p.id !== a.payload)
             })
     },
 })

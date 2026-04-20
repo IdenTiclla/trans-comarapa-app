@@ -42,6 +42,7 @@ export default function PackageReceiptModal({ show, packageData, onClose }: Pack
         onClick={onClose}
       />
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-3xl sm:w-full border border-gray-100/50"
         onClick={(e) => e.stopPropagation()}

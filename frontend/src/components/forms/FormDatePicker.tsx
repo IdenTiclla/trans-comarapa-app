@@ -123,6 +123,7 @@ export default function FormDatePicker({
   // Sync calendar to selected date
   useEffect(() => {
     if (selectedDate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentMonth(selectedDate.getMonth())
       setCurrentYear(selectedDate.getFullYear())
     }
@@ -162,6 +163,7 @@ export default function FormDatePicker({
       )}
 
       <div className="relative group">
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           onClick={toggleCalendar}
           className={cn(

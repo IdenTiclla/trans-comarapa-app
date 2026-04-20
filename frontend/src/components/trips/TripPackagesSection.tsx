@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
-import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote, FileText } from 'lucide-react'
+import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
-import { cn } from '@/lib/utils'
 import { PackageListView, PackageCardsView } from './TripPackageViews'
 import type { TripPackage } from './TripPackageViews'
 
@@ -23,7 +21,6 @@ type ViewMode = 'list' | 'cards'
 
 export default function TripPackagesSection({
     tripPackages = [],
-    tripId,
     isLoading = false,
     tripStatus = '',
     onOpenAssignModal,

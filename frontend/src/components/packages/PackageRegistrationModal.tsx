@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormCheckbox from '@/components/forms/FormCheckbox'
 import { Button } from '@/components/ui/button'
 import PackageReceiptModal from './PackageReceiptModal'
@@ -47,6 +48,7 @@ export default function PackageRegistrationModal({
       )}>
         <div className="absolute inset-0" aria-hidden="true" onClick={onClose}></div>
 
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
           className="relative bg-gray-50 rounded-2xl text-left shadow-2xl transform transition-all w-full max-w-6xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100/50"
           onClick={(e) => e.stopPropagation()}

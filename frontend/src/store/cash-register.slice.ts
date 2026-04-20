@@ -35,8 +35,9 @@ export const fetchCurrentRegister = createAsyncThunk(
       // Returns null (HTTP 200) when no register is open — that is a normal state
       const register = await cashRegisterService.getCurrentRegister(officeId);
       return register;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch current register");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to fetch current register";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -46,8 +47,9 @@ export const fetchTransactions = createAsyncThunk(
   async (registerId: number, { rejectWithValue }) => {
     try {
       return await cashRegisterService.getTransactions(registerId);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch transactions");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to fetch transactions";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -57,8 +59,9 @@ export const fetchDailySummary = createAsyncThunk(
   async (registerId: number, { rejectWithValue }) => {
     try {
       return await cashRegisterService.getDailySummary(registerId);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch daily summary");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to fetch daily summary";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -68,8 +71,9 @@ export const openRegister = createAsyncThunk(
   async (data: OpenRegisterPayload, { rejectWithValue }) => {
     try {
       return await cashRegisterService.openRegister(data);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to open register");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to open register";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -79,8 +83,9 @@ export const closeRegister = createAsyncThunk(
   async ({ registerId, data }: { registerId: number; data: CloseRegisterPayload }, { rejectWithValue }) => {
     try {
       return await cashRegisterService.closeRegister(registerId, data);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to close register");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to close register";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -90,8 +95,9 @@ export const recordTransaction = createAsyncThunk(
   async ({ registerId, data }: { registerId: number; data: RecordTransactionPayload }, { rejectWithValue }) => {
     try {
       return await cashRegisterService.recordTransaction(registerId, data);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to record transaction");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to record transaction";
+      return rejectWithValue(msg);
     }
   }
 );
@@ -101,8 +107,9 @@ export const recordWithdrawal = createAsyncThunk(
   async ({ registerId, data }: { registerId: number; data: WithdrawalPayload }, { rejectWithValue }) => {
     try {
       return await cashRegisterService.recordWithdrawal(registerId, data);
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to record withdrawal");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to record withdrawal";
+      return rejectWithValue(msg);
     }
   }
 );

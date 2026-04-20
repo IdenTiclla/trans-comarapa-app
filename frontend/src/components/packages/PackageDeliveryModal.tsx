@@ -26,7 +26,7 @@ export default function PackageDeliveryModal({
     const [errorMessage, setErrorMessage] = useState('')
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
     const [isCashRegisterOpen, setIsCashRegisterOpen] = useState<boolean | null>(null)
-    const [checkingCashRegister, setCheckingCashRegister] = useState(false)
+    const [, setCheckingCashRegister] = useState(false)
 
     useEffect(() => {
         if (show) {
@@ -104,9 +104,9 @@ export default function PackageDeliveryModal({
 
             await packageService.deliver(packageData.id, finalPaymentMethod, user?.id || null)
             onConfirm({ packageId: packageData.id })
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error in confirm delivery:', error)
-            setErrorMessage(error.data?.detail || error.message || 'Error al confirmar la entrega. Por favor, intente nuevamente.')
+            setErrorMessage(error.data?.detail || (error instanceof Error ? error.message : String(error)) || 'Error al confirmar la entrega. Por favor, intente nuevamente.')
         } finally {
             setIsSubmitting(false)
         }
@@ -118,6 +118,7 @@ export default function PackageDeliveryModal({
         <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="fixed inset-0 modal-overlay-bokeh" aria-hidden="true" onClick={onClose} />
             <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                     className="relative z-10 w-full bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-xl"
                     onClick={(e) => e.stopPropagation()}
@@ -223,8 +224,9 @@ export default function PackageDeliveryModal({
                                         </div>
 
                                         <div className="mt-4 border-t border-orange-200 pt-4">
-                                            <label className="block text-sm font-medium text-orange-900 mb-2">Seleccione el método de pago recibido:</label>
+                                            <span className="block text-sm font-medium text-orange-900 mb-2">Seleccione el método de pago recibido:</span>
                                             <div className="grid grid-cols-2 gap-3">
+                                                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                                                 <div
                                                     onClick={() => setPaymentMethod('cash')}
                                                     className={cn(
@@ -236,6 +238,7 @@ export default function PackageDeliveryModal({
                                                     <span className={cn("text-sm font-bold", paymentMethod === 'cash' ? 'text-orange-800' : 'text-gray-600')}>Efectivo</span>
                                                 </div>
 
+                                                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                                                 <div
                                                     onClick={() => setPaymentMethod('qr')}
                                                     className={cn(

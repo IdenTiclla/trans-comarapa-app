@@ -1,18 +1,27 @@
 import { useState, useCallback, useRef } from 'react'
 import { apiFetch } from '@/lib/api'
 
+export interface ClientRecord {
+    id?: number
+    firstname?: string
+    lastname?: string
+    document_id?: string
+    phone?: string | null
+    [key: string]: unknown
+}
+
 export function useClientSearch() {
     // Client type: 'existing' | 'new'
     const [clientType, setClientType] = useState<'existing' | 'new'>('existing')
 
     // Search state
     const [clientSearchQuery, setClientSearchQuery] = useState('')
-    const [foundClients, setFoundClients] = useState<any[]>([])
+    const [foundClients, setFoundClients] = useState<ClientRecord[]>([])
     const [searchingClients, setSearchingClients] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
 
     // Selected client
-    const [selectedExistingClient, setSelectedExistingClient] = useState<any | null>(null)
+    const [selectedExistingClient, setSelectedExistingClient] = useState<ClientRecord | null>(null)
     const [hasSelectedExistingClient, setHasSelectedExistingClient] = useState(false)
 
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -33,7 +42,7 @@ export function useClientSearch() {
         debounceRef.current = setTimeout(async () => {
             setSearchingClients(true)
             try {
-                const resp = await apiFetch(`/clients/search?q=${encodeURIComponent(query)}`) as any
+                const resp = await apiFetch(`/clients/search?q=${encodeURIComponent(query)}`) as ClientRecord[] | unknown
                 setFoundClients(Array.isArray(resp) ? resp : [])
                 setHasSearched(true)
             } catch (err) {
@@ -46,7 +55,7 @@ export function useClientSearch() {
         }, 350)
     }, [])
 
-    const selectExistingClient = useCallback((client: any) => {
+    const selectExistingClient = useCallback((client: ClientRecord) => {
         setSelectedExistingClient(client)
         setHasSelectedExistingClient(true)
         setClientSearchQuery(`${client.firstname} ${client.lastname}`)
@@ -73,7 +82,7 @@ export function useClientSearch() {
     }, [])
 
     // Creates a new client via API or returns the existing one
-    const getOrCreateClient = useCallback(async (clientData: any): Promise<any> => {
+    const getOrCreateClient = useCallback(async (clientData: ClientRecord): Promise<ClientRecord> => {
         if (clientType === 'existing') {
             // clientData is the selectedExistingClient
             if (!clientData || !clientData.id) throw new Error('No se ha seleccionado un cliente existente.')
@@ -87,7 +96,7 @@ export function useClientSearch() {
             const created = await apiFetch('/clients', {
                 method: 'POST',
                 body: { firstname, lastname, document_id, phone: phone || null }
-            })
+            }) as ClientRecord
             return created
         }
     }, [clientType])

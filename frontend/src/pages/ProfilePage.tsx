@@ -3,10 +3,10 @@ import { useAuth } from '@/hooks/use-auth'
 import { officeService } from '@/services/office.service'
 import { toast } from 'sonner'
 import type { Office } from '@/types/office'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { User, Mail, Phone } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import FormInput from '@/components/forms/FormInput'
 
 export function Component() {

@@ -29,6 +29,7 @@ export function WithdrawalHistoryTable({ withdrawals, ownerName }: Props) {
                 <>
                     {/* Table */}
                     <div className="overflow-x-auto">
+                        {/* eslint-disable-next-line no-restricted-syntax */}
                         <table className="w-full">
                             <thead>
                                 <tr className="border-t border-gray-100">

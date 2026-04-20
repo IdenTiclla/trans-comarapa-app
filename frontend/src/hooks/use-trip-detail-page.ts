@@ -12,6 +12,38 @@ import { useTripPackagesPanel } from '@/hooks/use-trip-packages-panel'
 import { useTripStaffEditor } from '@/hooks/use-trip-staff-editor'
 import { toast } from 'sonner'
 
+interface Seat {
+    id: number
+    number?: number | string
+    [key: string]: unknown
+}
+
+interface Ticket {
+    id: number
+    state: string
+    seat?: { seat_number?: number | string; [k: string]: unknown }
+    [key: string]: unknown
+}
+
+interface Trip {
+    id: number
+    trip_datetime?: string
+    total_seats?: number
+    [key: string]: unknown
+}
+
+interface Person {
+    id: number
+    [key: string]: unknown
+}
+
+function errMsg(e: unknown, fallback: string): string {
+    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+        return (e as { message: string }).message
+    }
+    return fallback
+}
+
 function showNotification(type: 'success' | 'error', title: string, message: string) {
     if (type === 'success') toast.success(title, { description: message })
     else toast.error(title, { description: message })
@@ -20,11 +52,11 @@ function showNotification(type: 'success' | 'error', title: string, message: str
 export function useTripDetailPage(tripId: number) {
     const dispatch = useAppDispatch()
 
-    const trip = useAppSelector(selectCurrentTrip) as any
+    const trip = useAppSelector(selectCurrentTrip) as Trip | null
     const loading = useAppSelector(selectTripLoading)
     const error = useAppSelector(selectTripError)
-    const drivers = useAppSelector(selectDrivers) as any[]
-    const assistants = useAppSelector(selectAssistants) as any[]
+    const drivers = useAppSelector(selectDrivers) as Person[]
+    const assistants = useAppSelector(selectAssistants) as Person[]
 
     const { soldTickets, reservedSeatNumbers, fetchSoldTickets, formatDate } = useTripDetails()
     const { lockedSeats, fetchLockedSeats } = useTripSeatLocks(tripId)
@@ -53,8 +85,8 @@ export function useTripDetailPage(tripId: number) {
             showNotification('success', 'Viaje despachado', 'El viaje ha sido despachado correctamente.')
             setShowDispatchModal(false)
             refreshTrip()
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo despachar el viaje.')
+        } catch (err) {
+            showNotification('error', 'Error', errMsg(err, 'No se pudo despachar el viaje.'))
         } finally { setDispatching(false) }
     }
 
@@ -65,32 +97,32 @@ export function useTripDetailPage(tripId: number) {
             showNotification('success', 'Viaje terminado', 'El viaje ha sido marcado como terminado.')
             setShowFinishModal(false)
             refreshTrip()
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo terminar el viaje.')
+        } catch (err) {
+            showNotification('error', 'Error', errMsg(err, 'No se pudo terminar el viaje.'))
         } finally { setFinishing(false) }
     }
 
     // ── Ticket sale/view modals ───────────────────────────────────────────
     const [showTicketSaleModal, setShowTicketSaleModal] = useState(false)
     const [saleActionType, setSaleActionType] = useState<'sell' | 'reserve'>('sell')
-    const [selectedSeatsForSale, setSelectedSeatsForSale] = useState<any[]>([])
+    const [selectedSeatsForSale, setSelectedSeatsForSale] = useState<Seat[]>([])
     const [showTicketPreview, setShowTicketPreview] = useState(false)
-    const [ticketForPreview, setTicketForPreview] = useState<any>(null)
+    const [ticketForPreview, setTicketForPreview] = useState<Ticket | null>(null)
 
     // ── Confirm sale modal ────────────────────────────────────────────────
     const [showConfirmSaleModal, setShowConfirmSaleModal] = useState(false)
-    const [ticketToConfirm, setTicketToConfirm] = useState<any>(null)
+    const [ticketToConfirm, setTicketToConfirm] = useState<Ticket | null>(null)
     const [confirmingSale, setConfirmingSale] = useState(false)
 
     // ── Seat map / selection ──────────────────────────────────────────────
     const [seatMapKey, setSeatMapKey] = useState(0)
-    const [currentSelectedSeats, setCurrentSelectedSeats] = useState<any[]>([])
+    const [currentSelectedSeats, setCurrentSelectedSeats] = useState<Seat[]>([])
     const [controlledSeatIds, setControlledSeatIds] = useState<number[]>([])
 
     // ── Seat change ───────────────────────────────────────────────────────
     const [seatChangeMode, setSeatChangeMode] = useState(false)
-    const [seatChangeTicket, setSeatChangeTicket] = useState<any>(null)
-    const [newSelectedSeat, setNewSelectedSeat] = useState<any>(null)
+    const [seatChangeTicket, setSeatChangeTicket] = useState<Ticket | null>(null)
+    const [newSelectedSeat, setNewSelectedSeat] = useState<Seat | null>(null)
     const [showSeatChangeConfirmModal, setShowSeatChangeConfirmModal] = useState(false)
     const [seatChangeLoading, setSeatChangeLoading] = useState(false)
 
@@ -112,8 +144,8 @@ export function useTripDetailPage(tripId: number) {
             showNotification('success', 'Asiento cambiado', 'El cambio de asiento se realizó con éxito.')
             refreshTrip()
             cancelSeatChange()
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo cambiar el asiento.')
+        } catch (err) {
+            showNotification('error', 'Error', errMsg(err, 'No se pudo cambiar el asiento.'))
         } finally { setSeatChangeLoading(false) }
     }, [seatChangeTicket, newSelectedSeat, refreshTrip, cancelSeatChange])
 
@@ -127,8 +159,8 @@ export function useTripDetailPage(tripId: number) {
             setSeatMapKey(prev => prev + 1)
             setShowConfirmSaleModal(false)
             setTicketToConfirm(null)
-        } catch (err: any) {
-            showNotification('error', 'Error', err?.message || 'No se pudo confirmar la venta.')
+        } catch (err) {
+            showNotification('error', 'Error', errMsg(err, 'No se pudo confirmar la venta.'))
         } finally { setConfirmingSale(false) }
     }
 
@@ -140,20 +172,20 @@ export function useTripDetailPage(tripId: number) {
         setControlledSeatIds([])
     }, [tripId, currentSelectedSeats])
 
-    const handleRemoveSeat = useCallback((seat: any) => {
+    const handleRemoveSeat = useCallback((seat: Seat) => {
         seatService.unlockSeats(tripId, [seat.id]).catch(() => {})
         setCurrentSelectedSeats(prev => prev.filter(s => s.id !== seat.id))
         setControlledSeatIds(prev => prev.filter(id => id !== seat.id))
     }, [tripId])
 
-    const handleSellTicket = useCallback((seats: any[] | any) => {
+    const handleSellTicket = useCallback((seats: Seat[] | Seat) => {
         const seatsArray = Array.isArray(seats) ? seats : [seats]
         setSelectedSeatsForSale(seatsArray)
         setSaleActionType('sell')
         setShowTicketSaleModal(true)
     }, [])
 
-    const handleReserveSeat = useCallback((seats: any[] | any) => {
+    const handleReserveSeat = useCallback((seats: Seat[] | Seat) => {
         const seatsArray = Array.isArray(seats) ? seats : [seats]
         setSelectedSeatsForSale(seatsArray)
         setSaleActionType('reserve')
@@ -168,9 +200,9 @@ export function useTripDetailPage(tripId: number) {
         setSeatMapKey(prev => prev + 1)
     }
 
-    const findTicketBySeat = (seat: any) => soldTickets.find(t => t.seat?.seat_number === seat.number) || null
+    const findTicketBySeat = (seat: Seat) => soldTickets.find((t: Ticket) => t.seat?.seat_number === seat.number) || null
 
-    const handlePreviewTicket = (seat: any) => {
+    const handlePreviewTicket = (seat: Seat) => {
         const ticket = findTicketBySeat(seat)
         if (ticket) {
             setTicketForPreview(ticket)
@@ -178,7 +210,7 @@ export function useTripDetailPage(tripId: number) {
         }
     }
 
-    const handleCancelReservation = async (seat: any) => {
+    const handleCancelReservation = async (seat: Seat) => {
         const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && t.state === 'pending')
         if (ticket) {
             try {
@@ -186,13 +218,13 @@ export function useTripDetailPage(tripId: number) {
                 showNotification('success', 'Reserva cancelada', 'La reserva ha sido cancelada exitosamente.')
                 refreshTrip()
                 setSeatMapKey(prev => prev + 1)
-            } catch (err: any) {
-                showNotification('error', 'Error', err?.message || 'No se pudo cancelar la reserva.')
+            } catch (err) {
+                showNotification('error', 'Error', errMsg(err, 'No se pudo cancelar la reserva.'))
             }
         }
     }
 
-    const handleConfirmSale = (seat: any) => {
+    const handleConfirmSale = (seat: Seat) => {
         const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && t.state === 'pending')
         if (ticket) {
             setTicketToConfirm(ticket)
@@ -200,7 +232,7 @@ export function useTripDetailPage(tripId: number) {
         }
     }
 
-    const handleChangeSeat = (seat: any) => {
+    const handleChangeSeat = (seat: Seat) => {
         const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && (t.state === 'confirmed' || t.state === 'paid' || t.state === 'pending'))
         if (ticket) {
             setSeatChangeTicket(ticket)
@@ -210,7 +242,7 @@ export function useTripDetailPage(tripId: number) {
         }
     }
 
-    const handleSelectionChange = async (seats: any[]) => {
+    const handleSelectionChange = async (seats: Seat[]) => {
         const prevIds = new Set(currentSelectedSeats.map(s => s.id))
         const newIds = new Set(seats.map(s => s.id))
 
@@ -337,7 +369,7 @@ export function useTripDetailPage(tripId: number) {
         ticketPreview: {
             show: showTicketPreview,
             ticket: ticketForPreview,
-            open: (ticket: any) => { setTicketForPreview(ticket); setShowTicketPreview(true) },
+            open: (ticket: Ticket) => { setTicketForPreview(ticket); setShowTicketPreview(true) },
             close: () => { setShowTicketPreview(false); setTicketForPreview(null) },
         },
 

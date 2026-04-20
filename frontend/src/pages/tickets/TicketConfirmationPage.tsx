@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams, Navigate } from 'react-router'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { apiFetch } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Printer } from 'lucide-react'
 
 export function Component() {
   const navigate = useNavigate()
@@ -200,21 +202,13 @@ export function Component() {
 
                 <div className="mt-8 border-t border-gray-200 pt-6">
                   <div className="flex justify-between">
-                    <button
-                      onClick={printTicket}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <svg className="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                      </svg>
+                    <Button variant="outline" onClick={printTicket}>
+                      <Printer className="h-5 w-5 mr-2 text-gray-500" />
                       Imprimir boleto
-                    </button>
-                    <button
-                      onClick={() => navigate('/dashboard')}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
+                    </Button>
+                    <Button onClick={() => navigate('/dashboard')} className="bg-blue-600 hover:bg-blue-700">
                       Volver al dashboard
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

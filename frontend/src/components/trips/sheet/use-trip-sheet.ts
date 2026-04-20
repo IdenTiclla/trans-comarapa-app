@@ -6,7 +6,7 @@ import type { Passenger } from './helpers'
 
 export function useTripSheet(tripId: number) {
   const dispatch = useAppDispatch()
-  const trip = useAppSelector(selectCurrentTrip) as any
+  const trip = useAppSelector(selectCurrentTrip) as { route?: { destination?: { name?: string } | string } | null; [k: string]: unknown } | null
   const loading = useAppSelector(selectTripLoading)
   const error = useAppSelector(selectTripError)
 
@@ -30,8 +30,8 @@ export function useTripSheet(tripId: number) {
             return acc
           }, {})
         )
-      } catch (err: any) {
-        setPassError(err?.message || 'Error al cargar la planilla.')
+      } catch (err) {
+        setPassError(err instanceof Error ? err.message : 'Error al cargar la planilla.')
       } finally {
         setLoadingPassengers(false)
       }

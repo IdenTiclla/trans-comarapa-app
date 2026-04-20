@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router'
 import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 
 const heroImages = [
   '/images/buses_challa.jpeg',
@@ -89,12 +90,14 @@ export default function LoginLayout() {
 
         <div className="absolute bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
           {heroImages.map((_, index) => (
-            <button
+            <Button
               key={index}
+              variant="ghost"
+              size="icon"
               onClick={() => setCurrentSlide(index)}
-              className={`w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full transition-all duration-300 hover:scale-110 ${
+              className={`w-2.5 h-2.5 lg:w-3 lg:h-3 min-w-0 rounded-full p-0 transition-all duration-300 hover:scale-110 ${
                 index === currentSlide
-                  ? 'bg-white shadow-lg scale-125'
+                  ? 'bg-white shadow-lg scale-125 hover:bg-white'
                   : 'bg-white/50 hover:bg-white/70'
               }`}
               aria-label={`Ir a imagen ${index + 1}`}

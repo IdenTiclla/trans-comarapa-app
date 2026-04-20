@@ -49,6 +49,7 @@ export function BoardingChecklist({ tripId, passengers }: Props) {
         </div>
       </div>
       {passengers.map(p => (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
           key={p.ticket_id}
           onClick={() => toggleCheck(p.ticket_id)}

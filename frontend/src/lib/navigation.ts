@@ -12,7 +12,6 @@ import {
   Package,
   Ticket,
   Calculator,
-  ClipboardList,
   type LucideIcon,
 } from 'lucide-react'
 import type { Role } from '@/lib/constants'

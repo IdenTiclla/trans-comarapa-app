@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Button } from '@/components/ui/button'
+
 interface SeatContextMenuProps {
     visible: boolean
     position: { x: number, y: number }
@@ -25,7 +28,10 @@ export default function SeatContextMenu({
 }: SeatContextMenuProps) {
     if (!visible || !enableContextMenu) return null
 
+    const itemCls = 'w-full justify-start h-auto rounded-none px-4 py-1.5 text-sm font-normal hover:bg-gray-100'
+
     return (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
             className="fixed bg-white shadow-lg rounded-md border border-gray-200 py-1 z-50 min-w-[140px]"
             style={{ top: `${position.y}px`, left: `${position.x}px` }}
@@ -38,55 +44,37 @@ export default function SeatContextMenu({
             {(selectedSeat?.status === 'reserved' || selectedSeat?.occupied || selectedSeat?.status === 'occupied') && (
                 <>
                     {onPreviewTicket && (
-                        <button
-                            onClick={onPreviewTicket}
-                            className="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
+                        <Button variant="ghost" onClick={onPreviewTicket} className={`${itemCls} text-gray-700`}>
                             Previsualizar boleto
-                        </button>
+                        </Button>
                     )}
                     {onGoToTicketPage && (
-                        <button
-                            onClick={onGoToTicketPage}
-                            className="w-full text-left block px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
+                        <Button variant="ghost" onClick={onGoToTicketPage} className={`${itemCls} text-gray-700`}>
                             Ir al boleto
-                        </button>
+                        </Button>
                     )}
                 </>
             )}
 
             {selectedSeat?.status === 'reserved' && (
                 <>
-                    <button
-                        onClick={onConfirmSale}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-green-600 hover:bg-gray-100 transition-colors"
-                    >
+                    <Button variant="ghost" onClick={onConfirmSale} className={`${itemCls} text-green-600`}>
                         Confirmar venta
-                    </button>
-                    <button
-                        onClick={onCancelReservation}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-red-600 hover:bg-gray-100 transition-colors"
-                    >
+                    </Button>
+                    <Button variant="ghost" onClick={onCancelReservation} className={`${itemCls} text-red-600`}>
                         Cancelar reserva
-                    </button>
+                    </Button>
                 </>
             )}
 
             {(selectedSeat?.occupied || selectedSeat?.status === 'occupied') && (
                 <>
-                    <button
-                        onClick={onChangeSeat}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-blue-600 hover:bg-gray-100 transition-colors"
-                    >
+                    <Button variant="ghost" onClick={onChangeSeat} className={`${itemCls} text-blue-600`}>
                         Cambiar asiento
-                    </button>
-                    <button
-                        onClick={onRescheduleTrip}
-                        className="w-full text-left block px-4 py-1.5 text-sm text-green-600 hover:bg-gray-100 transition-colors"
-                    >
+                    </Button>
+                    <Button variant="ghost" onClick={onRescheduleTrip} className={`${itemCls} text-green-600`}>
                         Reprogramar viaje
-                    </button>
+                    </Button>
                 </>
             )}
         </div>

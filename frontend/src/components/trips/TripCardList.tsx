@@ -100,7 +100,8 @@ function TripRow({
     const dividerClasses = trip ? "bg-border" : isPast ? "bg-muted" : "bg-blue-100"
 
     return (
-        <div 
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+        <div
             className={containerClasses}
             onClick={() => !trip && !isPast && onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time })}
         >

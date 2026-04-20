@@ -8,19 +8,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import {
-    Select as SelectRoot,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import type { TripFinancial } from '@/hooks/use-owner-settlements'
 import { fmt } from './settlement-utils'
 import FormSelect from '@/components/forms/FormSelect'
 import FormInput from '@/components/forms/FormInput'
 import { Wallet, Building2, Ticket, Package, History, ArrowRightCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface Props {
     isOpen: boolean

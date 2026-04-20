@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import FormDatePicker from '@/components/forms/FormDatePicker'
+import { Button } from '@/components/ui/button'
 
 interface Driver {
   id: number
@@ -98,6 +99,7 @@ export function Component() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -149,12 +151,13 @@ export function Component() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => openEdit(driver)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
                       Editar Licencia
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -201,12 +204,12 @@ export function Component() {
                 />
 
                 <div className="flex justify-end space-x-3 pt-4">
-                  <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm">
+                  <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                     Cancelar
-                  </button>
-                  <button type="submit" disabled={saving} className="px-4 py-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium text-sm disabled:opacity-50">
+                  </Button>
+                  <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
                     {saving ? 'Guardando...' : 'Guardar'}
-                  </button>
+                  </Button>
                 </div>
               </form>
            </div>

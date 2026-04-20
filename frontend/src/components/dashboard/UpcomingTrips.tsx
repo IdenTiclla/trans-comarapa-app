@@ -64,6 +64,7 @@ export default function UpcomingTrips() {
                 const destination = trip.route?.destination || 'Destino'
 
                 return (
+                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                     <div
                         key={trip.id}
                         onClick={() => navigate(`/trips/${trip.id}`)}

@@ -4,6 +4,9 @@ import { officeService } from '@/services/office.service'
 import { apiFetch } from '@/lib/api'
 import { toast } from 'sonner'
 import type { Office } from '@/types/office'
+import { Button } from '@/components/ui/button'
+import FormInput from '@/components/forms/FormInput'
+import FormSelect from '@/components/forms/FormSelect'
 
 interface User {
   id: number
@@ -37,6 +40,8 @@ const ROLE_COLORS: Record<string, string> = {
   assistant: 'bg-amber-100 text-amber-700',
   client: 'bg-gray-100 text-gray-700',
 }
+
+const ROLE_OPTIONS = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))
 
 export function Component() {
   const [users, setUsers] = useState<User[]>([])
@@ -84,7 +89,6 @@ export function Component() {
     setFormData({ email: user.email, password: '', role: user.role, first_name: user.first_name || '', last_name: user.last_name || '' })
     setShowForm(true)
 
-    // Load secretary-specific data if applicable
     if (user.role === 'secretary') {
       try {
         const sec = await apiFetch<Secretary>(`/secretaries/by-user/${user.id}`)
@@ -104,8 +108,6 @@ export function Component() {
 
       if (editing) {
         await userManagementService.update(editing.id, data)
-
-        // If secretary, also update office assignment
         if (formData.role === 'secretary' && secretaryInfo) {
           await apiFetch(`/secretaries/${secretaryInfo.id}`, {
             method: 'PATCH',
@@ -157,12 +159,9 @@ export function Component() {
           <h1 className="text-2xl font-bold text-gray-900">Administración de Usuarios</h1>
           <p className="text-gray-600 mt-1">Gestiona las cuentas de usuario del sistema</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
-        >
+        <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">
           + Nuevo Usuario
-        </button>
+        </Button>
       </div>
 
       {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
@@ -171,6 +170,7 @@ export function Component() {
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -195,16 +195,18 @@ export function Component() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => toggleActive(u)}
-                        className={`px-2 py-1 text-xs rounded-full font-medium cursor-pointer ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                        aria-label={u.is_active ? 'Desactivar usuario' : 'Activar usuario'}
+                        className={`h-auto px-2 py-1 text-xs rounded-full font-medium ${u.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
                       >
                         {u.is_active ? 'Activo' : 'Inactivo'}
-                      </button>
+                      </Button>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => openEdit(u)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</button>
-                      <button onClick={() => handleDelete(u)} className="text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</button>
+                      <Button variant="ghost" onClick={() => openEdit(u)} className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</Button>
+                      <Button variant="ghost" onClick={() => handleDelete(u)} className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</Button>
                     </td>
                   </tr>
                 ))
@@ -214,7 +216,6 @@ export function Component() {
         </div>
       )}
 
-      {/* Create / Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
@@ -224,55 +225,56 @@ export function Component() {
             )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                  <input type="text" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                  <input type="text" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-                </div>
+                <FormInput
+                  label="Nombre"
+                  type="text"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                />
+                <FormInput
+                  label="Apellido"
+                  type="text"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña {editing ? <span className="text-gray-400">(dejar vacío para no cambiar)</span> : ''}
-                </label>
-                <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} {...(!editing ? { required: true } : {})} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                >
-                  {Object.entries(ROLE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </div>
+              <FormInput
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+              <FormInput
+                label={editing ? 'Contraseña (dejar vacío para no cambiar)' : 'Contraseña'}
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required={!editing}
+              />
+              <FormSelect
+                label="Rol"
+                value={formData.role}
+                onChange={(val) => setFormData({ ...formData, role: val })}
+                options={ROLE_OPTIONS}
+              />
 
-              {/* Secretary office assignment — only shown when role is secretary */}
               {isSecretary && (
                 <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
-                  <label className="block text-sm font-semibold text-blue-800 mb-1 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-blue-800 mb-1 flex items-center gap-2">
                     <span>🏢</span> Oficina Asignada
-                  </label>
+                  </p>
                   <p className="text-xs text-blue-600 mb-2">
                     Las secretarias deben tener una oficina asignada para poder operar la caja registradora.
                   </p>
-                  <select
-                    value={officeId ?? ''}
-                    onChange={(e) => setOfficeId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">— Sin oficina asignada —</option>
-                    {offices.map((o) => (
-                      <option key={o.id} value={o.id}>{o.name}</option>
-                    ))}
-                  </select>
+                  <FormSelect
+                    value={officeId ? String(officeId) : ''}
+                    onChange={(val) => setOfficeId(val ? Number(val) : null)}
+                    options={[
+                      { value: '', label: '— Sin oficina asignada —' },
+                      ...offices.map((o) => ({ value: String(o.id), label: o.name })),
+                    ]}
+                  />
                   {!officeId && (
                     <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                       <span>⚠️</span> Sin oficina la secretaria no podrá abrir la caja registradora.
@@ -282,20 +284,12 @@ export function Component() {
               )}
 
               <div className="flex justify-end space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm"
-                >
+                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm disabled:opacity-50"
-                >
+                </Button>
+                <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
                   {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Usuario'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

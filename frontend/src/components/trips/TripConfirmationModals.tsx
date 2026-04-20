@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
+import { Button } from '@/components/ui/button'
 
 interface DispatchState {
     show: boolean
@@ -54,15 +56,15 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
         <>
             {/* Dispatch Modal */}
             {dispatch.show && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100"><svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></div>
                             <div><h3 className="text-lg font-medium text-gray-900">Despachar Viaje</h3><p className="text-sm text-gray-500 mt-2">¿Estás seguro? Las encomiendas asignadas pasarán a "En tránsito".</p></div>
                         </div>
                         <div className="mt-6 flex justify-end gap-3">
-                            <button onClick={() => dispatch.setShow(false)} disabled={dispatch.executing} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancelar</button>
-                            <button onClick={dispatch.execute} disabled={dispatch.executing} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{dispatch.executing ? 'Despachando...' : 'Sí, despachar'}</button>
+                            <Button variant="outline" onClick={() => dispatch.setShow(false)} disabled={dispatch.executing}>Cancelar</Button>
+                            <Button onClick={dispatch.execute} disabled={dispatch.executing} className="bg-blue-600 hover:bg-blue-700">{dispatch.executing ? 'Despachando...' : 'Sí, despachar'}</Button>
                         </div>
                     </div>
                 </div>
@@ -70,15 +72,15 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Finish Modal */}
             {finish.show && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-green-100"><svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
                             <div><h3 className="text-lg font-medium text-gray-900">Terminar Viaje</h3><p className="text-sm text-gray-500 mt-2">¿Estás seguro? Las encomiendas en tránsito pasarán a "En destino".</p></div>
                         </div>
                         <div className="mt-6 flex justify-end gap-3">
-                            <button onClick={() => finish.setShow(false)} disabled={finish.executing} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancelar</button>
-                            <button onClick={finish.execute} disabled={finish.executing} className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">{finish.executing ? 'Terminando...' : 'Sí, terminar'}</button>
+                            <Button variant="outline" onClick={() => finish.setShow(false)} disabled={finish.executing}>Cancelar</Button>
+                            <Button onClick={finish.execute} disabled={finish.executing} className="bg-green-600 hover:bg-green-700">{finish.executing ? 'Terminando...' : 'Sí, terminar'}</Button>
                         </div>
                     </div>
                 </div>
@@ -96,7 +98,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Confirm Sale Modal */}
             {confirmSale.show && confirmSale.ticket && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
@@ -111,8 +113,8 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-3">
-                            <button onClick={confirmSale.close} disabled={confirmSale.executing} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancelar</button>
-                            <button onClick={confirmSale.execute} disabled={confirmSale.executing} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{confirmSale.executing ? 'Confirmando...' : 'Confirmar Venta'}</button>
+                            <Button variant="outline" onClick={confirmSale.close} disabled={confirmSale.executing}>Cancelar</Button>
+                            <Button onClick={confirmSale.execute} disabled={confirmSale.executing} className="bg-blue-600 hover:bg-blue-700">{confirmSale.executing ? 'Confirmando...' : 'Confirmar Venta'}</Button>
                         </div>
                     </div>
                 </div>
@@ -120,7 +122,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
 
             {/* Confirm Seat Change Modal */}
             {seatChange.showConfirm && seatChange.ticket && seatChange.newSeat && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
@@ -136,8 +138,8 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-3">
-                            <button onClick={seatChange.cancel} disabled={seatChange.loading} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancelar</button>
-                            <button onClick={seatChange.confirm} disabled={seatChange.loading} className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:opacity-50">{seatChange.loading ? 'Cambiando...' : 'Confirmar Cambio'}</button>
+                            <Button variant="outline" onClick={seatChange.cancel} disabled={seatChange.loading}>Cancelar</Button>
+                            <Button onClick={seatChange.confirm} disabled={seatChange.loading} className="bg-orange-600 hover:bg-orange-700">{seatChange.loading ? 'Cambiando...' : 'Confirmar Cambio'}</Button>
                         </div>
                     </div>
                 </div>

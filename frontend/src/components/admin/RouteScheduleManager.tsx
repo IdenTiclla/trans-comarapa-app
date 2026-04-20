@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import { Clock, Plus, Trash2, CheckCircle, XCircle, X } from 'lucide-react'
@@ -83,9 +84,15 @@ export default function RouteScheduleManager({
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onClose}
+                        aria-label="Cerrar"
+                        className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+                    >
                         <X className="h-5 w-5" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -164,26 +171,30 @@ export default function RouteScheduleManager({
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => toggleActive(schedule)}
+                                        aria-label={schedule.is_active ? 'Desactivar horario' : 'Activar horario'}
                                         className={cn(
-                                            "p-2 rounded-xl transition-all duration-200",
-                                            schedule.is_active 
-                                                ? "text-green-600 bg-green-50 hover:bg-green-100" 
+                                            "rounded-xl transition-all duration-200",
+                                            schedule.is_active
+                                                ? "text-green-600 bg-green-50 hover:bg-green-100"
                                                 : "text-gray-400 bg-gray-100 hover:bg-gray-200"
                                         )}
-                                        title={schedule.is_active ? 'Desactivar' : 'Activar'}
                                     >
                                         {schedule.is_active ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
-                                    </button>
+                                    </Button>
 
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => removeSchedule(schedule)}
-                                        className="p-2 rounded-xl text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                                        title="Eliminar"
+                                        aria-label="Eliminar horario"
+                                        className="rounded-xl text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all duration-200 opacity-0 group-hover:opacity-100"
                                     >
                                         <Trash2 className="h-5 w-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ))}

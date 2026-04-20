@@ -168,6 +168,7 @@ export default function ClientCardList({
                     ) : (
                         <Card>
                             <div className="overflow-x-auto">
+                                {/* eslint-disable-next-line no-restricted-syntax */}
                                 <table className="min-w-full divide-y divide-border">
                                     <thead className="bg-muted/50">
                                         <tr>

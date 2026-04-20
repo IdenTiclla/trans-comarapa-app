@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { salesService } from '@/services/sales.service'
+import { Button } from '@/components/ui/button'
 
 interface Sale {
     id: number
@@ -91,12 +92,13 @@ export default function RecentSales({ limit = 5, onViewAll }: RecentSalesProps) 
             </div>
             {onViewAll && (
                 <div className="px-6 py-3 bg-gray-50 text-right">
-                    <button
+                    <Button
+                        variant="link"
                         onClick={onViewAll}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                        className="h-auto p-0 text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
                         Ver todas las ventas →
-                    </button>
+                    </Button>
                 </div>
             )}
         </>

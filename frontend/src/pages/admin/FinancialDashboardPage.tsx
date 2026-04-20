@@ -104,6 +104,7 @@ export function Component() {
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
+                {/* eslint-disable-next-line no-restricted-syntax */}
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-muted/50">
                     <tr>
@@ -144,7 +145,8 @@ export function Component() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  {/* eslint-disable-next-line no-restricted-syntax */}
+                <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>

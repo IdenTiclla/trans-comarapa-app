@@ -70,7 +70,7 @@ export function Component() {
         <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <div className="flex items-start gap-3">
             <div className="h-5 w-5 text-red-400 mt-0.5">!</div>
-            <div><p className="text-sm font-medium text-red-800">{error}</p><button onClick={refreshTrip} className="mt-2 text-sm text-red-600 underline">Reintentar</button></div>
+            <div><p className="text-sm font-medium text-red-800">{error}</p><Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-red-600 underline">Reintentar</Button></div>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ export function Component() {
             onConfirmSale={page.seatMapHandlers.onConfirmSale}
             onChangeSeat={page.seatMapHandlers.onChangeSeat}
             onPreviewTicket={page.seatMapHandlers.onPreviewTicket}
-            onGoToTicketPage={(seat: any) => {
+            onGoToTicketPage={(seat) => {
               const ticket = page.findTicketBySeat(seat)
               if (ticket) navigate(`/tickets/${ticket.id}`)
             }}

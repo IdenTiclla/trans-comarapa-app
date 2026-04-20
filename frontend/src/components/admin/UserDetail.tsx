@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
+import { Button } from '@/components/ui/button'
+import { X, AlertCircle, Loader2, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react'
 
 interface UserDetailProps {
     user?: any
@@ -81,37 +84,29 @@ export default function UserDetail({
         <div className="bg-white rounded-lg shadow-md overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h3 className="text-lg font-semibold text-gray-900">Detalles del Usuario</h3>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onClose}
-                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                    title="Cerrar"
+                    aria-label="Cerrar"
+                    className="text-gray-500 hover:text-gray-700"
                 >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                    <X className="h-5 w-5" />
+                </Button>
             </div>
 
             {loading ? (
                 <div className="p-10 text-center">
-                    <svg className="animate-spin h-10 w-10 text-indigo-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <Loader2 className="animate-spin h-10 w-10 text-indigo-500 mx-auto" />
                     <p className="mt-4 text-gray-600">Cargando información del usuario...</p>
                 </div>
             ) : error ? (
                 <div className="p-10 text-center">
-                    <svg className="h-10 w-10 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
                     <p className="mt-4 text-red-600">{error}</p>
-                    <button
-                        onClick={onRefresh}
-                        className="mt-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                    >
+                    <Button onClick={onRefresh} className="mt-4 bg-indigo-600 hover:bg-indigo-700">
                         Intentar nuevamente
-                    </button>
+                    </Button>
                 </div>
             ) : (
                 <div className="p-6">
@@ -241,55 +236,27 @@ export default function UserDetail({
 
                     {/* Botones de acción */}
                     <div className="mt-8 flex flex-wrap justify-end gap-3 pt-5 border-t border-gray-200">
-                        <button
-                            onClick={() => onEdit(user)}
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                        >
-                            <span className="flex items-center">
-                                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Editar Usuario
-                            </span>
-                        </button>
+                        <Button onClick={() => onEdit(user)} className="bg-indigo-600 hover:bg-indigo-700">
+                            <Pencil className="h-4 w-4 mr-1.5" />
+                            Editar Usuario
+                        </Button>
 
                         {user.is_active ? (
-                            <button
-                                onClick={() => onDeactivate(user)}
-                                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200"
-                            >
-                                <span className="flex items-center">
-                                    <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                    Desactivar Usuario
-                                </span>
-                            </button>
+                            <Button onClick={() => onDeactivate(user)} className="bg-yellow-600 hover:bg-yellow-700">
+                                <UserX className="h-4 w-4 mr-1.5" />
+                                Desactivar Usuario
+                            </Button>
                         ) : (
-                            <button
-                                onClick={() => onActivate(user)}
-                                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
-                            >
-                                <span className="flex items-center">
-                                    <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Activar Usuario
-                                </span>
-                            </button>
+                            <Button onClick={() => onActivate(user)} className="bg-green-600 hover:bg-green-700">
+                                <UserCheck className="h-4 w-4 mr-1.5" />
+                                Activar Usuario
+                            </Button>
                         )}
 
-                        <button
-                            onClick={() => onDelete(user)}
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
-                        >
-                            <span className="flex items-center">
-                                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Eliminar Usuario
-                            </span>
-                        </button>
+                        <Button onClick={() => onDelete(user)} className="bg-red-600 hover:bg-red-700">
+                            <Trash2 className="h-4 w-4 mr-1.5" />
+                            Eliminar Usuario
+                        </Button>
                     </div>
                 </div>
             )}

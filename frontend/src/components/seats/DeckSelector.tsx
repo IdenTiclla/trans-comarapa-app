@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface DeckSelectorProps {
     busType?: string | null
@@ -61,9 +64,11 @@ export default function DeckSelector({
     return (
         <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm transition-all duration-300">
             <div className="flex bg-gray-100 rounded-xl p-1">
-                <button
+                <Button
+                    variant="ghost"
                     onClick={() => onDeckChanged(firstDeckValue)}
-                    className={`flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:-translate-y-px active:translate-y-0 ${isFirstDeckSelected ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'}`}
+                    className={cn('flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 h-auto text-sm font-medium',
+                        isFirstDeckSelected ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200')}
                 >
                     <span className="mr-1.5">🔽</span>
                     <span className="hidden sm:inline">Planta</span>
@@ -72,11 +77,13 @@ export default function DeckSelector({
                     {firstDeckSeatsCount !== null && (
                         <span className="ml-1.5 text-xs opacity-75">({firstDeckSeatsCount})</span>
                     )}
-                </button>
+                </Button>
 
-                <button
+                <Button
+                    variant="ghost"
                     onClick={() => onDeckChanged(secondDeckValue)}
-                    className={`flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:-translate-y-px active:translate-y-0 ${isSecondDeckSelected ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'}`}
+                    className={cn('flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 h-auto text-sm font-medium',
+                        isSecondDeckSelected ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200')}
                 >
                     <span className="mr-1.5">🔼</span>
                     <span className="hidden sm:inline">Planta</span>
@@ -85,7 +92,7 @@ export default function DeckSelector({
                     {secondDeckSeatsCount !== null && (
                         <span className="ml-1.5 text-xs opacity-75">({secondDeckSeatsCount})</span>
                     )}
-                </button>
+                </Button>
             </div>
 
             <div className="mt-3 flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-100">

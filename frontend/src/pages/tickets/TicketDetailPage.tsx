@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { AlertCircle, ArrowRight, Ban, ChevronRight, Edit, Eye, Printer, TicketIcon } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { useTicketDetail } from '@/hooks/use-ticket-detail'
 import { ticketService } from '@/services/ticket.service'
 import { Button } from '@/components/ui/button'
@@ -17,65 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
 import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
-
-const formatCurrency = (amount: number | undefined | null) =>
-  new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount ?? 0)
-
-const formatDateTime = (value: string | undefined | null) => {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleString('es-BO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return value
-  }
-}
-
-const formatDate = (value: string | undefined | null) => {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleDateString('es-BO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return value
-  }
-}
-
-const formatTime = (value: string | undefined | null) => {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleTimeString('es-BO', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return value
-  }
-}
-
-const STATE_BADGE: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pendiente', className: 'bg-amber-100 text-amber-800 ring-amber-200' },
-  confirmed: { label: 'Confirmado', className: 'bg-emerald-100 text-emerald-800 ring-emerald-200' },
-  cancelled: { label: 'Cancelado', className: 'bg-rose-100 text-rose-800 ring-rose-200' },
-  completed: { label: 'Completado', className: 'bg-sky-100 text-sky-800 ring-sky-200' },
-}
-
-const PAYMENT_METHOD: Record<string, string> = {
-  cash: 'Efectivo',
-  card: 'Tarjeta',
-  qr: 'QR',
-  transfer: 'Transferencia',
-}
+import { TicketDetailHeader } from './ticket-detail/TicketDetailHeader'
+import { PassengerCard } from './ticket-detail/PassengerCard'
+import { TripLogisticsCard } from './ticket-detail/TripLogisticsCard'
+import { PaymentSummaryCard } from './ticket-detail/PaymentSummaryCard'
+import { QuickActionsCard } from './ticket-detail/QuickActionsCard'
 
 export function Component() {
   const { id } = useParams()
@@ -88,25 +35,7 @@ export function Component() {
   const [showPreview, setShowPreview] = useState(false)
   const [autoPrintPreview, setAutoPrintPreview] = useState(false)
 
-  const stateInfo = useMemo(() => {
-    const state = ticket?.state?.toLowerCase() ?? ''
-    return STATE_BADGE[state] ?? { label: state || '—', className: 'bg-gray-100 text-gray-800 ring-gray-200' }
-  }, [ticket?.state])
-
-  const canCancel = ticket?.state && !['cancelled', 'completed'].includes(ticket.state.toLowerCase())
-
-  const origin =
-    trip?.route?.origin_location?.name ||
-    trip?.route?.origin ||
-    '—'
-  const destination =
-    ticket?.destination ||
-    trip?.route?.destination_location?.name ||
-    trip?.route?.destination ||
-    '—'
-
-  const passengerName = [ticket?.client?.firstname, ticket?.client?.lastname].filter(Boolean).join(' ') || '—'
-  const secretaryName = [ticket?.secretary?.firstname, ticket?.secretary?.lastname].filter(Boolean).join(' ') || '—'
+  const canCancel = Boolean(ticket?.state && !['cancelled', 'completed'].includes(ticket.state.toLowerCase()))
 
   const handleCancel = async () => {
     if (!ticket) return
@@ -117,27 +46,15 @@ export function Component() {
       setShowCancelDialog(false)
       await reload()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo cancelar el boleto'
-      toast.error(message)
+      toast.error(err instanceof Error ? err.message : 'No se pudo cancelar el boleto')
     } finally {
       setCancelling(false)
     }
   }
 
-  const handlePreview = () => {
-    setAutoPrintPreview(false)
-    setShowPreview(true)
-  }
-
-  const handlePrint = () => {
-    setAutoPrintPreview(true)
-    setShowPreview(true)
-  }
-
-  const handleClosePreview = () => {
-    setShowPreview(false)
-    setAutoPrintPreview(false)
-  }
+  const handlePreview = () => { setAutoPrintPreview(false); setShowPreview(true) }
+  const handlePrint = () => { setAutoPrintPreview(true); setShowPreview(true) }
+  const handleClosePreview = () => { setShowPreview(false); setAutoPrintPreview(false) }
 
   if (loading && !ticket) {
     return (
@@ -160,256 +77,39 @@ export function Component() {
         </h3>
         {error && <p className="mt-2 text-sm text-gray-500">{error}</p>}
         <div className="mt-6 flex justify-center gap-3">
-          <Button variant="outline" onClick={() => navigate('/tickets')}>
-            Volver a boletos
-          </Button>
-          {error && (
-            <Button onClick={reload}>Reintentar</Button>
-          )}
+          <Button variant="outline" onClick={() => navigate('/tickets')}>Volver a boletos</Button>
+          {error && <Button onClick={reload}>Reintentar</Button>}
         </div>
       </div>
     )
   }
 
-  const basePrice = trip?.route?.price
-  const totalPrice = ticket.price
-
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="w-full px-4 lg:px-8 pt-6 pb-12">
-        {/* Header */}
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <nav className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">
-              <Link to="/tickets" className="hover:text-primary">Boletos</Link>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-primary">Detalles</span>
-            </nav>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
-              Boleto #{ticket.id}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <span
-                className={cn(
-                  'px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest rounded ring-1',
-                  stateInfo.className,
-                )}
-              >
-                {stateInfo.label}
-              </span>
-              <span className="text-sm text-gray-500">
-                Emitido: {formatDateTime(ticket.created_at)}
-              </span>
-            </div>
-          </div>
+        <TicketDetailHeader
+          ticketId={ticket.id}
+          state={ticket.state}
+          createdAt={ticket.created_at}
+          onEdit={() => navigate(`/tickets?edit=${ticket.id}`)}
+          onPreview={handlePreview}
+          onPrint={handlePrint}
+        />
 
-          <div className="flex flex-wrap gap-2 print:hidden">
-            <Button variant="outline" onClick={() => navigate(`/tickets?edit=${ticket.id}`)}>
-              <Edit className="h-4 w-4" />
-              Editar
-            </Button>
-            <Button variant="outline" onClick={handlePreview}>
-              <Eye className="h-4 w-4" />
-              Previsualizar
-            </Button>
-            <Button onClick={handlePrint}>
-              <Printer className="h-4 w-4" />
-              Imprimir
-            </Button>
-          </div>
-        </header>
-
-        {/* Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main */}
           <section className="lg:col-span-8 space-y-6">
-            {/* Passenger & Seat */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 space-y-5">
-                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2">
-                    Información del Pasajero
-                  </h3>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Nombre</p>
-                    <p className="text-xl font-semibold text-gray-900">{passengerName}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">CI / Documento</p>
-                      <p className="text-base font-medium text-gray-900">
-                        {ticket.client?.document_id || '—'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Teléfono</p>
-                      <p className="text-base font-medium text-gray-900">
-                        {ticket.client?.phone || '—'}
-                      </p>
-                    </div>
-                  </div>
-                  {ticket.client?.email && (
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Email</p>
-                      <p className="text-base font-medium text-gray-900">{ticket.client.email}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-slate-50 rounded-lg p-5 flex flex-col items-center justify-center text-center">
-                  <div className="w-14 h-14 bg-primary text-white flex items-center justify-center rounded-lg mb-3">
-                    <TicketIcon className="h-7 w-7" />
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Asiento</p>
-                  <p className="text-5xl font-bold tracking-tight text-primary leading-none mt-1">
-                    {ticket.seat?.seat_number ?? ticket.seat_id ?? '—'}
-                  </p>
-                  {ticket.seat?.deck && (
-                    <p className="text-xs text-gray-500 mt-2">Piso {ticket.seat.deck}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Trip Logistics */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-6">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2">
-                Información del Viaje
-              </h3>
-
-              {trip ? (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                    <div className="relative pl-6 border-l-2 border-dashed border-gray-300">
-                      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary ring-4 ring-white" />
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Origen</p>
-                      <p className="text-lg font-bold text-gray-900">{origin}</p>
-                    </div>
-                    <div className="flex flex-col items-center py-2 md:py-0">
-                      <ArrowRight className="h-7 w-7 text-gray-300" />
-                      {trip.bus?.license_plate && (
-                        <p className="text-[10px] font-bold text-primary uppercase mt-1">
-                          Bus {trip.bus.license_plate}
-                        </p>
-                      )}
-                    </div>
-                    <div className="md:text-right">
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Destino</p>
-                      <p className="text-lg font-bold text-gray-900">{destination}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-5 pt-4 border-t border-gray-100">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Fecha salida</p>
-                      <p className="text-sm font-medium text-gray-900">{formatDate(trip.trip_datetime)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Hora</p>
-                      <p className="text-sm font-medium text-gray-900">{formatTime(trip.trip_datetime)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Viaje</p>
-                      <Link
-                        to={`/trips/${trip.id}`}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        #{trip.id}
-                      </Link>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Estado viaje</p>
-                      <p className="text-sm font-medium text-gray-900 capitalize">{trip.status || '—'}</p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-gray-500 italic">Sin información del viaje.</p>
-              )}
-            </div>
+            <PassengerCard ticket={ticket} />
+            <TripLogisticsCard ticket={ticket} trip={trip} />
           </section>
 
-          {/* Sidebar */}
           <aside className="lg:col-span-4 space-y-6">
-            {/* Payment Summary (Parcel-style) */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-4">Valor Pagado</p>
-              <h3 className="text-[40px] font-bold text-gray-900 leading-none mb-1 tracking-tight">
-                {formatCurrency(totalPrice)}
-              </h3>
-              <p className="text-[11px] text-gray-500 mb-6">Monto total del servicio</p>
-
-              <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-gray-700 uppercase tracking-tighter">Estado</span>
-                  <span
-                    className={cn(
-                      'px-2 py-0.5 font-bold uppercase tracking-widest rounded ring-1 scale-90 origin-right',
-                      stateInfo.className,
-                    )}
-                  >
-                    {stateInfo.label}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-gray-700">Método de pago</span>
-                  <span className="text-xs font-bold text-gray-900">
-                    {ticket.payment_method ? PAYMENT_METHOD[ticket.payment_method] ?? ticket.payment_method : '—'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-gray-700">Emitido por</span>
-                  <span className="text-xs font-bold text-gray-900">{secretaryName}</span>
-                </div>
-                {basePrice !== undefined && basePrice !== totalPrice && (
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200/50">
-                    <span className="text-xs font-bold text-gray-700">Tarifa Base</span>
-                    <span className="text-xs font-bold text-gray-500 line-through">{formatCurrency(basePrice)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 print:hidden">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 px-2 pt-1 pb-3">
-                Acciones
-              </h3>
-              <button
-                onClick={handlePreview}
-                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Eye className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-900">Previsualizar boleto</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-primary" />
-              </button>
-              <button
-                onClick={handlePrint}
-                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Printer className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-900">Imprimir boleto</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-primary" />
-              </button>
-              {canCancel && (
-                <button
-                  onClick={() => setShowCancelDialog(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-rose-50 transition-colors group text-rose-600"
-                >
-                  <div className="flex items-center gap-3">
-                    <Ban className="h-4 w-4" />
-                    <span className="text-sm font-medium">Cancelar boleto</span>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-rose-600" />
-                </button>
-              )}
-            </div>
-
-            {/* Trip */}
+            <PaymentSummaryCard ticket={ticket} trip={trip} />
+            <QuickActionsCard
+              canCancel={canCancel}
+              onPreview={handlePreview}
+              onPrint={handlePrint}
+              onCancel={() => setShowCancelDialog(true)}
+            />
             <AssignedTripCard pkg={{ trip }} />
           </aside>
         </div>

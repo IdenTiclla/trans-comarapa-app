@@ -52,7 +52,7 @@ export function OpenRegisterModal({ officeId, userId, onSuccess }: OpenRegisterM
       toast.success(`Se abrió la caja con un saldo inicial de ${balance.toFixed(2)} Bs.`);
       setOpen(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error?.toString() || "No se pudo abrir la caja registradora.");
     } finally {
       setIsSubmitting(false);

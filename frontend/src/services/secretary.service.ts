@@ -12,7 +12,7 @@ export interface Secretary {
 
 export const secretaryService = {
     getAll: async (): Promise<Secretary[]> => {
-        const response = await apiFetch('/secretaries') as any
+        const response = await apiFetch('/secretaries') as Secretary[] | { items?: Secretary[] }
         // The endpoint might return { items: Secretary[], total: number } or Secretary[]
         return Array.isArray(response) ? response : response.items || []
     },

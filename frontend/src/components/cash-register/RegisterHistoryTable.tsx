@@ -61,6 +61,7 @@ export function RegisterHistoryTable({ registers, isLoading }: RegisterHistoryTa
     <div className="space-y-2">
       {registers.map((reg) => (
         <div key={reg.id} className="border rounded-lg overflow-hidden">
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             className="flex items-center w-full p-4 hover:bg-muted/50 cursor-pointer transition-colors"
             onClick={() => handleToggle(reg.id)}

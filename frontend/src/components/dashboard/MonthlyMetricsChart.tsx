@@ -129,6 +129,7 @@ export default function MonthlyMetricsChart({
 
                 {showPeriodSelector && (
                     <div>
+                        {/* eslint-disable-next-line no-restricted-syntax */}
                         <select
                             value={selectedPeriod}
                             onChange={handlePeriodChange}

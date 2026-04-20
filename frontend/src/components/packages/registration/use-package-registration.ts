@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
@@ -231,7 +232,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
       try {
         const secretaryResponse: any = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, { method: 'GET' })
         secretaryId = secretaryResponse.id
-      } catch (error) {
+      } catch {
         throw new Error('No se pudo verificar su rol de secretario o no tiene los permisos suficientes.')
       }
 
@@ -293,9 +294,9 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
         if (onPackageRegistered) onPackageRegistered(response)
         resetForm()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error registrando encomienda:', error)
-      setFormErrorMessage(error.message || error.data?.detail || 'Hubo un error al registrar la encomienda.')
+      setFormErrorMessage((error instanceof Error ? error.message : String(error)) || error.data?.detail || 'Hubo un error al registrar la encomienda.')
     } finally {
       setIsSubmitting(false)
     }

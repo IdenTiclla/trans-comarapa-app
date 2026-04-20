@@ -79,30 +79,44 @@ export const PACKAGE_PAYMENT_STATUS_VALUES = {
 
 // ── Origin & Destination resolution ───────────────────────────────────────────
 
-export function getPackageDestination(pkg: any, trip?: any): string {
+type MaybePkg = Record<string, unknown> | null | undefined
+
+const pick = (obj: unknown, path: string[]): string | undefined => {
+    let cur: unknown = obj
+    for (const key of path) {
+        if (cur && typeof cur === 'object' && key in cur) {
+            cur = (cur as Record<string, unknown>)[key]
+        } else {
+            return undefined
+        }
+    }
+    return typeof cur === 'string' ? cur : undefined
+}
+
+export function getPackageDestination(pkg: MaybePkg, trip?: MaybePkg): string {
     if (!pkg) return 'Destino'
-    return pkg.destination_office?.name ||
-        pkg.destination_office_name ||
-        pkg.destination ||
-        pkg.recipient?.branch?.name ||
-        pkg.recipient?.office?.name ||
-        pkg.trip?.route?.destination_location?.name ||
-        pkg.trip?.route?.destination ||
-        trip?.route?.destination?.name ||
-        trip?.route?.destination ||
+    return pick(pkg, ['destination_office', 'name']) ||
+        pick(pkg, ['destination_office_name']) ||
+        pick(pkg, ['destination']) ||
+        pick(pkg, ['recipient', 'branch', 'name']) ||
+        pick(pkg, ['recipient', 'office', 'name']) ||
+        pick(pkg, ['trip', 'route', 'destination_location', 'name']) ||
+        pick(pkg, ['trip', 'route', 'destination']) ||
+        pick(trip, ['route', 'destination', 'name']) ||
+        pick(trip, ['route', 'destination']) ||
         'Destino'
 }
 
-export function getPackageOrigin(pkg: any, trip?: any): string {
+export function getPackageOrigin(pkg: MaybePkg, trip?: MaybePkg): string {
     if (!pkg) return 'Origen'
-    return pkg.origin_office?.name ||
-        pkg.origin_office_name ||
-        pkg.origin ||
-        pkg.sender?.branch?.name ||
-        pkg.sender?.office?.name ||
-        pkg.trip?.route?.origin_location?.name ||
-        pkg.trip?.route?.origin ||
-        trip?.route?.origin?.name ||
-        trip?.route?.origin ||
+    return pick(pkg, ['origin_office', 'name']) ||
+        pick(pkg, ['origin_office_name']) ||
+        pick(pkg, ['origin']) ||
+        pick(pkg, ['sender', 'branch', 'name']) ||
+        pick(pkg, ['sender', 'office', 'name']) ||
+        pick(pkg, ['trip', 'route', 'origin_location', 'name']) ||
+        pick(pkg, ['trip', 'route', 'origin']) ||
+        pick(trip, ['route', 'origin', 'name']) ||
+        pick(trip, ['route', 'origin']) ||
         'Origen'
 }

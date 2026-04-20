@@ -33,6 +33,7 @@ export default function PackageCard({
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-200">
             <CardContent className="p-0">
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                     className="p-4 border-b border-gray-100 bg-muted/50 flex justify-between items-start cursor-pointer group"
                     onClick={() => onViewPackage?.(pkg.id)}

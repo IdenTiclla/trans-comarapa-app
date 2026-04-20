@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { User, UserCheck, ShieldCheck, Mail, Phone, Fingerprint } from 'lucide-react'
 import { cn } from '@/lib/utils'

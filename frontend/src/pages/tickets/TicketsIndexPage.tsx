@@ -243,7 +243,7 @@ export function Component() {
       toast.success(showCreateModal ? 'Boleto creado' : 'Boleto actualizado')
       handleCloseModal()
       fetchData()
-    } catch (error: any) {
+    } catch (error) {
       if (error.status === 403) toast.error('Permiso denegado. Solo secretarios/administradores pueden crear boletos.')
       else toast.error('Error al guardar boleto')
     } finally {

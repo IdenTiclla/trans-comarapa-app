@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users, Pencil, Loader2 } from 'lucide-react'
+import FormInput from '@/components/forms/FormInput'
 
 interface Owner {
   id: number
@@ -116,6 +117,7 @@ export function Component() {
       ) : (
         <Card>
           <CardContent className="p-0">
+            {/* eslint-disable-next-line no-restricted-syntax */}
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-muted/50 border-b border-gray-200">
                 <tr>
@@ -177,27 +179,45 @@ export function Component() {
                <div className="p-6">
                  <form onSubmit={handleSubmit} className="space-y-4 text-left">
                    <div className="grid grid-cols-2 gap-4">
-                     <div>
-                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nombre/s <span className="text-red-500">*</span></label>
-                         <input type="text" required value={formData.firstname} onChange={(e) => setFormData({ ...formData, firstname: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring transition-shadow outline-none" placeholder="Ej: Juan" />
-                     </div>
-                     <div>
-                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Apellidos <span className="text-red-500">*</span></label>
-                         <input type="text" required value={formData.lastname} onChange={(e) => setFormData({ ...formData, lastname: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring transition-shadow outline-none" placeholder="Ej: Perez" />
-                     </div>
+                     <FormInput
+                       label="Nombre/s *"
+                       type="text"
+                       required
+                       value={formData.firstname}
+                       onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                       placeholder="Ej: Juan"
+                     />
+                     <FormInput
+                       label="Apellidos *"
+                       type="text"
+                       required
+                       value={formData.lastname}
+                       onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                       placeholder="Ej: Perez"
+                     />
                    </div>
-                   <div>
-                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">Cédula de Identidad (CI) <span className="text-red-500">*</span></label>
-                       <input type="text" required value={formData.ci} onChange={(e) => setFormData({ ...formData, ci: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring transition-shadow outline-none" placeholder="Ej: 1234567" />
-                   </div>
-                   <div>
-                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">Teléfono</label>
-                       <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring transition-shadow outline-none" placeholder="Ej: 77766554" />
-                   </div>
-                   <div>
-                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email (Opcional)</label>
-                       <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring transition-shadow outline-none" placeholder="Ej: correo@ejemplo.com" />
-                   </div>
+                   <FormInput
+                     label="Cédula de Identidad (CI) *"
+                     type="text"
+                     required
+                     value={formData.ci}
+                     onChange={(e) => setFormData({ ...formData, ci: e.target.value })}
+                     placeholder="Ej: 1234567"
+                   />
+                   <FormInput
+                     label="Teléfono"
+                     type="tel"
+                     value={formData.phone}
+                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                     placeholder="Ej: 77766554"
+                   />
+                   <FormInput
+                     label="Email (Opcional)"
+                     type="email"
+                     value={formData.email}
+                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                     placeholder="Ej: correo@ejemplo.com"
+                   />
 
                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
                      <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>

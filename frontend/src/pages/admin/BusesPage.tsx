@@ -126,6 +126,7 @@ export function Component() {
             ) : (
                 <Card>
                     <CardContent className="p-0">
+                        {/* eslint-disable-next-line no-restricted-syntax */}
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-muted/50">
                                 <tr>

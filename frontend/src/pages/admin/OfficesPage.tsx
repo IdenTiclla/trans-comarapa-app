@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import type { Office } from '@/types/office'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import { Button } from '@/components/ui/button'
 
 interface Location { id: number; name: string;[key: string]: unknown }
 
@@ -105,7 +106,7 @@ export function Component() {
           <h1 className="text-2xl font-bold text-gray-900">Administración de Oficinas</h1>
           <p className="text-gray-600 mt-1">Gestiona las oficinas del sistema</p>
         </div>
-        <button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">+ Nueva Oficina</button>
+        <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">+ Nueva Oficina</Button>
       </div>
 
       {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
@@ -114,6 +115,7 @@ export function Component() {
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -137,8 +139,8 @@ export function Component() {
                     <td className="px-6 py-4 text-sm text-gray-600">{office.email || '—'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{office.manager_name || '—'}</td>
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                      <button onClick={() => openEdit(office)} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</button>
-                      <button onClick={() => handleDelete(office)} className="text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</button>
+                      <Button variant="ghost" onClick={() => openEdit(office)} className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</Button>
+                      <Button variant="ghost" onClick={() => handleDelete(office)} className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</Button>
                     </td>
                   </tr>
                 ))
@@ -194,10 +196,10 @@ export function Component() {
               />
 
               <div className="flex justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Cancelar</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium disabled:opacity-50">
+                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+                <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
                   {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

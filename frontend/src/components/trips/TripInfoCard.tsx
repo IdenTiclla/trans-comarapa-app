@@ -94,16 +94,13 @@ function InfoCell({ icon, label, value }: { icon: React.ReactNode; label: string
     )
 }
 
-export function TripInfoCard({ trip, ticketStats, formatDate, drivers, assistants, staff, actions }: Props) {
+export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, actions }: Props) {
     const occupancyPercent = ticketStats.total > 0
         ? ((ticketStats.sold + ticketStats.reserved) / ticketStats.total) * 100
         : 0
 
     const statusStyle = STATUS_BADGE[trip.status] ?? { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' }
     const statusLabel = STATUS_MAP[trip.status] ?? trip.status
-
-    const driverName = trip.driver ? `${trip.driver.firstname} ${trip.driver.lastname}` : 'No asignado'
-    const assistantName = trip.assistant ? `${trip.assistant.firstname} ${trip.assistant.lastname}` : 'No asignado'
 
     return (
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">

@@ -114,15 +114,16 @@ export default function CreateTripModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-foreground">Crear Viaje</h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
           <div className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/10">
             <div className="flex items-center gap-2 text-foreground font-semibold">

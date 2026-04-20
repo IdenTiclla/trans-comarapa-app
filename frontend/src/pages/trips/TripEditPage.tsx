@@ -8,6 +8,7 @@ import { fetchDrivers, selectDrivers } from '@/store/driver.slice'
 import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import { Button } from '@/components/ui/button'
 
 const STATUS_OPTIONS = [
   { value: 'scheduled', label: 'Programado' },
@@ -153,8 +154,8 @@ export function Component() {
               </div>
 
               <div className="mt-6 flex justify-end space-x-3">
-                <button type="button" onClick={() => navigate(-1)} className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Cancelar</button>
-                <button type="submit" disabled={submitting || tripLoading} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">{submitting ? 'Guardando...' : 'Guardar Cambios'}</button>
+                <Button type="button" variant="outline" onClick={() => navigate(-1)}>Cancelar</Button>
+                <Button type="submit" disabled={submitting || tripLoading} className="bg-blue-600 hover:bg-blue-700">{submitting ? 'Guardando...' : 'Guardar Cambios'}</Button>
               </div>
             </form>
           </div>

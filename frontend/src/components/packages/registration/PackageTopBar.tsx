@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormSelect from '@/components/forms/FormSelect'
 import type { Office } from './use-package-registration'
 
@@ -57,7 +58,7 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
           <div className="hidden md:block"></div>
         )}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Estado</label>
+          <span className="block text-xs font-medium text-gray-700 mb-1">Estado</span>
           <div className="flex items-center h-[38px]">
             {tripId ? (
               <span className="inline-flex items-center px-2 py-1.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 w-full justify-center">

@@ -125,6 +125,7 @@ export default function BusSeatGrid({
                         {seat.number}<span className="ml-1 opacity-75 sm:text-xs text-[0.6rem]">{seat.position === 'window' ? '🪟' : '🚶'}</span>
                     </div>
                 </div>
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                     className={`seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:-translate-y-0.5 group-hover:scale-105 cursor-pointer shadow-sm border-2 overflow-hidden ${getModernSeatClass(seat)}`}
                     onClick={() => toggleSeatSelection(seat)}

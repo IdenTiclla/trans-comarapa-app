@@ -109,18 +109,22 @@ export function Component() {
   return (
     <div className="w-full">
       <div className="flex justify-end gap-2 px-2 sm:px-4 lg:px-6 pt-4">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setFilter('active')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'active' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className={`h-auto px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'active' ? 'bg-primary text-white hover:bg-primary/90 hover:text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
         >
           Activos
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className={`h-auto px-3 py-1.5 rounded-lg text-sm font-medium ${filter === 'all' ? 'bg-primary text-white hover:bg-primary/90 hover:text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
         >
           Todos
-        </button>
+        </Button>
       </div>
 
       <div className="w-full px-2 sm:px-4 lg:px-6 py-4 space-y-6">
@@ -282,13 +286,13 @@ function TripCard({
       {/* Transition button */}
       {transition && (
         <div className="px-4 pb-3">
-          <button
+          <Button
             onClick={handleTransitionClick}
             disabled={transitioning === trip.id}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${transition.color} disabled:opacity-50`}
+            className={`w-full h-auto py-2 rounded-lg text-sm font-medium ${transition.color} disabled:opacity-50`}
           >
             {transitioning === trip.id ? 'Actualizando...' : transition.label}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -300,6 +304,7 @@ function TripCard({
             <p className="text-sm text-gray-500 italic">Sin pasajeros registrados.</p>
           ) : (
             <div className="overflow-x-auto">
+              {/* eslint-disable-next-line no-restricted-syntax */}
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">

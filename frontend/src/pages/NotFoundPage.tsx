@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { Button } from '@/components/ui/button'
 
 export function Component() {
   const navigate = useNavigate()
@@ -8,12 +9,9 @@ export function Component() {
       <div className="text-center">
         <h1 className="text-6xl font-bold text-comarapa-dark">404</h1>
         <p className="text-xl text-gray-600 mt-4">Página no encontrada</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-6 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-        >
+        <Button onClick={() => navigate('/')} className="mt-6 h-auto px-6 py-3 font-semibold">
           Volver al inicio
-        </button>
+        </Button>
       </div>
     </div>
   )

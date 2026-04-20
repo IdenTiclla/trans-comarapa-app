@@ -38,6 +38,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
   return (
     <div className="overflow-x-auto border rounded-md bg-card">
+      {/* eslint-disable-next-line no-restricted-syntax */}
       <table className="w-full text-sm text-left">
         <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
           <tr>

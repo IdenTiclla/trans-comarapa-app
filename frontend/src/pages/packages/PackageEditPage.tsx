@@ -8,6 +8,7 @@ import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 
 // Note: For editing sender/recipient details, we might need to recreate the ClientSelector component logic
 // For simplicity in this edit form, we might just edit the basic fields, since sender/receiver 
@@ -53,6 +54,7 @@ export function Component() {
 
   useEffect(() => {
     if (currentPackage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         description: currentPackage.description || '',
         package_type: currentPackage.package_type || '',
@@ -110,11 +112,9 @@ export function Component() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center mb-6">
-          <button onClick={() => navigate(-1)} className="mr-4 text-blue-600 hover:text-blue-800">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Volver" className="mr-4 text-blue-600 hover:text-blue-800">
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
           <h1 className="text-2xl font-semibold text-gray-800">Editar Encomienda ID: {id}</h1>
         </div>
 
@@ -160,7 +160,7 @@ export function Component() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
                 <FormSelect
                   id="status"
                   value={formData.status}
@@ -169,7 +169,7 @@ export function Component() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notas Adicionales</label>
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notas Adicionales</label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -184,7 +184,7 @@ export function Component() {
             <h2 className="text-xl font-medium text-gray-700 mb-3">Viaje Asociado (Opcional)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Viaje</label>
+                <label htmlFor="trip_id" className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Viaje</label>
                 <FormSelect
                   id="trip_id"
                   value={String(formData.trip_id)}

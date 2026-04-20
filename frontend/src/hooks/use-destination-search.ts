@@ -1,8 +1,14 @@
 import { useState, useCallback } from 'react'
 
-export function useDestinationSearch(initialLocations: any[] = []) {
+interface Location {
+    name: string
+    department?: string
+    [key: string]: unknown
+}
+
+export function useDestinationSearch(initialLocations: Location[] = []) {
     const [searchTerm, setSearchTerm] = useState('')
-    const [selectedLocation, setSelectedLocation] = useState<any>(null)
+    const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
 
     const filteredLocations = useCallback(() => {
         if (!searchTerm) return initialLocations

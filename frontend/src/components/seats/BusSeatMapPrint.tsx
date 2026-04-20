@@ -65,6 +65,7 @@ export default function BusSeatMapPrint({
 
     useEffect(() => {
         if (controlledSelectedIds !== undefined) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedSeatIds(controlledSelectedIds)
         }
     }, [controlledSelectedIds])
@@ -198,6 +199,7 @@ export default function BusSeatMapPrint({
     useEffect(() => {
         if (initialSelectedSeats && initialSelectedSeats.length > 0) {
             const newIds = initialSelectedSeats.map(s => s.id || s.seat_id)
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedSeatIds(prev => {
                 if (prev.length === newIds.length && prev.every((v, i) => v === newIds[i])) return prev
                 return newIds

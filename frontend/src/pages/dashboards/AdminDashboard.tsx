@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 export function Component() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  useAuth()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const ticketStats = useAppSelector(selectTicketStats)

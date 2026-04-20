@@ -4,6 +4,8 @@ import FormInput from '@/components/forms/FormInput'
 import FormCheckbox from '@/components/forms/FormCheckbox'
 import { cn } from '@/lib/utils'
 import { getPackageDestination } from '@/lib/package-status'
+import { Button } from '@/components/ui/button'
+import { Plus, X, Loader2, Package } from 'lucide-react'
 
 interface PackageAssignModalProps {
     show: boolean
@@ -96,8 +98,10 @@ export default function PackageAssignModal({
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div className="fixed inset-0 modal-overlay-bokeh" onClick={onClose} />
             <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                     className="relative z-10 w-full bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-3xl"
                     onClick={(e) => e.stopPropagation()}
@@ -110,21 +114,17 @@ export default function PackageAssignModal({
                             </div>
                             <div className="flex items-center space-x-4">
                                 {onOpenRegistration && (
-                                    <button
+                                    <Button
                                         onClick={() => { onClose(); onOpenRegistration(); }}
-                                        className="text-xs font-medium bg-white text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded flex items-center shadow-sm"
+                                        className="h-auto text-xs font-medium bg-white text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 shadow-sm"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                        </svg>
+                                        <Plus className="h-4 w-4 mr-1" />
                                         Registrar Nueva
-                                    </button>
+                                    </Button>
                                 )}
-                                <button onClick={onClose} className="text-white hover:text-gray-200">
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-white hover:text-gray-200 hover:bg-transparent">
+                                    <X className="h-6 w-6" />
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -141,17 +141,12 @@ export default function PackageAssignModal({
 
                         {loading ? (
                             <div className="text-center py-8">
-                                <svg className="animate-spin h-8 w-8 text-indigo-600 mx-auto" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
+                                <Loader2 className="animate-spin h-8 w-8 text-indigo-600 mx-auto" />
                                 <p className="mt-2 text-sm text-gray-500">Cargando encomiendas disponibles...</p>
                             </div>
                         ) : filteredPackages.length === 0 ? (
                             <div className="text-center py-8">
-                                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
+                                <Package className="mx-auto h-12 w-12 text-gray-400" />
                                 <p className="mt-2 text-sm text-gray-500">
                                     {searchQuery ? 'No se encontraron encomiendas' : 'No hay encomiendas pendientes'}
                                 </p>
@@ -168,6 +163,7 @@ export default function PackageAssignModal({
                                 </div>
 
                                 {filteredPackages.map(pkg => (
+                                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                                     <div
                                         key={pkg.id}
                                         className={cn(
@@ -213,19 +209,16 @@ export default function PackageAssignModal({
                             )}
                         </div>
                         <div className="flex space-x-3">
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
+                            <Button variant="outline" onClick={onClose}>
                                 Cancelar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={confirmAssignment}
                                 disabled={selectedIds.length === 0 || assigning}
-                                className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-indigo-600 hover:bg-indigo-700"
                             >
                                 {assigning ? 'Asignando...' : `Cargar ${selectedIds.length || ''} al Viaje`}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

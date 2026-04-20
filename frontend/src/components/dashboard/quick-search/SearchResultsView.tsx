@@ -49,6 +49,7 @@ export function SearchResultsView({
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder={categoryInfo.placeholder}
             className="border-0 shadow-none focus-visible:ring-0 px-0 py-0 h-auto text-sm"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
         </div>

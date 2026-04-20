@@ -90,7 +90,7 @@ export function Component() {
     let totalSeats = 0
     let soldTickets = 0
     let estimatedRevenue = 0
-    let activeRoutes = scheduleBoard.length
+    const activeRoutes = scheduleBoard.length
 
     for (const group of scheduleBoard) {
       for (const slot of group.slots) {
@@ -121,13 +121,13 @@ export function Component() {
           
           <Popover>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer group">
+              <Button variant="ghost" className="flex items-center gap-2 mt-0.5 h-auto p-0 text-sm text-muted-foreground hover:text-primary hover:bg-transparent cursor-pointer group">
                 <Calendar className="h-3.5 w-3.5" />
                 <span className="font-medium group-hover:underline underline-offset-4 decoration-primary/30">{formattedDate}</span>
                 <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
                 <span className="text-border mx-1">|</span>
                 <span className="text-primary font-medium">{boardStats.activeRoutes} Rutas Activas</span>
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto p-4 border shadow-xl bg-card rounded-xl">
               <CalendarView 

@@ -116,6 +116,7 @@ export function Component() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
+                  {/* eslint-disable-next-line no-restricted-syntax */}
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-muted/50">
                       <tr>

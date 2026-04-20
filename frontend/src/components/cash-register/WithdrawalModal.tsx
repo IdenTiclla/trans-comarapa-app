@@ -71,7 +71,7 @@ export function WithdrawalModal({
       setDescription("");
       onClose();
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error?.toString() || "No se pudo registrar el retiro.");
     }
   };

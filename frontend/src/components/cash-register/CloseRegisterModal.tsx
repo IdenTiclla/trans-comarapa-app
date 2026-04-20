@@ -64,7 +64,7 @@ export function CloseRegisterModal({ registerId, userId, expectedBalance, onSucc
       toast.success("El turno fue cerrado correctamente.");
       setOpen(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error?.toString() || "No se pudo cerrar la caja registradora.");
     } finally {
       setIsSubmitting(false);

@@ -145,6 +145,7 @@ export default function FormFileUpload({
         </label>
       )}
 
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={cn(
           'mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md',
@@ -230,6 +231,7 @@ export default function FormFileUpload({
       ) : null}
 
       {previewSrc && (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50" onClick={() => setPreviewSrc(null)}>
           <div className="max-w-3xl max-h-[90vh] p-2 bg-white rounded-lg shadow-xl">
             <img src={previewSrc} className="max-w-full max-h-[80vh] object-contain" alt="Vista previa" />

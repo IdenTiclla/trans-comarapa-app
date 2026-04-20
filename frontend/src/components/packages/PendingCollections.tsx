@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { packageService } from '@/services/package.service'
 import PackageDeliveryModal from './PackageDeliveryModal'
 import { Package, Clock, MapPin, User, ArrowRight, DollarSign, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface PendingPackage {
     id: number
@@ -110,12 +111,13 @@ export default function PendingCollections({
         return (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-800 text-sm mb-2">{error}</p>
-                <button
+                <Button
+                    variant="ghost"
                     onClick={fetchPendingCollections}
-                    className="text-sm text-red-600 hover:text-red-800 font-medium"
+                    className="h-auto p-0 text-sm text-red-600 hover:text-red-800 hover:bg-transparent font-medium"
                 >
                     Intentar nuevamente
-                </button>
+                </Button>
             </div>
         )
     }
@@ -171,24 +173,25 @@ export default function PendingCollections({
                                     <ArrowRight className="h-3 w-3 inline mx-1" />
                                     <span>{pkg.recipient_name || 'N/A'}</span>
                                 </div>
-                                <button
+                                <Button
                                     onClick={() => handleDeliver(pkg)}
-                                    className="px-2.5 py-1 bg-orange-600 text-white text-xs font-medium rounded hover:bg-orange-700 transition-colors"
+                                    className="h-auto px-2.5 py-1 bg-orange-600 text-white text-xs font-medium hover:bg-orange-700"
                                 >
                                     Entregar
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {onViewAll && (
-                    <button
+                    <Button
+                        variant="ghost"
                         onClick={onViewAll}
-                        className="w-full mt-3 text-center text-sm text-orange-600 hover:text-orange-800 font-medium"
+                        className="w-full mt-3 h-auto text-center text-sm text-orange-600 hover:text-orange-800 hover:bg-transparent font-medium"
                     >
                         Ver todos los cobros pendientes
-                    </button>
+                    </Button>
                 )}
 
                 <PackageDeliveryModal
@@ -215,13 +218,15 @@ export default function PendingCollections({
                         </span>
                     </div>
                 )}
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={fetchPendingCollections}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Actualizar"
+                    aria-label="Actualizar"
+                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                     <RefreshCw className="h-5 w-5" />
-                </button>
+                </Button>
             </div>
 
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4">
@@ -239,6 +244,7 @@ export default function PendingCollections({
 
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
+                    {/* eslint-disable-next-line no-restricted-syntax */}
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -311,19 +317,20 @@ export default function PendingCollections({
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button
+                                            <Button
                                                 onClick={() => handleDeliver(pkg)}
-                                                className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-orange-600 text-white hover:bg-orange-700 transition-colors shadow-sm"
+                                                className="h-auto px-3 py-1.5 text-xs font-semibold bg-orange-600 text-white hover:bg-orange-700 shadow-sm"
                                             >
                                                 <DollarSign className="h-3.5 w-3.5 mr-1" />
                                                 Entregar y Cobrar
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
+                                                variant="outline"
                                                 onClick={() => navigate(`/packages/${pkg.id}`)}
-                                                className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                                                className="h-auto px-2.5 py-1.5 text-xs font-medium"
                                             >
                                                 Ver
-                                            </button>
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>

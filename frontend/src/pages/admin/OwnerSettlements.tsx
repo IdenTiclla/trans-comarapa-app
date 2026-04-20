@@ -56,9 +56,9 @@ export function Component() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-6">
                 <div className="flex flex-wrap items-end gap-4">
                     <div className="flex-1 min-w-[220px]">
-                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                        <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
                             Seleccionar Socio
-                        </label>
+                        </span>
                         {loadingOwners ? (
                             <div className="h-9 bg-gray-100 animate-pulse rounded-md" />
                         ) : (
@@ -80,9 +80,9 @@ export function Component() {
                         )}
                     </div>
                     <div className="flex-1 min-w-[220px]">
-                        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                        <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
                             Unidad (Bus)
-                        </label>
+                        </span>
                         <SelectRoot value={selectedBusId} onValueChange={setSelectedBusId}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Todos los buses" />

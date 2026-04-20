@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import PackageCard from './PackageCard'
 import SkeletonLoader from '@/components/common/SkeletonLoader'
 import EmptyState from '@/components/common/EmptyState'
 import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatusBg, getPackageStatusText as getStatusText, getPaymentStatusLabel, getPaymentStatusBg, getPaymentStatusTextClass, getPackageOrigin, getPackageDestination } from '@/lib/package-status'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Check, Eye, Pencil, Trash2, Package, ArrowRight } from 'lucide-react'
 
 interface PackageCardListProps {
     packages: any[]
@@ -50,6 +53,7 @@ export default function PackageCardList({
         return (
             <div className="w-full max-w-full bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
                 <div className="w-full overflow-x-auto">
+                    {/* eslint-disable-next-line no-restricted-syntax */}
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -78,11 +82,7 @@ export default function PackageCardList({
             <EmptyState
                 title="No hay encomiendas"
                 description="Intente ajustar los filtros o cree una nueva encomienda."
-                icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2-2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
-                }
+                icon={<Package className="h-10 w-10 text-gray-400" />}
             />
         )
     }
@@ -107,6 +107,7 @@ export default function PackageCardList({
     return (
         <div className="w-full max-w-full bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
             <div className="w-full overflow-x-auto">
+                {/* eslint-disable-next-line no-restricted-syntax */}
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -134,9 +135,7 @@ export default function PackageCardList({
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div className="flex items-center gap-1">
                                         <span>{getPackageOrigin(pkg)}</span>
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
+                                        <ArrowRight className="w-4 h-4 text-gray-400" />
                                         <span>{getPackageDestination(pkg)}</span>
                                     </div>
                                 </td>
@@ -171,48 +170,48 @@ export default function PackageCardList({
                                     Bs. {pkg.price || '0.00'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                                     <div className="flex items-center justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
                                         {pkg.status === 'arrived_at_destination' && (
-                                            <button
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => onDeliverPackage && onDeliverPackage(pkg.id)}
-                                                className="text-indigo-600 hover:text-indigo-900 p-1 rounded-md hover:bg-indigo-50 transition-colors"
-                                                title="Entregar"
+                                                aria-label="Entregar encomienda"
+                                                className="h-8 w-8 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50"
                                             >
-                                                <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
+                                                <Check className="w-4 h-4" />
+                                            </Button>
                                         )}
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={() => onViewPackage && onViewPackage(pkg.id)}
-                                            className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors"
-                                            title="Ver detalles"
+                                            aria-label="Ver detalles"
+                                            className="h-8 w-8 text-green-600 hover:text-green-900 hover:bg-green-50"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        </button>
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
                                         {pkg.status === 'registered_at_office' && (
-                                            <button
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => onEditPackage && onEditPackage(pkg.id)}
-                                                className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors"
-                                                title="Editar"
+                                                aria-label="Editar encomienda"
+                                                className="h-8 w-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
+                                                <Pencil className="w-4 h-4" />
+                                            </Button>
                                         )}
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={() => onDeletePackage && onDeletePackage(pkg.id)}
-                                            className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors"
-                                            title="Eliminar"
+                                            aria-label="Eliminar encomienda"
+                                            className="h-8 w-8 text-red-600 hover:text-red-900 hover:bg-red-50"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>

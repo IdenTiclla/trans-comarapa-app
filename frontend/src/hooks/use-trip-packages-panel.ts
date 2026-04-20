@@ -2,13 +2,25 @@ import { useState, useCallback } from 'react'
 import { apiFetch } from '@/lib/api'
 import { toast } from 'sonner'
 
+interface TripPackage {
+    id: number
+    [key: string]: unknown
+}
+
+function errMsg(e: unknown, fallback: string): string {
+    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+        return (e as { message: string }).message
+    }
+    return fallback
+}
+
 function notify(type: 'success' | 'error', title: string, message: string) {
     if (type === 'success') toast.success(title, { description: message })
     else toast.error(title, { description: message })
 }
 
 export function useTripPackagesPanel(tripId: number) {
-    const [tripPackages, setTripPackages] = useState<any[]>([])
+    const [tripPackages, setTripPackages] = useState<TripPackage[]>([])
     const [loadingPackages, setLoadingPackages] = useState(false)
 
     const [showPackageAssignModal, setShowPackageAssignModal] = useState(false)
@@ -16,15 +28,15 @@ export function useTripPackagesPanel(tripId: number) {
     const [showPackageReceptionModal, setShowPackageReceptionModal] = useState(false)
     const [showPackageRegistrationModal, setShowPackageRegistrationModal] = useState(false)
     const [showPackageReceiptModal, setShowPackageReceiptModal] = useState(false)
-    const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<any>(null)
-    const [selectedPackageForReception, setSelectedPackageForReception] = useState<any>(null)
-    const [selectedPackageForReceipt, setSelectedPackageForReceipt] = useState<any>(null)
+    const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<TripPackage | null>(null)
+    const [selectedPackageForReception, setSelectedPackageForReception] = useState<TripPackage | null>(null)
+    const [selectedPackageForReceipt, setSelectedPackageForReceipt] = useState<TripPackage | null>(null)
 
     const fetchPackages = useCallback(async (tId: number) => {
         setLoadingPackages(true)
         try {
             const data = await apiFetch(`/packages/by-trip/${tId}`)
-            setTripPackages(Array.isArray(data) ? data : [])
+            setTripPackages(Array.isArray(data) ? (data as TripPackage[]) : [])
         } catch { setTripPackages([]) }
         finally { setLoadingPackages(false) }
     }, [])
@@ -34,8 +46,8 @@ export function useTripPackagesPanel(tripId: number) {
             await apiFetch(`/packages/${packageId}/unassign`, { method: 'POST' })
             notify('success', 'Encomienda removida', 'La encomienda fue removida del viaje.')
             fetchPackages(tripId)
-        } catch (err: any) {
-            notify('error', 'Error', err?.message || 'No se pudo remover la encomienda.')
+        } catch (err) {
+            notify('error', 'Error', errMsg(err, 'No se pudo remover la encomienda.'))
         }
     }
 
@@ -85,8 +97,8 @@ export function useTripPackagesPanel(tripId: number) {
             setSelectedPackageForReception(null)
             fetchPackages(tripId)
             notify('success', 'Encomienda recibida', 'La encomienda fue marcada como recibida en destino.')
-        } catch (err: any) {
-            notify('error', 'Error', err?.message || 'No se pudo actualizar el estado.')
+        } catch (err) {
+            notify('error', 'Error', errMsg(err, 'No se pudo actualizar el estado.'))
         }
     }
 

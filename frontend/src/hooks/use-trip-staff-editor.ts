@@ -7,7 +7,13 @@ function notify(type: 'success' | 'error', title: string, message: string) {
     else toast.error(title, { description: message })
 }
 
-export function useTripStaffEditor(tripId: number, trip: any, refreshTrip: () => void) {
+interface StaffTrip {
+    driver?: { id?: number | string } | null
+    assistant?: { id?: number | string } | null
+    [key: string]: unknown
+}
+
+export function useTripStaffEditor(tripId: number, trip: StaffTrip | null, refreshTrip: () => void) {
     const [editingDriver, setEditingDriver] = useState(false)
     const [editingAssistant, setEditingAssistant] = useState(false)
     const [selectedDriverId, setSelectedDriverId] = useState<string>('')
