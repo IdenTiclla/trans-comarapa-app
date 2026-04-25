@@ -8,7 +8,7 @@
 
 **Stack:** FastAPI + MySQL 8.0 + Redis 7 | React 19 + TypeScript + Redux Toolkit + Tailwind + shadcn/ui
 **Roles:** Admin, Secretary, Driver, Assistant, Client
-**Docker Services:** `db` (:3308), `redis` (:6379), `backend` (:8000), `frontend` (:3000), `frontend-react` (:3001)
+**Docker Services:** `db` (:3308), `redis` (:6379), `backend` (:8000), `frontend` (:3000)
 
 ## Quick Start
 
@@ -34,8 +34,10 @@ cd backend && uv sync && source .venv/bin/activate
 python run.py       # localhost:8000
 pytest -v --cov=.
 
-# Frontend React local
-cd frontend-react && npm install && npm run dev  # localhost:3001
+# Frontend local
+cd frontend && npm install && npm run dev    # localhost:3000
+npm run lint      # must pass — see ui-conventions.md
+npx tsc --noEmit  # must pass
 ```
 
 ## Architecture (summary)
@@ -54,10 +56,10 @@ cd frontend-react && npm install && npm run dev  # localhost:3001
 
 ## Code Standards
 
-- **File size limits** per file type defined in each skill (`backend-dev/SKILL.md`, `frontend-dev/SKILL.md`)
 - **Backend:** SQLAlchemy 2.0+, all models inherit `Base`, layered architecture
-- **React:** TypeScript, functional components, Redux Toolkit, Tailwind + shadcn/ui, sonner for toasts
+- **React:** TypeScript strict (no `any`), functional components, Redux Toolkit, Tailwind + shadcn/ui, sonner for toasts
 - **API:** REST conventions, all endpoints `/api/v1/` prefix, React uses `apiFetch` from `lib/api.ts`
+- **UI / a11y / file-size / typing (MANDATORY for any `frontend/` work):** [docs/guides/ui-conventions.md](docs/guides/ui-conventions.md) — rules enforced by ESLint, CI blocks violations
 - **Naming conventions:** [docs/guides/naming-conventions.md](docs/guides/naming-conventions.md)
 - **Adding features:** [docs/guides/adding-features.md](docs/guides/adding-features.md)
 
@@ -69,6 +71,7 @@ cd frontend-react && npm install && npm run dev  # localhost:3001
 - `002`: Never call `.toFixed()`, `Object.entries()` directly on API response fields — use `?? 0` / `?? {}`
 - `003`: Unit tests must NOT require database — use mocks and dependency injection
 - `004`: Check `package.json` for routing package before importing — use `'react-router'` not `'react-router-dom'`
+- `005`: Never use `any` in React/TS — type API shapes with domain interfaces + `[key: string]: unknown` escape hatch; narrow errors with `err instanceof Error ? err.message : fallback`
 
 ## Key Resources
 
@@ -76,5 +79,5 @@ cd frontend-react && npm install && npm run dev  # localhost:3001
 - **Environment setup:** [docs/guides/environment-setup.md](docs/guides/environment-setup.md)
 - **Implementation plans:** [docs/implementation-plans/](docs/implementation-plans/)
 - **API Docs:** http://localhost:8000/docs (Swagger UI)
-- **React App:** http://localhost:3001
+- **React App:** http://localhost:3000
 - **Database:** MySQL at `:3308` (root/Passw0rd!)

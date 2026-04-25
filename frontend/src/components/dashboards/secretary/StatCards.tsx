@@ -1,10 +1,10 @@
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
 
 interface Props {
-  ticketStats: { count: number; trend?: any }
-  packageStats: { count: number; trend?: any }
-  tripStats: { count: number; trend?: any }
-  salesSummary: { totalAmount?: number; trend?: any }
+  ticketStats: { count: number; trend?: number }
+  packageStats: { count: number; trend?: number }
+  tripStats: { count: number; trend?: number }
+  salesSummary: { totalAmount?: number; trend?: number }
 }
 
 export function StatCards({ ticketStats, packageStats, tripStats, salesSummary }: Props) {

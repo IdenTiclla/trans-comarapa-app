@@ -1,6 +1,17 @@
 import { formatDate, formatTime } from './helpers'
 
-export function SheetHeader({ trip }: { trip: any }) {
+interface TripSheet {
+  id: number
+  trip_datetime?: string
+  departure_time?: string
+  route?: { origin?: string | { name?: string }; destination?: string | { name?: string } }
+  driver?: { firstname?: string; lastname?: string; license_number?: string; license_type?: string }
+  assistant?: { firstname?: string; lastname?: string }
+  bus?: { license_plate?: string; brand?: string; model?: string; color?: string }
+  [k: string]: unknown
+}
+
+export function SheetHeader({ trip }: { trip: TripSheet }) {
   return (
     <div className="doc-header">
       <div className="doc-logo">

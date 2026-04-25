@@ -64,15 +64,16 @@ export function Component() {
         ticketService.getAll({ skip: 0, limit: 10000 }),
         clientService.getAll({ skip: 0, limit: 10000 }),
         tripService.getAll({ upcoming: true }),
-        (statsService.getTicketsStatsComparison() as Promise<any>).catch(() => null),
+        (statsService.getTicketsStatsComparison() as Promise<unknown>).catch(() => null),
       ])
 
       setTickets((ticketsRes as Ticket[]) || [])
       setClients((clientsRes as Client[]) || [])
-      setAvailableTrips((tripsRes as any).trips || [])
+      setAvailableTrips((tripsRes as { trips?: Trip[] }).trips || [])
 
       if (statsRes) {
-        const d = statsRes as any
+        type StatsBucket = { confirmed?: number; pending?: number; cancelled?: number; totalRevenue?: number }
+        const d = statsRes as { today: StatsBucket; comparison: StatsBucket }
         setStats({
           confirmed: d.today.confirmed || 0,
           pending: d.today.pending || 0,
@@ -112,10 +113,10 @@ export function Component() {
   const fetchAvailableSeats = async (tripId: string) => {
     if (!tripId) { setAvailableSeats([]); return }
     try {
-      const tripResponse = (await tripService.getById(Number(tripId))) as any
+      const tripResponse = (await tripService.getById(Number(tripId))) as { bus_id?: number }
       if (!tripResponse.bus_id) { setAvailableSeats([]); return }
       const seatsResponse = (await apiFetch(`/seats/bus/${tripResponse.bus_id}`)) as Seat[]
-      const availableResponse = (await apiFetch(`/trips/${tripId}/available-seats`)) as any
+      const availableResponse = (await apiFetch(`/trips/${tripId}/available-seats`)) as { available_seat_numbers: number[] }
       setAvailableSeats(
         seatsResponse.filter((seat) => availableResponse.available_seat_numbers.includes(seat.seat_number))
       )

@@ -18,7 +18,7 @@ interface Client {
     age_category?: string
     is_minor?: boolean
     created_at?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 interface ClientCardProps {

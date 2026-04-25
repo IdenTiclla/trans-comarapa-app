@@ -28,9 +28,9 @@ export function Component() {
   const trips = useAppSelector(selectTrips) as Record<string, unknown>[]
   const tripLoading = useAppSelector(selectTripLoading)
   const tripError = useAppSelector(selectTripError)
-  const routesWithSchedules = useAppSelector((s: any) => s.route.routesWithSchedules) as Record<string, unknown>[]
-  const routeLoading = useAppSelector((s: any) => s.route.isLoading)
-  const routeError = useAppSelector((s: any) => s.route.error)
+  const routesWithSchedules = useAppSelector((s) => (s as unknown as { route: { routesWithSchedules: Record<string, unknown>[] } }).route.routesWithSchedules)
+  const routeLoading = useAppSelector((s) => (s as unknown as { route: { isLoading: boolean } }).route.isLoading)
+  const routeError = useAppSelector((s) => (s as unknown as { route: { error: string | null } }).route.error)
 
   const [selectedDate, setSelectedDate] = useState(getTodayStr())
   const [createModal, setCreateModal] = useState<{ routeId: number; routeLabel: string; date: string; time: string } | null>(null)
@@ -42,7 +42,7 @@ export function Component() {
     const dateFrom = `${date}T00:00:00`
     const dateTo = `${date}T23:59:59`
     dispatch(fetchRoutesWithSchedules())
-    dispatch(fetchTrips({ sort_by: 'trip_datetime', sort_direction: 'asc', date_from: dateFrom, date_to: dateTo, limit: 100 } as any))
+    dispatch(fetchTrips({ sort_by: 'trip_datetime', sort_direction: 'asc', date_from: dateFrom, date_to: dateTo, limit: 100 } as Parameters<typeof fetchTrips>[0]))
   }, [dispatch])
 
   useEffect(() => { loadData(selectedDate) }, [selectedDate, loadData])
@@ -57,15 +57,19 @@ export function Component() {
   }, [selectedDate])
 
   const scheduleBoard = useMemo(() => {
-    const routes = routesWithSchedules || []
-    const board: any[] = []
-    for (const route of routes as any[]) {
-      const activeSchedules = (route.schedules || []).filter((s: any) => s.is_active)
+    type Schedule = { departure_time: string; is_active?: boolean; [k: string]: unknown }
+    type RouteWithSchedules = { id: number; schedules?: Schedule[]; origin_location?: { name?: string }; destination_location?: { name?: string }; price?: number; [k: string]: unknown }
+    type Slot = { schedule: Schedule; time: string; trip: Record<string, unknown> | null; route: { id: number; origin: string; destination: string; price?: number } }
+    type BoardGroup = { route: { id: number; origin: string; destination: string; price?: number }; slots: Slot[] }
+    const routes = (routesWithSchedules || []) as RouteWithSchedules[]
+    const board: BoardGroup[] = []
+    for (const route of routes) {
+      const activeSchedules = (route.schedules || []).filter((s) => s.is_active)
       if (activeSchedules.length === 0) continue
-      const slots = activeSchedules.map((schedule: any) => {
+      const slots: Slot[] = activeSchedules.map((schedule) => {
         const parts = schedule.departure_time.split(':')
         const timeHHMM = `${parts[0].padStart(2, '0')}:${parts[1]}`
-        const matchingTrip = trips.find((t: any) => {
+        const matchingTrip = trips.find((t) => {
           if (t.route_id !== route.id) return false
           try {
             const td = new Date(t.trip_datetime as string)
@@ -79,7 +83,7 @@ export function Component() {
           route: { id: route.id, origin: route.origin_location?.name || 'Desconocido', destination: route.destination_location?.name || 'Desconocido', price: route.price },
         }
       })
-      slots.sort((a: any, b: any) => a.time.localeCompare(b.time))
+      slots.sort((a, b) => a.time.localeCompare(b.time))
       board.push({ route: { id: route.id, origin: route.origin_location?.name || 'Desconocido', destination: route.destination_location?.name || 'Desconocido', price: route.price }, slots })
     }
     return board
@@ -202,7 +206,7 @@ export function Component() {
         onViewTrip={(id) => navigate(`/trips/${id}`)}
         onSellTicket={(id) => navigate(`/trips/${id}`)}
         onCreateTrip={({ routeId, date, time }) => {
-          const routeGroup = scheduleBoard.find((g: any) => g.route.id === routeId)
+          const routeGroup = scheduleBoard.find((g) => g.route.id === routeId)
           const routeLabel = routeGroup ? `${routeGroup.route.origin} → ${routeGroup.route.destination}` : ''
           setCreateModal({ routeId, routeLabel, date, time })
         }}

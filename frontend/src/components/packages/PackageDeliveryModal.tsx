@@ -7,9 +7,23 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Check, X, CreditCard, CheckCircle, Banknote, QrCode, AlertTriangle, Wallet, AlertCircle, Loader2 } from 'lucide-react'
 
+interface Person { firstname?: string; lastname?: string }
+interface PackageItem { id?: number; description?: string; quantity?: number; [k: string]: unknown }
+interface PackageData {
+    id: number
+    payment_status?: string
+    sender_name?: string
+    receiver_name?: string
+    recipient_name?: string
+    sender?: Person
+    recipient?: Person
+    items?: PackageItem[]
+    [k: string]: unknown
+}
+
 interface PackageDeliveryModalProps {
     show: boolean
-    packageData: any
+    packageData: PackageData | null
     onClose: () => void
     onConfirm: (data: { packageId: number }) => void
 }
@@ -71,14 +85,14 @@ export default function PackageDeliveryModal({
         return true
     }, [packageData, paymentMethod, isCashRegisterOpen])
 
-    const getSenderName = (pkg: any) => {
+    const getSenderName = (pkg: PackageData | null) => {
         if (!pkg) return 'N/A'
         if (pkg.sender_name) return pkg.sender_name
         if (pkg.sender) return `${pkg.sender.firstname || ''} ${pkg.sender.lastname || ''}`.trim() || 'N/A'
         return 'N/A'
     }
 
-    const getRecipientName = (pkg: any) => {
+    const getRecipientName = (pkg: PackageData | null) => {
         if (!pkg) return 'N/A'
         if (pkg.receiver_name) return pkg.receiver_name
         if (pkg.recipient_name) return pkg.recipient_name
@@ -171,7 +185,7 @@ export default function PackageDeliveryModal({
                                     <div className="bg-white rounded border border-gray-100 p-2 max-h-32 overflow-y-auto overflow-x-hidden">
                                         {packageData.items && packageData.items.length > 0 ? (
                                             <ul className="space-y-1">
-                                                {packageData.items.map((item: any) => (
+                                                {packageData.items.map((item: PackageItem) => (
                                                     <li key={item.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                                                         <span className="flex items-start min-w-0 pr-4">
                                                             <span className="font-bold text-gray-700 mr-2 flex-shrink-0">{item.quantity}x</span>

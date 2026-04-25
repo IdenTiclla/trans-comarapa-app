@@ -11,28 +11,62 @@ interface LockedSeatInfo {
     ttl: number
 }
 
+interface BackendSeat {
+    id: number
+    seat_number: number
+    status?: string
+    column?: number
+    deck?: string
+    [k: string]: unknown
+}
+
+interface SeatItem {
+    id: number
+    number: number
+    status: string
+    occupied: boolean
+    locked: boolean
+    position: string
+    column: string
+    deck: string
+    passenger: { name: string; phone: string } | null
+    seat_id?: number
+}
+
+interface TripLike {
+    bus?: { floors?: number }
+    seats_layout?: BackendSeat[]
+    [k: string]: unknown
+}
+
+interface TicketLike {
+    seat?: { id?: number; seat_number?: number | string }
+    client?: { phone?: string; [k: string]: unknown }
+    [k: string]: unknown
+}
+
 interface BusSeatMapPrintProps {
-    trip: any
-    tickets?: any[]
-    occupiedSeats?: any[]
+    trip: TripLike | null | undefined
+    tickets?: TicketLike[]
+    occupiedSeats?: SeatItem[]
     reserved_seat_numbers?: number[]
     lockedSeats?: LockedSeatInfo[]
     currentUserId?: number
-    initialSelectedSeats?: any[]
+    initialSelectedSeats?: Array<{ id?: number; seat_id?: number }>
     selectionEnabled?: boolean
     maxSelections?: number
     disabled?: boolean
     enableContextMenu?: boolean
 
-    onSeatSelected?: (seat: any) => void
-    onSeatDeselected?: (seat: any) => void
-    onSelectionChange?: (seats: any[]) => void
-    onCancelReservation?: (seat: any) => void
-    onConfirmSale?: (seat: any) => void
-    onChangeSeat?: (seat: any) => void
-    onRescheduleTrip?: (seat: any) => void
-    onGoToTicketPage?: (seat: any) => void
-    onPreviewTicket?: (seat: any) => void
+    onSeatSelected?: (seat: SeatItem) => void
+    onSeatDeselected?: (seat: SeatItem) => void
+    onSelectionChange?: (seats: SeatItem[]) => void
+    onCancelReservation?: (seat: SeatItem) => void
+    onConfirmSale?: (seat: SeatItem) => void
+    onChangeSeat?: (seat: SeatItem) => void
+    onRescheduleTrip?: (seat: SeatItem) => void
+    onGoToTicketPage?: (seat: SeatItem) => void
+    onPreviewTicket?: (seat: SeatItem) => void
     seatChangeMode?: boolean
     controlledSelectedIds?: number[]
 }
@@ -72,7 +106,7 @@ export default function BusSeatMapPrint({
 
     const [showContextMenu, setShowContextMenu] = useState(false)
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 })
-    const [selectedSeatForContext, setSelectedSeatForContext] = useState<any>(null)
+    const [selectedSeatForContext, setSelectedSeatForContext] = useState<SeatItem | null>(null)
 
     const busFloors = trip?.bus?.floors || 1
     const isDoubleDeck = busFloors >= 2
@@ -105,14 +139,14 @@ export default function BusSeatMapPrint({
     const seats = useMemo(() => {
         if (!trip?.seats_layout) return []
 
-        let backendSeats: any[]
+        let backendSeats: BackendSeat[]
         try {
             backendSeats = JSON.parse(seatsLayoutStr)
         } catch {
             return []
         }
 
-        const generatedSeats = []
+        const generatedSeats: SeatItem[] = []
 
         for (const backendSeat of backendSeats) {
             const seatNumber = backendSeat.seat_number
@@ -127,7 +161,7 @@ export default function BusSeatMapPrint({
 
             if (isLockedByOther) status = 'locked'
 
-            const ticket = safeTickets.find((t: any) => t.seat?.id === backendSeat.id)
+            const ticket = (safeTickets as TicketLike[]).find((t) => t.seat?.id === backendSeat.id)
             let passenger = null
             if (ticket && ticket.client) {
                 passenger = {
@@ -157,7 +191,7 @@ export default function BusSeatMapPrint({
             generatedSeats.push({
                 id: backendSeat.id,
                 number: backendSeat.seat_number,
-                status: status,
+                status: status ?? 'available',
                 occupied: status === 'occupied',
                 locked: status === 'locked',
                 position: position,
@@ -207,7 +241,7 @@ export default function BusSeatMapPrint({
         }
     }, [initialSelectedSeats])
 
-    const handleSeatSelected = (seat: any, newSelectedIds: number[]) => {
+    const handleSeatSelected = (seat: SeatItem, newSelectedIds: number[]) => {
         setSelectedSeatIds(newSelectedIds)
         if (onSeatSelected) onSeatSelected(seat)
         if (onSelectionChange) {
@@ -215,7 +249,7 @@ export default function BusSeatMapPrint({
         }
     }
 
-    const handleSeatDeselected = (seat: any, newSelectedIds: number[]) => {
+    const handleSeatDeselected = (seat: SeatItem, newSelectedIds: number[]) => {
         setSelectedSeatIds(newSelectedIds)
         if (onSeatDeselected) onSeatDeselected(seat)
         if (onSelectionChange) {
@@ -223,7 +257,7 @@ export default function BusSeatMapPrint({
         }
     }
 
-    const handleContextMenu = (event: any, seat: any) => {
+    const handleContextMenu = (event: React.MouseEvent, seat: SeatItem) => {
         if (!enableContextMenu) return
         event.preventDefault()
         setShowContextMenu(true)

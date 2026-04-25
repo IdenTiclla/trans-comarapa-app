@@ -1,6 +1,17 @@
 import { formatDate, formatTime } from './helpers'
 
-export function ManifestHeader({ trip }: { trip: any }) {
+interface TripManifest {
+  id: number
+  trip_datetime?: string
+  departure_time?: string
+  route?: { origin?: string | { name?: string }; destination?: string | { name?: string } }
+  driver?: { firstname?: string; lastname?: string }
+  assistant?: { firstname?: string; lastname?: string }
+  bus?: { license_plate?: string }
+  [k: string]: unknown
+}
+
+export function ManifestHeader({ trip }: { trip: TripManifest }) {
   return (
     <div className="doc-header">
       <div className="doc-logo">

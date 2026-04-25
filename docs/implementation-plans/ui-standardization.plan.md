@@ -140,12 +140,15 @@ Cada lote:
 - Corrige a11y con axe en rutas afectadas.
 - Al cerrar el lote, subir el threshold de `max-lines` si procede.
 
-## Fase 3 — Endurecer (final)
+## ~~Fase 3 — Endurecer~~ ✅ 3.1 Completada (2026-04-20)
 
-- `max-lines` a error en 400 líneas.
-- `jsx-a11y/recommended` → errores.
-- `react/forbid-elements` bloqueante (sin warnings).
-- Añadir check de axe-core en tests E2E si existen.
+- ~~`max-lines` a error en 400 líneas.~~ ✅
+- ~~`jsx-a11y/recommended` → errores.~~ ✅
+- ~~`react/forbid-elements` (vía `no-restricted-syntax`) bloqueante.~~ ✅
+- ~~Purga total de `any` en `services/`, `slices/`, `hooks/`, páginas y componentes.~~ ✅ (patrones documentados en `docs/guides/ui-conventions.md` §7)
+- Pendiente: axe-core en tests E2E (fuera de scope actual).
+
+**Estado final del lint:** 0 errores de `no-explicit-any`, 0 errores de a11y, 0 errores de `no-restricted-syntax`. Quedan 10 warnings `exhaustive-deps` (no bloqueantes) y 1 parsing error pre-existente en `tests/components/RouteTable.test.tsx` (test garbage, no relacionado).
 
 ---
 

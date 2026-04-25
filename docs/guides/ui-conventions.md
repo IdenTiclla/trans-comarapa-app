@@ -43,16 +43,16 @@ ESLint bloquea su uso con un mensaje que indica el reemplazo correcto. Las primi
 - Focus visible: no quites `focus-visible:*` de los componentes ui.
 - Formularios: cada input lleva su `Label` asociado (usa `htmlFor` + `id`).
 
-`eslint-plugin-jsx-a11y` aplica las reglas `recommended` (warning por ahora, error al final de Fase 3).
+`eslint-plugin-jsx-a11y` aplica las reglas `recommended` como **errores** (bloquean CI).
 
 ## 4. Tamaño de archivos
 
-- Límite objetivo: **300 líneas** por archivo `.tsx`/`.ts` (warning).
-- Archivos más grandes deben dividirse extrayendo:
+- Límite actual: **400 líneas** por archivo `.tsx`/`.ts` (error de ESLint, bloquea CI).
+- Objetivo ideal: 300 líneas. Si te acercas, divide antes extrayendo:
   - Subcomponentes a `components/<feature>/`.
   - Hooks de estado/datos a `hooks/use-<name>.ts`.
   - Helpers puros a `lib/` o `<feature>/utils.ts`.
-- Excepción: `src/components/ui/**` (las primitivas pueden superar el límite).
+- Excepción: `src/components/ui/**` y `src/components/forms/**` (las primitivas pueden superar el límite).
 
 ## 5. Estados de UI obligatorios
 
@@ -71,14 +71,80 @@ Rutina mínima: revisar `useSelector` status (`idle | loading | succeeded | fail
 - Clases con `cn()` de `@/lib/utils` para combinar Tailwind.
 - No introduzcas CSS global nuevo fuera de `globals.css` sin consenso.
 
-## 7. Cómo añadir un nuevo componente primitivo
+## 7. TypeScript — cero `any`
+
+La regla `@typescript-eslint/no-explicit-any` es **error**. Patrones establecidos:
+
+### 7.1 Selectores Redux tipados
+
+```ts
+// ❌ mal
+const trips = useAppSelector(selectTrips) as any[]
+const auth = useAppSelector((s: any) => s.auth)
+
+// ✅ bien — interfaz mínima + cast explícito
+interface Trip { id: number; trip_datetime?: string; [k: string]: unknown }
+const trips = useAppSelector(selectTrips) as Trip[]
+const auth = useAppSelector((s) => (s as unknown as { auth: AuthState }).auth)
+```
+
+### 7.2 Respuestas API parcialmente conocidas
+
+Usa interfaces mínimas con `[key: string]: unknown` como escape hatch:
+
+```ts
+interface PackageLike {
+  id: number
+  tracking_number?: string
+  items?: PackageItem[]
+  [k: string]: unknown   // otros campos del backend no modelados
+}
+```
+
+Prefiere esto a `any` o `Record<string, any>`. El índice `unknown` obliga a narrow antes de usar.
+
+### 7.3 Narrowing de errores en `catch`
+
+```ts
+// ❌ mal
+} catch (err: any) {
+  setError(err.message)
+}
+
+// ✅ bien
+} catch (err) {
+  setError(err instanceof Error ? err.message : 'Fallback legible')
+}
+```
+
+### 7.4 Casts en respuestas unión
+
+Cuando el endpoint puede devolver varias formas:
+
+```ts
+const data = (await apiFetch('/x')) as { items?: Thing[]; total?: number } | Thing[]
+```
+
+No uses `as any` — siempre declara las formas posibles.
+
+### 7.5 Hooks y utilidades reusables
+
+Si un hook expone tipos, exporta la interfaz (`export interface ClientRecord`) para que los consumidores no redefinan.
+
+## 8. Manejo de errores y toasts
+
+- Errores de red o Redux: narrow con `instanceof Error`, fallback string legible.
+- Feedback al usuario: `toast.success` / `toast.error` / `toast.info` de `sonner`. Nunca `alert()` ni `console.log`.
+- Errores persistentes/bloqueantes: `Alert` de `@/components/ui/alert` dentro del contenido.
+
+## 9. Cómo añadir un nuevo componente primitivo
 
 1. Vive en `src/components/ui/<name>.tsx`.
 2. Debe aceptar `className` y forwardear `...props` del elemento base.
 3. Si es interactivo: soporta teclado, focus ring, estados `disabled`/`aria-*`.
 4. Documenta en esta guía (tabla sección 1) y añade al `index` si existe.
 
-## 8. Referencias
+## 10. Referencias
 
 - Plan activo: `docs/implementation-plans/ui-standardization.plan.md`
 - Config ESLint: `frontend/eslint.config.js`

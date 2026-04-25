@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
-import { useClientSearch } from '@/hooks/use-client-search'
+import { useClientSearch, type ClientRecord } from '@/hooks/use-client-search'
 
 interface ClientDetails {
     name: string
@@ -29,7 +28,7 @@ export default function ClientSelector({
     const [clientType, setClientType] = useState<'existing' | 'new'>(selectedClientId ? 'existing' : (clientDetails?.name ? 'new' : 'existing'))
 
     const { searchTerm, results, isLoading, error, searchClients, clearSearch } = useClientSearch('')
-    const [selectedClient, setSelectedClient] = useState<any>(null)
+    const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null)
 
     const [newClient, setNewClient] = useState<ClientDetails>({
         name: clientDetails?.name || '',
@@ -72,7 +71,7 @@ export default function ClientSelector({
         }
     }
 
-    const selectClient = (client: any) => {
+    const selectClient = (client: ClientRecord) => {
         setSelectedClient(client)
         searchClients(client.full_name || client.name || '')
         onSelectedClientIdChange(client.id)

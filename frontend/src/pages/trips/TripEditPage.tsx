@@ -23,13 +23,29 @@ export function Component() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
-  const currentTrip = useAppSelector(selectCurrentTrip) as any
+  interface TripLoaded {
+    route?: { id?: number | string }
+    route_id?: number | string
+    trip_datetime?: string
+    status?: string
+    bus?: { id?: number | string }
+    bus_id?: number | string
+    driver?: { id?: number | string }
+    driver_id?: number | string
+    assistant?: { id?: number | string }
+    assistant_id?: number | string
+    [k: string]: unknown
+  }
+  interface Route { id: number; origin_location?: { name?: string }; destination_location?: { name?: string }; origin?: string; destination?: string }
+  interface Bus { id: number; license_plate?: string; plate?: string; model?: string }
+  interface Person { id: number; firstname: string; lastname: string }
+  const currentTrip = useAppSelector(selectCurrentTrip) as TripLoaded | null
   const tripLoading = useAppSelector(selectTripLoading)
   const tripError = useAppSelector(selectTripError)
-  const routes = useAppSelector(selectRoutes) as any[]
-  const buses = useAppSelector(selectBuses) as any[]
-  const drivers = useAppSelector(selectDrivers) as any[]
-  const assistants = useAppSelector(selectAssistants) as any[]
+  const routes = useAppSelector(selectRoutes) as Route[]
+  const buses = useAppSelector(selectBuses) as Bus[]
+  const drivers = useAppSelector(selectDrivers) as Person[]
+  const assistants = useAppSelector(selectAssistants) as Person[]
 
   const [formLoading, setFormLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -80,20 +96,20 @@ export function Component() {
     }
   }, [currentTrip])
 
-  const routeOptions = useMemo(() => (routes || []).map((r: any) => ({
+  const routeOptions = useMemo(() => (routes || []).map((r: Route) => ({
     value: r.id, label: `${r.origin_location?.name || r.origin} → ${r.destination_location?.name || r.destination}`,
   })), [routes])
 
-  const busOptions = useMemo(() => (buses || []).map((b: any) => ({
+  const busOptions = useMemo(() => (buses || []).map((b: Bus) => ({
     value: b.id, label: `${b.license_plate || b.plate} - ${b.model}`,
   })), [buses])
 
   const driverOptions = useMemo(() =>
-    [{ value: '', label: 'Sin asignar' }, ...(drivers || []).map((d: any) => ({ value: d.id, label: `${d.firstname} ${d.lastname}` }))],
+    [{ value: '', label: 'Sin asignar' }, ...(drivers || []).map((d: Person) => ({ value: d.id, label: `${d.firstname} ${d.lastname}` }))],
     [drivers])
 
   const assistantOptions = useMemo(() =>
-    [{ value: '', label: 'Sin asignar' }, ...(assistants || []).map((a: any) => ({ value: a.id, label: `${a.firstname} ${a.lastname}` }))],
+    [{ value: '', label: 'Sin asignar' }, ...(assistants || []).map((a: Person) => ({ value: a.id, label: `${a.firstname} ${a.lastname}` }))],
     [assistants])
 
   const handleSubmit = useCallback(async (e: FormEvent) => {
@@ -115,8 +131,8 @@ export function Component() {
       } else {
         setPageError('No se pudieron guardar los cambios.')
       }
-    } catch (err: any) {
-      setPageError(err?.message || 'No se pudieron guardar los cambios.')
+    } catch (err) {
+      setPageError(err instanceof Error ? err.message : 'No se pudieron guardar los cambios.')
     } finally {
       setSubmitting(false)
     }

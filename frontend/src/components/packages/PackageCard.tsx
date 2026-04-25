@@ -4,8 +4,23 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Package, Clock, Receipt, CheckCircle, ArrowRight, Pencil, Trash2, Eye } from 'lucide-react'
 
+interface PackageItem { id?: number; description?: string; quantity?: number; [k: string]: unknown }
+interface PackageLike {
+    id: number
+    tracking_number?: string
+    created_at?: string
+    status?: string
+    sender_name?: string
+    recipient_name?: string
+    description?: string
+    total_items_count?: number
+    items?: PackageItem[]
+    payment_status?: string
+    [k: string]: unknown
+}
+
 interface PackageCardProps {
-    pkg: any
+    pkg: PackageLike
     onViewPackage?: (id: number) => void
     onEditPackage?: (id: number) => void
     onDeletePackage?: (id: number) => void
@@ -83,7 +98,7 @@ export default function PackageCard({
                         <p className="text-xs text-gray-500 mb-1">Productos ({pkg.total_items_count || 0})</p>
                         <p className="text-sm text-gray-700 italic line-clamp-2">
                             {pkg.items && pkg.items.length > 0
-                                ? pkg.items.map((item: any) => `${item.quantity}x ${item.description}`).join(', ')
+                                ? pkg.items.map((item: PackageItem) => `${item.quantity}x ${item.description}`).join(', ')
                                 : pkg.description || 'Sin descripción'}
                         </p>
                     </div>

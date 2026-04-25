@@ -7,7 +7,7 @@ export interface Ticket {
   price: number
   payment_method: string
   created_at: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface Client {

@@ -5,17 +5,27 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
+interface Client {
+    id: number
+    name?: string
+    first_name?: string
+    firstname?: string
+    lastname?: string
+    status?: string
+    [k: string]: unknown
+}
+
 interface ClientCardListProps {
-    clients?: any[]
+    clients?: Client[]
     loading?: boolean
     currentPage?: number
     totalItems?: number
     itemsPerPage?: number
     viewMode?: 'grid' | 'table'
     onPageChange: (page: number) => void
-    onViewClient: (client: any) => void
-    onEditClient: (client: any) => void
-    onDeleteClient: (client: any) => void
+    onViewClient: (client: Client) => void
+    onEditClient: (client: Client) => void
+    onDeleteClient: (client: Client) => void
     onClearFilters: () => void
     onNewClient: () => void
 }
@@ -81,8 +91,8 @@ export default function ClientCardList({
         return name.slice(0, 2).toUpperCase()
     }
 
-    const getStatusText = (client: any) => client.status === 'active' ? 'Activo' : 'Inactivo'
-    const getStatusClass = (client: any) => client.status === 'active'
+    const getStatusText = (client: Client) => client.status === 'active' ? 'Activo' : 'Inactivo'
+    const getStatusClass = (client: Client) => client.status === 'active'
         ? 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'
         : 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'
 

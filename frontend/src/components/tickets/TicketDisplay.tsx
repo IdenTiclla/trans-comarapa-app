@@ -1,10 +1,25 @@
+interface Seat { seat_number?: number | string }
+interface TicketLike {
+    client?: { firstname?: string; lastname?: string }
+    seat?: Seat
+    seats?: Seat[]
+    destination?: string
+    trip?: { route?: { destination?: string }; trip_datetime?: string }
+    [k: string]: unknown
+}
+interface TripLike {
+    route?: { destination?: string }
+    trip_datetime?: string
+    [k: string]: unknown
+}
+
 export default function TicketDisplay({
     ticket,
     trip,
     previewMode = false
 }: {
-    ticket: any
-    trip: any
+    ticket: TicketLike
+    trip: TripLike
     previewMode?: boolean
 }) {
     const formatPrice = (price?: number | string) => price ? parseFloat(price.toString()).toFixed(2) : '0.00'
@@ -52,7 +67,7 @@ export default function TicketDisplay({
 
     const getSeatNumbers = () => {
         if (ticket?.seats && Array.isArray(ticket.seats)) {
-            return ticket.seats.map((s: any) => s.seat_number).join(', ')
+            return ticket.seats.map((s: Seat) => s.seat_number).join(', ')
         } else if (ticket?.seat?.seat_number) {
             return ticket.seat.seat_number
         }

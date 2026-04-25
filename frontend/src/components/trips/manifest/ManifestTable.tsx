@@ -4,7 +4,7 @@ import { getDescription, isPaid, type TripPackage } from './helpers'
 
 interface Props {
   packages: TripPackage[]
-  trip: any
+  trip: Record<string, unknown>
 }
 
 export function ManifestTable({ packages, trip }: Props) {

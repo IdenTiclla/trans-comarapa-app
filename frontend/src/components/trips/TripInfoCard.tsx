@@ -71,12 +71,15 @@ interface StaffState {
     saveAssistant: () => void
 }
 
+interface Person { id: number; firstname?: string; lastname?: string; [k: string]: unknown }
+interface TripInfo { id: number; [k: string]: unknown }
+
 interface Props {
-    trip: any
+    trip: TripInfo
     ticketStats: TicketStats
     formatDate: (dateString: string) => string
-    drivers: any[]
-    assistants: any[]
+    drivers: Person[]
+    assistants: Person[]
     staff: StaffState
     actions?: React.ReactNode
 }

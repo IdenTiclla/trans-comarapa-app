@@ -1,15 +1,34 @@
 import { useMemo } from 'react'
 
+interface SeatItem {
+    id: number
+    number?: number | string
+    column?: 'left' | 'right' | string
+    position?: 'window' | 'aisle' | string
+    occupied?: boolean
+    status?: 'reserved' | 'locked' | string
+    passenger?: { name?: string; phone?: string }
+    [key: string]: unknown
+}
+
+interface SeatTicket {
+    seat?: { seat_number?: number | string }
+    price?: number | string
+    destination?: string
+    destination_location?: { name?: string }
+    [key: string]: unknown
+}
+
 interface BusSeatGridProps {
-    seats: any[]
+    seats: SeatItem[]
     selectedSeatIds: number[]
     disabled?: boolean
     maxSelections?: number
-    tickets?: any[]
+    tickets?: SeatTicket[]
 
-    onSeatSelected?: (seat: any, newSelectedIds: number[]) => void
-    onSeatDeselected?: (seat: any, newSelectedIds: number[]) => void
-    onContextMenu?: (event: React.MouseEvent, seat: any) => void
+    onSeatSelected?: (seat: SeatItem, newSelectedIds: number[]) => void
+    onSeatDeselected?: (seat: SeatItem, newSelectedIds: number[]) => void
+    onContextMenu?: (event: React.MouseEvent, seat: SeatItem) => void
     seatChangeMode?: boolean
 }
 
@@ -27,7 +46,7 @@ export default function BusSeatGrid({
     const leftColumnSeats = useMemo(() => seats.filter(seat => seat.column === 'left'), [seats])
     const rightColumnSeats = useMemo(() => seats.filter(seat => seat.column === 'right'), [seats])
 
-    const getModernSeatClass = (seat: any) => {
+    const getModernSeatClass = (seat: SeatItem) => {
         if (seat.occupied) {
             return 'bg-gradient-to-br from-red-100 to-red-200 border-red-300 cursor-not-allowed hover:scale-100'
         } else if (seat.status === 'reserved') {
@@ -43,7 +62,7 @@ export default function BusSeatGrid({
         }
     }
 
-    const getModernStatusClass = (seat: any) => {
+    const getModernStatusClass = (seat: SeatItem) => {
         if (seat.occupied) {
             return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
         } else if (seat.status === 'reserved') {
@@ -57,7 +76,7 @@ export default function BusSeatGrid({
         }
     }
 
-    const getSeatStatusText = (seat: any) => {
+    const getSeatStatusText = (seat: SeatItem) => {
         if (seat.occupied) return 'OCUPADO'
         if (seat.status === 'reserved') return 'RESERVADO'
         if (seat.status === 'locked') return 'BLOQUEADO'
@@ -65,7 +84,7 @@ export default function BusSeatGrid({
         return 'DISPONIBLE'
     }
 
-    const toggleSeatSelection = (seat: any) => {
+    const toggleSeatSelection = (seat: SeatItem) => {
         if (seat.occupied || seat.status === 'reserved' || seat.status === 'locked' || disabled) return
 
         const index = selectedSeatIds.indexOf(seat.id)
@@ -85,23 +104,23 @@ export default function BusSeatGrid({
         }
     }
 
-    const handleContextMenu = (event: React.MouseEvent, seat: any) => {
+    const handleContextMenu = (event: React.MouseEvent, seat: SeatItem) => {
         event.preventDefault()
         if (onContextMenu) onContextMenu(event, seat)
     }
 
-    const getSeatPrice = (seat: any) => {
+    const getSeatPrice = (seat: SeatItem) => {
         if (!seat.occupied && seat.status !== 'reserved') return null
         const ticket = tickets.find(t => t.seat && t.seat.seat_number === seat.number)
         return ticket?.price || null
     }
 
-    const formatPrice = (price: any) => {
+    const formatPrice = (price: number | string | null | undefined) => {
         if (price === null || price === undefined) return '0.00'
-        return parseFloat(price).toFixed(2)
+        return parseFloat(String(price)).toFixed(2)
     }
 
-    const getSeatDestination = (seat: any) => {
+    const getSeatDestination = (seat: SeatItem) => {
         if (!seat.occupied && seat.status !== 'reserved') return null
         const ticket = tickets.find(t => t.seat && t.seat.seat_number === seat.number)
         if (!ticket) return null
@@ -112,7 +131,7 @@ export default function BusSeatGrid({
         return null
     }
 
-    const renderSeat = (seat: any) => {
+    const renderSeat = (seat: SeatItem) => {
         const isOccupiedOrReserved = seat.occupied || seat.status === 'reserved';
         const passengerName = isOccupiedOrReserved ? (seat.passenger?.name || '') : '';
         const passengerPhone = isOccupiedOrReserved ? (seat.passenger?.phone || '') : '';

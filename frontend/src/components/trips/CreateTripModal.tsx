@@ -29,13 +29,17 @@ export default function CreateTripModal({
   date,
   time,
 }: CreateTripModalProps) {
+  interface Bus { id: number; license_plate?: string; model?: string; capacity?: number; floors?: number }
+  interface Person { id: number; firstname: string; lastname: string; license_number?: string }
+  interface Secretary { id: number; user_id?: number }
+  interface AuthState { user?: { id?: number; person?: { id?: number } } }
   const dispatch = useAppDispatch()
-  const buses = useAppSelector(selectBuses) as any[]
+  const buses = useAppSelector(selectBuses) as Bus[]
   const busLoading = useAppSelector(selectBusLoading)
-  const drivers = useAppSelector(selectDrivers) as any[]
-  const assistants = useAppSelector(selectAssistants) as any[]
-  const secretaries = useAppSelector(selectSecretaries) as any[]
-  const auth = useAppSelector((s: any) => s.auth)
+  const drivers = useAppSelector(selectDrivers) as Person[]
+  const assistants = useAppSelector(selectAssistants) as Person[]
+  const secretaries = useAppSelector(selectSecretaries) as Secretary[]
+  const auth = useAppSelector((s) => (s as unknown as { auth: AuthState }).auth)
 
   const [busId, setBusId] = useState('')
   const [driverId, setDriverId] = useState('')
@@ -55,19 +59,19 @@ export default function CreateTripModal({
   }, [open, dispatch])
 
   const busOptions = useMemo(() =>
-    (buses || []).map((b: any) => ({
+    (buses || []).map((b: Bus) => ({
       value: String(b.id),
       label: `${b.license_plate} - ${b.model} (${b.capacity} asientos${b.floors === 2 ? ', 2 pisos' : ''})`,
     })), [buses])
 
   const driverOptions = useMemo(() =>
-    (drivers || []).map((d: any) => ({
+    (drivers || []).map((d: Person) => ({
       value: String(d.id),
       label: `${d.firstname} ${d.lastname}${d.license_number ? ` (${d.license_number})` : ''}`,
     })), [drivers])
 
   const assistantOptions = useMemo(() =>
-    (assistants || []).map((a: any) => ({
+    (assistants || []).map((a: Person) => ({
       value: String(a.id),
       label: `${a.firstname} ${a.lastname}`,
     })), [assistants])
@@ -91,7 +95,7 @@ export default function CreateTripModal({
         payload.secretary_id = personId
       } else {
         const currentUserId = auth?.user?.id
-        const secretary = secretaries.find((s: any) => s.user_id === currentUserId)
+        const secretary = secretaries.find((s: Secretary) => s.user_id === currentUserId)
         if (secretary) payload.secretary_id = secretary.id
       }
 
@@ -100,7 +104,7 @@ export default function CreateTripModal({
         toast.success('Viaje creado exitosamente')
         onCreated()
       } else {
-        const error = (result as any)?.payload || 'Error al crear viaje'
+        const error = (result as { payload?: unknown })?.payload || 'Error al crear viaje'
         toast.error(typeof error === 'string' ? error : 'Error al crear viaje')
       }
     } catch (err: unknown) {

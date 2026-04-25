@@ -20,6 +20,17 @@ import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
 import { Users, Plus, Search, Download, BarChart3, LayoutGrid, List } from 'lucide-react'
 
+interface Client {
+    id: number
+    name?: string
+    first_name?: string
+    firstname?: string
+    lastname?: string
+    status?: string
+    created_at?: string
+    [k: string]: unknown
+}
+
 export function Component() {
     const dispatch = useAppDispatch()
     const clients = useAppSelector(selectClients)
@@ -30,13 +41,13 @@ export function Component() {
     const [itemsPerPage] = useState(12)
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
-    const [filters, setFilters] = useState<Record<string, any>>({ status: 'active' })
+    const [filters, setFilters] = useState<Record<string, unknown>>({ status: 'active' })
     const [sorting, setSorting] = useState({ column: 'created_at', direction: 'desc' })
 
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
     const [showViewModal, setShowViewModal] = useState(false)
-    const [selectedClient, setSelectedClient] = useState<any>(null)
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
     const loadClients = () => {
         dispatch(fetchClients({ filters: { ...filters, sort_by: sorting.column, sort_order: sorting.direction } }))
@@ -47,8 +58,8 @@ export function Component() {
     }, [dispatch, filters, sorting])
 
     const totalClients = clients.length
-    const activeClients = clients.filter((c: any) => c.status === 'active').length
-    const newClientsToday = clients.filter((c: any) => {
+    const activeClients = clients.filter((c: Client) => c.status === 'active').length
+    const newClientsToday = clients.filter((c: Client) => {
         const today = new Date().toDateString()
         return c.created_at && new Date(c.created_at).toDateString() === today
     }).length
@@ -72,7 +83,7 @@ export function Component() {
         }
     }
 
-    const handleFilterChange = (newFilters: any) => {
+    const handleFilterChange = (newFilters: Record<string, unknown>) => {
         setFilters(newFilters)
         setCurrentPage(1)
     }
@@ -86,24 +97,24 @@ export function Component() {
         setCurrentPage(newPage)
     }
 
-    const viewClient = (client: any) => {
+    const viewClient = (client: Client) => {
         setSelectedClient(client)
         setShowViewModal(true)
     }
 
-    const editClient = (client: any) => {
+    const editClient = (client: Client) => {
         setSelectedClient(client)
         setShowEditModal(true)
     }
 
-    const handleDeleteClient = async (client: any) => {
+    const handleDeleteClient = async (client: Client) => {
         if (window.confirm(`¿Estás seguro de que quieres eliminar a ${client.name || client.first_name || 'este cliente'}?`)) {
             try {
                 await dispatch(deleteClient(client.id)).unwrap()
                 toast.success('Cliente eliminado correctamente')
                 loadClients()
-            } catch (err: any) {
-                toast.error(err || 'Error al eliminar cliente')
+            } catch (err) {
+                toast.error(typeof err === 'string' ? err : 'Error al eliminar cliente')
             }
         }
     }
@@ -114,7 +125,7 @@ export function Component() {
         setSelectedClient(null)
     }
 
-    const handleSave = async (clientData: any) => {
+    const handleSave = async (clientData: Partial<Client>) => {
         try {
             if (showEditModal && selectedClient) {
                 await dispatch(updateClient({ id: selectedClient.id, data: clientData })).unwrap()
@@ -125,8 +136,8 @@ export function Component() {
             }
             closeModal()
             loadClients()
-        } catch (err: any) {
-            toast.error(err || 'Error al guardar cliente')
+        } catch (err) {
+            toast.error(typeof err === 'string' ? err : 'Error al guardar cliente')
         }
     }
 

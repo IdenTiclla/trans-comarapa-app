@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
+import { useAppDispatch } from '@/store'
 import type { RootState } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
 import { fetchTrips } from '@/store/trip.slice'
@@ -18,12 +19,12 @@ import { ArrowLeft } from 'lucide-react'
 export function Component() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const dispatch = useDispatch<any>()
+  const dispatch = useAppDispatch()
 
   const { currentPackage, loading, error } = useSelector((state: RootState) => state.package)
   const { trips } = useSelector((state: RootState) => state.trip)
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<Record<string, unknown>>({
     description: '',
     package_type: '',
     weight: '',

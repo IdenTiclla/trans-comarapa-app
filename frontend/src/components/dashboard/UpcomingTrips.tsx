@@ -32,7 +32,7 @@ export default function UpcomingTrips() {
         async function load() {
             try {
                 const data = await tripService.getAll({ status: 'scheduled,in_progress', limit: 5 }, controller.signal)
-                const items = Array.isArray(data) ? data : (data as { trips?: Trip[]; items?: Trip[] }).trips || (data as any).items || []
+                const items = Array.isArray(data) ? data : (data as { trips?: Trip[]; items?: Trip[] }).trips || (data as { items?: Trip[] }).items || []
                 setTrips(items as Trip[])
             } catch (_err) {
                 if (controller.signal.aborted) return

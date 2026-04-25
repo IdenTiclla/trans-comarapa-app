@@ -15,9 +15,12 @@ export function Component() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [confirmedTrip, setConfirmedTrip] = useState<any>(null)
-  const [fetchedTickets, setFetchedTickets] = useState<any[]>([])
-  const [confirmedClient, setConfirmedClient] = useState<any>(null)
+  type TripLike = Record<string, unknown>
+  type TicketLike = { id: number; client_id?: number; seat_id?: number; seat?: { seat_number?: number | string }; [k: string]: unknown }
+  type ClientLike = Record<string, unknown>
+  const [confirmedTrip, setConfirmedTrip] = useState<TripLike | null>(null)
+  const [fetchedTickets, setFetchedTickets] = useState<TicketLike[]>([])
+  const [confirmedClient, setConfirmedClient] = useState<ClientLike | null>(null)
 
   useEffect(() => {
     async function loadConfirmation() {
@@ -39,17 +42,17 @@ export function Component() {
         if (!tripRes) {
           throw new Error('No se pudo cargar la información del viaje.')
         }
-        setConfirmedTrip(tripRes)
+        setConfirmedTrip(tripRes as TripLike)
 
         // Fetch ticket details
         const ticketIdArray = ticketIdsParam.split(',')
-        const tickets = []
-        let firstClientId = null
+        const tickets: TicketLike[] = []
+        let firstClientId: number | null = null
 
         if (ticketIdArray.length > 0) {
           for (const ticketId of ticketIdArray) {
             try {
-              const ticketRes = await apiFetch(`/tickets/${ticketId}`) as any
+              const ticketRes = await apiFetch(`/tickets/${ticketId}`) as TicketLike
               if (ticketRes) {
                 tickets.push(ticketRes)
                 if (!firstClientId && ticketRes.client_id) {
@@ -72,15 +75,15 @@ export function Component() {
           try {
             const clientRes = await apiFetch(`/clients/${firstClientId}`)
             if (clientRes) {
-              setConfirmedClient(clientRes)
+              setConfirmedClient(clientRes as ClientLike)
             }
           } catch (err) {
             console.warn(`No se pudo cargar el cliente ID: ${firstClientId}`, err)
           }
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error en TicketConfirmationPage:", err)
-        setError(err.message || 'Ocurrió un error al cargar los detalles de la confirmación.')
+        setError(err instanceof Error ? err.message : 'Ocurrió un error al cargar los detalles de la confirmación.')
       } finally {
         setLoading(false)
       }

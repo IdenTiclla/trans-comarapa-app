@@ -7,6 +7,15 @@ import { getPackageDestination } from '@/lib/package-status'
 import { Button } from '@/components/ui/button'
 import { Plus, X, Loader2, Package } from 'lucide-react'
 
+interface PackageItem {
+    id: number
+    tracking_number?: string
+    sender_name?: string
+    receiver_name?: string
+    created_at?: string
+    [k: string]: unknown
+}
+
 interface PackageAssignModalProps {
     show: boolean
     tripId: number | string
@@ -31,7 +40,7 @@ export default function PackageAssignModal({
     const [selectedIds, setSelectedIds] = useState<number[]>([])
     const [loading, setLoading] = useState(false)
     const [assigning, setAssigning] = useState(false)
-    const [unassignedPackages, setUnassignedPackages] = useState<any[]>([])
+    const [unassignedPackages, setUnassignedPackages] = useState<PackageItem[]>([])
 
     useEffect(() => {
         if (show && tripId) {
@@ -40,7 +49,7 @@ export default function PackageAssignModal({
             setSearchQuery('')
             packageService.getUnassigned()
                 .then(res => {
-                    const data = Array.isArray(res) ? res : ((res as any).packages || (res as any).data || [])
+                    const data = Array.isArray(res) ? res : ((res as { packages?: PackageItem[]; data?: PackageItem[] }).packages || (res as { packages?: PackageItem[]; data?: PackageItem[] }).data || [])
                     setUnassignedPackages(data)
                 })
                 .catch(err => {

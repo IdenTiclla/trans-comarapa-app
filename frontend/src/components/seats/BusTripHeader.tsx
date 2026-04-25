@@ -1,12 +1,15 @@
+interface Person { id: number; firstname?: string; lastname?: string; [k: string]: unknown }
+interface TripLike { id: number; [k: string]: unknown }
+
 interface BusTripHeaderProps {
-    trip: any
+    trip: TripLike
     occupiedSeatsCount?: number
     reservedSeatsCount?: number
     availableSeatsCount?: number
     totalSeatsCount?: number | null
     editable?: boolean
-    drivers?: any[]
-    assistants?: any[]
+    drivers?: Person[]
+    assistants?: Person[]
     editingDriver?: boolean
     editingAssistant?: boolean
     selectedDriverId?: number | null
