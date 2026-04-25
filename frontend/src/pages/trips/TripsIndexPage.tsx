@@ -18,6 +18,8 @@ function formatDateStr(date: Date) {
   return `${y}-${m}-${d}`
 }
 
+const getDayBeforeYesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 2); return formatDateStr(d) }
+const getYesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return formatDateStr(d) }
 const getTodayStr = () => formatDateStr(new Date())
 const getTomorrowStr = () => { const d = new Date(); d.setDate(d.getDate() + 1); return formatDateStr(d) }
 const getDayAfterStr = () => { const d = new Date(); d.setDate(d.getDate() + 2); return formatDateStr(d) }
@@ -125,6 +127,8 @@ export function Component() {
     return { totalSeats, soldTickets, estimatedRevenue, activeRoutes }
   }, [scheduleBoard])
 
+  const isDayBeforeYesterday = selectedDate === getDayBeforeYesterdayStr()
+  const isYesterday = selectedDate === getYesterdayStr()
   const isToday = selectedDate === getTodayStr()
   const isTomorrow = selectedDate === getTomorrowStr()
   const isDayAfter = selectedDate === getDayAfterStr()
@@ -156,6 +160,8 @@ export function Component() {
         </div>
         <div className="flex items-center flex-wrap gap-1.5">
           {[
+            { label: 'Anteayer', active: isDayBeforeYesterday, fn: () => setSelectedDate(getDayBeforeYesterdayStr()) },
+            { label: 'Ayer', active: isYesterday, fn: () => setSelectedDate(getYesterdayStr()) },
             { label: 'Hoy', active: isToday, fn: () => setSelectedDate(getTodayStr()) },
             { label: 'Mañana', active: isTomorrow, fn: () => setSelectedDate(getTomorrowStr()) },
             { label: 'Pasado', active: isDayAfter, fn: () => setSelectedDate(getDayAfterStr()) },
