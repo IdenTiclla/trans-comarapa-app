@@ -280,6 +280,8 @@ export default function BusSeatMapPrint({
                     </div>
                 )}
 
+                <BusSeatLegend />
+
                 <BusSeatGrid
                     seats={filteredSeats}
                     selectedSeatIds={selectedSeatIds}
@@ -291,8 +293,6 @@ export default function BusSeatMapPrint({
                     onSeatDeselected={handleSeatDeselected}
                     onContextMenu={handleContextMenu}
                 />
-
-                <BusSeatLegend />
             </div>
 
             <SeatContextMenu
