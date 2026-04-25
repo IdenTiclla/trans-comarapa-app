@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useParams, Link, useNavigate } from 'react-router'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router'
 import { useAppSelector } from '@/store'
 import { selectUser } from '@/store/auth.slice'
 import { useTripDetailPage } from '@/hooks/use-trip-detail-page'
@@ -16,7 +16,11 @@ import PackageRegistrationModal from '@/components/packages/PackageRegistrationM
 import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
-import { Send, Check, FileText, Package } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Send, Check, FileText, Package, Armchair } from 'lucide-react'
+
+const VALID_TABS = ['seats', 'packages'] as const
+type TabValue = typeof VALID_TABS[number]
 
 export function Component() {
   const { id } = useParams()
@@ -26,6 +30,16 @@ export function Component() {
   const currentUser = useAppSelector(selectUser)
   const page = useTripDetailPage(tripId)
   const { trip, loading, error, refreshTrip, seatMap, seatChange, floatPanel } = page
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as TabValue | null
+  const activeTab: TabValue = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'seats'
+  const setActiveTab = (value: string) => {
+    const next = new URLSearchParams(searchParams)
+    if (value === 'seats') next.delete('tab')
+    else next.set('tab', value)
+    setSearchParams(next, { replace: true })
+  }
 
   const isDoubleDeck = (trip?.bus?.floors || 1) >= 2
 
@@ -104,88 +118,117 @@ export function Component() {
 
       {/* Main Content */}
       <div className="pt-3 pb-8 px-3 sm:px-4 lg:px-6">
-        <div className="w-full space-y-6">
-          <TripInfoCard
-            trip={trip}
-            ticketStats={page.ticketStats}
-            formatDate={page.formatDate}
-            drivers={page.drivers}
-            assistants={page.assistants}
-            staff={page.staff}
-            actions={
-              <>
-                {(trip.status === 'scheduled' || trip.status === 'boarding') && (
-                  <Button
-                    size="sm"
-                    variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
-                    disabled={!page.dispatch.canDispatch}
-                    onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
-                    title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
-                    className="gap-1.5"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Despachar
-                  </Button>
-                )}
-                {trip.status === 'departed' && (
-                  <Button
-                    size="sm"
-                    onClick={() => page.finish.setShow(true)}
-                    className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Terminar
-                  </Button>
-                )}
-                <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
-                  <Button size="sm" variant="outline" className="gap-1.5">
-                    <FileText className="h-3.5 w-3.5" />
-                    Planilla de pasajeros
-                  </Button>
-                </Link>
-                <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
-                  <Button size="sm" variant="outline" className="gap-1.5">
-                    <Package className="h-3.5 w-3.5" />
-                    Manifiesto de encomiendas
-                  </Button>
-                </Link>
-              </>
-            }
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-          <BusSeatMapPrint
-            key={seatMap.key}
-            trip={trip}
-            tickets={page.soldTickets}
-            reserved_seat_numbers={page.reservedSeatNumbers}
-            lockedSeats={seatMap.lockedSeats}
-            currentUserId={currentUser?.id}
-            selectionEnabled={true}
-            enableContextMenu={true}
-            seatChangeMode={seatChange.mode}
-            controlledSelectedIds={seatMap.controlledIds}
-            onSelectionChange={seatMap.onSelectionChange}
-            onCancelReservation={page.seatMapHandlers.onCancelReservation}
-            onConfirmSale={page.seatMapHandlers.onConfirmSale}
-            onChangeSeat={page.seatMapHandlers.onChangeSeat}
-            onPreviewTicket={page.seatMapHandlers.onPreviewTicket}
-            onGoToTicketPage={(seat) => {
-              const ticket = page.findTicketBySeat(seat)
-              if (ticket) navigate(`/tickets/${ticket.id}`)
-            }}
-          />
+          {/* Left: Tabs (main) */}
+          <div className="lg:col-span-3 min-w-0 order-2 lg:order-1">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
+              <div className={`sticky ${seatChange.mode ? 'top-[64px]' : 'top-0'} z-10 -mx-3 sm:-mx-4 lg:-mx-0 px-3 sm:px-4 lg:px-0 py-2 bg-background/85 backdrop-blur-md`}>
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="seats" className="gap-1.5">
+                    <Armchair className="h-4 w-4" />
+                    Asientos & Venta
+                  </TabsTrigger>
+                  <TabsTrigger value="packages" className="gap-1.5">
+                    <Package className="h-4 w-4" />
+                    Encomiendas
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-          <TripPackagesSection
-            tripPackages={page.packages.items}
-            tripId={trip.id}
-            isLoading={page.packages.loading}
-            tripStatus={trip.status}
-            onOpenAssignModal={page.packages.openAssignModal}
-            onUnassignPackage={page.packages.unassign}
-            onDeliverPackage={page.packages.deliver}
-            onReceivePackage={page.packages.receive}
-            onShowReceipt={page.packages.showReceipt}
-          />
+              <TabsContent value="seats">
+                <BusSeatMapPrint
+                  key={seatMap.key}
+                  trip={trip}
+                  tickets={page.soldTickets}
+                  reserved_seat_numbers={page.reservedSeatNumbers}
+                  lockedSeats={seatMap.lockedSeats}
+                  currentUserId={currentUser?.id}
+                  selectionEnabled={true}
+                  enableContextMenu={true}
+                  seatChangeMode={seatChange.mode}
+                  controlledSelectedIds={seatMap.controlledIds}
+                  onSelectionChange={seatMap.onSelectionChange}
+                  onCancelReservation={page.seatMapHandlers.onCancelReservation}
+                  onConfirmSale={page.seatMapHandlers.onConfirmSale}
+                  onChangeSeat={page.seatMapHandlers.onChangeSeat}
+                  onPreviewTicket={page.seatMapHandlers.onPreviewTicket}
+                  onGoToTicketPage={(seat) => {
+                    const ticket = page.findTicketBySeat(seat)
+                    if (ticket) navigate(`/tickets/${ticket.id}`)
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="packages">
+                <TripPackagesSection
+                  tripPackages={page.packages.items}
+                  tripId={trip.id}
+                  isLoading={page.packages.loading}
+                  tripStatus={trip.status}
+                  onOpenAssignModal={page.packages.openAssignModal}
+                  onUnassignPackage={page.packages.unassign}
+                  onDeliverPackage={page.packages.deliver}
+                  onReceivePackage={page.packages.receive}
+                  onShowReceipt={page.packages.showReceipt}
+                />
+              </TabsContent>
+             </Tabs>
+          </div>
+
+          {/* Right: Sidebar */}
+          <aside className="lg:col-span-1 order-1 lg:order-2">
+            <div className={`lg:sticky ${seatChange.mode ? 'lg:top-24' : 'lg:top-4'}`}>
+              <TripInfoCard
+                variant="sidebar"
+                trip={trip}
+                ticketStats={page.ticketStats}
+                formatDate={page.formatDate}
+                drivers={page.drivers}
+                assistants={page.assistants}
+                staff={page.staff}
+                actions={
+                  <>
+                    {(trip.status === 'scheduled' || trip.status === 'boarding') && (
+                      <Button
+                        size="sm"
+                        variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
+                        disabled={!page.dispatch.canDispatch}
+                        onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
+                        title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
+                        className="gap-1.5 justify-center"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        Despachar
+                      </Button>
+                    )}
+                    {trip.status === 'departed' && (
+                      <Button
+                        size="sm"
+                        onClick={() => page.finish.setShow(true)}
+                        className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Terminar
+                      </Button>
+                    )}
+                    <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
+                      <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                        <FileText className="h-3.5 w-3.5" />
+                        Planilla de pasajeros
+                      </Button>
+                    </Link>
+                    <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
+                      <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                        <Package className="h-3.5 w-3.5" />
+                        Manifiesto de encomiendas
+                      </Button>
+                    </Link>
+                  </>
+                }
+              />
+            </div>
+          </aside>
         </div>
       </div>
 

@@ -1,17 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { X, ChevronUp, Ticket, CalendarCheck, Trash2 } from 'lucide-react'
+
+interface PanelSeat {
+    id: number | string
+    number: number | string
+    position?: 'window' | 'aisle' | string
+    deck?: string
+    [key: string]: unknown
+}
 
 interface FloatingSeatsPanelProps {
-    selectedSeats: any[]
+    selectedSeats: PanelSeat[]
     selectionEnabled?: boolean
     seatChangeMode?: boolean
     isDoubleDeck?: boolean
     onSellTicket: () => void
     onReserveSeat: () => void
     onClearSelection: () => void
-    onRemoveSeat: (seat: any) => void
+    onRemoveSeat: (seat: PanelSeat) => void
 }
 
 export default function FloatingSeatsPanel({
@@ -22,155 +29,194 @@ export default function FloatingSeatsPanel({
     onSellTicket,
     onReserveSeat,
     onClearSelection,
-    onRemoveSeat
+    onRemoveSeat,
 }: FloatingSeatsPanelProps) {
-    const [isExpanded, setIsExpanded] = useState(false)
+    const [userExpanded, setUserExpanded] = useState(false)
 
-    // Si no hay asientos, o esta en modo cambio, o no esta habilitada la seleccion, ocultar panel.
-    useEffect(() => {
-        if (!selectionEnabled || selectedSeats.length === 0 || seatChangeMode) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setIsExpanded(false)
-        }
-    }, [selectionEnabled, selectedSeats.length, seatChangeMode])
+    const isVisible = selectionEnabled && selectedSeats.length > 0 && !seatChangeMode
+    const isExpanded = userExpanded && isVisible
 
-    const windowSeatsCount = useMemo(() => selectedSeats.filter(seat => seat.position === 'window').length, [selectedSeats])
-    const aisleSeatsCount = useMemo(() => selectedSeats.filter(seat => seat.position === 'aisle').length, [selectedSeats])
+    const windowSeatsCount = useMemo(
+        () => selectedSeats.filter((seat) => seat.position === 'window').length,
+        [selectedSeats]
+    )
+    const aisleSeatsCount = useMemo(
+        () => selectedSeats.filter((seat) => seat.position === 'aisle').length,
+        [selectedSeats]
+    )
 
-    if (!selectionEnabled || selectedSeats.length === 0 || seatChangeMode) return null
+    if (!isVisible) return null
 
     return (
-        <div className="fixed bottom-6 right-6 z-40 font-sans print:hidden animate-[slideUp_0.3s_ease-out]">
-            <div className={`bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-indigo-100 overflow-hidden transition-all duration-300 ease-in-out w-[340px] sm:w-[420px]`}>
+        <div
+            role="dialog"
+            aria-label="Asientos seleccionados"
+            className="fixed bottom-6 right-6 z-40 font-sans print:hidden animate-[slideUp_0.3s_ease-out]"
+        >
+            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border overflow-hidden transition-all duration-300 ease-in-out w-[340px] sm:w-[420px]">
 
-                {/* Header / Collapsed State */}
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                <div
-                    className={`flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors ${isExpanded ? 'border-b border-indigo-100 bg-slate-50/80 rounded-t-2xl' : 'rounded-2xl'}`}
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    title={isExpanded ? "Haz clic para colapsar" : "Haz clic para expandir"}
+                {/* Header / collapsed state */}
+                <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setUserExpanded((v) => !v)}
+                    aria-expanded={isExpanded}
+                    aria-controls="floating-seats-panel-content"
+                    title={isExpanded ? 'Colapsar panel' : 'Expandir panel'}
+                    className={`flex items-center justify-between w-full h-auto p-4 text-left hover:bg-muted/50 ${isExpanded ? 'border-b border-border bg-muted/40 rounded-t-xl rounded-b-none' : 'rounded-xl'}`}
                 >
-                    <div className="flex items-center space-x-3 pointer-events-none">
-                        <div className="bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md transition-transform">
+                    <div className="flex items-center space-x-3">
+                        <div className="bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
                             {selectedSeats.length}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-slate-800 text-sm sm:text-base whitespace-nowrap">
+                            <span className="font-bold text-foreground text-sm sm:text-base whitespace-nowrap">
                                 Asientos Seleccionados
                             </span>
                             {!isExpanded && (
-                                <span className="text-xs text-slate-500 font-medium truncate w-[100px] sm:w-[150px] inline-block">
-                                    {selectedSeats.map(s => s.number).join(', ')}
+                                <span className="text-xs text-muted-foreground font-medium truncate w-[100px] sm:w-[150px] inline-block">
+                                    {selectedSeats.map((s) => s.number).join(', ')}
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center gap-2 ml-4">
                         {!isExpanded && (
-                            <div className="hidden sm:flex items-center space-x-2 mr-2">
+                            <div className="hidden sm:flex items-center gap-2 mr-1">
                                 <Button
-                                    onClick={(e) => { e.stopPropagation(); onSellTicket(); }}
-                                    className="h-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 shadow-sm"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onSellTicket()
+                                    }}
+                                    className="h-8 text-xs font-semibold"
                                 >
                                     Vender
                                 </Button>
                                 <Button
-                                    onClick={(e) => { e.stopPropagation(); onReserveSeat(); }}
-                                    className="h-auto bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 px-3 shadow-sm"
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onReserveSeat()
+                                    }}
+                                    className="h-8 text-xs font-semibold"
                                 >
                                     Reservar
                                 </Button>
                             </div>
                         )}
-                        <div className={`transform transition-transform duration-300 text-slate-400 ${isExpanded ? 'rotate-180' : ''}`}>
-                            <svg className="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                        </div>
+                        <ChevronUp
+                            className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`}
+                            aria-hidden="true"
+                        />
                     </div>
-                </div>
+                </Button>
 
-                {/* Expanded State Content */}
-                <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[60vh] opacity-100 visible overflow-y-auto' : 'max-h-0 opacity-0 invisible overflow-hidden'}`}>
-
-                    {/* Seat Grid Details */}
-                    <div className="p-4 bg-slate-50/50">
+                {/* Expanded content */}
+                <div
+                    id="floating-seats-panel-content"
+                    className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[60vh] opacity-100 visible overflow-y-auto' : 'max-h-0 opacity-0 invisible overflow-hidden'}`}
+                >
+                    <div className="p-4 bg-muted/30">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Detalles de Asientos</span>
-                            <div className="flex space-x-3 text-xs text-slate-500 font-medium">
-                                <span title="Asientos en Ventana">🪟 {windowSeatsCount}</span>
-                                <span title="Asientos en Pasillo">🚶 {aisleSeatsCount}</span>
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                Detalles de Asientos
+                            </span>
+                            <div className="flex gap-3 text-xs text-muted-foreground font-medium">
+                                <span title="Asientos en ventana" aria-label={`${windowSeatsCount} en ventana`}>
+                                    🪟 {windowSeatsCount}
+                                </span>
+                                <span title="Asientos en pasillo" aria-label={`${aisleSeatsCount} en pasillo`}>
+                                    🚶 {aisleSeatsCount}
+                                </span>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                            {selectedSeats.map(seat => (
-                                <div key={seat.id} className="relative group bg-white border border-slate-200 shadow-sm rounded-lg p-2 text-center hover:border-indigo-400 hover:shadow-md transition-all cursor-default flex flex-col items-center justify-center min-h-[64px]">
-                                    <div className="text-sm font-bold text-indigo-700">{seat.number}</div>
-                                    <div className="text-[9px] uppercase font-semibold text-slate-400 mt-0.5 tracking-wider">
-                                        {isDoubleDeck && seat.deck && <span className="block text-[8px] text-indigo-400/80 mb-0.5">{seat.deck === 'FIRST' ? '1º Piso' : '2º Piso'}</span>}
+                            {selectedSeats.map((seat) => (
+                                <div
+                                    key={seat.id}
+                                    className="relative group bg-card border border-border shadow-sm rounded-lg p-2 text-center hover:border-primary/60 hover:shadow-md transition-all flex flex-col items-center justify-center min-h-[64px]"
+                                >
+                                    <div className="text-sm font-bold text-primary">{seat.number}</div>
+                                    <div className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5 tracking-wider">
+                                        {isDoubleDeck && seat.deck && (
+                                            <span className="block text-[8px] text-primary/80 mb-0.5">
+                                                {seat.deck === 'FIRST' ? '1º Piso' : '2º Piso'}
+                                            </span>
+                                        )}
                                         {seat.position === 'window' ? 'Ventana' : 'Pasillo'}
                                     </div>
                                     <Button
-                                        variant="ghost"
+                                        variant="outline"
                                         size="icon"
-                                        onClick={(e) => { e.stopPropagation(); onRemoveSeat(seat); }}
-                                        aria-label="Quitar asiento"
-                                        className="absolute -top-2 -right-2 h-6 w-6 bg-white text-slate-400 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-full shadow-sm opacity-0 group-hover:opacity-100 z-10"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onRemoveSeat(seat)
+                                        }}
+                                        aria-label={`Quitar asiento ${seat.number}`}
+                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-10"
                                     >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="p-4 bg-white border-t border-slate-100 grid grid-cols-2 gap-3 sm:gap-4 rounded-b-2xl">
+                    {/* Action buttons */}
+                    <div className="p-4 bg-card border-t border-border grid grid-cols-2 gap-3 rounded-b-xl">
                         <Button
                             onClick={onSellTicket}
-                            className="col-span-2 h-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm"
+                            className="col-span-2 h-auto font-semibold py-2.5 rounded-lg gap-2"
                         >
-                            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            <span>Vender Tickets <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.5 text-[10px] uppercase bg-white/20 rounded shadow-sm border border-emerald-500/30">V</kbd></span>
+                            <Ticket className="h-4 w-4" aria-hidden="true" />
+                            <span className="flex items-center gap-1.5">
+                                Vender Tickets
+                                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] uppercase bg-primary-foreground/15 rounded border border-primary-foreground/20">
+                                    V
+                                </kbd>
+                            </span>
                         </Button>
 
                         <Button
+                            variant="secondary"
                             onClick={onReserveSeat}
-                            className="h-auto bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm text-sm"
+                            className="h-auto font-semibold py-2.5 rounded-lg gap-2"
                         >
-                            <svg className="w-4 h-4 hidden sm:block mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>Reservar <kbd className="hidden sm:inline-block px-1 ml-1 text-[10px] uppercase bg-white/20 rounded shadow-sm border border-amber-400/30">R</kbd></span>
+                            <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                            <span className="flex items-center gap-1.5">
+                                Reservar
+                                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] uppercase bg-foreground/10 rounded border border-foreground/20">
+                                    R
+                                </kbd>
+                            </span>
                         </Button>
 
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={onClearSelection}
-                            className="h-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm"
+                            className="h-auto font-semibold py-2.5 rounded-lg gap-2"
                         >
-                            <svg className="w-4 h-4 hidden sm:block mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            <span>Limpiar <kbd className="hidden sm:inline-block px-1 ml-1 text-[10px] uppercase bg-slate-300 rounded text-slate-600 shadow-sm border border-slate-200">C</kbd></span>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            <span className="flex items-center gap-1.5">
+                                Limpiar
+                                <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] uppercase bg-foreground/10 rounded border border-foreground/20">
+                                    C
+                                </kbd>
+                            </span>
                         </Button>
                     </div>
                 </div>
             </div>
 
             <style>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: #cbd5e1;
+                    background-color: hsl(var(--border));
                     border-radius: 20px;
                 }
             `}</style>

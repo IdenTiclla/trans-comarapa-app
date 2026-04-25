@@ -82,6 +82,7 @@ interface Props {
     assistants: Person[]
     staff: StaffState
     actions?: React.ReactNode
+    variant?: 'full' | 'sidebar'
 }
 
 // ── Small info cell used in the data grid ────────────────────────────────────
@@ -97,13 +98,88 @@ function InfoCell({ icon, label, value }: { icon: React.ReactNode; label: string
     )
 }
 
-export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, actions }: Props) {
+export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, actions, variant = 'full' }: Props) {
     const occupancyPercent = ticketStats.total > 0
         ? ((ticketStats.sold + ticketStats.reserved) / ticketStats.total) * 100
         : 0
 
     const statusStyle = STATUS_BADGE[trip.status] ?? { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' }
     const statusLabel = STATUS_MAP[trip.status] ?? trip.status
+
+    if (variant === 'sidebar') {
+        return (
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                {/* Header */}
+                <div className="px-4 pt-4 pb-3 border-b border-border/60">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
+                            {statusLabel}
+                        </span>
+                        <span className="text-[11px] font-mono text-muted-foreground">#{trip.id}</span>
+                    </div>
+                    <h1 className="text-lg font-extrabold text-foreground tracking-tight leading-tight">
+                        {trip.route?.origin ?? 'N/D'}
+                        <span className="mx-1.5 text-muted-foreground font-normal">→</span>
+                        {trip.route?.destination ?? 'N/D'}
+                    </h1>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">
+                        {formatFullDate(trip.trip_datetime)}
+                        {trip.departure_time && ` · ${formatTimeAmPm(trip.departure_time)}`}
+                    </p>
+                </div>
+
+                {/* Actions */}
+                {actions && (
+                    <div className="px-4 py-3 border-b border-border/60 flex flex-col gap-2 [&>*]:w-full [&_a]:w-full">
+                        {actions}
+                    </div>
+                )}
+
+                {/* Data list */}
+                <div className="px-4 py-3 border-b border-border/60 space-y-3">
+                    <InfoCell
+                        icon={<Bus className="h-4 w-4" />}
+                        label="Bus"
+                        value={`${trip.bus?.license_plate ?? 'N/A'} · ${trip.bus?.floors ?? 1} piso${(trip.bus?.floors ?? 1) > 1 ? 's' : ''}`}
+                    />
+                    <InfoCell
+                        icon={<Banknote className="h-4 w-4" />}
+                        label="Precio"
+                        value={`Bs. ${trip.route?.price ?? trip.price ?? 'N/A'}`}
+                    />
+                    <InfoCell
+                        icon={<Clock className="h-4 w-4" />}
+                        label="Salida"
+                        value={trip.departure_time ? formatTimeAmPm(trip.departure_time) : 'N/A'}
+                    />
+                </div>
+
+                {/* Staff */}
+                <div className="px-4 py-3 border-b border-border/60">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Personal</p>
+                    <TripStaffEditor
+                        drivers={drivers}
+                        assistants={assistants}
+                        trip={trip}
+                        staff={staff}
+                        compact
+                    />
+                </div>
+
+                {/* Occupancy */}
+                <div className="px-4 py-3">
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                        <div
+                            className="h-1.5 rounded-full transition-all bg-green-500"
+                            style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
+                        />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{Math.round(occupancyPercent)}% ocupado</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">

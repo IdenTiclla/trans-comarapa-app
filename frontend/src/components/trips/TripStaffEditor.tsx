@@ -23,6 +23,7 @@ interface Props {
     assistants: any[]
     trip: any
     staff: StaffState
+    compact?: boolean
 }
 
 function StaffDisplayCard({
@@ -99,12 +100,12 @@ function StaffEditCard({
     )
 }
 
-export function TripStaffEditor({ drivers, assistants, trip, staff }: Props) {
+export function TripStaffEditor({ drivers, assistants, trip, staff, compact }: Props) {
     const driverName = trip.driver ? `${trip.driver.firstname} ${trip.driver.lastname}` : 'No asignado'
     const assistantName = trip.assistant ? `${trip.assistant.firstname} ${trip.assistant.lastname}` : 'No asignado'
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className={`grid gap-3 ${compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
             {/* Conductor */}
             {staff.editingDriver ? (
                 <StaffEditCard
