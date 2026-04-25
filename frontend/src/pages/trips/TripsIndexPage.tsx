@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTrips, selectTrips, selectTripLoading, selectTripError } from '@/store/trip.slice'
 import { fetchRoutesWithSchedules } from '@/store/route.slice'
@@ -32,8 +32,21 @@ export function Component() {
   const routeLoading = useAppSelector((s) => (s as unknown as { route: { isLoading: boolean } }).route.isLoading)
   const routeError = useAppSelector((s) => (s as unknown as { route: { error: string | null } }).route.error)
 
-  const [selectedDate, setSelectedDate] = useState(getTodayStr())
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedDate, setSelectedDateState] = useState(() => {
+    const param = searchParams.get('date')
+    return param && /^\d{4}-\d{2}-\d{2}$/.test(param) ? param : getTodayStr()
+  })
   const [createModal, setCreateModal] = useState<{ routeId: number; routeLabel: string; date: string; time: string } | null>(null)
+
+  const setSelectedDate = useCallback((date: string) => {
+    setSelectedDateState(date)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('date', date)
+      return next
+    }, { replace: true })
+  }, [setSearchParams])
 
   const isLoading = tripLoading || routeLoading
   const hasError = tripError || routeError
