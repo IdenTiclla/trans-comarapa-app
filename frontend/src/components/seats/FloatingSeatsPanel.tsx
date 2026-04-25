@@ -53,7 +53,7 @@ export default function FloatingSeatsPanel({
             aria-label="Asientos seleccionados"
             className="fixed bottom-6 right-6 z-40 font-sans print:hidden animate-[slideUp_0.3s_ease-out]"
         >
-            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border overflow-hidden transition-all duration-300 ease-in-out w-[340px] sm:w-[420px]">
+            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border transition-all duration-300 ease-in-out w-[340px] sm:w-[420px]">
 
                 {/* Header / collapsed state */}
                 <Button
@@ -63,7 +63,7 @@ export default function FloatingSeatsPanel({
                     aria-expanded={isExpanded}
                     aria-controls="floating-seats-panel-content"
                     title={isExpanded ? 'Colapsar panel' : 'Expandir panel'}
-                    className={`flex items-center justify-between w-full h-auto p-4 text-left hover:bg-muted/50 ${isExpanded ? 'border-b border-border bg-muted/40 rounded-t-xl rounded-b-none' : 'rounded-xl'}`}
+                    className={`flex items-center justify-between w-full h-auto p-4 text-left hover:bg-muted/50 overflow-hidden ${isExpanded ? 'border-b border-border bg-muted/40 rounded-t-xl rounded-b-none' : 'rounded-xl'}`}
                 >
                     <div className="flex items-center space-x-3">
                         <div className="bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
@@ -134,32 +134,32 @@ export default function FloatingSeatsPanel({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-2 max-h-52 overflow-y-auto p-2 custom-scrollbar">
                             {selectedSeats.map((seat) => (
                                 <div
                                     key={seat.id}
-                                    className="relative group bg-card border border-border shadow-sm rounded-lg p-2 text-center hover:border-primary/60 hover:shadow-md transition-all flex flex-col items-center justify-center min-h-[64px]"
+                                    className="relative group bg-card border border-border shadow-sm rounded-lg p-2.5 text-center hover:border-primary/60 hover:shadow-md transition-all flex flex-col items-center justify-center min-h-[72px]"
                                 >
-                                    <div className="text-sm font-bold text-primary">{seat.number}</div>
-                                    <div className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5 tracking-wider">
+                                    <div className="text-base font-bold text-primary leading-none mb-1">{seat.number}</div>
+                                    <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight">
                                         {isDoubleDeck && seat.deck && (
-                                            <span className="block text-[8px] text-primary/80 mb-0.5">
+                                            <span className="block text-primary/70 mb-0.5">
                                                 {seat.deck === 'FIRST' ? '1º Piso' : '2º Piso'}
                                             </span>
                                         )}
                                         {seat.position === 'window' ? 'Ventana' : 'Pasillo'}
                                     </div>
                                     <Button
-                                        variant="outline"
+                                        variant="destructive"
                                         size="icon"
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             onRemoveSeat(seat)
                                         }}
                                         aria-label={`Quitar asiento ${seat.number}`}
-                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 z-10"
+                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md border-2 border-card z-10 hover:scale-110 active:scale-95 transition-transform"
                                     >
-                                        <X className="h-3.5 w-3.5" />
+                                        <X className="h-4 w-4" />
                                     </Button>
                                 </div>
                             ))}
@@ -167,7 +167,7 @@ export default function FloatingSeatsPanel({
                     </div>
 
                     {/* Action buttons */}
-                    <div className="p-4 bg-card border-t border-border grid grid-cols-2 gap-3 rounded-b-xl">
+                    <div className="p-4 bg-card border-t border-border grid grid-cols-2 gap-3 rounded-b-xl overflow-hidden">
                         <Button
                             onClick={onSellTicket}
                             className="col-span-2 h-auto font-semibold py-2.5 rounded-lg gap-2"
