@@ -72,6 +72,7 @@ npx tsc --noEmit  # must pass
 - `003`: Unit tests must NOT require database — use mocks and dependency injection
 - `004`: Check `package.json` for routing package before importing — use `'react-router'` not `'react-router-dom'`
 - `005`: Never use `any` in React/TS — type API shapes with domain interfaces + `[key: string]: unknown` escape hatch; narrow errors with `err instanceof Error ? err.message : fallback`
+- `006`: Use `navigate(-1)` in modal onClose callbacks instead of hardcoded routes — pages can be reached from multiple locations
 
 ## Key Resources
 

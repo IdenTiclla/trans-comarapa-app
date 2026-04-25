@@ -21,7 +21,7 @@ export function Component() {
         <CardContent className="p-6 min-h-[500px] relative">
           <PackageRegistrationModal
             show={true}
-            onClose={() => navigate('/packages')}
+            onClose={() => navigate(-1)}
             onPackageRegistered={() => {
               // No navegamos aquí para permitir ver el recibo primero
               // El onClose se encargará de la navegación cuando el usuario termine
