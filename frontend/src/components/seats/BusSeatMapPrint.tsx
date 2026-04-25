@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import DeckSelector from './DeckSelector'
 import BusSeatGrid from './BusSeatGrid'
 import BusSeatLegend from './BusSeatLegend'
@@ -96,6 +96,7 @@ export default function BusSeatMapPrint({
 }: BusSeatMapPrintProps) {
     const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([])
     const [selectedDeck, setSelectedDeck] = useState('FIRST')
+    const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (controlledSelectedIds !== undefined) {
@@ -238,10 +239,18 @@ export default function BusSeatMapPrint({
     }
 
     const handleContextMenu = (event: React.MouseEvent, seat: SeatItem) => {
-        if (!enableContextMenu) return
+        if (!enableContextMenu || !containerRef.current) return
         event.preventDefault()
+        
+        const rect = containerRef.current.getBoundingClientRect()
+        const targetRect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+        
+        // Position at the right edge of the seat, centered vertically
+        const x = targetRect.right - rect.left
+        const y = (targetRect.top + targetRect.height / 2) - rect.top
+
         setShowContextMenu(true)
-        setContextMenuPosition({ x: event.clientX, y: event.clientY })
+        setContextMenuPosition({ x, y })
         setSelectedSeatForContext(seat)
     }
 
@@ -267,7 +276,7 @@ export default function BusSeatMapPrint({
     }
 
     return (
-        <div className="bus-seat-map-print font-sans relative">
+        <div ref={containerRef} className="bus-seat-map-print font-sans relative">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden print:max-w-none print:shadow-none print:p-0">
                 {isDoubleDeck && (
                     <div className="px-4 sm:px-6 md:px-8">
