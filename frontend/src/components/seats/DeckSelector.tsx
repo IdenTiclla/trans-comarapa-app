@@ -51,7 +51,7 @@ export default function DeckSelector({
     if (!isDoubleDeck) return null
 
     return (
-        <div className="flex justify-center py-3">
+        <div className="flex justify-center pt-1 pb-3">
             <Tabs
                 value={currentValue}
                 onValueChange={onDeckChanged}

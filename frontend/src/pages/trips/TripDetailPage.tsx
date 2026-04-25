@@ -118,25 +118,24 @@ export function Component() {
 
       {/* Main Content */}
       <div className="pt-3 pb-8 px-3 sm:px-4 lg:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className={`sticky ${seatChange.mode ? 'top-[64px]' : 'top-0'} z-10 -mx-3 sm:-mx-4 lg:-mx-0 px-3 sm:px-4 lg:px-0 pt-1 pb-4 bg-background/85 backdrop-blur-md`}>
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="seats" className="gap-1.5">
+                <Armchair className="h-4 w-4" />
+                Asientos & Venta
+              </TabsTrigger>
+              <TabsTrigger value="packages" className="gap-1.5">
+                <Package className="h-4 w-4" />
+                Encomiendas
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Left: Tabs (main) */}
-          <div className="lg:col-span-3 min-w-0 order-2 lg:order-1">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
-              <div className={`sticky ${seatChange.mode ? 'top-[64px]' : 'top-0'} z-10 -mx-3 sm:-mx-4 lg:-mx-0 px-3 sm:px-4 lg:px-0 py-2 bg-background/85 backdrop-blur-md`}>
-                <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="seats" className="gap-1.5">
-                    <Armchair className="h-4 w-4" />
-                    Asientos & Venta
-                  </TabsTrigger>
-                  <TabsTrigger value="packages" className="gap-1.5">
-                    <Package className="h-4 w-4" />
-                    Encomiendas
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="seats">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-2">
+            {/* Left: Tabs Content (main) */}
+            <div className="lg:col-span-3 min-w-0 order-2 lg:order-1">
+              <TabsContent value="seats" className="mt-0">
                 <BusSeatMapPrint
                   key={seatMap.key}
                   trip={trip}
@@ -160,7 +159,7 @@ export function Component() {
                 />
               </TabsContent>
 
-              <TabsContent value="packages">
+              <TabsContent value="packages" className="mt-0">
                 <TripPackagesSection
                   tripPackages={page.packages.items}
                   tripId={trip.id}
@@ -173,63 +172,63 @@ export function Component() {
                   onShowReceipt={page.packages.showReceipt}
                 />
               </TabsContent>
-             </Tabs>
-          </div>
-
-          {/* Right: Sidebar */}
-          <aside className="lg:col-span-1 order-1 lg:order-2">
-            <div className={`lg:sticky ${seatChange.mode ? 'lg:top-24' : 'lg:top-4'}`}>
-              <TripInfoCard
-                variant="sidebar"
-                trip={trip}
-                ticketStats={page.ticketStats}
-                formatDate={page.formatDate}
-                drivers={page.drivers}
-                assistants={page.assistants}
-                staff={page.staff}
-                actions={
-                  <>
-                    {(trip.status === 'scheduled' || trip.status === 'boarding') && (
-                      <Button
-                        size="sm"
-                        variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
-                        disabled={!page.dispatch.canDispatch}
-                        onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
-                        title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
-                        className="gap-1.5 justify-center"
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                        Despachar
-                      </Button>
-                    )}
-                    {trip.status === 'departed' && (
-                      <Button
-                        size="sm"
-                        onClick={() => page.finish.setShow(true)}
-                        className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                        Terminar
-                      </Button>
-                    )}
-                    <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
-                      <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
-                        <FileText className="h-3.5 w-3.5" />
-                        Planilla de pasajeros
-                      </Button>
-                    </Link>
-                    <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
-                      <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
-                        <Package className="h-3.5 w-3.5" />
-                        Manifiesto de encomiendas
-                      </Button>
-                    </Link>
-                  </>
-                }
-              />
             </div>
-          </aside>
-        </div>
+
+            {/* Right: Sidebar */}
+            <aside className="lg:col-span-1 order-1 lg:order-2">
+              <div className={`lg:sticky ${seatChange.mode ? 'lg:top-[120px]' : 'lg:top-20'}`}>
+                <TripInfoCard
+                  variant="sidebar"
+                  trip={trip}
+                  ticketStats={page.ticketStats}
+                  formatDate={page.formatDate}
+                  drivers={page.drivers}
+                  assistants={page.assistants}
+                  staff={page.staff}
+                  actions={
+                    <>
+                      {(trip.status === 'scheduled' || trip.status === 'boarding') && (
+                        <Button
+                          size="sm"
+                          variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
+                          disabled={!page.dispatch.canDispatch}
+                          onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
+                          title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
+                          className="gap-1.5 justify-center"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          Despachar
+                        </Button>
+                      )}
+                      {trip.status === 'departed' && (
+                        <Button
+                          size="sm"
+                          onClick={() => page.finish.setShow(true)}
+                          className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          Terminar
+                        </Button>
+                      )}
+                      <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
+                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                          <FileText className="h-3.5 w-3.5" />
+                          Planilla de pasajeros
+                        </Button>
+                      </Link>
+                      <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
+                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                          <Package className="h-3.5 w-3.5" />
+                          Manifiesto de encomiendas
+                        </Button>
+                      </Link>
+                    </>
+                  }
+                />
+              </div>
+            </aside>
+          </div>
+        </Tabs>
       </div>
 
       {/* Floating Seats Panel */}
