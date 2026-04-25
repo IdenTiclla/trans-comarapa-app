@@ -167,9 +167,28 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                     />
                 </div>
 
-                {/* Occupancy */}
+                {/* Seat stats */}
                 <div className="px-4 py-3">
-                    <div className="w-full bg-muted rounded-full h-1.5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Asientos</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div className="flex flex-col">
+                            <span className="text-lg font-extrabold text-foreground leading-none">{ticketStats.total}</span>
+                            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-extrabold text-red-600 leading-none">{ticketStats.sold}</span>
+                            <span className="text-[10px] text-red-500 font-semibold uppercase tracking-wider">Ocupados</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-extrabold text-yellow-600 leading-none">{ticketStats.reserved}</span>
+                            <span className="text-[10px] text-yellow-500 font-semibold uppercase tracking-wider">Reservados</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-lg font-extrabold text-blue-600 leading-none">{ticketStats.available}</span>
+                            <span className="text-[10px] text-blue-500 font-semibold uppercase tracking-wider">Disponibles</span>
+                        </div>
+                    </div>
+                    <div className="mt-3 w-full bg-muted rounded-full h-1.5">
                         <div
                             className="h-1.5 rounded-full transition-all bg-green-500"
                             style={{ width: `${Math.min(occupancyPercent, 100)}%` }}

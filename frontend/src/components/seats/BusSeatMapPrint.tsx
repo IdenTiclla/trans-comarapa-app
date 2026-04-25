@@ -209,26 +209,6 @@ export default function BusSeatMapPrint({
         return seats.filter(seat => seat.deck === selectedDeck)
     }, [seats, isDoubleDeck, selectedDeck])
 
-    const occupiedSeatsCount = useMemo(() => {
-        if (!filteredSeats) return 0
-        return filteredSeats.filter(seat => seat.occupied).length
-    }, [filteredSeats])
-
-    const reservedSeatsCount = useMemo(() => {
-        if (!filteredSeats) return 0
-        return filteredSeats.filter(seat => seat.status === 'reserved').length
-    }, [filteredSeats])
-
-    const lockedSeatsCount = useMemo(() => {
-        if (!filteredSeats) return 0
-        return filteredSeats.filter(seat => seat.status === 'locked').length
-    }, [filteredSeats])
-
-    const availableSeatsCount = useMemo(() => {
-        if (!filteredSeats) return 0
-        return filteredSeats.length - occupiedSeatsCount - reservedSeatsCount - lockedSeatsCount
-    }, [filteredSeats, occupiedSeatsCount, reservedSeatsCount, lockedSeatsCount])
-
     // Sync initialSelectedSeats
     useEffect(() => {
         if (initialSelectedSeats && initialSelectedSeats.length > 0) {
@@ -295,10 +275,6 @@ export default function BusSeatMapPrint({
                             floors={busFloors}
                             selectedDeck={selectedDeck}
                             seats={seats}
-                            occupiedSeatsCount={occupiedSeatsCount}
-                            reservedSeatsCount={reservedSeatsCount}
-                            availableSeatsCount={availableSeatsCount}
-                            totalFilteredSeatsCount={filteredSeats.length}
                             onDeckChanged={(deck) => setSelectedDeck(deck)}
                         />
                     </div>

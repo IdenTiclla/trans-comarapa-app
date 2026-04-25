@@ -1,17 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from 'react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+interface SeatLike {
+    deck: string
+    [k: string]: unknown
+}
 
 interface DeckSelectorProps {
     busType?: string | null
     floors?: number | null
     selectedDeck: string
-    seats?: any[]
-    occupiedSeatsCount?: number
-    reservedSeatsCount?: number
-    availableSeatsCount?: number
-    totalFilteredSeatsCount?: number
+    seats?: SeatLike[]
     onDeckChanged: (deck: string) => void
 }
 
@@ -20,13 +19,8 @@ export default function DeckSelector({
     floors = null,
     selectedDeck,
     seats = [],
-    occupiedSeatsCount = 0,
-    reservedSeatsCount = 0,
-    availableSeatsCount = 0,
-    totalFilteredSeatsCount = 0,
-    onDeckChanged
+    onDeckChanged,
 }: DeckSelectorProps) {
-
     const isDoubleDeck = useMemo(() => {
         if (floors !== null) return floors >= 2
         if (busType) return busType === 'double-deck' || busType === 'double_deck'
@@ -40,91 +34,43 @@ export default function DeckSelector({
     const firstDeckValue = usesFirstSecond ? 'FIRST' : 'lower'
     const secondDeckValue = usesFirstSecond ? 'SECOND' : 'upper'
 
-    const isFirstDeckSelected = selectedDeck === 'FIRST' || selectedDeck === 'lower'
-    const isSecondDeckSelected = selectedDeck === 'SECOND' || selectedDeck === 'upper'
-
     const firstDeckSeatsCount = useMemo(() => {
-        if (!isDoubleDeck) return null
+        if (!isDoubleDeck) return 0
         return seats.filter(seat => seat.deck === 'FIRST' || seat.deck === 'lower').length
     }, [isDoubleDeck, seats])
 
     const secondDeckSeatsCount = useMemo(() => {
-        if (!isDoubleDeck) return null
+        if (!isDoubleDeck) return 0
         return seats.filter(seat => seat.deck === 'SECOND' || seat.deck === 'upper').length
     }, [isDoubleDeck, seats])
 
-    const getDeckDisplayName = () => {
-        if (isFirstDeckSelected) return 'Planta Baja'
-        if (isSecondDeckSelected) return 'Planta Alta'
-        return 'Planta Única'
-    }
+    const currentValue = selectedDeck === 'FIRST' || selectedDeck === 'lower'
+        ? firstDeckValue
+        : secondDeckValue
 
     if (!isDoubleDeck) return null
 
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-6 shadow-sm transition-all duration-300">
-            <div className="flex bg-gray-100 rounded-xl p-1">
-                <Button
-                    variant="ghost"
-                    onClick={() => onDeckChanged(firstDeckValue)}
-                    className={cn('flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 h-auto text-sm font-medium',
-                        isFirstDeckSelected ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200')}
-                >
-                    <span className="mr-1.5">🔽</span>
-                    <span className="hidden sm:inline">Planta</span>
-                    <span className="sm:hidden">P.</span>
-                    <span className="ml-1">Baja</span>
-                    {firstDeckSeatsCount !== null && (
-                        <span className="ml-1.5 text-xs opacity-75">({firstDeckSeatsCount})</span>
-                    )}
-                </Button>
-
-                <Button
-                    variant="ghost"
-                    onClick={() => onDeckChanged(secondDeckValue)}
-                    className={cn('flex-1 flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-3 h-auto text-sm font-medium',
-                        isSecondDeckSelected ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:text-white' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200')}
-                >
-                    <span className="mr-1.5">🔼</span>
-                    <span className="hidden sm:inline">Planta</span>
-                    <span className="sm:hidden">P.</span>
-                    <span className="ml-1">Alta</span>
-                    {secondDeckSeatsCount !== null && (
-                        <span className="ml-1.5 text-xs opacity-75">({secondDeckSeatsCount})</span>
-                    )}
-                </Button>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-100">
-                <div className="flex items-center space-x-2 min-w-0">
-                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-semibold text-gray-700 truncate">
-                        {getDeckDisplayName()}
-                    </span>
-                </div>
-
-                <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-                    <div className="text-center">
-                        <span className="text-base sm:text-lg font-black text-indigo-600">{totalFilteredSeatsCount}</span>
-                        <p className="text-[10px] sm:text-xs text-gray-500">Total</p>
-                    </div>
-                    <div className="w-px h-6 sm:h-8 bg-gray-200" />
-                    <div className="text-center">
-                        <span className="text-base sm:text-lg font-black text-red-600">{occupiedSeatsCount}</span>
-                        <p className="text-[10px] sm:text-xs text-gray-500">Ocupados</p>
-                    </div>
-                    <div className="w-px h-6 sm:h-8 bg-gray-200" />
-                    <div className="text-center">
-                        <span className="text-base sm:text-lg font-black text-amber-600">{reservedSeatsCount}</span>
-                        <p className="text-[10px] sm:text-xs text-gray-500">Reservados</p>
-                    </div>
-                    <div className="w-px h-6 sm:h-8 bg-gray-200" />
-                    <div className="text-center">
-                        <span className="text-base sm:text-lg font-black text-emerald-600">{availableSeatsCount}</span>
-                        <p className="text-[10px] sm:text-xs text-gray-500">Disponibles</p>
-                    </div>
-                </div>
-            </div>
+        <div className="flex justify-center py-3">
+            <Tabs
+                value={currentValue}
+                onValueChange={onDeckChanged}
+            >
+                <TabsList>
+                    <TabsTrigger value={firstDeckValue}>
+                        Planta Baja
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                            ({firstDeckSeatsCount})
+                        </span>
+                    </TabsTrigger>
+                    <TabsTrigger value={secondDeckValue}>
+                        Planta Alta
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                            ({secondDeckSeatsCount})
+                        </span>
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
         </div>
     )
 }
