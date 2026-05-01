@@ -1,49 +1,49 @@
-# Plan: Flujo completo de venta y reserva de asientos en React
+# Plan: Complete Seat Sale and Reservation Flow in React
 
-## Estado actual
+## Current Status
 
-La app React (`frontend-react/`) ya tiene **todos los componentes base** implementados para el flujo de venta/reserva. Sin embargo, hay **gaps funcionales** entre la implementacion Nuxt (funcionando al 100%) y React que deben cerrarse para que el flujo sea identico.
+The React app (`frontend-react/`) already has **all the base components** implemented for the sale/reservation flow. However, there are **functional gaps** between the Nuxt implementation (working 100%) and React that need to be closed so the flow is identical.
 
-### Componentes existentes en React
-| Componente | Path | Estado |
+### Existing Components in React
+| Component | Path | Status |
 |---|---|---|
-| `TripDetailPage` | `src/pages/trips/TripDetailPage.tsx` | Implementado, necesita ajustes |
-| `TicketSaleModal` | `src/components/tickets/TicketSaleModal.tsx` | Implementado, necesita ajustes |
-| `TicketModal` | `src/components/tickets/TicketModal.tsx` | Implementado |
-| `TicketDisplay` | `src/components/tickets/TicketDisplay.tsx` | Implementado |
-| `BusSeatMapPrint` | `src/components/seats/BusSeatMapPrint.tsx` | Implementado |
-| `BusSeatGrid` | `src/components/seats/BusSeatGrid.tsx` | Implementado |
-| `SelectedSeatsPanel` | `src/components/seats/SelectedSeatsPanel.tsx` | Implementado |
-| `SeatContextMenu` | `src/components/seats/SeatContextMenu.tsx` | Implementado |
-| `useClientSearch` | `src/hooks/use-client-search.ts` | Implementado, necesita fix |
-| `useTripDetails` | `src/hooks/use-trip-details.ts` | Implementado |
+| `TripDetailPage` | `src/pages/trips/TripDetailPage.tsx` | Implemented, needs adjustments |
+| `TicketSaleModal` | `src/components/tickets/TicketSaleModal.tsx` | Implemented, needs adjustments |
+| `TicketModal` | `src/components/tickets/TicketModal.tsx` | Implemented |
+| `TicketDisplay` | `src/components/tickets/TicketDisplay.tsx` | Implemented |
+| `BusSeatMapPrint` | `src/components/seats/BusSeatMapPrint.tsx` | Implemented |
+| `BusSeatGrid` | `src/components/seats/BusSeatGrid.tsx` | Implemented |
+| `SelectedSeatsPanel` | `src/components/seats/SelectedSeatsPanel.tsx` | Implemented |
+| `SeatContextMenu` | `src/components/seats/SeatContextMenu.tsx` | Implemented |
+| `useClientSearch` | `src/hooks/use-client-search.ts` | Implemented, needs fix |
+| `useTripDetails` | `src/hooks/use-trip-details.ts` | Implemented |
 
-### Servicios existentes
-| Servicio | Path | Estado |
+### Existing Services
+| Service | Path | Status |
 |---|---|---|
-| `ticket.service.ts` | `src/services/ticket.service.ts` | Completo |
-| `client.service.ts` | `src/services/client.service.ts` | Completo |
-| `trip.service.ts` | `src/services/trip.service.ts` | Completo |
-| `seat.service.ts` | `src/services/seat.service.ts` | Completo |
+| `ticket.service.ts` | `src/services/ticket.service.ts` | Complete |
+| `client.service.ts` | `src/services/client.service.ts` | Complete |
+| `trip.service.ts` | `src/services/trip.service.ts` | Complete |
+| `seat.service.ts` | `src/services/seat.service.ts` | Complete |
 
-### Ruta configurada
-- `/trips/:id` -> `TripDetailPage.tsx` (ya en `src/router/index.tsx` linea 49)
+### Configured Route
+- `/trips/:id` -> `TripDetailPage.tsx` (already in `src/router/index.tsx` line 49)
 
 ---
 
-## Gaps identificados (Nuxt vs React)
+## Identified Gaps (Nuxt vs React)
 
-### GAP 1: useClientSearch - endpoint de busqueda incorrecto
-**Archivo:** `src/hooks/use-client-search.ts` (linea 36)
+### GAP 1: useClientSearch - incorrect search endpoint
+**File:** `src/hooks/use-client-search.ts` (line 36)
 
-**Problema:** Usa `/clients?search=...` pero el backend expone `/clients/search?q=...`
+**Problem:** Uses `/clients?search=...` but the backend exposes `/clients/search?q=...`
 
-**Nuxt (correcto):**
+**Nuxt (correct):**
 ```js
 const apiUrl = `${config.public.apiBaseUrl}/clients/search?q=${encodeURIComponent(searchTerm)}`
 ```
 
-**React (incorrecto):**
+**React (incorrect):**
 ```ts
 const resp = await apiFetch(`/clients?search=${encodeURIComponent(query)}&limit=10`)
 ```
@@ -53,37 +53,37 @@ const resp = await apiFetch(`/clients?search=${encodeURIComponent(query)}&limit=
 const resp = await apiFetch(`/clients/search?q=${encodeURIComponent(query)}`)
 ```
 
-Y ajustar el parseo de respuesta: `setFoundClients(Array.isArray(resp) ? resp : [])` en vez de `resp?.items || resp || []`.
+And adjust the response parsing: `setFoundClients(Array.isArray(resp) ? resp : [])` instead of `resp?.items || resp || []`.
 
 ---
 
-### GAP 2: TicketSaleModal - body de request como string vs objeto
-**Archivo:** `src/components/tickets/TicketSaleModal.tsx` (lineas 148-183)
+### GAP 2: TicketSaleModal - request body as string vs object
+**File:** `src/components/tickets/TicketSaleModal.tsx` (lines 148-183)
 
-**Problema:** Usa `JSON.stringify(body)` al crear cliente y tickets, pero `apiFetch` probablemente ya serializa el body.
+**Problem:** Uses `JSON.stringify(body)` when creating a client and tickets, but `apiFetch` probably already serializes the body.
 
-**Fix:** Verificar como funciona `apiFetch` en `src/lib/api.ts`. Si usa `fetch` con headers `Content-Type: application/json`, el body ya debe ser un objeto, no un string. Cambiar:
+**Fix:** Check how `apiFetch` works in `src/lib/api.ts`. If it uses `fetch` with `Content-Type: application/json` headers, the body should already be an object, not a string. Change:
 ```ts
-// Crear cliente (linea 148-152)
-body: newClientForm     // en vez de JSON.stringify(newClientForm)
+// Create client (line 148-152)
+body: newClientForm     // instead of JSON.stringify(newClientForm)
 
-// Crear ticket (linea 179-182)
-body: ticketData        // en vez de JSON.stringify(ticketData)
+// Create ticket (line 179-182)
+body: ticketData        // instead of JSON.stringify(ticketData)
 ```
 
 ---
 
-### GAP 3: Falta cancelacion de ticket con PUT en vez de DELETE
-**Archivo:** `src/pages/trips/TripDetailPage.tsx` (lineas 205-217)
+### GAP 3: Missing ticket cancellation with PUT instead of DELETE
+**File:** `src/pages/trips/TripDetailPage.tsx` (lines 205-217)
 
-**Problema:** `handleCancelReservation` usa `DELETE /tickets/:id` pero Nuxt usa `PUT /tickets/:id/cancel`.
+**Problem:** `handleCancelReservation` uses `DELETE /tickets/:id` but Nuxt uses `PUT /tickets/:id/cancel`.
 
-**Nuxt (correcto):**
+**Nuxt (correct):**
 ```js
 await $fetch(`${config.public.apiBaseUrl}/tickets/${selectedTicket.value.id}/cancel`, { method: 'PUT' })
 ```
 
-**React (incorrecto):**
+**React (incorrect):**
 ```ts
 await apiFetch(`/tickets/${ticket.id}`, { method: 'DELETE' })
 ```
@@ -95,10 +95,10 @@ await apiFetch(`/tickets/${ticket.id}/cancel`, { method: 'PUT' })
 
 ---
 
-### GAP 4: Estado de ticket reservado - 'pending' vs 'reserved'
-**Archivo:** `src/hooks/use-trip-details.ts` (linea 26) y `TripDetailPage.tsx` (lineas 206, 220)
+### GAP 4: Reserved ticket state - 'pending' vs 'reserved'
+**File:** `src/hooks/use-trip-details.ts` (line 26) and `TripDetailPage.tsx` (lines 206, 220)
 
-**Problema:** React filtra por `t.state === 'reserved'` pero Nuxt usa `t.state === 'pending'` para reservas.
+**Problem:** React filters by `t.state === 'reserved'` but Nuxt uses `t.state === 'pending'` for reservations.
 
 **Nuxt:**
 ```js
@@ -110,207 +110,207 @@ soldTickets.value.filter(ticket => ticket.state === 'pending' && ticket.seat)
 tickets.filter((t) => t.state === 'reserved')
 ```
 
-**Fix:** Verificar en backend cual es el estado correcto. En `TicketSaleModal.vue` (Nuxt, linea 466):
+**Fix:** Check the backend for the correct state. In `TicketSaleModal.vue` (Nuxt, line 466):
 ```js
 ticketForm.value.state = newActionType === 'sell' ? 'confirmed' : 'pending'
 ```
 
-El estado para reservas es `'pending'`. Actualizar React para usar `'pending'` en:
-- `use-trip-details.ts` linea 26: `t.state === 'pending'`
-- `TripDetailPage.tsx` linea 206: `t.state === 'pending'`
-- `TripDetailPage.tsx` linea 220: `t.state === 'pending'`
+The state for reservations is `'pending'`. Update React to use `'pending'` in:
+- `use-trip-details.ts` line 26: `t.state === 'pending'`
+- `TripDetailPage.tsx` line 206: `t.state === 'pending'`
+- `TripDetailPage.tsx` line 220: `t.state === 'pending'`
 
 ---
 
-### GAP 5: Falta modo de cambio de asiento
-**Archivo:** `src/pages/trips/TripDetailPage.tsx`
+### GAP 5: Missing seat change mode
+**File:** `src/pages/trips/TripDetailPage.tsx`
 
-**Problema:** Nuxt tiene un flujo completo de "cambio de asiento" (seat change mode) que no existe en React:
-1. Click derecho en asiento ocupado -> "Cambiar asiento"
-2. Se activa `seatChangeMode` - el mapa visual cambia
-3. Usuario selecciona un asiento disponible
-4. Modal de confirmacion de cambio
-5. Llamada a `PUT /tickets/:id/change-seat/:newSeatId`
+**Problem:** Nuxt has a complete "seat change" flow that doesn't exist in React:
+1. Right click on occupied seat -> "Change seat"
+2. `seatChangeMode` is activated - the visual map changes
+3. User selects an available seat
+4. Change confirmation modal
+5. Call to `PUT /tickets/:id/change-seat/:newSeatId`
 
-**Componentes Nuxt involucrados:**
-- Estado: `seatChangeMode`, `seatChangeTicket`, `newSelectedSeat`, `showSeatChangeConfirmModal`
+**Nuxt components involved:**
+- State: `seatChangeMode`, `seatChangeTicket`, `newSelectedSeat`, `showSeatChangeConfirmModal`
 - Handler: `handleChangeSeat()`, `confirmSeatChange()`, `cancelSeatChange()`
-- Visual: CSS con animacion de rayas naranjas, pulse verde en disponibles
-- Teclado: `Escape` cancela el modo
+- Visual: CSS with orange striped animation, green pulse on available
+- Keyboard: `Escape` cancels the mode
 
-**Archivos a modificar:**
-- `TripDetailPage.tsx` - agregar estado y handlers de seat change
-- `BusSeatMapPrint.tsx` - propagar prop `seatChangeMode` y evento `onChangeSeat`
-- `BusSeatGrid.tsx` - visual diferente cuando `seatChangeMode=true`
-
----
-
-### GAP 6: Falta confirmacion de venta desde reserva
-**Archivo:** `src/pages/trips/TripDetailPage.tsx` (lineas 219-231)
-
-**Problema:** `handleConfirmSale` hace un `PUT` directo sin modal de confirmacion. Nuxt tiene un modal dedicado (`showConfirmSaleModal`).
-
-**Fix:** Agregar estado `showConfirmSaleModal` y `ticketToConfirm`, con un modal simple de confirmacion antes de ejecutar el `PUT`.
+**Files to modify:**
+- `TripDetailPage.tsx` - add state and seat change handlers
+- `BusSeatMapPrint.tsx` - propagate `seatChangeMode` prop and `onChangeSeat` event
+- `BusSeatGrid.tsx` - different visual when `seatChangeMode=true`
 
 ---
 
-### GAP 7: Falta TicketSaleModal - ticket.service ya tiene confirmSale
-**Archivo:** `src/services/ticket.service.ts` (lineas 42-47)
+### GAP 6: Missing sale confirmation from reservation
+**File:** `src/pages/trips/TripDetailPage.tsx` (lines 219-231)
 
-**Nota:** El metodo `confirmSale` en el service hace `PUT /tickets/:id` con `{ state: 'confirmed' }`, lo cual es correcto segun el backend. Solo necesita wiring al UI.
+**Problem:** `handleConfirmSale` does a direct `PUT` without a confirmation modal. Nuxt has a dedicated modal (`showConfirmSaleModal`).
+
+**Fix:** Add `showConfirmSaleModal` and `ticketToConfirm` state, with a simple confirmation modal before executing the `PUT`.
 
 ---
 
-## Plan de implementacion por fases
+### GAP 7: Missing TicketSaleModal - ticket.service already has confirmSale
+**File:** `src/services/ticket.service.ts` (lines 42-47)
 
-### Fase 1: Fixes criticos para que funcione el flujo basico
-**Prioridad: ALTA** | **Archivos: 3** | **Estimado: Cambios menores**
+**Note:** The `confirmSale` method in the service does `PUT /tickets/:id` with `{ state: 'confirmed' }`, which is correct according to the backend. It just needs UI wiring.
+
+---
+
+## Phased Implementation Plan
+
+### Phase 1: Critical fixes to make the basic flow work
+**Priority: HIGH** | **Files: 3** | **Estimate: Minor changes**
 
 #### 1.1 Fix useClientSearch endpoint
 ```
-Archivo: src/hooks/use-client-search.ts
-Linea 36: Cambiar URL de busqueda
-Linea 37: Cambiar parseo de respuesta
+File: src/hooks/use-client-search.ts
+Line 36: Change search URL
+Line 37: Change response parsing
 ```
 
 #### 1.2 Fix TicketSaleModal body serialization
 ```
-Archivo: src/components/tickets/TicketSaleModal.tsx
-Lineas 148-152: Verificar y ajustar body de createClient
-Lineas 179-182: Verificar y ajustar body de createTicket
+File: src/components/tickets/TicketSaleModal.tsx
+Lines 148-152: Verify and adjust createClient body
+Lines 179-182: Verify and adjust createTicket body
 ```
-**Prerequisito:** Leer `src/lib/api.ts` para confirmar como maneja el body.
+**Prerequisite:** Read `src/lib/api.ts` to confirm how it handles the body.
 
-#### 1.3 Fix estado de reserva 'pending' vs 'reserved'
+#### 1.3 Fix reservation state 'pending' vs 'reserved'
 ```
-Archivo: src/hooks/use-trip-details.ts
-Linea 26: Cambiar 'reserved' a 'pending'
+File: src/hooks/use-trip-details.ts
+Line 26: Change 'reserved' to 'pending'
 
-Archivo: src/pages/trips/TripDetailPage.tsx
-Lineas 206, 220: Cambiar 'reserved' a 'pending'
-```
-
-#### 1.4 Fix cancelacion de reserva (DELETE -> PUT cancel)
-```
-Archivo: src/pages/trips/TripDetailPage.tsx
-Lineas 208-209: Cambiar a PUT /tickets/:id/cancel
+File: src/pages/trips/TripDetailPage.tsx
+Lines 206, 220: Change 'reserved' to 'pending'
 ```
 
-### Fase 2: Confirmacion de venta con modal
-**Prioridad: MEDIA** | **Archivos: 1**
-
-#### 2.1 Agregar modal de confirmacion de venta
+#### 1.4 Fix reservation cancellation (DELETE -> PUT cancel)
 ```
-Archivo: src/pages/trips/TripDetailPage.tsx
+File: src/pages/trips/TripDetailPage.tsx
+Lines 208-209: Change to PUT /tickets/:id/cancel
+```
 
-Nuevos estados:
+### Phase 2: Sale confirmation with modal
+**Priority: MEDIUM** | **Files: 1**
+
+#### 2.1 Add sale confirmation modal
+```
+File: src/pages/trips/TripDetailPage.tsx
+
+New states:
 - showConfirmSaleModal: boolean
 - ticketToConfirm: any
 - confirmingSale: boolean
 
-Nuevo handler:
-- handleConfirmSale: muestra modal en vez de ejecutar directo
-- executeConfirmSale: hace el PUT y refresca
+New handler:
+- handleConfirmSale: shows modal instead of executing directly
+- executeConfirmSale: performs the PUT and refreshes
 
-Nuevo JSX:
-- Modal simple con info del ticket y botones Cancelar/Confirmar
+New JSX:
+- Simple modal with ticket info and Cancel/Confirm buttons
 ```
 
-### Fase 3: Modo cambio de asiento
-**Prioridad: MEDIA** | **Archivos: 3-4**
+### Phase 3: Seat change mode
+**Priority: MEDIUM** | **Files: 3-4**
 
-#### 3.1 Estado y logica en TripDetailPage
+#### 3.1 State and logic in TripDetailPage
 ```
-Archivo: src/pages/trips/TripDetailPage.tsx
+File: src/pages/trips/TripDetailPage.tsx
 
-Nuevos estados:
+New states:
 - seatChangeMode: boolean
-- seatChangeTicket: any (ticket que se esta cambiando)
+- seatChangeTicket: any (ticket being changed)
 - newSelectedSeat: any
 - showSeatChangeConfirmModal: boolean
 - seatChangeLoading: boolean
 
-Nuevos handlers:
-- handleChangeSeat(seat): activa modo cambio
-- handleSelectionInChangeMode(seats): valida y muestra confirmacion
+New handlers:
+- handleChangeSeat(seat): activates change mode
+- handleSelectionInChangeMode(seats): validates and shows confirmation
 - confirmSeatChange(): PUT /tickets/:id/change-seat/:newSeatId
-- cancelSeatChange(): limpia estado
+- cancelSeatChange(): clears state
 
 Keyboard shortcut:
-- Escape: cancela modo cambio
+- Escape: cancels change mode
 ```
 
-#### 3.2 Propagar modo cambio al mapa de asientos
+#### 3.2 Propagate change mode to the seat map
 ```
-Archivo: src/components/seats/BusSeatMapPrint.tsx
+File: src/components/seats/BusSeatMapPrint.tsx
 
-Nueva prop: seatChangeMode: boolean
-Comportamiento: cuando seatChangeMode=true, el onSelectionChange
-solo acepta 1 asiento disponible y lo propaga como newSelectedSeat
-```
-
-#### 3.3 Visual del modo cambio en BusSeatGrid
-```
-Archivo: src/components/seats/BusSeatGrid.tsx
-
-Nueva prop: seatChangeMode: boolean
-Cuando activo:
-- Asientos disponibles: animacion pulse verde
-- Fondo: overlay con rayas naranjas
-- Asientos ocupados: cursor no permitido
+New prop: seatChangeMode: boolean
+Behavior: when seatChangeMode=true, onSelectionChange
+only accepts 1 available seat and propagates it as newSelectedSeat
 ```
 
-#### 3.4 Modal de confirmacion de cambio
+#### 3.3 Change mode visual in BusSeatGrid
 ```
-Archivo: src/pages/trips/TripDetailPage.tsx (inline)
+File: src/components/seats/BusSeatGrid.tsx
 
-Contenido:
-- "Cambiar de asiento X a asiento Y?"
-- Info del pasajero
-- Botones: Cancelar / Confirmar cambio
-```
-
-### Fase 4: Pulido y paridad completa
-**Prioridad: BAJA** | **Archivos: varios**
-
-#### 4.1 Notificaciones mejoradas
-- Usar `sonner` (ya integrado en main.tsx con `<Toaster />`) en vez del div notification manual
-- Reemplazar `showNotification()` por `toast.success()`, `toast.error()`
-
-#### 4.2 Keyboard shortcuts completos
-```
-Archivo: src/pages/trips/TripDetailPage.tsx
-
-Shortcuts existentes en Nuxt:
-- V: vender (ya implementado en React)
-- R: reservar (ya implementado en React)
-- C: limpiar seleccion (FALTA)
-- Escape: cerrar modales / cancelar cambio (parcial)
-- Enter: confirmar cambio de asiento (FALTA)
+New prop: seatChangeMode: boolean
+When active:
+- Available seats: green pulse animation
+- Background: overlay with orange stripes
+- Occupied seats: not-allowed cursor
 ```
 
-#### 4.3 Banner visual de modo cambio de asiento
-- Banner sticky amarillo/naranja cuando seatChangeMode esta activo
-- Info del ticket actual y instrucciones
-- Boton de cancelar
+#### 3.4 Change confirmation modal
+```
+File: src/pages/trips/TripDetailPage.tsx (inline)
+
+Content:
+- "Change from seat X to seat Y?"
+- Passenger info
+- Buttons: Cancel / Confirm change
+```
+
+### Phase 4: Polish and complete parity
+**Priority: LOW** | **Files: multiple**
+
+#### 4.1 Improved notifications
+- Use `sonner` (already integrated in main.tsx with `<Toaster />`) instead of the manual notification div
+- Replace `showNotification()` with `toast.success()`, `toast.error()`
+
+#### 4.2 Complete keyboard shortcuts
+```
+File: src/pages/trips/TripDetailPage.tsx
+
+Existing shortcuts in Nuxt:
+- V: sell (already implemented in React)
+- R: reserve (already implemented in React)
+- C: clear selection (MISSING)
+- Escape: close modals / cancel change (partial)
+- Enter: confirm seat change (MISSING)
+```
+
+#### 4.3 Seat change mode visual banner
+- Sticky yellow/orange banner when seatChangeMode is active
+- Current ticket info and instructions
+- Cancel button
 
 ---
 
-## Referencia: Endpoints de backend utilizados
+## Reference: Used backend endpoints
 
-| Endpoint | Metodo | Uso |
+| Endpoint | Method | Use |
 |---|---|---|
-| `GET /trips/:id` | GET | Cargar datos del viaje |
-| `GET /tickets/trip/:tripId` | GET | Listar boletos del viaje |
-| `POST /tickets` | POST | Crear boleto (venta o reserva) |
-| `PUT /tickets/:id/cancel` | PUT | Cancelar reserva |
-| `PUT /tickets/:id` | PUT | Actualizar ticket (confirmar venta) |
-| `PUT /tickets/:id/change-seat/:newSeatId` | PUT | Cambiar asiento |
-| `GET /clients/search?q=term` | GET | Buscar clientes |
-| `POST /clients` | POST | Crear cliente nuevo |
-| `GET /packages/trip/:tripId` | GET | Listar encomiendas del viaje |
+| `GET /trips/:id` | GET | Load trip data |
+| `GET /tickets/trip/:tripId` | GET | List trip tickets |
+| `POST /tickets` | POST | Create ticket (sale or reservation) |
+| `PUT /tickets/:id/cancel` | PUT | Cancel reservation |
+| `PUT /tickets/:id` | PUT | Update ticket (confirm sale) |
+| `PUT /tickets/:id/change-seat/:newSeatId` | PUT | Change seat |
+| `GET /clients/search?q=term` | GET | Search clients |
+| `POST /clients` | POST | Create new client |
+| `GET /packages/trip/:tripId` | GET | List trip packages |
 
-## Referencia: Esquema de datos del ticket
+## Reference: Ticket data schema
 
 ```python
 # backend/schemas/ticket.py
@@ -321,13 +321,13 @@ TicketCreate:
   destination: str
   price: float
   payment_method: str  # 'cash', 'card', 'transfer', 'qr'
-  state: str           # 'pending' (reserva), 'confirmed' (venta)
-  operator_user_id: int (opcional)
+  state: str           # 'pending' (reservation), 'confirmed' (sale)
+  operator_user_id: int (optional)
 ```
 
-## Orden de ejecucion recomendado
+## Recommended Execution Order
 
-1. **Fase 1** (critica) - Hacer que el flujo basico funcione: buscar cliente, crear ticket, ver en mapa
-2. **Fase 2** (media) - Agregar confirmacion de venta desde reserva
-3. **Fase 3** (media) - Implementar cambio de asiento
-4. **Fase 4** (baja) - Pulido, sonner, shortcuts completos
+1. **Phase 1** (critical) - Make the basic flow work: search client, create ticket, see on map
+2. **Phase 2** (medium) - Add sale confirmation from reservation
+3. **Phase 3** (medium) - Implement seat change
+4. **Phase 4** (low) - Polish, sonner, complete shortcuts

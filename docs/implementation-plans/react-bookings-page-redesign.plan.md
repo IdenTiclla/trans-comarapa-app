@@ -1,138 +1,138 @@
-# Plan: BookingsPage - Rediseño y Funcionalidad Completa
+# Plan: BookingsPage - Redesign and Full Functionality
 
-## Contexto
+## Context
 
-La página `/bookings` es la interfaz de gestión de reservas para Admin y Secretaria. Actualmente existe (`BookingsPage.tsx`, 807 líneas) con funcionalidad básica pero con problemas de UX, estados incompletos y lógica fragmentada. El objetivo es entregar una página completamente funcional con excelente experiencia de usuario.
+The `/bookings` page is the reservation management interface for Admin and Secretary. It currently exists (`BookingsPage.tsx`, 807 lines) with basic functionality but has UX issues, incomplete states, and fragmented logic. The goal is to deliver a fully functional page with an excellent user experience.
 
-**Audiencia:** Admin y Secretaria
-**Archivo principal:** `frontend-react/src/pages/BookingsPage.tsx`
-
----
-
-## Problemas Actuales
-
-1. **Stats section**: usa `apiFetch` directo sin manejo de error consistente; comparación con día anterior frágil
-2. **Filtros**: el panel de filtros avanzados está oculto por defecto y el UX es confuso
-3. **Vista tabla**: sin columnas ordenables, sin acciones claras por fila
-4. **Vista cards**: diseño básico sin jerarquía visual clara
-5. **Estados vacíos / error**: sin componentes dedicados
-6. **Loading**: sin skeleton loaders en stats ni en la lista
-7. **Modal de edición**: comparte estado con creación causando bugs potenciales
-8. **Paginación**: implementación manual redundante
-9. **Cancelación de ticket**: no integrada correctamente (debe usar `PUT /tickets/:id/cancel`)
+**Audience:** Admin and Secretary
+**Main File:** `frontend-react/src/pages/BookingsPage.tsx`
 
 ---
 
-## Enfoque de Implementación
+## Current Issues
 
-Reescribir `BookingsPage.tsx` manteniendo la misma ruta y los mismos servicios/componentes existentes, pero con arquitectura clara por secciones.
+1. **Stats section**: Uses direct `apiFetch` without consistent error handling; fragile comparison with previous day.
+2. **Filters**: The advanced filters panel is hidden by default and the UX is confusing.
+3. **Table view**: No sortable columns, no clear row actions.
+4. **Cards view**: Basic design without clear visual hierarchy.
+5. **Empty / Error states**: No dedicated components.
+6. **Loading**: No skeleton loaders in stats or the list.
+7. **Edit modal**: Shares state with creation, causing potential bugs.
+8. **Pagination**: Redundant manual implementation.
+9. **Ticket cancellation**: Not correctly integrated (should use `PUT /tickets/:id/cancel`).
 
 ---
 
-## Secciones de la Página
+## Implementation Approach
+
+Rewrite `BookingsPage.tsx` maintaining the same route and existing services/components, but with a clear architecture by sections.
+
+---
+
+## Page Sections
 
 ### 1. Header
-- Título "Gestión de Reservas" + descripción
-- Botón "Nueva Reserva" (abre TicketSaleModal existente)
-- Botón "Exportar CSV" con estado de loading
+- Title "Reservation Management" + description.
+- "New Reservation" button (opens existing `TicketSaleModal`).
+- "Export CSV" button with loading state.
 
-### 2. Stats Row (4 tarjetas con DashboardStatCard)
-- **Confirmadas hoy** (verde, icono CheckCircle)
-- **Pendientes** (amarillo, icono Clock)
-- **Canceladas hoy** (rojo, icono XCircle)
-- **Ingresos hoy** (azul, icono DollarSign)
-- Skeleton loader mientras carga
-- Manejo de error con fallback a `--`
+### 2. Stats Row (4 cards with DashboardStatCard)
+- **Confirmed today** (green, CheckCircle icon).
+- **Pending** (yellow, Clock icon).
+- **Cancelled today** (red, XCircle icon).
+- **Revenue today** (blue, DollarSign icon).
+- Skeleton loader while loading.
+- Error handling with fallback to `--`.
 
-### 3. Barra de Búsqueda y Filtros
-- Input de búsqueda (nombre cliente, ID, asiento) con debounce 300ms
-- Filtros siempre visibles en fila: `Select` de estado + `DatePicker` desde/hasta + `Select` método pago
-- Botón "Limpiar filtros" solo visible cuando hay filtros activos
-- Toggle vista: tabla / cards (iconos shadcn/ui)
+### 3. Search Bar and Filters
+- Search input (customer name, ID, seat) with 300ms debounce.
+- Always visible filters in row: `Select` for status + `DatePicker` from/to + `Select` for payment method.
+- "Clear filters" button only visible when there are active filters.
+- View toggle: table / cards (shadcn/ui icons).
 
-### 4. Lista de Tickets
+### 4. Ticket List
 
-#### Vista Tabla (default desktop)
-Columnas: `#ID` | `Cliente` | `Ruta` | `Viaje` | `Asiento` | `Estado` | `Precio` | `Pago` | `Acciones`
-- Badge de estado con colores: confirmed=verde, pending=amarillo, cancelled=rojo
-- Acciones por fila: Ver, Editar, Cancelar (iconos + tooltips)
-- Filas clickeables para ver detalle
-- Columnas ordenables: fecha, precio, estado
+#### Table View (default desktop)
+Columns: `#ID` | `Customer` | `Route` | `Trip` | `Seat` | `Status` | `Price` | `Payment` | `Actions`
+- Status badge with colors: confirmed=green, pending=yellow, cancelled=red.
+- Row actions: View, Edit, Cancel (icons + tooltips).
+- Clickable rows to see details.
+- Sortable columns: date, price, status.
 
-#### Vista Cards (mobile-friendly)
-- Cards con: ruta (origen→destino), fecha/hora, cliente, asiento, badge estado, precio
-- Acciones en menú dropdown (DropdownMenu de shadcn)
+#### Cards View (mobile-friendly)
+- Cards with: route (origin→destination), date/time, customer, seat, status badge, price.
+- Actions in dropdown menu (shadcn DropdownMenu).
 
-### 5. Paginación
-- Controles: anterior / página actual / siguiente
-- Selector de items por página: 10 / 25 / 50
-- Texto: "Mostrando X-Y de Z resultados"
+### 5. Pagination
+- Controls: previous / current page / next.
+- Items per page selector: 10 / 25 / 50.
+- Text: "Showing X-Y of Z results".
 
 ### 6. Empty State
-- Cuando no hay tickets: ilustración + mensaje + botón "Crear primera reserva"
-- Cuando no hay resultados para filtros: mensaje + botón "Limpiar filtros"
+- When no tickets: illustration + message + "Create first reservation" button.
+- When no results for filters: message + "Clear filters" button.
 
 ### 7. Error State
-- Banner de error con botón "Reintentar"
+- Error banner with "Retry" button.
 
 ---
 
-## Flujos Modales
+## Modal Flows
 
-### Ver ticket (detalles)
-- Usar `TicketModal` existente en modo `'details'`
-- Muestra `TicketDisplay` con opción de imprimir
+### View ticket (details)
+- Use existing `TicketModal` in `'details'` mode.
+- Shows `TicketDisplay` with print option.
 
-### Cancelar ticket
-- Usar `TicketModal` existente en modo `'cancel'`
-- Llama a `ticketService.update(id, { state: 'cancelled' })` o el endpoint `PUT /tickets/:id/cancel`
-- Actualiza lista localmente sin re-fetch completo
+### Cancel ticket
+- Use existing `TicketModal` in `'cancel'` mode.
+- Calls `ticketService.update(id, { state: 'cancelled' })` or the `PUT /tickets/:id/cancel` endpoint.
+- Updates list locally without a full re-fetch.
 
-### Crear ticket (nueva reserva)
-- Abrir `TicketSaleModal` existente
-- Soportar URL params: `?trip_id=X&action=sell|reserve&seat_number=Y`
+### Create ticket (new reservation)
+- Open existing `TicketSaleModal`.
+- Support URL params: `?trip_id=X&action=sell|reserve&seat_number=Y`.
 
-### Editar ticket
-- Modal inline con campos: estado, método de pago, precio
-- Llama a `ticketService.update(id, data)`
+### Edit ticket
+- Inline modal with fields: status, payment method, price.
+- Calls `ticketService.update(id, data)`.
 
 ---
 
-## Servicios y Hooks a Usar
+## Services and Hooks to Use
 
-| Uso | Función | Archivo |
+| Usage | Function | File |
 |-----|---------|---------|
-| Cargar tickets | `ticketService.getAll(params)` | `services/ticket.service.ts` |
-| Actualizar ticket | `ticketService.update(id, data)` | `services/ticket.service.ts` |
-| Cancelar ticket | `ticketService.update(id, {state:'cancelled'})` | `services/ticket.service.ts` |
+| Load tickets | `ticketService.getAll(params)` | `services/ticket.service.ts` |
+| Update ticket | `ticketService.update(id, data)` | `services/ticket.service.ts` |
+| Cancel ticket | `ticketService.update(id, {state:'cancelled'})` | `services/ticket.service.ts` |
 | Stats | `statsService.getBookingsStatsComparison()` | `services/stats.service.ts` |
-| Exportar CSV | generación local desde datos filtrados | — |
-| Clientes | `clientService.getAll()` | `services/client.service.ts` |
-| Viajes | `tripService.getAll()` | `services/trip.service.ts` |
+| Export CSV | local generation from filtered data | — |
+| Customers | `clientService.getAll()` | `services/client.service.ts` |
+| Trips | `tripService.getAll()` | `services/trip.service.ts` |
 
-**Componentes existentes a reutilizar:**
-- `TicketDisplay.tsx` — visualización imprimible
-- `TicketModal.tsx` — modal detalles/cancelación
-- `TicketSaleModal.tsx` — modal creación
-- `DashboardStatCard.tsx` — tarjetas de stats
+**Existing components to reuse:**
+- `TicketDisplay.tsx` — printable visualization.
+- `TicketModal.tsx` — details/cancellation modal.
+- `TicketSaleModal.tsx` — creation modal.
+- `DashboardStatCard.tsx` — stats cards.
 
 ---
 
-## Archivos a Modificar
+## Files to Modify
 
-| Archivo | Acción |
+| File | Action |
 |---------|--------|
-| `frontend-react/src/pages/BookingsPage.tsx` | Reescritura completa |
-| `frontend-react/src/components/tickets/TicketModal.tsx` | Verificar y ajustar la acción de cancelar |
+| `frontend-react/src/pages/BookingsPage.tsx` | Complete rewrite |
+| `frontend-react/src/components/tickets/TicketModal.tsx` | Verify and adjust cancel action |
 
 ---
 
-## Estructura del Nuevo Componente
+## New Component Structure
 
 ```
 BookingsPage
-├── useEffect: cargar stats + tickets al montar y al cambiar filtros
-├── Estado:
+├── useEffect: load stats + tickets on mount and when filters change
+├── State:
 │   ├── tickets[], total, page, pageSize
 │   ├── stats { confirmed, pending, cancelled, revenue }
 │   ├── filters { search, status, dateFrom, dateTo, paymentMethod }
@@ -140,35 +140,35 @@ BookingsPage
 │   ├── loading: { stats, list }
 │   ├── error: string | null
 │   └── modals: { create, view, edit, cancel } + selectedTicket
-├── Header (título + acciones)
+├── Header (title + actions)
 ├── StatsRow (4x DashboardStatCard)
-├── FilterBar (búsqueda + filtros + toggle vista)
-├── TicketTable | TicketCards (condicional)
+├── FilterBar (search + filters + view toggle)
+├── TicketTable | TicketCards (conditional)
 ├── Pagination
-└── Modales (TicketSaleModal, TicketModal, EditModal)
+└── Modals (TicketSaleModal, TicketModal, EditModal)
 ```
 
 ---
 
-## Detalles Técnicos
+## Technical Details
 
-- **Debounce** en búsqueda: `useCallback` + `setTimeout` 300ms con cleanup
-- **Filtros en URL params**: sincronizar con `useSearchParams` para que los filtros sean copiables/bookmarkables
-- **Optimistic updates**: al cancelar, marcar ticket como cancelado localmente antes de confirmación del servidor
-- **Toast notifications**: `sonner` para éxito/error en cada acción
-- **Accesibilidad**: aria-labels en botones de acción, foco manejado en modales
+- **Debounce** on search: `useCallback` + `setTimeout` 300ms with cleanup.
+- **Filters in URL params**: synchronize with `useSearchParams` so filters are copyable/bookmarkable.
+- **Optimistic updates**: when cancelling, mark ticket as cancelled locally before server confirmation.
+- **Toast notifications**: `sonner` for success/error on each action.
+- **Accessibility**: aria-labels on action buttons, focus managed in modals.
 
 ---
 
-## Verificación
+## Verification
 
-1. Abrir `http://localhost:3001/bookings` como admin o secretaria
-2. Verificar que las 4 stats cargan con skeleton y luego datos reales
-3. Buscar por nombre de cliente → lista se filtra
-4. Filtrar por estado "Pendiente" → solo muestra tickets pendientes
-5. Click en "Ver" → abre TicketModal con diseño de ticket imprimible
-6. Click en "Cancelar" → modal de confirmación → ticket cambia a rojo
-7. Click en "Nueva Reserva" → TicketSaleModal funciona con selección de viaje y cliente
-8. Navegar a `/bookings?trip_id=X&action=sell` desde TripDetailPage → modal se abre automáticamente
-9. Exportar CSV → descarga archivo con tickets filtrados actuales
-10. Cambiar a vista cards → layout responsive correcto en mobile
+1. Open `http://localhost:3001/bookings` as admin or secretary.
+2. Verify that the 4 stats load with skeleton and then real data.
+3. Search by customer name → list is filtered.
+4. Filter by "Pending" status → only shows pending tickets.
+5. Click "View" → opens TicketModal with printable ticket design.
+6. Click "Cancel" → confirmation modal → ticket turns red.
+7. Click "New Reservation" → TicketSaleModal works with trip and customer selection.
+8. Navigate to `/bookings?trip_id=X&action=sell` from TripDetailPage → modal opens automatically.
+9. Export CSV → downloads file with current filtered tickets.
+10. Change to cards view → correct responsive layout on mobile.

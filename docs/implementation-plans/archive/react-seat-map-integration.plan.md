@@ -1,32 +1,32 @@
-# Plan: Integrar mapa de asientos interactivo en TripDetailPage (React)
+# Plan: Integrate interactive seat map in TripDetailPage (React)
 
-## Contexto
+## Context
 
-La página de detalle de viaje (`/trips/:id`) en React tiene un **placeholder** donde debería estar el mapa de asientos interactivo (líneas 327-363 de `TripDetailPage.tsx`). Todos los componentes necesarios ya existen y están completamente implementados:
+The trip detail page (`/trips/:id`) in React has a **placeholder** where the interactive seat map should be (lines 327-363 of `TripDetailPage.tsx`). All necessary components already exist and are completely implemented:
 
-- `BusSeatMapPrint` - Componente principal del mapa
-- `BusSeatGrid` - Grid visual de asientos
-- `SelectedSeatsPanel` - Panel de asientos seleccionados
-- `SeatContextMenu` - Menú contextual (click derecho)
-- `TicketSaleModal` - Modal de venta/reserva de boletos
-- `TicketModal` - Modal de detalle de boleto
+- `BusSeatMapPrint` - Main map component
+- `BusSeatGrid` - Visual seat grid
+- `SelectedSeatsPanel` - Selected seats panel
+- `SeatContextMenu` - Context menu (right click)
+- `TicketSaleModal` - Ticket sale/reservation modal
+- `TicketModal` - Ticket detail modal
 
-La tarea es **integrar** estos componentes existentes en `TripDetailPage`, conectando los event handlers para venta, reserva, y gestión de asientos. Debe ser funcional como en Nuxt pero con diseño mejorado usando shadcn/Tailwind.
+The task is to **integrate** these existing components into `TripDetailPage`, connecting the event handlers for sale, reservation, and seat management. It must be functional like in Nuxt but with an improved design using shadcn/Tailwind.
 
-## Archivo a modificar
+## File to modify
 
 ### `frontend-react/src/pages/trips/TripDetailPage.tsx`
 
-### Cambios:
+### Changes:
 
-**1. Imports adicionales**
+**1. Additional imports**
 ```tsx
 import BusSeatMapPrint from '@/components/seats/BusSeatMapPrint'
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 import TicketModal from '@/components/tickets/TicketModal'
 ```
 
-**2. Nuevos estados para mapa de asientos**
+**2. New states for seat map**
 ```tsx
 // Ticket sale modal
 const [showTicketSaleModal, setShowTicketSaleModal] = useState(false)
@@ -41,9 +41,9 @@ const [selectedTicketForView, setSelectedTicketForView] = useState<any>(null)
 const [seatMapKey, setSeatMapKey] = useState(0)
 ```
 
-**3. Handlers para el mapa de asientos**
+**3. Handlers for the seat map**
 ```tsx
-// Vender ticket(s)
+// Sell ticket(s)
 const handleSellTicket = (seats: any[] | any) => {
   const seatsArray = Array.isArray(seats) ? seats : [seats]
   setSelectedSeatsForSale(seatsArray)
@@ -51,7 +51,7 @@ const handleSellTicket = (seats: any[] | any) => {
   setShowTicketSaleModal(true)
 }
 
-// Reservar asiento(s)
+// Reserve seat(s)
 const handleReserveSeat = (seats: any[] | any) => {
   const seatsArray = Array.isArray(seats) ? seats : [seats]
   setSelectedSeatsForSale(seatsArray)
@@ -59,14 +59,14 @@ const handleReserveSeat = (seats: any[] | any) => {
   setShowTicketSaleModal(true)
 }
 
-// Ticket creado → refresh silencioso
+// Ticket created → silent refresh
 const handleTicketCreated = () => {
   setShowTicketSaleModal(false)
   refreshTrip()
   setSeatMapKey(prev => prev + 1)
 }
 
-// Ver detalle de ticket (desde context menu en asiento ocupado)
+// View ticket detail (from context menu on occupied seat)
 const handleViewDetails = (seat: any) => {
   const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number)
   if (ticket) {
@@ -75,7 +75,7 @@ const handleViewDetails = (seat: any) => {
   }
 }
 
-// Cancelar reserva
+// Cancel reservation
 const handleCancelReservation = async (seat: any) => {
   const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && t.state === 'reserved')
   if (ticket) {
@@ -85,7 +85,7 @@ const handleCancelReservation = async (seat: any) => {
   }
 }
 
-// Confirmar venta (reserva → confirmada)
+// Confirm sale (reservation → confirmed)
 const handleConfirmSale = async (seat: any) => {
   const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && t.state === 'reserved')
   if (ticket) {
@@ -96,9 +96,9 @@ const handleConfirmSale = async (seat: any) => {
 }
 ```
 
-**4. Reemplazar placeholder con BusSeatMapPrint + modales**
+**4. Replace placeholder with BusSeatMapPrint + modals**
 
-Reemplazar el bloque del placeholder (líneas 327-363) con:
+Replace the placeholder block (lines 327-363) with:
 ```tsx
 {/* Seat Map */}
 <BusSeatMapPrint
@@ -137,20 +137,20 @@ Reemplazar el bloque del placeholder (líneas 327-363) con:
 )}
 ```
 
-**5. Keyboard shortcuts (opcional pero presente en Nuxt)**
+**5. Keyboard shortcuts (optional but present in Nuxt)**
 
-Agregar `useEffect` para atajos de teclado:
-- `V` → Vender tickets seleccionados
-- `R` → Reservar asientos seleccionados
-- `Escape` → Cerrar modales
+Add `useEffect` for keyboard shortcuts:
+- `V` → Sell selected tickets
+- `R` → Reserve selected seats
+- `Escape` → Close modals
 
-**6. Eliminar código del placeholder**
+**6. Remove placeholder code**
 
-Eliminar completamente el bloque placeholder actual (tabla de tickets vendidos, texto "El componente de mapa de asientos interactivo se cargará cuando BusSeatMapPrint esté implementado").
+Completely remove the current placeholder block (table of sold tickets, text "The interactive seat map component will be loaded when BusSeatMapPrint is implemented").
 
-## Componentes existentes que se reutilizan (sin modificar)
+## Existing components being reused (unmodified)
 
-| Componente | Path |
+| Component | Path |
 |---|---|
 | `BusSeatMapPrint` | `src/components/seats/BusSeatMapPrint.tsx` |
 | `BusSeatGrid` | `src/components/seats/BusSeatGrid.tsx` |
@@ -163,28 +163,28 @@ Eliminar completamente el bloque placeholder actual (tabla de tickets vendidos, 
 | `TicketModal` | `src/components/tickets/TicketModal.tsx` |
 | `TicketDisplay` | `src/components/tickets/TicketDisplay.tsx` |
 
-## Flujo de usuario completo
+## Complete user flow
 
 ```
-1. Usuario navega a /trips/42
-2. Se carga el viaje con seats_layout del backend
-3. BusSeatMapPrint renderiza el mapa visual (left/right columns, aisle)
-4. Usuario selecciona asientos disponibles (click) → aparece SelectedSeatsPanel
-5. Click "Vender Tickets" → TicketSaleModal se abre
-6. Llena datos del cliente, precio, método de pago
-7. Crea ticket → modal se cierra → mapa se actualiza (asiento ahora ocupado)
-8. Click derecho en asiento ocupado → SeatContextMenu → Ver detalles / Cambiar asiento
-9. Click derecho en asiento reservado → Confirmar venta / Cancelar reserva
+1. User navigates to /trips/42
+2. Trip is loaded with seats_layout from backend
+3. BusSeatMapPrint renders the visual map (left/right columns, aisle)
+4. User selects available seats (click) → SelectedSeatsPanel appears
+5. Click "Sell Tickets" → TicketSaleModal opens
+6. Fills in client data, price, payment method
+7. Creates ticket → modal closes → map updates (seat now occupied)
+8. Right click on occupied seat → SeatContextMenu → View details / Change seat
+9. Right click on reserved seat → Confirm sale / Cancel reservation options
 ```
 
-## Verificación
+## Verification
 
-1. Navegar a `http://localhost:3001/trips/{id}` (un viaje existente)
-2. Verificar que el mapa de asientos se renderiza con la distribución del bus
-3. Click en asiento disponible → se selecciona (azul)
-4. Seleccionar varios asientos → aparece panel con "Vender Tickets" y "Reservar"
-5. Click "Vender Tickets" → se abre TicketSaleModal
-6. Crear ticket → modal cierra → asiento aparece como ocupado (rojo)
-7. Click derecho en asiento ocupado → menú contextual con opciones
-8. Click derecho en asiento reservado → opciones de confirmar/cancelar
-9. Bus de doble piso → verificar selector de pisos funciona
+1. Navigate to `http://localhost:3001/trips/{id}` (an existing trip)
+2. Verify that the seat map renders with the bus layout
+3. Click on available seat → it is selected (blue)
+4. Select multiple seats → panel appears with "Sell Tickets" and "Reserve"
+5. Click "Sell Tickets" → TicketSaleModal opens
+6. Create ticket → modal closes → seat appears as occupied (red)
+7. Right click on occupied seat → context menu with options
+8. Right click on reserved seat → confirm/cancel options
+9. Double-decker bus → verify floor selector works

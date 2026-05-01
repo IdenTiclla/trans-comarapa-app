@@ -1,48 +1,48 @@
-# Plan de Implementación: Manifiesto de Encomiendas
+# Implementation Plan: Package Manifest
 
-## Objetivo
-Implementar una nueva vista para imprimir el manifiesto de encomiendas de un viaje, accesible desde un nuevo botón en la página de detalles del viaje, y mejorar la claridad de los botones existentes.
+## Objective
+Implement a new view to print the package manifest for a trip, accessible from a new button on the trip details page, and improve the clarity of existing buttons.
 
-## Revisión de Mapeo de Datos
-A continuación detallamos cómo mapearemos los datos del sistema a las columnas de la tabla, en el siguiente orden:
-- **Nº**: Número correlativo de fila (1, 2, 3...).
-- **REMITENTE**: Nombre del remitente (`sender_name`).
-- **DESCRIPCIÓN ENCOMIENDA**: Una descripción de la carga basándose en los ítems de la encomienda.
-- **DESTINATARIO**: Nombre del destinatario (`recipient_name`). *(antes llamado "Nombre")*
-- **ESTADO**: Estado de pago de la encomienda. Puede ser **"Pagado"** o **"Por Pagar"**, derivado del campo `payment_status` del paquete.
-- **Bs.**: Precio total (`total_amount`).
+## Data Mapping Review
+Below we detail how we will map the system data to the table columns, in the following order:
+- **No.**: Sequential row number (1, 2, 3...).
+- **SENDER**: Name of the sender (`sender_name`).
+- **PACKAGE DESCRIPTION**: A description of the cargo based on the package items.
+- **RECIPIENT**: Name of the recipient (`recipient_name`). *(formerly "Name")*
+- **STATUS**: Payment status of the package. Can be **"Paid"** or **"To Pay"**, derived from the `payment_status` field of the package.
+- **Bs.**: Total price (`total_amount`).
 
-> **Nota:** La columna **FIRMA** ha sido eliminada del diseño. Ya no se incluirá espacio para firma en el manifiesto imprimible.
+> **Note:** The **SIGNATURE** column has been removed from the design. No space for a signature will be included in the printable manifest.
 
-## Cambios Propuestos
+## Proposed Changes
 
-### 1. Modificación de la UI del Viaje
-**Archivo**: `frontend-react/src/pages/trips/TripDetailPage.tsx`
-- Renombrar el texto del botón actual "Planilla" a "Planilla de pasajeros".
-- Añadir un nuevo componente `Button` y `Link` a su lado derecho etiquetado "Manifiesto de encomiendas", utilizando el ícono `Package` (lucide-react).
-- El enlace apuntará a `/trips/${tripId}/packages-manifest`, abriéndose con `target="_blank"`.
+### 1. Trip UI Modification
+**File**: `frontend-react/src/pages/trips/TripDetailPage.tsx`
+- Rename the current button text "Sheet" to "Passenger Sheet".
+- Add a new `Button` and `Link` component to its right labeled "Package Manifest", using the `Package` icon (lucide-react).
+- The link will point to `/trips/${tripId}/packages-manifest`, opening with `target="_blank"`.
 
-### 2. Actualización de Rutas
-**Archivo**: `frontend-react/src/router/index.tsx`
-- Se debe añadir la nueva ruta al arreglo de componentes para impresión, dentro de `PrintLayout`:
+### 2. Routes Update
+**File**: `frontend-react/src/router/index.tsx`
+- The new route must be added to the print components array within `PrintLayout`:
   `{ path: '/trips/:id/packages-manifest', lazy: () => import('@/pages/trips/TripPackagesManifestPage') }`
-- Esto garantiza que la cabecera y barra lateral de la app base no se rindan en esta vista.
+- This ensures the base app's header and sidebar are not rendered in this view.
 
-### 3. Creación de la Vista Imprimible
-**Archivo nuevo**: `frontend-react/src/pages/trips/TripPackagesManifestPage.tsx`
-- Será un clon funcional ajustado de `TripSheetPage.tsx`.
-- Utilizará hooks de estado y selectores (`useAppSelector`) o `apiFetch` para cargar los detalles del viaje (`trip`) y las encomiendas asociadas al viaje (`/packages/by-trip/${tripId}`).
-- Utilizará Media Queries (`@media print`) para forzar un diseño apaisado limpio, sin los bordes convencionales del navegador.
-- Incorporará en el encabezado toda la data estática mostrada en la foto, como 'Ruta', 'Fecha', 'Conductor', etc.
-- Renderizará la tabla de encomiendas con las columnas en el siguiente **orden definitivo**:
+### 3. Creation of the Printable View
+**New File**: `frontend-react/src/pages/trips/TripPackagesManifestPage.tsx`
+- It will be a functional clone adjusted from `TripSheetPage.tsx`.
+- It will use state hooks and selectors (`useAppSelector`) or `apiFetch` to load trip details (`trip`) and packages associated with the trip (`/packages/by-trip/${tripId}`).
+- It will use Media Queries (`@media print`) to force a clean landscape layout, without conventional browser borders.
+- It will incorporate all static data shown in the photo into the header, such as 'Route', 'Date', 'Driver', etc.
+- It will render the package table with the columns in the following **final order**:
 
-| # | Columna | Fuente de dato |
+| # | Column | Data Source |
 |---|---------|----------------|
-| 1 | Nº | Correlativo |
-| 2 | Remitente | `sender_name` |
-| 3 | Descripción Encomienda | ítems del paquete |
-| 4 | Destinatario | `recipient_name` |
-| 5 | Estado | `payment_status` → "Pagado" / "Por Pagar" |
+| 1 | No. | Sequential |
+| 2 | Sender | `sender_name` |
+| 3 | Package Description | Package items |
+| 4 | Recipient | `recipient_name` |
+| 5 | Status | `payment_status` → "Paid" / "To Pay" |
 | 6 | Bs. | `total_amount` |
 
-- La columna **Estado** debe mostrarse con una etiqueta visual distintiva: fondo verde claro para "Pagado" y fondo amarillo claro para "Por Pagar", tanto en pantalla como en impresión (`print-color-adjust: exact`).
+- The **Status** column should be displayed with a distinctive visual label: light green background for "Paid" and light yellow background for "To Pay", both on screen and in print (`print-color-adjust: exact`).

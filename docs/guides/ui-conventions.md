@@ -1,151 +1,151 @@
-# Convenciones UI — Trans Comarapa (frontend/)
+# UI Conventions — Trans Comarapa (frontend-react/)
 
-Guía obligatoria para todo código nuevo o refactorizado en `frontend/src/`. Las reglas clave están automatizadas vía ESLint (`frontend/eslint.config.js`).
+Mandatory guide for all new or refactored code in `frontend-react/src/`. Key rules are automated via ESLint (`frontend-react/eslint.config.js`).
 
-## 1. Componentes permitidos
+## 1. Allowed Components
 
-Usa siempre los componentes de `src/components/ui/` antes de escribir markup nativo:
+Always use components from `src/components/ui/` before writing native markup:
 
-| Caso de uso | Componente | Import |
+| Use Case | Component | Import |
 |---|---|---|
-| Botones (acciones) | `Button` | `@/components/ui/button` |
-| Texto input | `Input` | `@/components/ui/input` |
+| Buttons (actions) | `Button` | `@/components/ui/button` |
+| Text Input | `Input` | `@/components/ui/input` |
 | Textarea | `Textarea` | `@/components/ui/textarea` |
 | Select | `Select` | `@/components/ui/select` |
 | Checkbox / Radio | `Checkbox`, `RadioGroup` | `@/components/ui/checkbox`, `@/components/ui/radio-group` |
-| Label de formulario | `Label` | `@/components/ui/label` |
-| Tablas | `Table` | `@/components/ui/table` |
-| Modales | `Dialog`, `AlertDialog`, `Sheet` | `@/components/ui/*` |
-| Menús / dropdowns | `DropdownMenu`, `Popover`, `Command` | `@/components/ui/*` |
+| Form Label | `Label` | `@/components/ui/label` |
+| Tables | `Table` | `@/components/ui/table` |
+| Modals | `Dialog`, `AlertDialog`, `Sheet` | `@/components/ui/*` |
+| Menus / Dropdowns | `DropdownMenu`, `Popover`, `Command` | `@/components/ui/*` |
 | Tabs | `Tabs` | `@/components/ui/tabs` |
 | Tooltip | `Tooltip` | `@/components/ui/tooltip` |
-| Card informativo | `Card` | `@/components/ui/card` |
-| Card clickeable | `ClickableCard` | `@/components/ui/clickable-card` |
-| Estado loading | `Skeleton` | `@/components/ui/skeleton` |
-| Feedback inline | `Alert` | `@/components/ui/alert` |
-| Etiquetas de estado | `Badge` | `@/components/ui/badge` |
-| Notificaciones toast | `toast` de `sonner` | `sonner` |
+| Information Card | `Card` | `@/components/ui/card` |
+| Clickable Card | `ClickableCard` | `@/components/ui/clickable-card` |
+| Loading State | `Skeleton` | `@/components/ui/skeleton` |
+| Inline Feedback | `Alert` | `@/components/ui/alert` |
+| Status Badges | `Badge` | `@/components/ui/badge` |
+| Toast Notifications | `toast` from `sonner` | `sonner` |
 
-## 2. Elementos HTML nativos prohibidos
+## 2. Forbidden Native HTML Elements
 
-Fuera de `src/components/ui/**` está prohibido usar:
+Outside of `src/components/ui/**`, using the following is prohibited:
 
 `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<table>`
 
-ESLint bloquea su uso con un mensaje que indica el reemplazo correcto. Las primitivas viven sólo en `src/components/ui/`.
+ESLint blocks their use with a message indicating the correct replacement. Primitives live only in `src/components/ui/`.
 
-## 3. Elementos clickeables y accesibilidad
+## 3. Clickable Elements and Accessibility
 
-- **Nunca** `<div>` u otro no-interactivo con `onClick`. Usa `Button` o `ClickableCard`.
-- Todo botón sin texto visible (iconos) requiere `aria-label`.
-- `ClickableCard` obliga a pasar `ariaLabel` por props (no opcional).
-- Navegación por teclado: Tab debe alcanzar todo control interactivo; Enter/Space debe activarlo. Los componentes `ui/` ya lo cubren, no lo rompas con `tabIndex={-1}`.
-- Focus visible: no quites `focus-visible:*` de los componentes ui.
-- Formularios: cada input lleva su `Label` asociado (usa `htmlFor` + `id`).
+- **Never** use `<div>` or other non-interactive elements with `onClick`. Use `Button` or `ClickableCard`.
+- Every button without visible text (icons) requires an `aria-label`.
+- `ClickableCard` forces passing `ariaLabel` through props (not optional).
+- Keyboard Navigation: Tab must reach every interactive control; Enter/Space must activate it. `ui/` components already cover this; do not break it with `tabIndex={-1}`.
+- Visible Focus: Do not remove `focus-visible:*` from UI components.
+- Forms: Each input must have an associated `Label` (use `htmlFor` + `id`).
 
-`eslint-plugin-jsx-a11y` aplica las reglas `recommended` como **errores** (bloquean CI).
+`eslint-plugin-jsx-a11y` applies `recommended` rules as **errors** (blocking CI).
 
-## 4. Tamaño de archivos
+## 4. File Size
 
-- Límite actual: **400 líneas** por archivo `.tsx`/`.ts` (error de ESLint, bloquea CI).
-- Objetivo ideal: 300 líneas. Si te acercas, divide antes extrayendo:
-  - Subcomponentes a `components/<feature>/`.
-  - Hooks de estado/datos a `hooks/use-<name>.ts`.
-  - Helpers puros a `lib/` o `<feature>/utils.ts`.
-- Excepción: `src/components/ui/**` y `src/components/forms/**` (las primitivas pueden superar el límite).
+- Current limit: **400 lines** per `.tsx`/`.ts` file (ESLint error, blocks CI).
+- Ideal goal: 300 lines. If you get close, divide before by extracting:
+  - Subcomponents to `components/<feature>/`.
+  - State/data hooks to `hooks/use-<name>.ts`.
+  - Pure helpers to `lib/` or `<feature>/utils.ts`.
+- Exception: `src/components/ui/**` and `src/components/forms/**` (primitives can exceed the limit).
 
-## 5. Estados de UI obligatorios
+## 5. Mandatory UI States
 
-Toda vista que consume datos debe manejar explícitamente:
+Every view that consumes data must explicitly handle:
 
-- **Loading** → `Skeleton` (no spinners hechos a mano).
-- **Empty** → componente/texto descriptivo con CTA si aplica.
-- **Error** → `Alert` con mensaje legible. Nunca mostrar un objeto de error crudo.
+- **Loading** → `Skeleton` (no handmade spinners).
+- **Empty** → Descriptive component/text with CTA if applicable.
+- **Error** → `Alert` with readable message. Never show a raw error object.
 
-Rutina mínima: revisar `useSelector` status (`idle | loading | succeeded | failed`) y renderizar cada rama.
+Minimum routine: check `useSelector` status (`idle | loading | succeeded | failed`) and render each branch.
 
-## 6. Estilos
+## 6. Styles
 
-- Usa tokens de `src/styles/globals.css` (colores brand Comarapa, tokens shadcn/ui).
-- No hardcodees colores (`#123456`) ni medidas arbitrarias si existe el token.
-- Clases con `cn()` de `@/lib/utils` para combinar Tailwind.
-- No introduzcas CSS global nuevo fuera de `globals.css` sin consenso.
+- Use tokens from `src/styles/globals.css` (Comarapa brand colors, shadcn/ui tokens).
+- Do not hardcode colors (`#123456`) or arbitrary measurements if a token exists.
+- Combine classes with `cn()` from `@/lib/utils` for Tailwind.
+- Do not introduce new global CSS outside of `globals.css` without consensus.
 
-## 7. TypeScript — cero `any`
+## 7. TypeScript — Zero `any`
 
-La regla `@typescript-eslint/no-explicit-any` es **error**. Patrones establecidos:
+The `@typescript-eslint/no-explicit-any` rule is an **error**. Established patterns:
 
-### 7.1 Selectores Redux tipados
+### 7.1 Typed Redux Selectors
 
 ```ts
-// ❌ mal
+// ❌ bad
 const trips = useAppSelector(selectTrips) as any[]
 const auth = useAppSelector((s: any) => s.auth)
 
-// ✅ bien — interfaz mínima + cast explícito
+// ✅ good — minimum interface + explicit cast
 interface Trip { id: number; trip_datetime?: string; [k: string]: unknown }
 const trips = useAppSelector(selectTrips) as Trip[]
 const auth = useAppSelector((s) => (s as unknown as { auth: AuthState }).auth)
 ```
 
-### 7.2 Respuestas API parcialmente conocidas
+### 7.2 Partially Known API Responses
 
-Usa interfaces mínimas con `[key: string]: unknown` como escape hatch:
+Use minimum interfaces with `[key: string]: unknown` as an escape hatch:
 
 ```ts
 interface PackageLike {
   id: number
   tracking_number?: string
   items?: PackageItem[]
-  [k: string]: unknown   // otros campos del backend no modelados
+  [k: string]: unknown   // other backend fields not modeled
 }
 ```
 
-Prefiere esto a `any` o `Record<string, any>`. El índice `unknown` obliga a narrow antes de usar.
+Prefer this over `any` or `Record<string, any>`. The `unknown` index forces narrowing before use.
 
-### 7.3 Narrowing de errores en `catch`
+### 7.3 Error Narrowing in `catch`
 
 ```ts
-// ❌ mal
+// ❌ bad
 } catch (err: any) {
   setError(err.message)
 }
 
-// ✅ bien
+// ✅ good
 } catch (err) {
-  setError(err instanceof Error ? err.message : 'Fallback legible')
+  setError(err instanceof Error ? err.message : 'Readable fallback')
 }
 ```
 
-### 7.4 Casts en respuestas unión
+### 7.4 Casts in Union Responses
 
-Cuando el endpoint puede devolver varias formas:
+When an endpoint can return multiple shapes:
 
 ```ts
 const data = (await apiFetch('/x')) as { items?: Thing[]; total?: number } | Thing[]
 ```
 
-No uses `as any` — siempre declara las formas posibles.
+Do not use `as any` — always declare possible shapes.
 
-### 7.5 Hooks y utilidades reusables
+### 7.5 Reusable Hooks and Utilities
 
-Si un hook expone tipos, exporta la interfaz (`export interface ClientRecord`) para que los consumidores no redefinan.
+If a hook exposes types, export the interface (`export interface ClientRecord`) so consumers don't redefine them.
 
-## 8. Manejo de errores y toasts
+## 8. Error Handling and Toasts
 
-- Errores de red o Redux: narrow con `instanceof Error`, fallback string legible.
-- Feedback al usuario: `toast.success` / `toast.error` / `toast.info` de `sonner`. Nunca `alert()` ni `console.log`.
-- Errores persistentes/bloqueantes: `Alert` de `@/components/ui/alert` dentro del contenido.
+- Network or Redux errors: Narrow with `instanceof Error`, readable string fallback.
+- User feedback: `toast.success` / `toast.error` / `toast.info` from `sonner`. Never `alert()` or `console.log`.
+- Persistent/blocking errors: `Alert` from `@/components/ui/alert` within the content.
 
-## 9. Cómo añadir un nuevo componente primitivo
+## 9. How to Add a New Primitive Component
 
-1. Vive en `src/components/ui/<name>.tsx`.
-2. Debe aceptar `className` y forwardear `...props` del elemento base.
-3. Si es interactivo: soporta teclado, focus ring, estados `disabled`/`aria-*`.
-4. Documenta en esta guía (tabla sección 1) y añade al `index` si existe.
+1. It lives in `src/components/ui/<name>.tsx`.
+2. It must accept `className` and forward `...props` of the base element.
+3. If interactive: support keyboard, focus ring, `disabled`/`aria-*` states.
+4. Document in this guide (section 1 table) and add to `index` if it exists.
 
-## 10. Referencias
+## 10. References
 
-- Plan activo: `docs/implementation-plans/ui-standardization.plan.md`
-- Config ESLint: `frontend/eslint.config.js`
-- Tokens: `frontend/src/styles/globals.css`
+- Active plan: `docs/implementation-plans/ui-standardization.plan.md`
+- ESLint config: `frontend-react/eslint.config.js`
+- Tokens: `frontend-react/src/styles/globals.css`

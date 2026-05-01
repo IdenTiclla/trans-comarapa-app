@@ -1,31 +1,31 @@
-# Lesson 004: Importar desde react-router-dom en lugar de react-router
+# Lesson 004: Import from react-router instead of react-router-dom
 
-**Fecha:** 2026-03-13
-**Contexto:** Trabajando en QuickSearch.tsx para agregar navegación a viajes
+**Date:** 2026-03-13
+**Context:** Working on QuickSearch.tsx to add navigation to trips
 
 ## Error
 
 ```tsx
-// MAL
+// WRONG
 import { useNavigate } from 'react-router-dom'
 ```
 
-**Resultado:**
+**Result:**
 ```
 [plugin:vite:import-analysis] Failed to resolve import "react-router-dom" from "src/components/dashboard/QuickSearch.tsx". Does the file exist?
 ```
 
-## Causa raíz
+## Root Cause
 
-El proyecto usa `react-router` v7 (no `react-router-dom`). En versiones modernas de react-router v7, todos los hooks y componentes se exportan desde el paquete `react-router` directamente. `react-router-dom` es un paquete separado que no está instalado en este proyecto.
+The project uses `react-router` v7 (not `react-router-dom`). In modern versions of react-router v7, all hooks and components are exported from the `react-router` package directly. `react-router-dom` is a separate package that is not installed in this project.
 
-## Solución
+## Solution
 
 ```tsx
-// BIEN
+// GOOD
 import { useNavigate } from 'react-router'
 ```
 
-## Regla
+## Rule
 
-Siempre verificar qué paquete de routing está instalado en `package.json` antes de importar. Si el proyecto tiene `react-router` v7+, importar desde `'react-router'`, no desde `'react-router-dom'`.
+Always check which routing package is installed in `package.json` before importing. If the project has `react-router` v7+, import from `'react-router'`, not from `'react-router-dom'`.

@@ -1,28 +1,28 @@
-# Plan: Migración completa de Nuxt 3 a React
+# Plan: Complete Migration from Nuxt 3 to React
 
-## Contexto
+## Context
 
-El frontend actual está construido con Nuxt 3 + Vue 3 + Pinia (143 archivos: 26 páginas, 67 componentes, 13 stores, 17 servicios, 7 composables, 5 layouts, 3 middleware, 4 plugins). Se migrará a una SPA con React para simplificar la arquitectura (no se necesita SSR ya que la app es principalmente para usuarios autenticados).
+The current frontend is built with Nuxt 3 + Vue 3 + Pinia (143 files: 26 pages, 67 components, 13 stores, 17 services, 7 composables, 5 layouts, 3 middleware, 4 plugins). It will be migrated to a React SPA to simplify the architecture (SSR is not needed as the app is primarily for authenticated users).
 
-**Stack destino:** Vite + React 19 + React Router v7 + Redux Toolkit + Tailwind CSS + shadcn/ui + TypeScript
+**Target Stack:** Vite + React 19 + React Router v7 + Redux Toolkit + Tailwind CSS + shadcn/ui + TypeScript
 
-El nuevo proyecto vivirá en `frontend-react/` junto al `frontend/` existente hasta completar la migración.
+The new project will live in `frontend-react/` alongside the existing `frontend/` until the migration is complete.
 
 ---
 
-## Fase 0: Scaffolding del proyecto ✅ COMPLETADA
+## Phase 0: Project Scaffolding ✅ COMPLETED
 
-Crear `frontend-react/` con Vite + React + TypeScript.
+Create `frontend-react/` with Vite + React + TypeScript.
 
-**Archivos de configuración:**
-- `vite.config.ts` — Plugin React, alias `@` → `src/`, proxy `/api/v1` → `http://localhost:8000`
-- `tailwind.config.ts` — Portar colores de marca (comarapa-dark: #0D47A1, comarapa-medium: #2196F3, comarapa-light: #64B5F6, comarapa-gray: #E3F2FD), screens customizados, font Inter, spacing y utilidades custom desde `frontend/tailwind.config.js`
+**Configuration Files:**
+- `vite.config.ts` — React plugin, alias `@` → `src/`, proxy `/api/v1` → `http://localhost:8000`
+- `tailwind.config.ts` — Port brand colors (comarapa-dark: #0D47A1, comarapa-medium: #2196F3, comarapa-light: #64B5F6, comarapa-gray: #E3F2FD), custom screens, Inter font, custom spacing and utilities from `frontend/tailwind.config.js`
 - `tsconfig.json` — Strict mode, path aliases
-- `components.json` — shadcn/ui estilo "new-york"
+- `components.json` — shadcn/ui "new-york" style
 - `postcss.config.js`, `.env`, `.env.example`
-- `src/styles/globals.css` — Portar desde `frontend/assets/css/main.css` (Google Fonts, variables CSS, transiciones, utilidades responsive)
+- `src/styles/globals.css` — Port from `frontend/assets/css/main.css` (Google Fonts, CSS variables, transitions, responsive utilities)
 
-**Dependencias principales:**
+**Main Dependencies:**
 ```
 react, react-dom, react-router, @reduxjs/toolkit, react-redux,
 @heroicons/react, react-chartjs-2, chart.js, clsx, tailwind-merge,
@@ -35,48 +35,48 @@ class-variance-authority, lodash-es, sonner
 vitest, @testing-library/react, @testing-library/jest-dom, jsdom
 ```
 
-**Estructura base:**
+**Base Structure:**
 ```
 frontend-react/src/
-├── main.tsx                    # Entry point con Provider + RouterProvider
+├── main.tsx                    # Entry point with Provider + RouterProvider
 ├── App.tsx                     # Root component
-├── lib/                        # Utilidades core
-│   ├── api.ts                  # Cliente API (reemplaza utils/api.js)
-│   ├── utils.ts                # cn() de shadcn/ui
-│   └── constants.ts            # Rutas públicas, mapeo de roles
-├── types/                      # Interfaces TypeScript
-├── hooks/                      # Custom hooks (reemplazan composables)
-├── services/                   # Llamadas API (17 servicios)
+├── lib/                        # Core utilities
+│   ├── api.ts                  # API client (replaces utils/api.js)
+│   ├── utils.ts                # shadcn/ui cn()
+│   └── constants.ts            # Public routes, role mapping
+├── types/                      # TypeScript interfaces
+├── hooks/                      # Custom hooks (replace composables)
+├── services/                   # API calls (17 services)
 ├── store/                      # Redux slices (13 slices)
-├── router/                     # Configuración de rutas y guards
+├── router/                     # Route and guard configuration
 ├── layouts/                    # Layout wrappers
-├── components/                 # Componentes UI
-│   ├── ui/                     # shadcn/ui (auto-generados)
-│   ├── common/                 # Wrappers custom
-│   ├── forms/                  # Form wrappers sobre shadcn
+├── components/                 # UI components
+│   ├── ui/                     # shadcn/ui (auto-generated)
+│   ├── common/                 # Custom wrappers
+│   ├── forms/                  # Form wrappers over shadcn
 │   ├── layout/                 # AdminHeader
 │   ├── dashboard/              # Stat cards, charts
-│   ├── admin/                  # Forms y tables admin
-│   ├── trips/                  # Cards y listas de viajes
-│   ├── packages/               # Cards y modales de encomiendas
-│   ├── tickets/                # Venta y display de boletos
-│   ├── seats/                  # Grilla de asientos
-│   └── clients/                # Cards y modales de clientes
-├── pages/                      # Componentes de página
-└── styles/globals.css          # Tailwind + estilos custom
+│   ├── admin/                  # Admin forms and tables
+│   ├── trips/                  # Trip cards and lists
+│   ├── packages/               # Package cards and modals
+│   ├── tickets/                # Ticket sales and display
+│   ├── seats/                  # Seat grid
+│   └── clients/                # Client cards and modals
+├── pages/                      # Page components
+└── styles/globals.css          # Tailwind + custom styles
 ```
 
 ---
 
-## Fase 1: Infraestructura core ✅ COMPLETADA
+## Phase 1: Core Infrastructure ✅ COMPLETED
 
-### 1.1 Cliente API (`src/lib/api.ts`)
-Portar desde `frontend/utils/api.js`. Replicar exactamente:
-- `apiFetch` con `credentials: 'include'`, timeout 15s
-- Refresh de token en 401 con mutex (`isRefreshing` + `refreshPromise`)
-- Skip refresh para `/auth/login`, `/auth/logout`, `/auth/refresh`
-- `SessionExpiredError`, flag `setLoggingOut`
-- Usar `fetch` nativo en vez de `ofetch`
+### 1.1 API Client (`src/lib/api.ts`)
+Port from `frontend/utils/api.js`. Replicate exactly:
+- `apiFetch` with `credentials: 'include'`, 15s timeout
+- Token refresh on 401 with mutex (`isRefreshing` + `refreshPromise`)
+- Skip refresh for `/auth/login`, `/auth/logout`, `/auth/refresh`
+- `SessionExpiredError`, `setLoggingOut` flag
+- Use native `fetch` instead of `ofetch`
 - Env var: `import.meta.env.VITE_API_BASE_URL`
 
 ### 1.2 Redux Store (`src/store/index.ts`)
@@ -91,17 +91,17 @@ configureStore({
 ```
 
 ### 1.3 Auth Slice (`src/store/auth.slice.ts`)
-Portar desde `frontend/stores/auth.js`:
+Port from `frontend/stores/auth.js`:
 - State: `user`, `loading`, `error`
 - AsyncThunks: `login`, `logout`, `refreshToken`, `loadProfile`, `updateProfile`, `initAuth`
 - Selectors: `selectIsAuthenticated`, `selectUserRole`, `selectUserFullName`, `selectUserInitials`
 
 ### 1.4 Router (`src/router/index.tsx`)
-React Router v7 con `createBrowserRouter`:
+React Router v7 with `createBrowserRouter`:
 
 ```
 LoginLayout      → /login
-ProtectedRoute + DefaultLayout → todas las rutas autenticadas
+ProtectedRoute + DefaultLayout → all authenticated routes
   RoleGuard(admin)     → /admin/users, /admin/buses, /admin/routes, /dashboards/dashboard-admin
   RoleGuard(secretary) → /dashboards/dashboard-secretary
   RoleGuard(driver)    → /dashboards/dashboard-driver
@@ -113,21 +113,21 @@ PrintLayout      → /trips/:id/sheet
 ```
 
 ### 1.5 Route Guards (`src/router/guards.tsx`)
-Portar desde `frontend/middleware/auth.global.ts` y `role.js`:
-- `ProtectedRoute` — redirige a `/login` si no autenticado
-- `RoleGuard` — redirige al dashboard correspondiente si el rol no coincide
+Port from `frontend/middleware/auth.global.ts` and `role.js`:
+- `ProtectedRoute` — redirects to `/login` if not authenticated
+- `RoleGuard` — redirects to the corresponding dashboard if the role does not match
 
 ---
 
-## Fase 2: Componentes compartidos ✅ COMPLETADA
+## Phase 2: Shared Components ✅ COMPLETED
 
-### 2.1 shadcn/ui — Instalar estos componentes:
+### 2.1 shadcn/ui — Install these components:
 `button, input, label, select, checkbox, radio-group, textarea, dialog, alert-dialog, card, badge, table, dropdown-menu, command, popover, sheet, tabs, separator, skeleton, tooltip, sonner`
 
 ### 2.2 Form wrappers (`src/components/forms/`)
-Thin wrappers sobre shadcn/ui que replican la API de los Vue forms:
+Thin wrappers over shadcn/ui that replicate the Vue forms API:
 
-| Nuevo | Reemplaza | Base shadcn |
+| New | Replaces | Base shadcn |
 |-------|-----------|-------------|
 | `FormInput.tsx` | `forms/FormInput.vue` | Input + Label |
 | `FormSelect.tsx` | `forms/FormSelect.vue` | Select |
@@ -138,26 +138,26 @@ Thin wrappers sobre shadcn/ui que replican la API de los Vue forms:
 | `FormDatePicker.tsx` | `forms/FormDatePicker.vue` | Input type date |
 | `FormFileUpload.tsx` | `forms/FormFileUpload.vue` | Custom |
 
-### 2.3 Componentes common
-| Nuevo | Reemplaza | Notas |
+### 2.3 Common Components
+| New | Replaces | Notes |
 |-------|-----------|-------|
-| `ConfirmDialog.tsx` | `ui/ConfirmDialog.vue` | Usa AlertDialog de shadcn |
-| `EmptyState.tsx` | `common/EmptyState.vue` | Componente simple |
-| `ErrorBoundary.tsx` | `common/ErrorBoundary.vue` | Class component React |
-| `NotificationModal.tsx` | `common/NotificationModal.vue` | Usa Dialog de shadcn |
-| `ProfileSkeleton.tsx` | `common/ProfileSkeleton.vue` | Usa Skeleton de shadcn |
-| `SkeletonLoader.tsx` | `common/SkeletonLoader.vue` | Usa Skeleton de shadcn |
+| `ConfirmDialog.tsx` | `ui/ConfirmDialog.vue` | Uses shadcn AlertDialog |
+| `EmptyState.tsx` | `common/EmptyState.vue` | Simple component |
+| `ErrorBoundary.tsx` | `common/ErrorBoundary.vue` | React class component |
+| `NotificationModal.tsx` | `common/NotificationModal.vue` | Uses shadcn Dialog |
+| `ProfileSkeleton.tsx` | `common/ProfileSkeleton.vue` | Uses shadcn Skeleton |
+| `SkeletonLoader.tsx` | `common/SkeletonLoader.vue` | Uses shadcn Skeleton |
 
 ### 2.4 Toast
-Usar `sonner` (integrado con shadcn/ui). Hook `use-toast.ts` con `success/error/info/warning`.
+Use `sonner` (integrated with shadcn/ui). `use-toast.ts` hook with `success/error/info/warning`.
 
 ---
 
-## Fase 3: Servicios (migración mecánica) ✅ COMPLETADA
+## Phase 3: Services (Mechanical Migration) ✅ COMPLETED
 
-Portar los 17 servicios de `frontend/services/` a `src/services/`. Cambio principal: `apiFetch` de ofetch → fetch custom. Mismos endpoints, mismas interfaces.
+Port the 17 services from `frontend/services/` to `src/services/`. Main change: `apiFetch` from ofetch → custom fetch. Same endpoints, same interfaces.
 
-**Orden (por dependencias):**
+**Order (by dependencies):**
 1. `auth.service.ts`, `profile.service.ts`
 2. `location.service.ts`, `bus.service.ts`, `route.service.ts`, `driver.service.ts`, `assistant.service.ts`
 3. `trip.service.ts`, `seat.service.ts`
@@ -168,58 +168,58 @@ Portar los 17 servicios de `frontend/services/` a `src/services/`. Cambio princi
 
 ---
 
-## Fase 4: Módulos por feature ✅ COMPLETADA
+## Phase 4: Modules by Feature ✅ COMPLETED
 
 ### 4.1 Auth + Login + Layouts
-- **Páginas:** `LoginPage.tsx`
+- **Pages:** `LoginPage.tsx`
 - **Layouts:** `DefaultLayout.tsx`, `LoginLayout.tsx`, `AuthLayout.tsx`, `PrintLayout.tsx`
-- **Componentes:** `AdminHeader.tsx`
+- **Components:** `AdminHeader.tsx`
 - **Slices:** `auth.slice.ts`, `app.slice.ts`
 - **Hooks:** `use-auth.ts`
 
 ### 4.2 Dashboards
-- **Páginas:** 5 dashboards (Admin, Secretary, Driver, Assistant, Client)
-- **Componentes:** `DashboardStatCard.tsx`, `MonthlyMetricsChart.tsx` (react-chartjs-2), `QuickSearch.tsx`, `RecentSales.tsx`, `UpcomingTrips.tsx`
+- **Pages:** 5 dashboards (Admin, Secretary, Driver, Assistant, Client)
+- **Components:** `DashboardStatCard.tsx`, `MonthlyMetricsChart.tsx` (react-chartjs-2), `QuickSearch.tsx`, `RecentSales.tsx`, `UpcomingTrips.tsx`
 - **Slices:** `stats.slice.ts`
-- **Servicios:** `stats.service.ts`, `activity.service.ts`
+- **Services:** `stats.service.ts`, `activity.service.ts`
 
-### 4.3 Admin — Buses, Rutas, Usuarios
-- **Páginas:** `BusesPage.tsx`, `RoutesPage.tsx`, `UsersPage.tsx`
-- **Componentes:** `BusForm.tsx`, `BusTable.tsx`, `RouteForm.tsx`, `RouteTable.tsx`, `RouteScheduleManager.tsx`, `SeatLayoutEditor.tsx`, `UserForm.tsx`, `UserTable.tsx`, `UserDetail.tsx`
+### 4.3 Admin — Buses, Routes, Users
+- **Pages:** `BusesPage.tsx`, `RoutesPage.tsx`, `UsersPage.tsx`
+- **Components:** `BusForm.tsx`, `BusTable.tsx`, `RouteForm.tsx`, `RouteTable.tsx`, `RouteScheduleManager.tsx`, `SeatLayoutEditor.tsx`, `UserForm.tsx`, `UserTable.tsx`, `UserDetail.tsx`
 - **Slices:** `bus.slice.ts`, `route.slice.ts`, `location.slice.ts`, `driver.slice.ts`, `assistant.slice.ts`, `secretary.slice.ts`
 - **Hooks:** `use-destination-search.ts`
 
-### 4.4 Viajes (feature core)
-- **Páginas:** `TripsIndexPage.tsx`, `TripNewPage.tsx`, `TripDetailPage.tsx`, `TripEditPage.tsx`, `TripSheetPage.tsx`
-- **Componentes:** `TripCard.tsx`, `TripCardList.tsx`, `TripCountdown.tsx`, `TripPackagesSection.tsx`
+### 4.4 Trips (Core Feature)
+- **Pages:** `TripsIndexPage.tsx`, `TripNewPage.tsx`, `TripDetailPage.tsx`, `TripEditPage.tsx`, `TripSheetPage.tsx`
+- **Components:** `TripCard.tsx`, `TripCardList.tsx`, `TripCountdown.tsx`, `TripPackagesSection.tsx`
 - **Slices:** `trip.slice.ts`
 - **Hooks:** `use-trip-details.ts`
 
-### 4.5 Clientes
-- **Páginas:** `ClientsPage.tsx`
-- **Componentes:** `ClientCard.tsx`, `ClientCardList.tsx`, `ClientFilters.tsx`, `ClientModal.tsx`, `ClientSelector.tsx`, `ClientViewModal.tsx`
+### 4.5 Clients
+- **Pages:** `ClientsPage.tsx`
+- **Components:** `ClientCard.tsx`, `ClientCardList.tsx`, `ClientFilters.tsx`, `ClientModal.tsx`, `ClientSelector.tsx`, `ClientViewModal.tsx`
 - **Slices:** `client.slice.ts`
 - **Hooks:** `use-client-search.ts`
 
-### 4.6 Asientos + Boletos
-- **Páginas:** `TicketConfirmationPage.tsx`, `BookingsPage.tsx`
-- **Componentes:** `BusSeatGrid.tsx`, `BusSeatLegend.tsx`, `BusSeatMapPrint.tsx`, `BusTripHeader.tsx`, `DeckSelector.tsx`, `SeatContextMenu.tsx`, `SelectedSeatsPanel.tsx`, `TicketDisplay.tsx`, `TicketModal.tsx`, `TicketSaleModal.tsx`
+### 4.6 Seats + Tickets
+- **Pages:** `TicketConfirmationPage.tsx`, `BookingsPage.tsx`
+- **Components:** `BusSeatGrid.tsx`, `BusSeatLegend.tsx`, `BusSeatMapPrint.tsx`, `BusTripHeader.tsx`, `DeckSelector.tsx`, `SeatContextMenu.tsx`, `SelectedSeatsPanel.tsx`, `TicketDisplay.tsx`, `TicketModal.tsx`, `TicketSaleModal.tsx`
 - **Slices:** `ticket.slice.ts`
-- **Nota:** BusSeatGrid es el componente más complejo visualmente — requiere atención especial
+- **Note:** `BusSeatGrid` is the most visually complex component — requires special attention.
 
-### 4.7 Encomiendas
-- **Páginas:** `PackagesIndexPage.tsx`, `PackageNewPage.tsx`, `PackageDetailPage.tsx`, `PackageEditPage.tsx`
-- **Componentes:** `PackageCard.tsx`, `PackageCardList.tsx`, `PackageAssignModal.tsx`, `PackageDeliveryModal.tsx`, `PackageReceiptModal.tsx`, `PackageReceptionModal.tsx`, `PackageRegistrationModal.tsx`
+### 4.7 Packages
+- **Pages:** `PackagesIndexPage.tsx`, `PackageNewPage.tsx`, `PackageDetailPage.tsx`, `PackageEditPage.tsx`
+- **Components:** `PackageCard.tsx`, `PackageCardList.tsx`, `PackageAssignModal.tsx`, `PackageDeliveryModal.tsx`, `PackageReceiptModal.tsx`, `PackageReceptionModal.tsx`, `PackageRegistrationModal.tsx`
 - **Slices:** `package.slice.ts`
 - **Hooks:** `use-package-status.ts`
 
-### 4.8 Perfil + Error page
-- **Páginas:** `ProfilePage.tsx`, `NotFoundPage.tsx`
-- Reutiliza slices y servicios existentes
+### 4.8 Profile + Error Page
+- **Pages:** `ProfilePage.tsx`, `NotFoundPage.tsx`
+- Reuses existing slices and services.
 
 ---
 
-## Fase 5: Traducciones clave Vue → React ✅ COMPLETADA (referencia aplicada)
+## Phase 5: Key Translations Vue → React ✅ COMPLETED (applied reference)
 
 | Vue | React |
 |-----|-------|
@@ -232,60 +232,60 @@ Portar los 17 servicios de `frontend/services/` a `src/services/`. Cambio princi
 | `v-for` | `{items.map(i => <C key={i.id}/>)}` |
 | `defineEmits / $emit` | Callback props (`onSubmit`, `onChange`) |
 | `<slot />` | `{children}` |
-| `<slot name="x" />` | Prop `renderX` o prop `x={<Node/>}` |
-| `@heroicons/vue` | `@heroicons/react` (mismos nombres) |
-| `vue-chartjs` | `react-chartjs-2` (misma config chart.js) |
+| `<slot name="x" />` | Prop `renderX` or `x={<Node/>}` |
+| `@heroicons/vue` | `@heroicons/react` (same names) |
+| `vue-chartjs` | `react-chartjs-2` (same chart.js config) |
 | Pinia `store.action()` | `dispatch(asyncThunk())` |
 | Pinia `store.getter` | `useAppSelector(selector)` |
-| Nuxt `navigateTo()` | `useNavigate()` de React Router |
-| Nuxt `useRoute().params` | `useParams()` de React Router |
-| Nuxt `useRoute().query` | `useSearchParams()` de React Router |
+| Nuxt `navigateTo()` | `useNavigate()` from React Router |
+| Nuxt `useRoute().params` | `useParams()` from React Router |
+| Nuxt `useRoute().query` | `useSearchParams()` from React Router |
 
 ---
 
-## Fase 6: Docker y despliegue ✅ COMPLETADA
+## Phase 6: Docker and Deployment ✅ COMPLETED
 
 ### 6.1 `frontend-react/Dockerfile`
 - Dev: Node 20 alpine, `npm run dev`
-- Prod: Build estático + nginx (no necesita Node runtime)
+- Prod: Static build + nginx (does not need Node runtime)
 
 ### 6.2 `frontend-react/nginx.conf`
-- `try_files $uri $uri/ /index.html` para SPA routing
-- Cache de assets estáticos
+- `try_files $uri $uri/ /index.html` for SPA routing
+- Static asset caching
 
-### 6.3 Actualizar `docker-compose.yml`
-- Cambiar `context: ./frontend` → `./frontend-react`
-- Cambiar `NUXT_PUBLIC_API_BASE_URL` → `VITE_API_BASE_URL`
-- Volúmenes: `./frontend-react:/app`
+### 6.3 Update `docker-compose.yml`
+- Change `context: ./frontend` → `./frontend-react`
+- Change `NUXT_PUBLIC_API_BASE_URL` → `VITE_API_BASE_URL`
+- Volumes: `./frontend-react:/app`
 
 ---
 
-## Fase 7: Testing
+## Phase 7: Testing
 
 - **Framework:** Vitest + @testing-library/react + jsdom
-- **Store slices:** Tests unitarios de reducers y thunks
-- **Services:** Mock de `apiFetch`, verificar URLs y métodos
-- **Components:** Render con store provider wrapper
-- **Pages:** Tests de integración con servicios mockeados
+- **Store Slices:** Unit tests for reducers and thunks
+- **Services:** Mock `apiFetch`, verify URLs and methods
+- **Components:** Render with store provider wrapper
+- **Pages:** Integration tests with mocked services
 
 ---
 
-## Áreas de riesgo alto
+## High-Risk Areas
 
-1. **Auth token refresh** (`lib/api.ts`) — Lógica mutex compleja, probar con tokens expirados
-2. **BusSeatGrid** — Componente visual más complejo, CSS grid + event handling
-3. **Print layout** — Verificar `@media print` después de migración
+1. **Auth Token Refresh** (`lib/api.ts`) — Complex mutex logic, test with expired tokens.
+2. **BusSeatGrid** — Most complex visual component, CSS grid + event handling.
+3. **Print Layout** — Verify `@media print` after migration.
 
 ---
 
-## Verificación
+## Verification
 
-1. `npm run dev` levanta sin errores en `localhost:3000`
-2. Login funciona con `admin1@transcomarapa.com / 123456`
-3. Navegación entre dashboards por rol
-4. CRUD completo de viajes (crear, editar, despachar, finalizar)
-5. Venta de boletos con selección de asientos
-6. Registro y flujo de encomiendas
-7. Print de hoja de viaje funciona
-8. `npm run build` genera bundle de producción sin errores
-9. Docker: `make up` levanta el frontend React correctamente
+1. `npm run dev` starts without errors at `localhost:3000`
+2. Login works with `admin1@transcomarapa.com / 123456`
+3. Navigation between dashboards by role
+4. Full trip CRUD (create, edit, dispatch, finish)
+5. Ticket sales with seat selection
+6. Package registration and flow
+7. Trip sheet printing works
+8. `npm run build` generates production bundle without errors
+9. Docker: `make up` starts frontend React correctly

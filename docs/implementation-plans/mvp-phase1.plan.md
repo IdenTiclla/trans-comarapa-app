@@ -1,195 +1,195 @@
-# Plan: Trans Comarapa - MVP Phase 1 (Primera versión funcional)
+# Plan: Trans Comarapa - MVP Phase 1 (First Functional Version)
 
-## Contexto
+## Context
 
-Trans Comarapa opera manualmente con papel y cuadernos. El sistema ya tiene ~85% de los flujos transaccionales construidos (venta de boletos con mapa de asientos, registro de encomiendas, gestión de viajes). Lo que falta para tener una **versión usable en producción** son: gestión de oficinas, caja diaria, bloqueo de asientos con Redis, dashboards de conductor/asistente, y reportes básicos.
+Trans Comarapa operates manually with paper and notebooks. The system already has ~85% of transactional flows built (ticket sales with seat map, package registration, trip management). What is missing for a **usable production version** are: office management, daily cash register, seat locking with Redis, driver/assistant dashboards, and basic reports.
 
-## Estado Actual
+## Current State
 
-### Ya construido (Backend + Frontend):
+### Already Built (Backend + Frontend):
 - Auth + RBAC (JWT, 5 roles) ✅
-- Gestión de rutas (CRUD + horarios) ✅
-- Gestión de buses y asientos (CRUD + layout editor) ✅
-- Programación de viajes (CRUD + estados) ✅
-- Venta de boletos (mapa de asientos, estados, recibos) ✅
-- Encomiendas (registro, items, entrega, "por cobrar") ✅
-- Gestión de usuarios y clientes ✅
-- Dashboard admin y secretaria (estadísticas, viajes próximos) ✅
-- Log de actividad/auditoría ✅
+- Route management (CRUD + schedules) ✅
+- Bus and seat management (CRUD + layout editor) ✅
+- Trip scheduling (CRUD + statuses) ✅
+- Ticket sales (seat map, statuses, receipts) ✅
+- Packages (registration, items, delivery, "collect on delivery") ✅
+- User and client management ✅
+- Admin and secretary dashboards (statistics, upcoming trips) ✅
+- Activity/audit log ✅
 
-### Falta para MVP:
-1. ❌ CRUD de oficinas (modelo existe, sin rutas/servicio)
-2. ❌ Sistema de caja registradora (sin modelos, sin nada)
-3. ❌ Bloqueo de asientos con Redis (cliente existe, sin lógica)
-4. ❌ Dashboards conductor/asistente (solo skeletons)
-5. ❌ Reportes mensuales con exportación
-
----
-
-## Plan de Implementación (5 Milestones)
-
-### Milestone 1: Gestión de Oficinas
-**Complejidad:** Pequeña | **Dependencias:** Ninguna
-
-**Backend (4 nuevos, 2 modificar):**
-- Crear `backend/schemas/office.py` — `OfficeCreate`, `OfficeUpdate`, `OfficeResponse`
-- Crear `backend/repositories/office_repository.py` — extiende `BaseRepository[Office]`
-- Crear `backend/services/office_service.py` — CRUD con validación de `location_id`
-- Crear `backend/routes/office.py` — `GET/POST/PUT/DELETE /api/v1/offices`
-- Modificar `backend/api/v1/api.py` — registrar router
-- Modificar `backend/db/seed.py` — crear oficinas por defecto (Santa Cruz, Los Negros, San Isidro, Comarapa)
-
-**Frontend (4 nuevos, 2 modificar):**
-- Crear `frontend-react/src/services/office.service.ts`
-- Crear `frontend-react/src/store/office.slice.ts`
-- Crear `frontend-react/src/pages/admin/OfficesPage.tsx` — seguir patrón de `RoutesPage.tsx`
-- Modificar `frontend-react/src/router/index.tsx` — agregar ruta `/admin/offices`
-- Modificar `frontend-react/src/components/layout/AdminHeader.tsx` — agregar link "Oficinas"
+### Missing for MVP:
+1. ❌ Office CRUD (model exists, no routes/service)
+2. ❌ Cash register system (no models, nothing)
+3. ❌ Seat locking with Redis (client exists, no logic)
+4. ❌ Driver/Assistant dashboards (skeletons only)
+5. ❌ Monthly reports with export
 
 ---
 
-### Milestone 2: Sistema de Caja Registradora
-**Complejidad:** Grande | **Depende de:** M1 (office_id)
+## Implementation Plan (5 Milestones)
 
-**Backend (7 nuevos, 3 modificar):**
-- Crear `backend/models/cash_register.py` — `CashRegister` (office_id, date, opened_by, initial_balance, closed_by, final_balance, status)
-- Crear `backend/models/cash_transaction.py` — `CashTransaction` (cash_register_id, type, amount, payment_method, reference_id, reference_type)
-- Agregar enums en `backend/core/enums.py` — `CashRegisterStatus` (OPEN/CLOSED), `CashTransactionType` (TICKET_SALE, PACKAGE_PAYMENT, POR_COBRAR_COLLECTION, WITHDRAWAL, ADJUSTMENT)
-- Crear `backend/schemas/cash_register.py`
-- Crear `backend/repositories/cash_register_repository.py` — consultas: registro abierto por oficina, transacciones por registro, resumen diario
-- Crear `backend/services/cash_register_service.py`:
-  - `open_register()` — validar que no haya registro abierto
-  - `close_register()` — calcular esperado vs real
-  - `record_transaction()` — llamado automáticamente al vender boletos/encomiendas
+### Milestone 1: Office Management
+**Complexity:** Small | **Dependencies:** None
+
+**Backend (4 new, 2 modify):**
+- Create `backend/schemas/office.py` — `OfficeCreate`, `OfficeUpdate`, `OfficeResponse`
+- Create `backend/repositories/office_repository.py` — extends `BaseRepository[Office]`
+- Create `backend/services/office_service.py` — CRUD with `location_id` validation
+- Create `backend/routes/office.py` — `GET/POST/PUT/DELETE /api/v1/offices`
+- Modify `backend/api/v1/api.py` — register router
+- Modify `backend/db/seed.py` — create default offices (Santa Cruz, Los Negros, San Isidro, Comarapa)
+
+**Frontend (4 new, 2 modify):**
+- Create `frontend-react/src/services/office.service.ts`
+- Create `frontend-react/src/store/office.slice.ts`
+- Create `frontend-react/src/pages/admin/OfficesPage.tsx` — follow `RoutesPage.tsx` pattern
+- Modify `frontend-react/src/router/index.tsx` — add `/admin/offices` route
+- Modify `frontend-react/src/components/layout/AdminHeader.tsx` — add "Offices" link
+
+---
+
+### Milestone 2: Cash Register System
+**Complexity:** Large | **Depends on:** M1 (office_id)
+
+**Backend (7 new, 3 modify):**
+- Create `backend/models/cash_register.py` — `CashRegister` (office_id, date, opened_by, initial_balance, closed_by, final_balance, status)
+- Create `backend/models/cash_transaction.py` — `CashTransaction` (cash_register_id, type, amount, payment_method, reference_id, reference_type)
+- Add enums in `backend/core/enums.py` — `CashRegisterStatus` (OPEN/CLOSED), `CashTransactionType` (TICKET_SALE, PACKAGE_PAYMENT, POR_COBRAR_COLLECTION, WITHDRAWAL, ADJUSTMENT)
+- Create `backend/schemas/cash_register.py`
+- Create `backend/repositories/cash_register_repository.py` — queries: open register by office, transactions by register, daily summary
+- Create `backend/services/cash_register_service.py`:
+  - `open_register()` — validate no open register exists
+  - `close_register()` — calculate expected vs real
+  - `record_transaction()` — called automatically when selling tickets/packages
   - `get_current_register()` / `get_daily_summary()`
-- Crear `backend/routes/cash_register.py` — `POST /open`, `POST /{id}/close`, `GET /current/{office_id}`, `GET /{id}`, `GET /history`
-- Modificar `backend/services/ticket_service.py` — **bloquear venta si no hay caja abierta** + auto-crear CashTransaction al vender
-- Modificar `backend/services/package_service.py` — **bloquear registro si no hay caja abierta** + auto-crear CashTransaction al registrar pago
-- Migración Alembic para tablas `cash_registers` y `cash_transactions`
+- Create `backend/routes/cash_register.py` — `POST /open`, `POST /{id}/close`, `GET /current/{office_id}`, `GET /{id}`, `GET /history`
+- Modify `backend/services/ticket_service.py` — **block sale if no open register** + auto-create CashTransaction on sale
+- Modify `backend/services/package_service.py` — **block registration if no open register** + auto-create CashTransaction on payment registration
+- Alembic migration for `cash_registers` and `cash_transactions` tables
 
-**Frontend (5 nuevos, 2 modificar):**
-- Crear `frontend-react/src/services/cash-register.service.ts`
-- Crear `frontend-react/src/store/cash-register.slice.ts`
-- Crear `frontend-react/src/pages/CashRegisterPage.tsx`:
-  - Abrir/cerrar caja con balance
-  - Banner de estado (abierta/cerrada)
-  - Lista de transacciones con filtros
-  - Totales por método de pago
-  - Resumen diario
-- Crear componentes en `frontend-react/src/components/cash-register/`:
+**Frontend (5 new, 2 modify):**
+- Create `frontend-react/src/services/cash-register.service.ts`
+- Create `frontend-react/src/store/cash-register.slice.ts`
+- Create `frontend-react/src/pages/CashRegisterPage.tsx`:
+  - Open/close register with balance
+  - Status banner (open/closed)
+  - Transaction list with filters
+  - Totals by payment method
+  - Daily summary
+- Create components in `frontend-react/src/components/cash-register/`:
   - `OpenRegisterModal.tsx`, `CloseRegisterModal.tsx`, `TransactionList.tsx`
-- Modificar router y navegación — ruta `/cash-register`, link "Caja" en nav secretaria
+- Modify router and navigation — `/cash-register` route, "Cash Register" link in secretary nav
 
 ---
 
-### Milestone 3: Bloqueo de Asientos con Redis
-**Complejidad:** Media | **Dependencias:** Ninguna (paralelo a M2)
+### Milestone 3: Seat Locking with Redis
+**Complexity:** Medium | **Dependencies:** None (parallel to M2)
 
-**Backend (2 nuevos, 2 modificar):**
-- Crear `backend/services/seat_lock_service.py`:
+**Backend (2 new, 2 modify):**
+- Create `backend/services/seat_lock_service.py`:
   - `lock_seat(trip_id, seat_id, user_id, ttl=300)` — Redis SET NX EX
-  - `unlock_seat()` — solo si es el holder actual
+  - `unlock_seat()` — only if it's the current holder
   - `is_locked()` / `get_locked_seats()` / `get_lock_holder()`
-  - Fallback graceful si Redis no está disponible
-- Crear `backend/routes/seat_lock.py` — `POST /seats/lock`, `DELETE /seats/lock`, `GET /seats/locks/{trip_id}`
-- Modificar `backend/services/ticket_service.py` — verificar lock antes de crear ticket, liberar lock después
-- Modificar respuesta de asientos disponibles para incluir estado de lock
+  - Graceful fallback if Redis is unavailable
+- Create `backend/routes/seat_lock.py` — `POST /seats/lock`, `DELETE /seats/lock`, `GET /seats/locks/{trip_id}`
+- Modify `backend/services/ticket_service.py` — verify lock before creating ticket, release lock after
+- Modify available seats response to include lock status
 
-**Frontend (0 nuevos, 2 modificar):**
-- Modificar componente de mapa de asientos — llamar API de lock al seleccionar, mostrar asientos bloqueados por otros (estado visual distinto)
-- Agregar métodos lock/unlock a `frontend-react/src/services/seat.service.ts`
-
----
-
-### Milestone 4: Dashboards Conductor y Asistente
-**Complejidad:** Pequeña | **Dependencias:** Ninguna (paralelo a M2/M3)
-
-**Backend (0 nuevos, 1 modificar):**
-- Agregar `GET /api/v1/trips/my-trips` en `backend/routes/trip.py` — viajes asignados al usuario actual (por driver_id o assistant_id)
-
-**Frontend (0 nuevos, 3 modificar):**
-- Reemplazar skeleton en `DriverDashboard.tsx`:
-  - Viajes asignados hoy (cards con ruta, hora, bus, estado)
-  - Manifiesto de pasajeros (tabla: nombre, asiento, destino)
-  - Lista de encomiendas del viaje
-- Reemplazar skeleton en `AssistantDashboard.tsx`:
-  - Misma vista de viajes que conductor
-  - Enfoque en gestión de encomiendas
-  - Lista de verificación de abordaje
-- Agregar links de navegación para conductor/asistente en `AdminHeader.tsx`
+**Frontend (0 new, 2 modify):**
+- Modify seat map component — call lock API on select, show seats locked by others (distinct visual state)
+- Add lock/unlock methods to `frontend-react/src/services/seat.service.ts`
 
 ---
 
-### Milestone 5: Reportes Básicos
-**Complejidad:** Media | **Depende de:** M2 (datos de caja)
+### Milestone 4: Driver and Assistant Dashboards
+**Complexity:** Small | **Dependencies:** None (parallel to M2/M3)
 
-**Backend (2 nuevos, 1 modificar):**
-- Crear `backend/services/report_service.py`:
-  - `monthly_ticket_report(year, month, office_id)` — total boletos, ingresos por método de pago, por ruta
-  - `monthly_package_report(year, month, office_id)` — total encomiendas, ingresos, por estado
-  - `monthly_cash_report(year, month, office_id)` — resumen de caja
-- Crear `backend/routes/report.py`:
-  - `GET /reports/monthly/tickets`, `/packages`, `/cash` (con filtros year, month, office_id)
-  - `GET /reports/monthly/*/csv` — exportación CSV (StreamingResponse)
-  - Admin ve todas las oficinas; secretaria solo la suya
-- Registrar en `backend/api/v1/api.py`
+**Backend (0 new, 1 modify):**
+- Add `GET /api/v1/trips/my-trips` in `backend/routes/trip.py` — trips assigned to the current user (by driver_id or assistant_id)
 
-**Frontend (3 nuevos, 2 modificar):**
-- Crear `frontend-react/src/services/report.service.ts`
-- Crear `frontend-react/src/pages/ReportsPage.tsx`:
-  - Selector de mes/año
-  - Filtro de oficina (solo admin)
-  - Tabs: Boletos, Encomiendas, Caja
-  - Cards de resumen + tablas de datos
-  - Botón "Descargar CSV"
-- Modificar router y navegación — ruta `/reports`, link "Reportes" en nav admin y secretaria
+**Frontend (0 new, 3 modify):**
+- Replace skeleton in `DriverDashboard.tsx`:
+  - Trips assigned today (cards with route, time, bus, status)
+  - Passenger manifest (table: name, seat, destination)
+  - Trip package list
+- Replace skeleton in `AssistantDashboard.tsx`:
+  - Same trip view as driver
+  - Focus on package management
+  - Boarding checklist
+- Add navigation links for driver/assistant in `AdminHeader.tsx`
 
 ---
 
-## Diferido (Post-MVP)
+### Milestone 5: Basic Reports
+**Complexity:** Medium | **Depends on:** M2 (cash register data)
 
-| Feature | Razón |
+**Backend (2 new, 1 modify):**
+- Create `backend/services/report_service.py`:
+  - `monthly_ticket_report(year, month, office_id)` — total tickets, revenue by payment method, by route
+  - `monthly_package_report(year, month, office_id)` — total packages, revenue, by status
+  - `monthly_cash_report(year, month, office_id)` — cash summary
+- Create `backend/routes/report.py`:
+  - `GET /reports/monthly/tickets`, `/packages`, `/cash` (with year, month, office_id filters)
+  - `GET /reports/monthly/*/csv` — CSV export (StreamingResponse)
+  - Admin sees all offices; secretary only their own
+- Register in `backend/api/v1/api.py`
+
+**Frontend (3 new, 2 modify):**
+- Create `frontend-react/src/services/report.service.ts`
+- Create `frontend-react/src/pages/ReportsPage.tsx`:
+  - Month/Year selector
+  - Office filter (admin only)
+  - Tabs: Tickets, Packages, Cash
+  - Summary cards + data tables
+  - "Download CSV" button
+- Modify router and navigation — `/reports` route, "Reports" link in admin and secretary nav
+
+---
+
+## Deferred (Post-MVP)
+
+| Feature | Reason |
 |---------|-------|
-| Gestión de retiros / FleetOwner | Puede rastrearse manualmente al inicio |
-| Exportación PDF | CSV cubre la necesidad inmediata |
-| Ocupación por segmento (TIX-04/05) | La mayoría viaja la ruta completa; requiere cambios significativos al modelo |
-| Portal de clientes | Fuera de scope Phase 1 |
-| Notificaciones SMS/WhatsApp | Phase 2 |
+| Withdrawal Management / FleetOwner | Can be tracked manually initially |
+| PDF Export | CSV covers immediate needs |
+| Segment-based occupancy (TIX-04/05) | Most travel the full route; requires significant model changes |
+| Client Portal | Out of scope for Phase 1 |
+| SMS/WhatsApp Notifications | Phase 2 |
 
 ---
 
-## Decisiones de Negocio
+## Business Decisions
 
-- **Venta sin caja abierta: BLOQUEADA.** Si la secretaria no tiene caja abierta, no puede vender boletos ni registrar encomiendas. Debe abrir caja antes de operar.
+- **Sale without open register: BLOCKED.** If the secretary does not have an open register, they cannot sell tickets or register packages. They must open the register before operating.
 
-## Orden de Ejecución
+## Execution Order
 
 ```
-M1 (Oficinas) → M2 (Caja) → M3 (Redis Locks) → M4 (Dashboards) → M5 (Reportes)
+M1 (Offices) → M2 (Cash Register) → M3 (Redis Locks) → M4 (Dashboards) → M5 (Reports)
 ```
 
-Orden lineal, un milestone a la vez.
+Linear order, one milestone at a time.
 
 ---
 
-## Verificación
+## Verification
 
-- **M1:** Crear/editar/eliminar oficinas desde UI admin. Verificar que secretarias se pueden asignar a oficinas.
-- **M2:** Abrir caja → vender boleto → verificar transacción registrada → cerrar caja con balance. Probar "por cobrar" con encomiendas.
-- **M3:** Abrir 2 sesiones de secretaria → seleccionar mismo asiento → verificar que solo una puede bloquear. Verificar expiración automática (5 min).
-- **M4:** Login como conductor → ver viajes asignados → ver manifiesto de pasajeros. Igual para asistente.
-- **M5:** Generar reporte mensual → verificar totales → descargar CSV → abrir en Excel.
+- **M1:** Create/edit/delete offices from admin UI. Verify secretaries can be assigned to offices.
+- **M2:** Open register → sell ticket → verify transaction recorded → close register with balance. Test "collect on delivery" with packages.
+- **M3:** Open 2 secretary sessions → select same seat → verify only one can lock. Verify automatic expiration (5 min).
+- **M4:** Login as driver → see assigned trips → see passenger manifest. Same for assistant.
+- **M5:** Generate monthly report → verify totals → download CSV → open in Excel.
 
 ---
 
-## Archivos Críticos (Referencia)
+## Critical Files (Reference)
 
-- `backend/api/v1/api.py` — registro central de routers
-- `backend/repositories/base.py` — patrón base para repositorios
-- `backend/services/ticket_service.py` — modificar para M2 y M3
-- `backend/services/package_service.py` — modificar para M2
-- `backend/core/enums.py` — agregar enums de caja
-- `backend/core/redis.py` — cliente Redis existente para M3
-- `frontend-react/src/components/layout/AdminHeader.tsx` — navegación
-- `frontend-react/src/router/index.tsx` — registro de rutas
-- `frontend-react/src/pages/admin/RoutesPage.tsx` — patrón de referencia para páginas CRUD
+- `backend/api/v1/api.py` — central router registration
+- `backend/repositories/base.py` — base repository pattern
+- `backend/services/ticket_service.py` — modify for M2 and M3
+- `backend/services/package_service.py` — modify for M2
+- `backend/core/enums.py` — add cash register enums
+- `backend/core/redis.py` — existing Redis client for M3
+- `frontend-react/src/components/layout/AdminHeader.tsx` — navigation
+- `frontend-react/src/router/index.tsx` — route registration
+- `frontend-react/src/pages/admin/RoutesPage.tsx` — reference pattern for CRUD pages

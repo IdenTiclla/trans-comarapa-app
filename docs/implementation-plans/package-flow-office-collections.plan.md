@@ -1,180 +1,180 @@
-# Plan: Mejora del Flujo de Encomiendas y Liquidaciones por Oficina
+# Plan: Improvement of Package Flow and Office Collections
 
-## Contexto
+## Context
 
-El sistema actual de encomiendas tiene limitaciones críticas:
-1. **Origen/destino no se guardan en BD** — solo texto libre en frontend, nunca enviado al backend
-2. **Endpoint `/deliver` no existe** — el frontend llama a `PUT /packages/{id}/deliver` pero la ruta no está definida
-3. **Sin vínculo a oficinas** — imposible saber qué oficina debe cobrar encomiendas "por cobrar"
-4. **Liquidaciones solo visibles para admin** — oficinas destino no ven cobros pendientes
-5. **Sin trazabilidad de quién entregó** — no se registra qué secretaria procesó la entrega
+The current package system has critical limitations:
+1. **Origin/destination not saved in DB** — only free text in frontend, never sent to backend.
+2. **`/deliver` endpoint does not exist** — frontend calls `PUT /packages/{id}/deliver` but the route is not defined.
+3. **No link to offices** — impossible to know which office should collect for "collect on delivery" packages.
+4. **Settlements only visible to admin** — destination offices do not see pending collections.
+5. **No traceability of who delivered** — no record of which secretary processed the delivery.
 
-**Objetivo**: Flujo completo de encomiendas con oficinas origen/destino, cobros pendientes visibles por oficina, y custodia total del dinero.
-
----
-
-## Fase 1: Modelo de Datos — Vincular Encomiendas a Oficinas
-
-### 1.1 Migración Alembic
-Crear migración que agregue a tabla `packages`:
-- `origin_office_id` (FK → offices.id, nullable) — nullable para datos existentes
-- `destination_office_id` (FK → offices.id, nullable)
-- `delivered_by_secretary_id` (FK → secretaries.id, nullable) — quién entregó en destino
-
-### 1.2 Actualizar modelo Package
-**Archivo**: `backend/models/package.py`
-- Agregar 3 columnas + relationships con `foreign_keys=[]` explícito (múltiples FK a misma tabla)
-
-### 1.3 Actualizar schemas Package
-**Archivo**: `backend/schemas/package.py`
-- `PackageCreate`: agregar `origin_office_id` (required) y `destination_office_id` (required)
-- `PackageResponse`: agregar campos de oficina + nombres de oficina
+**Objective**: Full package flow with origin/destination offices, pending collections visible by office, and full custody of money.
 
 ---
 
-## Fase 2: Backend — Endpoints y Lógica de Negocio
+## Phase 1: Data Model — Linking Packages to Offices
 
-### 2.1 Crear endpoint `PUT /packages/{id}/deliver` (BUG FIX)
-**Archivo**: `backend/routes/package.py`
-- El frontend ya llama este endpoint (`package.service.ts` línea ~155) pero no existe
-- Conectar con `PackageService.deliver_package()` que ya existe en el servicio
+### 1.1 Alembic Migration
+Create a migration to add to the `packages` table:
+- `origin_office_id` (FK → offices.id, nullable) — nullable for existing data.
+- `destination_office_id` (FK → offices.id, nullable).
+- `delivered_by_secretary_id` (FK → secretaries.id, nullable) — who delivered at destination.
 
-### 2.2 Crear endpoint `GET /packages/pending-collections`
-**Archivo**: `backend/routes/package.py`
-- Query params: `office_id` (required)
-- Retorna encomiendas donde:
-  - `destination_office_id == office_id`
-  - `payment_status == 'collect_on_delivery'`
-  - `status IN ('arrived_at_destination')` — llegó pero no entregada
+### 1.2 Update Package Model
+**File**: `backend/models/package.py`
+- Add 3 columns + relationships with explicit `foreign_keys=[]` (multiple FKs to the same table).
 
-### 2.3 Actualizar `PackageService.create_package()`
-**Archivo**: `backend/services/package_service.py`
-- Persistir `origin_office_id` y `destination_office_id` del payload
-- Auto-set `origin_office_id` desde `secretary.office_id` si no viene explícito
-
-### 2.4 Actualizar `PackageService.deliver_package()`
-**Archivo**: `backend/services/package_service.py`
-- Guardar `delivered_by_secretary_id`
-- El cobro `POR_COBRAR_COLLECTION` ya se registra en la caja de la secretaria que entrega (correcto: es la oficina destino)
-
-### 2.5 Agregar method en repository
-**Archivo**: `backend/repositories/package_repository.py`
-- `get_pending_collections(office_id)` con eager loading de sender, recipient, items, origin_office
+### 1.3 Update Package Schemas
+**File**: `backend/schemas/package.py`
+- `PackageCreate`: Add `origin_office_id` (required) and `destination_office_id` (required).
+- `PackageResponse`: Add office fields + office names.
 
 ---
 
-## Fase 3: Frontend — Rediseño del Registro de Encomiendas
+## Phase 2: Backend — Endpoints and Business Logic
 
-### 3.1 Reemplazar texto libre por selección de oficinas
-**Archivo**: `frontend-react/src/components/packages/PackageRegistrationModal.tsx`
+### 2.1 Create `PUT /packages/{id}/deliver` Endpoint (BUG FIX)
+**File**: `backend/routes/package.py`
+- The frontend already calls this endpoint (`package.service.ts` line ~155) but it doesn't exist.
+- Connect with `PackageService.deliver_package()` which already exists in the service.
 
-Cambios en el estado del form (líneas 41-52):
-- `origin: 'Comarapa'` → `origin_office_id: number | null` (auto-set desde oficina del usuario)
-- `destination: ''` → `destination_office_id: number | null` (dropdown de oficinas)
+### 2.2 Create `GET /packages/pending-collections` Endpoint
+**File**: `backend/routes/package.py`
+- Query params: `office_id` (required).
+- Returns packages where:
+  - `destination_office_id == office_id`.
+  - `payment_status == 'collect_on_delivery'`.
+  - `status IN ('arrived_at_destination')` — arrived but not delivered.
 
-Cambios en el payload (líneas 256-273):
-- Incluir `origin_office_id` y `destination_office_id`
+### 2.3 Update `PackageService.create_package()`
+**File**: `backend/services/package_service.py`
+- Persist `origin_office_id` and `destination_office_id` from payload.
+- Auto-set `origin_office_id` from `secretary.office_id` if not explicit.
+
+### 2.4 Update `PackageService.deliver_package()`
+**File**: `backend/services/package_service.py`
+- Save `delivered_by_secretary_id`.
+- The `POR_COBRAR_COLLECTION` collection is already recorded in the register of the secretary who delivers (correct: it is the destination office).
+
+### 2.5 Add Method in Repository
+**File**: `backend/repositories/package_repository.py`
+- `get_pending_collections(office_id)` with eager loading of sender, recipient, items, and origin_office.
+
+---
+
+## Phase 3: Frontend — Package Registration Redesign
+
+### 3.1 Replace Free Text with Office Selection
+**File**: `frontend-react/src/components/packages/PackageRegistrationModal.tsx`
+
+Changes in form state (lines 41-52):
+- `origin: 'Comarapa'` → `origin_office_id: number | null` (auto-set from user office).
+- `destination: ''` → `destination_office_id: number | null` (office dropdown).
+
+Changes in payload (lines 256-273):
+- Include `origin_office_id` and `destination_office_id`.
 
 UI:
-- Fetch lista de oficinas al montar (`apiFetch('/offices')`)
-- Origin: dropdown pre-seleccionado con oficina del usuario logueado (readonly o editable)
-- Destino: dropdown de oficinas disponibles (excluyendo la de origen)
-- Mostrar nombre de ciudad de cada oficina para claridad
+- Fetch office list on mount (`apiFetch('/offices')`).
+- Origin: Pre-selected dropdown with the logged-in user's office (readonly or editable).
+- Destination: Dropdown of available offices (excluding origin).
+- Show city name for each office for clarity.
 
-### 3.2 Actualizar `package.service.ts`
-**Archivo**: `frontend-react/src/services/package.service.ts`
-- Agregar `getPendingCollections(officeId: number)`
-- Verificar que `deliver()` envíe los params correctos al nuevo endpoint
+### 3.2 Update `package.service.ts`
+**File**: `frontend-react/src/services/package.service.ts`
+- Add `getPendingCollections(officeId: number)`.
+- Verify `deliver()` sends correct params to the new endpoint.
 
-### 3.3 Actualizar PackageDeliveryModal
-**Archivo**: `frontend-react/src/components/packages/PackageDeliveryModal.tsx`
-- Mostrar oficina origen y destino en la confirmación de entrega
-- Pasar `changed_by_user_id` correctamente
+### 3.3 Update `PackageDeliveryModal`
+**File**: `frontend-react/src/components/packages/PackageDeliveryModal.tsx`
+- Show origin and destination office in delivery confirmation.
+- Pass `changed_by_user_id` correctly.
 
-### 3.4 Actualizar vistas de lista y detalle
-**Archivos**: `PackagesIndexPage.tsx`, `PackageDetailPage.tsx`
-- Mostrar origen/destino como nombres de oficina en vez de texto vacío
-
----
-
-## Fase 4: Frontend — Vista de Cobros Pendientes por Oficina
-
-### 4.1 Crear componente PendingCollections
-**Archivo nuevo**: `frontend-react/src/components/packages/PendingCollections.tsx`
-
-Tabla/cards mostrando:
-- Nro. seguimiento
-- Remitente → Destinatario
-- Oficina origen
-- Monto total a cobrar
-- Botón "Entregar y Cobrar" → abre PackageDeliveryModal
-
-### 4.2 Integrar en Secretary Dashboard
-**Archivo**: `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx`
-
-Agregar sección "Cobros Pendientes" con:
-- Badge con conteo de pendientes
-- Lista de PendingCollections filtrada por `user.office_id`
-- Link "Ver todos" a página completa
-
-### 4.3 Página dedicada (opcional)
-**Archivo nuevo**: `frontend-react/src/pages/packages/PendingCollectionsPage.tsx`
-- Ruta: `/packages/pending-collections`
-- Vista completa con filtros y búsqueda
-- Agregar a router y navegación de secretaria
+### 3.4 Update List and Detail Views
+**Files**: `PackagesIndexPage.tsx`, `PackageDetailPage.tsx`
+- Show origin/destination as office names instead of empty text.
 
 ---
 
-## Fase 5: Integridad Financiera y Visibilidad Admin
+## Phase 4: Frontend — Pending Collections View by Office
 
-### 5.1 Validación en entrega
-**Archivo**: `backend/services/package_service.py`
-- Si `destination_office_id` está set, validar que la secretaria que entrega pertenece a esa oficina
-- Warning en log si hay mismatch (no bloquear por casos edge)
+### 4.1 Create `PendingCollections` Component
+**New File**: `frontend-react/src/components/packages/PendingCollections.tsx`
 
-### 5.2 Actualizar resumen financiero admin
-**Archivo**: `frontend-react/src/pages/admin/FinancialDashboardPage.tsx`
-- Agregar sección "Cobros por Oficina": desglose de `POR_COBRAR_COLLECTION` por oficina
+Table/cards showing:
+- Tracking No.
+- Sender → Recipient.
+- Origin Office.
+- Total amount to collect.
+- "Deliver and Collect" button → opens `PackageDeliveryModal`.
 
-### 5.3 Actualizar liquidaciones de socios
-**Archivo**: `frontend-react/src/pages/admin/OwnerSettlements.tsx`
-- Las encomiendas "por cobrar" que ya fueron cobradas en destino deben reflejarse como ingreso
-- Mostrar en qué oficina se cobró cada monto
+### 4.2 Integrate into Secretary Dashboard
+**File**: `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx`
+
+Add "Pending Collections" section with:
+- Badge with pending count.
+- `PendingCollections` list filtered by `user.office_id`.
+- "View all" link to full page.
+
+### 4.3 Dedicated Page (optional)
+**New File**: `frontend-react/src/pages/packages/PendingCollectionsPage.tsx`
+- Route: `/packages/pending-collections`.
+- Full view with filters and search.
+- Add to router and secretary navigation.
 
 ---
 
-## Orden de Implementación
+## Phase 5: Financial Integrity and Admin Visibility
+
+### 5.1 Delivery Validation
+**File**: `backend/services/package_service.py`
+- If `destination_office_id` is set, validate that the delivering secretary belongs to that office.
+- Log warning if mismatch (do not block for edge cases).
+
+### 5.2 Update Admin Financial Summary
+**File**: `frontend-react/src/pages/admin/FinancialDashboardPage.tsx`
+- Add "Collections by Office" section: Breakdown of `POR_COBRAR_COLLECTION` by office.
+
+### 5.3 Update Partner Settlements
+**File**: `frontend-react/src/pages/admin/OwnerSettlements.tsx`
+- "Collect on delivery" packages already collected at destination should be reflected as income.
+- Show at which office each amount was collected.
+
+---
+
+## Execution Order
 
 ```
-Fase 1 (DB/Modelo) → Fase 2 (Backend) → Fase 3 (Frontend Registro) → Fase 4 (Cobros Pendientes) → Fase 5 (Financiero)
+Phase 1 (DB/Model) → Phase 2 (Backend) → Phase 3 (Frontend Registration) → Phase 4 (Pending Collections) → Phase 5 (Financial)
 ```
 
-Fases 3 y 4 pueden hacerse en paralelo una vez completada Fase 2.
+Phases 3 and 4 can be done in parallel once Phase 2 is completed.
 
 ---
 
-## Archivos Críticos
+## Critical Files
 
-| Archivo | Cambio |
+| File | Change |
 |---------|--------|
-| `backend/models/package.py` | +3 columnas, +3 relationships |
-| `backend/schemas/package.py` | +campos oficina en Create/Response |
+| `backend/models/package.py` | +3 columns, +3 relationships |
+| `backend/schemas/package.py` | +office fields in Create/Response |
 | `backend/routes/package.py` | +2 endpoints (deliver, pending-collections) |
-| `backend/services/package_service.py` | Actualizar create, deliver, +pending_collections |
+| `backend/services/package_service.py` | Update create, deliver, +pending_collections |
 | `backend/repositories/package_repository.py` | +get_pending_collections, eager loading |
-| `frontend-react/src/components/packages/PackageRegistrationModal.tsx` | Dropdowns oficina reemplazan texto libre |
-| `frontend-react/src/components/packages/PackageDeliveryModal.tsx` | Mostrar oficinas, params correctos |
+| `frontend-react/src/components/packages/PackageRegistrationModal.tsx` | Office dropdowns replace free text |
+| `frontend-react/src/components/packages/PackageDeliveryModal.tsx` | Show offices, correct params |
 | `frontend-react/src/services/package.service.ts` | +getPendingCollections |
-| `frontend-react/src/components/packages/PendingCollections.tsx` | **NUEVO** — tabla cobros pendientes |
-| `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx` | +sección cobros pendientes |
+| `frontend-react/src/components/packages/PendingCollections.tsx` | **NEW** — pending collections table |
+| `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx` | +pending collections section |
 
 ---
 
-## Verificación
+## Verification
 
-1. **Registro**: Crear encomienda con oficina origen/destino → verificar en BD que `origin_office_id` y `destination_office_id` se guardan
-2. **Cobro pagado al enviar**: Crear encomienda `paid_on_send` → verificar `CashTransaction` tipo `PACKAGE_PAYMENT` en caja de oficina origen
-3. **Cobro por cobrar**: Crear encomienda `collect_on_delivery` → asignar a viaje → llega a destino → verificar que aparece en "Cobros Pendientes" de la secretaria destino
-4. **Entrega y cobro**: Entregar encomienda "por cobrar" → verificar `CashTransaction` tipo `POR_COBRAR_COLLECTION` en caja de oficina destino
-5. **Liquidación socio**: Verificar que el monto cobrado en destino se refleja en las liquidaciones del dueño del bus
-6. **Integridad**: Verificar que `caja_origen_ingresos + caja_destino_ingresos == total_encomiendas_del_viaje`
+1. **Registration**: Create package with origin/destination office → verify in DB that `origin_office_id` and `destination_office_id` are saved.
+2. **Paid at origin collection**: Create `paid_on_send` package → verify `CashTransaction` type `PACKAGE_PAYMENT` in origin office register.
+3. **Collect on delivery collection**: Create `collect_on_delivery` package → assign to trip → arrives at destination → verify it appears in "Pending Collections" for the destination secretary.
+4. **Delivery and collection**: Deliver "collect on delivery" package → verify `CashTransaction` type `POR_COBRAR_COLLECTION` in destination office register.
+5. **Partner settlement**: Verify amount collected at destination is reflected in bus owner's settlements.
+6. **Integrity**: Verify `origin_office_income + destination_office_income == total_trip_packages`.

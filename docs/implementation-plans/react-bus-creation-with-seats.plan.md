@@ -1,25 +1,25 @@
-# Plan: Integrar BusForm con wizard de asientos en BusesPage
+# Plan: Integrate BusForm with Seat Wizard in BusesPage
 
 ## Context
 
-`BusesPage.tsx` tiene un formulario inline simplificado que solo crea buses sin asientos (usa `POST /buses`). Sin embargo, ya existe `BusForm.tsx` — un componente completo con wizard de 2 pasos (datos básicos + planilla de asientos via `SeatLayoutEditor`) que no está integrado en la página. El objetivo es reemplazar el formulario inline por `BusForm` para que la creación y edición de buses incluya la planilla de asientos, tal como funciona en Nuxt.
+`BusesPage.tsx` has a simplified inline form that only creates buses without seats (using `POST /buses`). However, `BusForm.tsx` already exists — a full component with a 2-step wizard (basic data + seat layout via `SeatLayoutEditor`) that is not integrated into the page. The goal is to replace the inline form with `BusForm` so that bus creation and editing include the seat layout, just like it works in Nuxt.
 
-## Archivos a modificar
+## Files to Modify
 
-1. **`frontend-react/src/pages/admin/BusesPage.tsx`** — cambio principal
-2. **`frontend-react/src/store/bus.slice.ts`** — agregar thunk `createBusWithSeats` y `updateBusSeats`
+1. **`frontend-react/src/pages/admin/BusesPage.tsx`** — Main change.
+2. **`frontend-react/src/store/bus.slice.ts`** — Add `createBusWithSeats` and `updateBusSeats` thunks.
 
-## Archivos existentes que se reutilizan (no modificar)
+## Existing Reused Files (no modification)
 
-- `frontend-react/src/components/admin/BusForm.tsx` — wizard de 2 pasos
-- `frontend-react/src/components/admin/SeatLayoutEditor.tsx` — editor de planilla
-- `frontend-react/src/services/bus.service.ts` — ya tiene `createWithSeats()` y `updateSeats()`
+- `frontend-react/src/components/admin/BusForm.tsx` — 2-step wizard.
+- `frontend-react/src/components/admin/SeatLayoutEditor.tsx` — Layout editor.
+- `frontend-react/src/services/bus.service.ts` — Already has `createWithSeats()` and `updateSeats()`.
 
-## Cambios detallados
+## Detailed Changes
 
-### 1. `bus.slice.ts` — Agregar thunks faltantes
+### 1. `bus.slice.ts` — Add Missing Thunks
 
-Agregar dos thunks nuevos:
+Add two new thunks:
 
 ```ts
 export const createBusWithSeats = createAsyncThunk(
@@ -45,46 +45,46 @@ export const updateBusSeats = createAsyncThunk(
 )
 ```
 
-Agregar los `rejected` cases en `extraReducers`.
+Add `rejected` cases in `extraReducers`.
 
-### 2. `BusesPage.tsx` — Reemplazar formulario inline por BusForm
+### 2. `BusesPage.tsx` — Replace Inline Form with BusForm
 
-**Eliminar:**
-- Interface `Bus` local (usar tipo genérico o el que venga del backend)
-- Estado `formData` y toda la lógica del formulario inline
-- El bloque JSX del modal con el `<form>` inline (líneas 170-217)
+**Remove:**
+- Local `Bus` interface (use generic type or backend type).
+- `formData` state and all inline form logic.
+- JSX modal block with the inline `<form>` (lines 170-217).
 
-**Agregar:**
-- Import de `BusForm` y de los nuevos thunks
-- Import de `busService.getSeats()` para cargar asientos existentes al editar
-- Estado `existingSeats` para almacenar los asientos al abrir edición
+**Add:**
+- `BusForm` and new thunks import.
+- `busService.getSeats()` import to load existing seats when editing.
+- `existingSeats` state to store seats when opening edit mode.
 
-**Flujo de creación (nuevo):**
-1. Click "Nuevo Bus" → `setShowForm(true)`, `setEditingBus(null)`
-2. Renderizar `<BusForm onSubmit={handleFormSubmit} onCancel={...} />`
+**Creation Flow (new):**
+1. Click "New Bus" → `setShowForm(true)`, `setEditingBus(null)`.
+2. Render `<BusForm onSubmit={handleFormSubmit} onCancel={...} />`.
 3. `handleFormSubmit(busData)`:
-   - Si `busData.seats` existe → dispatch `createBusWithSeats(busData)`
-   - Si no tiene seats → dispatch `createBus(busData)` (caso edge, no debería pasar con el wizard)
-4. Toast de éxito/error, cerrar modal
+   - If `busData.seats` exists → dispatch `createBusWithSeats(busData)`.
+   - If no seats → dispatch `createBus(busData)` (edge case, shouldn't happen with the wizard).
+4. Success/error toast, close modal.
 
-**Flujo de edición (editar):**
-1. Click "Editar" → cargar asientos existentes con `busService.getSeats(bus.id)`, luego `setShowForm(true)`
-2. Renderizar `<BusForm bus={editingBus} isEditing existingSeats={existingSeats} onSubmit={handleFormSubmit} onCancel={...} />`
+**Editing Flow (edit):**
+1. Click "Edit" → load existing seats with `busService.getSeats(bus.id)`, then `setShowForm(true)`.
+2. Render `<BusForm bus={editingBus} isEditing existingSeats={existingSeats} onSubmit={handleFormSubmit} onCancel={...} />`.
 3. `handleFormSubmit(busData)`:
-   - Si viene de Step 1 (sin `seats`): dispatch `updateBus({ id, data: busData })`
-   - Si viene de Step 2 (`busData.seatsModified === true`): dispatch `updateBus` + dispatch `updateBusSeats`
-4. Toast de éxito/error, cerrar modal
+   - If from Step 1 (no `seats`): dispatch `updateBus({ id, data: busData })`.
+   - If from Step 2 (`busData.seatsModified === true`): dispatch `updateBus` + dispatch `updateBusSeats`.
+4. Success/error toast, close modal.
 
-**Mantener sin cambios:**
-- La tabla de buses (líneas 118-168)
-- La lógica de delete con `confirm()`
-- La carga de owners (para la tabla, no para el form — nota: BusForm actual no tiene campo owner)
+**Keep Unchanged:**
+- Bus table (lines 118-168).
+- Delete logic with `confirm()`.
+- Owner loading (for table, not form — note: current `BusForm` has no owner field).
 
-**Nota sobre owner_id:** `BusForm.tsx` actual no incluye campo `owner_id`. Si se requiere, se puede agregar al BusForm en Step 1, pero esto es opcional y puede hacerse en una iteración posterior.
+**Note on owner_id:** Current `BusForm.tsx` does not include an `owner_id` field. If required, it can be added to `BusForm` in Step 1, but this is optional and can be done in a later iteration.
 
-### Estructura del modal
+### Modal Structure
 
-Reemplazar el div modal actual por:
+Replace current modal div with:
 
 ```tsx
 {showForm && (
@@ -101,13 +101,13 @@ Reemplazar el div modal actual por:
 )}
 ```
 
-El `BusForm` ya maneja su propio ancho (`max-w-md` en step 1, `max-w-4xl` en step 2).
+`BusForm` already handles its own width (`max-w-md` in step 1, `max-w-4xl` in step 2).
 
-## Verificación
+## Verification
 
-1. **Crear bus nuevo**: Click "Nuevo Bus" → llenar Step 1 → diseñar planilla en Step 2 → "Crear Bus" → verificar que aparece en la tabla con la capacidad correcta
-2. **Editar datos básicos**: Click "Editar" → modificar placa/modelo → "Actualizar" → verificar cambios en tabla
-3. **Editar planilla**: Click "Editar" → "Editar Planilla" → modificar asientos → "Guardar Cambios" → verificar capacidad actualizada
-4. **Validación**: Intentar avanzar a Step 2 sin placa/modelo → debe mostrar errores
-5. **Eliminar**: Verificar que delete sigue funcionando igual
-6. **Bus de 2 pisos**: Crear bus con 2 pisos → verificar tabs de Piso 1/Piso 2 en Step 2
+1. **Create new bus**: Click "New Bus" → fill Step 1 → design layout in Step 2 → "Create Bus" → verify it appears in table with correct capacity.
+2. **Edit basic data**: Click "Edit" → modify plate/model → "Update" → verify changes in table.
+3. **Edit layout**: Click "Edit" → "Edit Layout" → modify seats → "Save Changes" → verify updated capacity.
+4. **Validation**: Attempt to advance to Step 2 without plate/model → should show errors.
+5. **Delete**: Verify delete still works the same.
+6. **Double-decker bus**: Create 2-deck bus → verify Floor 1/Floor 2 tabs in Step 2.

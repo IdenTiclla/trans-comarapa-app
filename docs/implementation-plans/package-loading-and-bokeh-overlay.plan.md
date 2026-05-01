@@ -1,103 +1,103 @@
-# Plan: Integrar Carga de Encomiendas en TripDetail + Overlay Bokeh en Modales
+# Plan: Integrate Package Loading in TripDetail + Bokeh Overlay in Modals
 
-## Contexto
+## Context
 
-La página TripDetailPage en React ya tiene el componente `TripPackagesSection` que muestra encomiendas y tiene botones de acción (Cargar, Quitar, Entregar, Recibir), pero solo el handler `onUnassignPackage` está conectado. Los modales de paquetes (`PackageAssignModal`, `PackageDeliveryModal`, `PackageReceptionModal`, `PackageRegistrationModal`) ya existen pero no están integrados en la página de viaje. Necesitamos replicar el flujo completo que tiene Nuxt.
+The React `TripDetailPage` already has the `TripPackagesSection` component that shows packages and has action buttons (Load, Remove, Deliver, Receive), but only the `onUnassignPackage` handler is connected. The package modals (`PackageAssignModal`, `PackageDeliveryModal`, `PackageReceptionModal`, `PackageRegistrationModal`) already exist but are not integrated into the trip page. We need to replicate the full flow from Nuxt.
 
-Además, todos los modales usan overlays con fondo negro sólido (`bg-black/50` o `bg-gray-500 opacity-75`). El usuario quiere un efecto degradado tipo bokeh.
-
----
-
-## Parte 1: Overlay Bokeh para Modales
-
-### Paso 1: Definir clase CSS global
-**Archivo:** `frontend-react/src/styles/globals.css`
-
-Agregar clase `.modal-overlay-bokeh` con múltiples `radial-gradient` en tonos indigo/purple/blue sobre fondo oscuro semi-transparente.
-
-### Paso 2: Actualizar componentes shadcn/ui (3 archivos)
-Reemplazar `bg-black/50` por `modal-overlay-bokeh`:
-- `frontend-react/src/components/ui/dialog.tsx` (DialogOverlay, línea 40)
-- `frontend-react/src/components/ui/sheet.tsx` (SheetOverlay, línea 37)
-- `frontend-react/src/components/ui/alert-dialog.tsx` (AlertDialogOverlay, línea 37)
-
-### Paso 3: Actualizar modales custom de Trip (4 ocurrencias)
-**Archivo:** `frontend-react/src/components/trips/TripConfirmationModals.tsx`
-Reemplazar `bg-black/50` en líneas 65, 81, 118, 142.
-
-### Paso 4: Actualizar modales de paquetes (3 archivos)
-Reemplazar el patrón anidado `bg-gray-500 opacity-75` por un solo div con `modal-overlay-bokeh`:
-- `frontend-react/src/components/packages/PackageAssignModal.tsx` (líneas 98-99)
-- `frontend-react/src/components/packages/PackageDeliveryModal.tsx` (líneas 85-86)
-- `frontend-react/src/components/packages/PackageReceptionModal.tsx` (líneas 56-57)
+Additionally, all modals use overlays with solid black backgrounds (`bg-black/50` or `bg-gray-500 opacity-75`). The user wants a bokeh-style gradient effect.
 
 ---
 
-## Parte 2: Integrar Gestión de Encomiendas en TripDetailPage
+## Part 1: Bokeh Overlay for Modals
 
-### Paso 5: Agregar estado y handlers al hook
-**Archivo:** `frontend-react/src/hooks/use-trip-detail-page.ts`
+### Step 1: Define Global CSS Class
+**File:** `frontend-react/src/styles/globals.css`
 
-Nuevo estado:
+Add the `.modal-overlay-bokeh` class with multiple `radial-gradient` in indigo/purple/blue tones over a semi-transparent dark background.
+
+### Step 2: Update shadcn/ui Components (3 files)
+Replace `bg-black/50` with `modal-overlay-bokeh`:
+- `frontend-react/src/components/ui/dialog.tsx` (DialogOverlay, line 40)
+- `frontend-react/src/components/ui/sheet.tsx` (SheetOverlay, line 37)
+- `frontend-react/src/components/ui/alert-dialog.tsx` (AlertDialogOverlay, line 37)
+
+### Step 3: Update Custom Trip Modals (4 occurrences)
+**File:** `frontend-react/src/components/trips/TripConfirmationModals.tsx`
+Replace `bg-black/50` on lines 65, 81, 118, 142.
+
+### Step 4: Update Package Modals (3 files)
+Replace the nested `bg-gray-500 opacity-75` pattern with a single div using `modal-overlay-bokeh`:
+- `frontend-react/src/components/packages/PackageAssignModal.tsx` (lines 98-99)
+- `frontend-react/src/components/packages/PackageDeliveryModal.tsx` (lines 85-86)
+- `frontend-react/src/components/packages/PackageReceptionModal.tsx` (lines 56-57)
+
+---
+
+## Part 2: Integrate Package Management in TripDetailPage
+
+### Step 5: Add State and Handlers to the Hook
+**File:** `frontend-react/src/hooks/use-trip-detail-page.ts`
+
+New state:
 - `showPackageAssignModal`, `showPackageDeliveryModal`, `showPackageReceptionModal`, `showPackageRegistrationModal`
 - `selectedPackageForDelivery`, `selectedPackageForReception`
 
-Nuevos handlers:
-- `handleDeliverPackage(id)` — busca paquete en `tripPackages`, abre modal entrega
-- `handleReceivePackage(id)` — busca paquete en `tripPackages`, abre modal recepción
-- `handlePackagesAssigned()` — refresca `fetchPackages(tripId)`, toast éxito
-- `handleDeliveryConfirm()` — cierra modal, refresca, toast éxito
-- `handleReceptionConfirm(packageId)` — llama `packageService.updateStatus(id, 'arrived_at_destination')`, cierra modal, refresca, toast éxito
-- `handlePackageRegistered()` — cierra modal registro, refresca
+New handlers:
+- `handleDeliverPackage(id)` — searches for package in `tripPackages`, opens delivery modal.
+- `handleReceivePackage(id)` — searches for package in `tripPackages`, opens reception modal.
+- `handlePackagesAssigned()` — refreshes `fetchPackages(tripId)`, success toast.
+- `handleDeliveryConfirm()` — closes modal, refreshes, success toast.
+- `handleReceptionConfirm(packageId)` — calls `packageService.updateStatus(id, 'arrived_at_destination')`, closes modal, refreshes, success toast.
+- `handlePackageRegistered()` — closes registration modal, refreshes.
 
-Ampliar el return `packages: { ... }` con los modales y handlers.
+Expand the `packages: { ... }` return with the modals and handlers.
 
-### Paso 6: Conectar en TripDetailPage
-**Archivo:** `frontend-react/src/pages/trips/TripDetailPage.tsx`
+### Step 6: Connect in TripDetailPage
+**File:** `frontend-react/src/pages/trips/TripDetailPage.tsx`
 
-1. Importar los 4 modales de paquetes
-2. Pasar `onOpenAssignModal`, `onDeliverPackage`, `onReceivePackage` a `TripPackagesSection`
-3. Renderizar los 4 modales después de `TripConfirmationModals`
+1. Import the 4 package modals.
+2. Pass `onOpenAssignModal`, `onDeliverPackage`, `onReceivePackage` to `TripPackagesSection`.
+3. Render the 4 modals after `TripConfirmationModals`.
 
-### Flujo completo (igual a Nuxt):
+### Full Flow (same as Nuxt):
 ```
-"Cargar Encomienda" → PackageAssignModal (selección múltiple)
-  └─ "Registrar Nueva" → cierra Assign, abre PackageRegistrationModal
-      └─ Al registrar → cierra, refresca
-  └─ Al asignar → refresca paquetes del viaje
-"Quitar del viaje" → unassign (ya funciona)
-"Marcar Recibido" → PackageReceptionModal → status → arrived_at_destination
-"Entregar" → PackageDeliveryModal → deliver con método de pago
+"Load Package" → PackageAssignModal (multiple selection)
+  └─ "Register New" → closes Assign, opens PackageRegistrationModal
+      └─ On registration → closes, refreshes
+  └─ On assign → refreshes trip packages
+"Remove from trip" → unassign (already working)
+"Mark Received" → PackageReceptionModal → status → arrived_at_destination
+"Deliver" → PackageDeliveryModal → deliver with payment method
 ```
 
 ---
 
-## Archivos a modificar
+## Files to Modify
 
-| Archivo | Cambio |
+| File | Change |
 |---------|--------|
-| `frontend-react/src/styles/globals.css` | Agregar `.modal-overlay-bokeh` |
-| `frontend-react/src/components/ui/dialog.tsx` | Overlay bokeh |
-| `frontend-react/src/components/ui/sheet.tsx` | Overlay bokeh |
-| `frontend-react/src/components/ui/alert-dialog.tsx` | Overlay bokeh |
-| `frontend-react/src/components/trips/TripConfirmationModals.tsx` | Overlay bokeh (x4) |
-| `frontend-react/src/components/packages/PackageAssignModal.tsx` | Overlay bokeh |
-| `frontend-react/src/components/packages/PackageDeliveryModal.tsx` | Overlay bokeh |
-| `frontend-react/src/components/packages/PackageReceptionModal.tsx` | Overlay bokeh |
-| `frontend-react/src/hooks/use-trip-detail-page.ts` | Estado + handlers paquetes |
-| `frontend-react/src/pages/trips/TripDetailPage.tsx` | Props + render modales |
+| `frontend-react/src/styles/globals.css` | Add `.modal-overlay-bokeh` |
+| `frontend-react/src/components/ui/dialog.tsx` | Bokeh overlay |
+| `frontend-react/src/components/ui/sheet.tsx` | Bokeh overlay |
+| `frontend-react/src/components/ui/alert-dialog.tsx` | Bokeh overlay |
+| `frontend-react/src/components/trips/TripConfirmationModals.tsx` | Bokeh overlay (x4) |
+| `frontend-react/src/components/packages/PackageAssignModal.tsx` | Bokeh overlay |
+| `frontend-react/src/components/packages/PackageDeliveryModal.tsx` | Bokeh overlay |
+| `frontend-react/src/components/packages/PackageReceptionModal.tsx` | Bokeh overlay |
+| `frontend-react/src/hooks/use-trip-detail-page.ts` | Package state + handlers |
+| `frontend-react/src/pages/trips/TripDetailPage.tsx` | Props + render modals |
 
-## Funciones existentes a reutilizar
+## Existing Functions to Reuse
 - `packageService.updateStatus()` — `frontend-react/src/services/package.service.ts`
 - `packageService.deliver()` — `frontend-react/src/services/package.service.ts`
-- `fetchPackages()` — ya existe en el hook (línea ~400)
-- `showNotification()` — ya existe en el hook
+- `fetchPackages()` — already exists in the hook (line ~400)
+- `showNotification()` — already exists in the hook
 
-## Verificación
-1. Abrir un viaje en estado `scheduled` → verificar botón "Cargar Encomienda" abre PackageAssignModal
-2. Seleccionar encomiendas y asignar → verificar que aparecen en la lista
-3. Registrar nueva encomienda desde el modal de asignar
-4. Quitar encomienda del viaje
-5. Con viaje `arrived`: verificar "Marcar Recibido" abre PackageReceptionModal
-6. Con encomienda `arrived_at_destination`: verificar "Entregar" abre PackageDeliveryModal con selección de pago
-7. Verificar que TODOS los modales (dialog, sheet, alert-dialog, custom) muestran el overlay bokeh degradado
+## Verification
+1. Open a trip in `scheduled` state → verify "Load Package" button opens `PackageAssignModal`.
+2. Select packages and assign → verify they appear in the list.
+3. Register new package from the assign modal.
+4. Remove package from the trip.
+5. With `arrived` trip: verify "Mark Received" opens `PackageReceptionModal`.
+6. With `arrived_at_destination` package: verify "Deliver" opens `PackageDeliveryModal` with payment selection.
+7. Verify that ALL modals (dialog, sheet, alert-dialog, custom) show the bokeh gradient overlay.

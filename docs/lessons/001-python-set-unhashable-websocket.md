@@ -1,14 +1,14 @@
-# Lesson 001: No usar `set` con objetos que contienen WebSocket
+# Lesson 001: Do not use `set` with objects containing WebSocket
 
-**Fecha:** 2026-03-10
-**Contexto:** Implementación de WebSocket para bloqueo de asientos en tiempo real
+**Date:** 2026-03-10
+**Context:** WebSocket implementation for real-time seat locking
 
 ## Error
 
-Se usó un `dataclass` (`WSConnection`) que contenía un `WebSocket` de FastAPI dentro de un `set()` de Python.
+A `dataclass` (`WSConnection`) containing a FastAPI `WebSocket` was used within a Python `set()`.
 
 ```python
-# MAL - WebSocket no es hashable
+# WRONG - WebSocket is not hashable
 @dataclass
 class WSConnection:
     ws: WebSocket
@@ -17,14 +17,14 @@ class WSConnection:
 self._connections: dict[int, set[WSConnection]] = {}
 ```
 
-**Resultado:** `TypeError: unhashable type: 'WSConnection'` en cada conexión WS. El WebSocket nunca se conectaba y el broadcast no funcionaba.
+**Result:** `TypeError: unhashable type: 'WSConnection'` on every WS connection. The WebSocket never connected and broadcast did not work.
 
-## Solución
+## Solution
 
-Usar `list` en vez de `set` para almacenar conexiones:
+Use `list` instead of `set` to store connections:
 
 ```python
-# BIEN
+# CORRECT
 class WSConnection:
     __slots__ = ('ws', 'user_id')
     def __init__(self, ws: WebSocket, user_id: int):
@@ -34,6 +34,6 @@ class WSConnection:
 self._connections: dict[int, list[WSConnection]] = {}
 ```
 
-## Regla
+## Rule
 
-Nunca usar `set` para almacenar objetos que contengan referencias a conexiones de red (`WebSocket`, `Socket`, etc.) — no son hashables. Usar `list` y manejar duplicados manualmente.
+Never use `set` to store objects containing references to network connections (`WebSocket`, `Socket`, etc.) — they are not hashable. Use `list` and handle duplicates manually.

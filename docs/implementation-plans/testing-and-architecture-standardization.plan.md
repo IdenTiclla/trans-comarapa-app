@@ -1,47 +1,47 @@
 # Plan: Testing & Architecture Standardization (v2)
 
-## Contexto
+## Context
 
-El proyecto tiene una base sólida pero enfrenta problemas críticos de calidad:
+The project has a solid foundation but faces critical quality issues:
 
-1. **Tests "unitarios" impuros**: `backend/tests/unit/` depende de MySQL real — son integration tests mal clasificados
-2. **Servicios no testeables**: Los servicios hardcodean `self.repo = XRepository(db)` en `__init__`, imposibilitando inyectar mocks
-3. **Frontend con mocking frágil**: `vi.mock` global en `setup.ts` + mocks manuales por servicio — no prueba la integración real servicio→API
-4. **Sin factories**: Fixtures de 200+ líneas creando datos manualmente
-5. **Sin thresholds de coverage**: No hay gates de calidad
-6. **Skills desactualizadas**: No documentan DI, MSW, factories, ni categorías de test
+1. **Impure "Unit" Tests**: `backend/tests/unit/` depends on a real MySQL database — these are misclassified integration tests.
+2. **Untestable Services**: Services hardcode `self.repo = XRepository(db)` in `__init__`, making it impossible to inject mocks.
+3. **Fragile Frontend Mocking**: Global `vi.mock` in `setup.ts` + manual mocks per service — does not test the real service→API integration.
+4. **No Factories**: Fixtures of 200+ lines manually creating data.
+5. **No Coverage Thresholds**: No quality gates.
+6. **Outdated Skills**: DI, MSW, factories, and test categories are not documented.
 
-**Objetivo**: Profesionalizar el stack de testing siguiendo estándares de la industria (Testing Pyramid, DI, MSW, AAA, factories).
+**Objective**: Professionalize the testing stack following industry standards (Testing Pyramid, DI, MSW, AAA, factories).
 
 ---
 
-## Gaps Identificados (v1 → v2)
+## Identified Gaps (v1 → v2)
 
-| # | Gap | Impacto |
+| # | Gap | Impact |
 |---|-----|---------|
-| 1 | DI con `Optional[repo]=None` es aceptable pero el plan no explica por qué se descartó Protocol-based DI | Falta justificación técnica |
-| 2 | No hay test data factories (factory-boy) | Fixtures de 200+ líneas |
-| 3 | No hay configuración de pytest markers (`--strict-markers`) | Tests mal clasificados sin warning |
-| 4 | No hay `conftest.py` separado para unit tests (sin DB) | Unit tests siguen requiriendo MySQL |
-| 5 | No hay `renderWithProviders` utility para frontend | Boilerplate en cada test de componente |
-| 6 | MSW setup incompleto (falta organización de handlers, migration path) | Tests frontend no cubren servicio→API |
-| 7 | No hay coverage thresholds | Sin gates de calidad |
-| 8 | No hay patrón para testing de hooks (`renderHook`) | Hooks custom no testeables |
-| 9 | `BusService` no usa repository (viola arquitectura) | Inconsistencia arquitectónica |
-| 10 | `pytest-mock` no está en dependencias | No se puede usar `mocker` fixture |
-| 11 | Test naming convention no definido | Tests inconsistentes |
-| 12 | No hay CI/CD integration plan | Tests no corren en PRs |
-| 13 | `setup.ts` mock global de `apiFetch` conflicta con MSW | Migration path necesario |
-| 14 | No hay documentación ni guía de testing | Conocimiento tribal |
-| 15 | Skills no cubren nuevos patrones | AI agent repite errores |
+| 1 | DI with `Optional[repo]=None` is acceptable but the plan doesn't explain why Protocol-based DI was discarded | Lacks technical justification |
+| 2 | No test data factories (factory-boy) | 200+ line fixtures |
+| 3 | No pytest markers configuration (`--strict-markers`) | Misclassified tests without warning |
+| 4 | No separate `conftest.py` for unit tests (no DB) | Unit tests still require MySQL |
+| 5 | No `renderWithProviders` utility for frontend | Boilerplate in each component test |
+| 6 | Incomplete MSW setup (lacks organization of handlers, migration path) | Frontend tests don't cover service→API |
+| 7 | No coverage thresholds | No quality gates |
+| 8 | No pattern for hook testing (`renderHook`) | Custom hooks untestable |
+| 9 | `BusService` doesn't use repository (violates architecture) | Architectural inconsistency |
+| 10 | `pytest-mock` not in dependencies | `mocker` fixture cannot be used |
+| 11 | Test naming convention not defined | Inconsistent tests |
+| 12 | No CI/CD integration plan | Tests don't run in PRs |
+| 13 | `setup.ts` global `apiFetch` mock conflicts with MSW | Migration path needed |
+| 14 | No documentation or testing guide | Tribal knowledge |
+| 15 | Skills don't cover new patterns | AI agent repeats errors |
 
 ---
 
-## Fase 1: Infraestructura Backend
+## Phase 1: Backend Infrastructure
 
-### 1A. Agregar dependencias de test
+### 1A. Add Test Dependencies
 
-**Archivo:** `backend/pyproject.toml`
+**File:** `backend/pyproject.toml`
 
 ```toml
 [project.optional-dependencies]
@@ -50,14 +50,14 @@ test = [
     "pytest-asyncio>=0.21.1",
     "httpx>=0.24.1",
     "pytest-cov>=4.1.0",
-    "pytest-mock>=3.12.0",     # NUEVO
-    "factory-boy>=3.3.0",      # NUEVO
+    "pytest-mock>=3.12.0",     # NEW
+    "factory-boy>=3.3.0",      # NEW
 ]
 ```
 
-### 1B. Configurar pytest markers
+### 1B. Configure Pytest Markers
 
-**Archivo:** `backend/pyproject.toml`
+**File:** `backend/pyproject.toml`
 
 ```toml
 [tool.pytest.ini_options]
@@ -71,9 +71,9 @@ markers = [
 addopts = "-v --strict-markers"
 ```
 
-### 1C. Crear conftest para unit tests (sin DB)
+### 1C. Create Conftest for Unit Tests (no DB)
 
-**Crear:** `backend/tests/unit/conftest.py`
+**Create:** `backend/tests/unit/conftest.py`
 
 ```python
 """Fixtures for pure unit tests. No database, no external services."""
@@ -99,9 +99,9 @@ def mock_query(mock_db):
     return query
 ```
 
-### 1D. Crear test data factories
+### 1D. Create Test Data Factories
 
-**Crear:** `backend/tests/factories.py`
+**Create:** `backend/tests/factories.py`
 
 ```python
 """Test data factories using factory_boy for consistent test data creation."""
@@ -175,30 +175,30 @@ class TicketFactory(factory.Factory):
     payment_method = "cash"
 ```
 
-### 1E. Reclasificar tests existentes
+### 1E. Reclassify Existing Tests
 
-| Archivo actual | Marker actual | Marker correcto | Razón |
+| Current File | Current Marker | Correct Marker | Reason |
 |---|---|---|---|
-| `test_state_machines.py` | ninguno | `@pytest.mark.unit` | Pura lógica, sin DB |
-| `test_auth.py` | `@pytest.mark.unit` | `@pytest.mark.integration` | Usa TestClient + DB |
-| `test_ticket.py` | `@pytest.mark.unit` | `@pytest.mark.integration` | Usa TestClient + DB |
-| `test_user_model.py` | verificar | probablemente `integration` | Probablemente usa DB |
-| `test_person_model.py` | verificar | `@pytest.mark.integration` | Ya está en integration/ |
+| `test_state_machines.py` | none | `@pytest.mark.unit` | Pure logic, no DB |
+| `test_auth.py` | `@pytest.mark.unit` | `@pytest.mark.integration` | Uses TestClient + DB |
+| `test_ticket.py` | `@pytest.mark.unit` | `@pytest.mark.integration` | Uses TestClient + DB |
+| `test_user_model.py` | verify | probably `integration` | Likely uses DB |
+| `test_person_model.py` | verify | `@pytest.mark.integration` | Already in integration/ |
 
 ---
 
-## Fase 2: DI en Servicios Backend
+## Phase 2: DI in Backend Services
 
-### 2A. Patrón de refactorización
+### 2A. Refactoring Pattern
 
 ```python
-# ANTES (Acoplamiento fuerte)
+# BEFORE (Strong Coupling)
 class TicketService:
     def __init__(self, db: Session):
         self.db = db
         self.repo = TicketRepository(db)
 
-# DESPUÉS (Inyección de Dependencias)
+# AFTER (Dependency Injection)
 class TicketService:
     def __init__(
         self,
@@ -211,19 +211,19 @@ class TicketService:
         self.lock_service = lock_service or SeatLockService()
 ```
 
-**¿Por qué `Optional` con default `None` y no Protocol-based DI?**
-Las routes usan `Depends(get_service)` que llama `XService(db)` — el path por defecto funciona exactamente igual. El `None` default es puramente para inyección en tests. Protocol-based DI (crear 12+ Protocol classes y modificar cada route) es demasiada ceremonia para un codebase de ~12 servicios. No vale la pena a esta escala.
+**Why `Optional` with `None` default and not Protocol-based DI?**
+Routes use `Depends(get_service)` which calls `XService(db)` — the default path works exactly the same. The `None` default is purely for test injection. Protocol-based DI (creating 12+ Protocol classes and modifying each route) is too much ceremony for a ~12 service codebase. It's not worth it at this scale.
 
-### 2B. Orden de prioridad
+### 2B. Priority Order
 
-1. `ticket_service.py` — más complejo, más lógica de negocio
-2. `trip_service.py` — transiciones de estado complejas
-3. `package_service.py` — transiciones de estado
-4. `bus_service.py` — **también necesita crear BusRepository** (actualmente hace `self.db.query()` directo)
-5. `auth_service.py` — lógica de autenticación
-6. Resto: `route_service.py`, `person_service.py`, `office_service.py`, `cash_register_service.py`, `seat_lock_service.py`, `report_service.py`, `user_management_service.py`
+1. `ticket_service.py` — most complex, most business logic.
+2. `trip_service.py` — complex state transitions.
+3. `package_service.py` — state transitions.
+4. `bus_service.py` — **also needs BusRepository creation** (currently does `self.db.query()` directly).
+5. `auth_service.py` — authentication logic.
+6. Rest: `route_service.py`, `person_service.py`, `office_service.py`, `cash_register_service.py`, `seat_lock_service.py`, `report_service.py`, `user_management_service.py`.
 
-### 2C. Ejemplo de test unitario puro
+### 2C. Pure Unit Test Example
 
 ```python
 """tests/unit/services/test_ticket_service.py"""
@@ -271,21 +271,21 @@ class TestTicketServiceCancel:
         mock_db.commit.assert_not_called()
 ```
 
-**Naming convention:** `test_[method]_[scenario]_[expected]` o agrupar por clase `TestXServiceMethod`.
+**Naming convention:** `test_[method]_[scenario]_[expected]` or group by class `TestXServiceMethod`.
 
 ---
 
-## Fase 3: Infraestructura Frontend
+## Phase 3: Frontend Infrastructure
 
-### 3A. Instalar MSW
+### 3A. Install MSW
 
 ```bash
 cd frontend-react && npm install -D msw@^2.7.0
 ```
 
-### 3B. Crear handlers MSW
+### 3B. Create MSW Handlers
 
-**Crear:** `frontend-react/src/test/mocks/handlers.ts`
+**Create:** `frontend-react/src/test/mocks/handlers.ts`
 
 ```typescript
 import { http, HttpResponse } from 'msw'
@@ -316,9 +316,9 @@ export const handlers = [
 ]
 ```
 
-### 3C. Crear servidor MSW
+### 3C. Create MSW Server
 
-**Crear:** `frontend-react/src/test/mocks/server.ts`
+**Create:** `frontend-react/src/test/mocks/server.ts`
 
 ```typescript
 import { setupServer } from 'msw/node'
@@ -327,9 +327,9 @@ import { handlers } from './handlers'
 export const server = setupServer(...handlers)
 ```
 
-### 3D. Migrar setup.ts
+### 3D. Migrate setup.ts
 
-**Modificar:** `frontend-react/src/test/setup.ts`
+**Modify:** `frontend-react/src/test/setup.ts`
 
 ```typescript
 import '@testing-library/jest-dom/vitest'
@@ -345,14 +345,14 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-// REMOVIDO: vi.mock('@/lib/api') — MSW lo reemplaza
+// REMOVED: vi.mock('@/lib/api') — replaced by MSW
 ```
 
-**Migration path:** Tests existentes con `vi.mock` siguen funcionando durante la migración. Se migran gradualmente a MSW.
+**Migration path:** Existing tests with `vi.mock` continue to work during migration. They are gradually migrated to MSW.
 
-### 3E. Crear renderWithProviders
+### 3E. Create renderWithProviders
 
-**Crear:** `frontend-react/src/test/test-utils.tsx`
+**Create:** `frontend-react/src/test/test-utils.tsx`
 
 ```tsx
 import React, { PropsWithChildren } from 'react'
@@ -398,9 +398,9 @@ export * from '@testing-library/react'
 export { default as userEvent } from '@testing-library/user-event'
 ```
 
-### 3F. Coverage thresholds
+### 3F. Coverage Thresholds
 
-**Modificar:** `frontend-react/vitest.config.ts`
+**Modify:** `frontend-react/vitest.config.ts`
 
 ```typescript
 coverage: {
@@ -415,7 +415,7 @@ coverage: {
 },
 ```
 
-### 3G. Patrón para testing de hooks
+### 3G. Pattern for Hook Testing
 
 ```tsx
 import { renderHook, waitFor } from '@testing-library/react'
@@ -433,112 +433,112 @@ it('fetches trip data on mount', async () => {
 })
 ```
 
-### 3H. Migrar QuickSearch.test.tsx como ejemplo
+### 3H. Migrate QuickSearch.test.tsx as Example
 
-Reemplazar los `vi.mock('@/services/...')` individuales por handlers MSW con `server.use()` para overrides per-test.
+Replace individual `vi.mock('@/services/...')` with MSW handlers using `server.use()` for per-test overrides.
 
 ---
 
-## Fase 4: Institucionalización
+## Phase 4: Institutionalization
 
-### 4A. Actualizar Skills
+### 4A. Update Skills
 
 **`.agents/skills/unit-testing/SKILL.md`:**
-- Agregar sección "Test Categories" (unit vs integration vs regression)
-- Backend: DI pattern, factories, `create_autospec`, `pytest -m unit`
-- Frontend: MSW, `renderWithProviders`, `renderHook`, `server.use()`
-- Naming convention: `test_[method]_[scenario]_[expected]`
+- Add "Test Categories" section (unit vs integration vs regression).
+- Backend: DI pattern, factories, `create_autospec`, `pytest -m unit`.
+- Frontend: MSW, `renderWithProviders`, `renderHook`, `server.use()`.
+- Naming convention: `test_[method]_[scenario]_[expected]`.
 
 **`.agents/skills/backend-dev/SKILL.md`:**
-- Agregar sección 2.6 "Dependency Injection for Testability"
+- Add section 2.6 "Dependency Injection for Testability".
 
 **`.agents/skills/frontend-dev/SKILL.md`:**
-- Agregar sección 7 "Testing Conventions" (MSW, renderWithProviders, userEvent)
+- Add section 7 "Testing Conventions" (MSW, `renderWithProviders`, `userEvent`).
 
-### 4B. Crear documentación
+### 4B. Create Documentation
 
-- `docs/guides/testing.md` — Guía completa de testing (filosofía, backend, frontend, comandos)
-- `docs/lessons/003-unit-vs-integration-tests.md` — Lesson learned
-- Actualizar `CLAUDE.md` con sección "Testing Standards"
-- Actualizar `docs/INDEX.md` con referencia a guía de testing
+- `docs/guides/testing.md` — Full testing guide (philosophy, backend, frontend, commands).
+- `docs/lessons/003-unit-vs-integration-tests.md` — Lesson learned.
+- Update `CLAUDE.md` with "Testing Standards" section.
+- Update `docs/INDEX.md` with reference to testing guide.
 
 ---
 
-## Fase 5: CI/CD (Futuro)
+## Phase 5: CI/CD (Future)
 
-Documentado para implementación futura:
+Documented for future implementation:
 
 - GitHub Actions `.github/workflows/test.yml`:
-  - Job `backend-unit`: `pytest -m unit` (sin servicios, rápido)
-  - Job `backend-integration`: `pytest -m integration` (con MySQL service container)
-  - Job `frontend-unit`: `vitest run --coverage`
-- Coverage gates: fallar PR si coverage baja del threshold
+  - `backend-unit` job: `pytest -m unit` (no services, fast).
+  - `backend-integration` job: `pytest -m integration` (with MySQL service container).
+  - `frontend-unit` job: `vitest run --coverage`.
+- Coverage gates: fail PR if coverage drops below threshold.
 
 ---
 
-## Archivos Críticos
+## Critical Files
 
 ```
-backend/pyproject.toml                     # Dependencias + pytest config
-backend/tests/conftest.py                  # Mantener para integration
-backend/tests/unit/conftest.py             # NUEVO: fixtures sin DB
-backend/tests/factories.py                 # NUEVO: factory-boy
-backend/services/ticket_service.py         # Template DI
+backend/pyproject.toml                     # Dependencies + pytest config
+backend/tests/conftest.py                  # Keep for integration
+backend/tests/unit/conftest.py             # NEW: fixtures without DB
+backend/tests/factories.py                 # NEW: factory-boy
+backend/services/ticket_service.py         # DI Template
 frontend-react/package.json               # MSW dependency
-frontend-react/src/test/setup.ts           # Migrar a MSW
-frontend-react/src/test/mocks/handlers.ts  # NUEVO
-frontend-react/src/test/mocks/server.ts    # NUEVO
-frontend-react/src/test/test-utils.tsx     # NUEVO: renderWithProviders
+frontend-react/src/test/setup.ts           # Migrate to MSW
+frontend-react/src/test/mocks/handlers.ts  # NEW
+frontend-react/src/test/mocks/server.ts    # NEW
+frontend-react/src/test/test-utils.tsx     # NEW: renderWithProviders
 frontend-react/vitest.config.ts            # Coverage thresholds
 ```
 
-## Orden de Implementación
+## Execution Order
 
-| # | Tarea | Esfuerzo | Dependencias |
+| # | Task | Effort | Dependencies |
 |---|-------|----------|-------------|
-| 1 | Agregar pytest-mock, factory-boy a pyproject.toml | Pequeño | Ninguna |
-| 2 | Configurar pytest markers en pyproject.toml | Pequeño | Ninguna |
-| 3 | Crear `tests/unit/conftest.py` con mock fixtures | Pequeño | Ninguna |
-| 4 | Crear `tests/factories.py` | Medio | #1 |
-| 5 | Reclasificar markers de tests existentes | Pequeño | #2 |
-| 6 | Agregar DI a TicketService + escribir primer unit test puro | Medio | #3, #4 |
-| 7 | Agregar DI a servicios restantes (incremental) | Medio | #6 |
-| 8 | Instalar MSW en frontend | Pequeño | Ninguna |
-| 9 | Crear handlers + server MSW | Medio | #8 |
-| 10 | Crear test-utils.tsx con renderWithProviders | Medio | Ninguna |
-| 11 | Migrar setup.ts a MSW | Pequeño | #9 |
-| 12 | Migrar QuickSearch.test.tsx a MSW | Medio | #9, #10, #11 |
-| 13 | Agregar coverage thresholds a vitest.config.ts | Pequeño | Ninguna |
-| 14 | Actualizar 3 SKILL.md | Medio | #6, #9, #10 |
-| 15 | Crear docs/guides/testing.md | Medio | #14 |
-| 16 | Crear lesson 003 | Pequeño | Ninguna |
+| 1 | Add pytest-mock, factory-boy to pyproject.toml | Small | None |
+| 2 | Configure pytest markers in pyproject.toml | Small | None |
+| 3 | Create `tests/unit/conftest.py` with mock fixtures | Small | None |
+| 4 | Create `tests/factories.py` | Medium | #1 |
+| 5 | Reclassify existing test markers | Small | #2 |
+| 6 | Add DI to TicketService + write first pure unit test | Medium | #3, #4 |
+| 7 | Add DI to remaining services (incremental) | Medium | #6 |
+| 8 | Install MSW in frontend | Small | None |
+| 9 | Create handlers + MSW server | Medium | #8 |
+| 10 | Create test-utils.tsx with renderWithProviders | Medium | None |
+| 11 | Migrate setup.ts to MSW | Small | #9 |
+| 12 | Migrate QuickSearch.test.tsx to MSW | Medium | #9, #10, #11 |
+| 13 | Add coverage thresholds to vitest.config.ts | Small | None |
+| 14 | Update 3 SKILL.md | Medium | #6, #9, #10 |
+| 15 | Create docs/guides/testing.md | Medium | #14 |
+| 16 | Create lesson 003 | Small | None |
 
-**PRs sugeridos:** #1-5 (infra backend), #6-7 (DI backend), #8-13 (infra frontend), #14-16 (docs/skills)
+**Suggested PRs:** #1-5 (backend infra), #6-7 (backend DI), #8-13 (frontend infra), #14-16 (docs/skills)
 
-## Verificación
+## Verification
 
 ```bash
-# Backend: Solo unit tests (rápido, sin DB)
+# Backend: Unit tests only (fast, no DB)
 cd backend && uv run pytest -m unit -v
 
-# Backend: Solo integration (necesita MySQL)
+# Backend: Integration only (needs MySQL)
 cd backend && uv run pytest -m integration -v
 
 # Backend: Strict markers (no warnings)
 cd backend && uv run pytest --strict-markers
 
-# Frontend: Todos los tests
+# Frontend: All tests
 cd frontend-react && npm run test:run
 
-# Frontend: Con coverage
+# Frontend: With coverage
 cd frontend-react && npm run test:coverage
 ```
 
-## Resumen de Beneficios
+## Summary of Benefits
 
-- **Velocidad:** Unit tests corren 10-50x más rápido (sin DB)
-- **Aislamiento:** Cambios en DB no rompen tests de lógica de negocio
-- **Realismo:** MSW detecta errores en URLs/headers que vi.mock ignora
-- **Consistencia:** Factories eliminan fixtures manuales de 200+ líneas
-- **Calidad:** Coverage thresholds previenen regresiones
-- **Conocimiento:** Skills y docs aseguran que humanos y AI sigan los patrones
+- **Speed:** Unit tests run 10-50x faster (no DB).
+- **Isolation:** DB changes don't break business logic tests.
+- **Realism:** MSW detects errors in URLs/headers that `vi.mock` ignores.
+- **Consistency:** Factories eliminate 200+ line manual fixtures.
+- **Quality:** Coverage thresholds prevent regressions.
+- **Knowledge:** Skills and docs ensure humans and AI follow patterns.

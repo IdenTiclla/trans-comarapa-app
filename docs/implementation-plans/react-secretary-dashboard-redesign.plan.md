@@ -1,126 +1,126 @@
-# Plan: Rediseño del Dashboard de Secretaría
+# Plan: Secretary Dashboard Redesign
 
 ## Context
-El dashboard actual en `/dashboards/dashboard-secretary` es funcional pero visualmente básico. Tiene datos hardcodeados en "Actividad Reciente", no tiene selector de período, no usa charts, y las tarjetas de stats tienen un diseño mínimo. El objetivo es un rediseño drástico que sea moderno, completamente funcional con datos reales, y ofrezca una experiencia de usuario notablemente mejor.
+The current dashboard at `/dashboards/dashboard-secretary` is functional but visually basic. It has hardcoded data in "Recent Activity", lacks a period selector, doesn't use charts, and the stats cards have a minimal design. The goal is a drastic redesign that is modern, fully functional with real data, and offers a significantly better user experience.
 
 ---
 
-## Archivos a modificar
+## Files to Modify
 
-| Archivo | Tipo de cambio |
+| File | Change Type |
 |---------|---------------|
-| `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx` | Rediseño completo |
-| `frontend-react/src/components/dashboard/DashboardStatCard.tsx` | Rediseño visual |
-| `frontend-react/src/components/dashboard/UpcomingTrips.tsx` | Mejoras funcionales + visuales |
-| `frontend-react/src/components/dashboard/RecentSales.tsx` | Mejoras visuales |
+| `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx` | Complete redesign |
+| `frontend-react/src/components/dashboard/DashboardStatCard.tsx` | Visual redesign |
+| `frontend-react/src/components/dashboard/UpcomingTrips.tsx` | Functional + visual improvements |
+| `frontend-react/src/components/dashboard/RecentSales.tsx` | Visual improvements |
 
 ---
 
-## Cambios detallados
+## Detailed Changes
 
-### 1. `SecretaryDashboard.tsx` — Rediseño completo
+### 1. `SecretaryDashboard.tsx` — Complete Redesign
 
 **Header:**
-- Fondo con gradiente azul-índigo (`from-blue-700 to-indigo-800`) con texto blanco
-- Saludo dinámico según hora: "Buenos días / tardes / noches, {nombre}"
-- Fecha actual a la derecha
-- Indicador de "En vivo" (punto verde pulsante) + botón de actualizar manual
-- Selector de período integrado en el header: botones tab-like `Hoy | Semana | Mes`
+- Blue-indigo gradient background (`from-blue-700 to-indigo-800`) with white text.
+- Dynamic greeting based on time: "Good morning / afternoon / evening, {name}".
+- Current date on the right.
+- "Live" indicator (pulsing green dot) + manual refresh button.
+- Period selector integrated in the header: tab-like buttons `Today | Week | Month`.
 
-**Estado local añadido:**
+**Added Local State:**
 ```tsx
 const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today')
 const [revenueChartData, setRevenueChartData] = useState<ChartDataPoint[]>([])
 ```
 
-**Efecto de período:** Cuando `selectedPeriod` cambia, re-despacha `fetchDashboardStats(selectedPeriod)`.
+**Period Effect:** When `selectedPeriod` changes, re-dispatch `fetchDashboardStats(selectedPeriod)`.
 
-**Tarjetas de Stats (5 en lugar de 4):**
-- Rediseñadas con fondo degradado de color (reemplaza el borde izquierdo)
-- `DashboardStatCard` acepta nuevo prop `gradient` (string de clases Tailwind)
-- Añadir 5ª tarjeta: **"Reservas Pendientes"** usando `statsService.getReservedTicketStats(selectedPeriod)` — color ámbar
-- Loading states con `Skeleton` de shadcn/ui en lugar de spinner full-page
+**Stats Cards (5 instead of 4):**
+- Redesigned with color gradient background (replaces left border).
+- `DashboardStatCard` accepts new `gradient` prop (Tailwind class string).
+- Add 5th card: **"Pending Reservations"** using `statsService.getReservedTicketStats(selectedPeriod)` — amber color.
+- Loading states with shadcn/ui `Skeleton` instead of a full-page spinner.
 
-**Quick Actions — rediseño:**
-- Layout horizontal compacto en desktop
-- Añadir flecha `→` visible al hover
-- Mejor contraste de colores
+**Quick Actions — Redesign:**
+- Compact horizontal layout on desktop.
+- Add visible `→` arrow on hover.
+- Better color contrast.
 
-**Layout principal:**
+**Main Layout:**
 ```
-[Header con gradiente]
+[Gradient Header]
 [5 Stat Cards]
 [Quick Actions]
 [Left 3/4: Upcoming Trips + Revenue Chart]  [Right 1/4: Quick Search + Recent Activity (REAL)]
-[Recent Sales (ancho completo)]
+[Recent Sales (full width)]
 ```
 
-**Reemplazar "Actividad Reciente" hardcodeada:**
-- Usar `salesService.getRecentSales(8)` (endpoint ya existe)
-- Feed real: icono de tipo (boleto/paquete), nombre de cliente, monto, tiempo relativo
-- Auto-refresh cada 60s (igual que RecentSales)
+**Replace Hardcoded "Recent Activity":**
+- Use `salesService.getRecentSales(8)` (endpoint already exists).
+- Real feed: Type icon (ticket/package), customer name, amount, relative time.
+- Auto-refresh every 60s (same as `RecentSales`).
 
-**Nuevo chart de Ingresos:**
-- Usar componente existente `MonthlyMetricsChart` (`components/dashboard/MonthlyMetricsChart.tsx`)
-- Datos de `statsService.getMonthlyRevenueStats(6)` → `/stats/revenue/monthly`
-- `valueFormatter`: `(v) => \`Bs. \${v.toLocaleString()}\``
-- Colocarlo debajo de UpcomingTrips en la columna izquierda
-
----
-
-### 2. `DashboardStatCard.tsx` — Rediseño visual
-
-- Nuevo prop `gradient?: string` (ej. `'from-blue-500 to-blue-600'`)
-- Con `gradient`: fondo degradado, texto blanco, icono en círculo semitransparente blanco (`bg-white/20`)
-- Sin `gradient`: mantener diseño actual como fallback
-- Trend badge: pill con `bg-white/20` en modo gradient, `bg-green-100/bg-red-100` en modo claro
-- Número principal más grande en modo gradient
+**New Revenue Chart:**
+- Use existing `MonthlyMetricsChart` component (`components/dashboard/MonthlyMetricsChart.tsx`).
+- Data from `statsService.getMonthlyRevenueStats(6)` → `/stats/revenue/monthly`.
+- `valueFormatter`: `(v) => \`Bs. \${v.toLocaleString()}\``.
+- Place it below `UpcomingTrips` in the left column.
 
 ---
 
-### 3. `UpcomingTrips.tsx` — Mejoras funcionales + visuales
+### 2. `DashboardStatCard.tsx` — Visual Redesign
 
-- **Barra de ocupación**: `occupied = (bus.capacity - available_seats) / bus.capacity * 100`
-  - Verde si <70% ocupado, amarillo si 70-90%, rojo si >90%
-  - `<div className="w-full bg-gray-200 rounded-full h-1.5">` con fill animado
-- **Badge de estado**: `scheduled` → azul "Programado", `in_progress` → verde "En curso"
-- **Tiempo relativo**: "En 2h 30min" / "En 45 min" usando diferencia de fechas
-- Skeleton durante loading
-
----
-
-### 4. `RecentSales.tsx` — Mejoras visuales
-
-- **Badge de tipo**: `Boleto` → pill azul (`bg-blue-100 text-blue-700`), `Paquete` → pill verde (`bg-green-100 text-green-700`)
-- **Borde izquierdo coloreado** por tipo: `border-l-4 border-blue-400` / `border-l-4 border-green-400`
-- Monto en verde prominente (`text-emerald-600 font-bold`)
+- New `gradient?: string` prop (e.g., `'from-blue-500 to-blue-600'`).
+- With `gradient`: Gradient background, white text, icon in semitransparent white circle (`bg-white/20`).
+- Without `gradient`: Maintain current design as fallback.
+- Trend badge: Pill with `bg-white/20` in gradient mode, `bg-green-100/bg-red-100` in light mode.
+- Main number larger in gradient mode.
 
 ---
 
-## Reutilización de código existente
+### 3. `UpcomingTrips.tsx` — Functional + Visual Improvements
 
-| Elemento | Archivo | Uso |
+- **Occupancy Bar**: `occupied = (bus.capacity - available_seats) / bus.capacity * 100`
+  - Green if <70% occupied, yellow if 70-90%, red if >90%.
+  - `<div className="w-full bg-gray-200 rounded-full h-1.5">` with animated fill.
+- **Status Badge**: `scheduled` → blue "Scheduled", `in_progress` → green "In Progress".
+- **Relative Time**: "In 2h 30min" / "In 45 min" using date difference.
+- Skeleton during loading.
+
+---
+
+### 4. `RecentSales.tsx` — Visual Improvements
+
+- **Type Badge**: `Ticket` → blue pill (`bg-blue-100 text-blue-700`), `Package` → green pill (`bg-green-100 text-green-700`).
+- **Colored Left Border** by type: `border-l-4 border-blue-400` / `border-l-4 border-green-400`.
+- Amount in prominent green (`text-emerald-600 font-bold`).
+
+---
+
+## Existing Code Reuse
+
+| Element | File | Usage |
 |----------|---------|-----|
-| `MonthlyMetricsChart` | `components/dashboard/MonthlyMetricsChart.tsx` | Chart de ingresos mensuales |
-| `statsService.getMonthlyRevenueStats` | `services/stats.service.ts:174` | Datos del chart |
-| `statsService.getReservedTicketStats` | `services/stats.service.ts:33` | 5ª stat card |
-| `salesService.getRecentSales` | `services/sales.service.ts` | Reemplazar actividad hardcodeada |
+| `MonthlyMetricsChart` | `components/dashboard/MonthlyMetricsChart.tsx` | Monthly revenue chart |
+| `statsService.getMonthlyRevenueStats` | `services/stats.service.ts:174` | Chart data |
+| `statsService.getReservedTicketStats` | `services/stats.service.ts:33` | 5th stat card |
+| `salesService.getRecentSales` | `services/sales.service.ts` | Replace hardcoded activity |
 | `Skeleton` | `components/ui/skeleton.tsx` | Loading states |
-| `Badge` | `components/ui/badge.tsx` | Badges en RecentSales |
-| `fetchDashboardStats` thunk | `store/stats.slice.ts:36` | Ya acepta `period` param |
+| `Badge` | `components/ui/badge.tsx` | Badges in RecentSales |
+| `fetchDashboardStats` thunk | `store/stats.slice.ts:36` | Already accepts `period` param |
 
 ---
 
-## Verificación
+## Verification
 
 1. `cd frontend-react && npm run dev`
-2. Navegar a `http://localhost:3001/dashboards/dashboard-secretary`
-3. Verificar:
-   - [ ] Header con gradiente azul-índigo y saludo dinámico según hora
-   - [ ] Selector Hoy/Semana/Mes actualiza las tarjetas de stats
-   - [ ] 5 tarjetas con fondos degradados de color
-   - [ ] "Actividad Reciente" muestra datos reales (no hardcodeados)
-   - [ ] Chart de ingresos mensuales con datos reales
-   - [ ] UpcomingTrips con barra de ocupación y badges de estado
-   - [ ] RecentSales con badges de tipo coloreados
-   - [ ] Loading states con skeletons
+2. Navigate to `http://localhost:3001/dashboards/dashboard-secretary`
+3. Verify:
+   - [ ] Blue-indigo gradient header with dynamic greeting based on time.
+   - [ ] Today/Week/Month selector updates the stats cards.
+   - [ ] 5 cards with color gradient backgrounds.
+   - [ ] "Recent Activity" shows real data (not hardcoded).
+   - [ ] Monthly revenue chart with real data.
+   - [ ] UpcomingTrips with occupancy bar and status badges.
+   - [ ] RecentSales with colored type badges.
+   - [ ] Loading states with skeletons.

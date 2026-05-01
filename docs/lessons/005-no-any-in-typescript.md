@@ -1,25 +1,25 @@
-# 005 — Nunca uses `any` en TypeScript (frontend)
+# 005 — Never use `any` in TypeScript (frontend)
 
-## Contexto
+## Context
 
-Durante la Fase 3.1 del plan `ui-standardization.plan.md` purgamos ~200 violaciones de `@typescript-eslint/no-explicit-any` que se habían acumulado en la migración Nuxt→React. Los `any` ocultaban bugs reales: campos mal nombrados, errores no narrow, casts que silenciaban diferencias de forma entre el backend y el frontend.
+During Phase 3.1 of the `ui-standardization.plan.md` plan, we purged ~200 violations of `@typescript-eslint/no-explicit-any` that had accumulated during the Nuxt→React migration. The `any`s hid real bugs: misspelled fields, un-narrowed errors, casts that silenced shape differences between backend and frontend.
 
-ESLint ahora bloquea `any` como **error**. Esta lección resume los patrones que reemplazan los usos típicos — si estás tentado de escribir `any`, primero revisa aquí.
+ESLint now blocks `any` as an **error**. This lesson summarizes the patterns that replace typical uses — if you are tempted to write `any`, check here first.
 
-## Patrones (canónicos en `docs/guides/ui-conventions.md §7`)
+## Patterns (canonical in `docs/guides/ui-conventions.md §7`)
 
-### Respuestas API / entidades de dominio
+### API Responses / Domain Entities
 ```ts
 interface PackageLike {
   id: number
   tracking_number?: string
   items?: PackageItem[]
-  [k: string]: unknown   // campos extra del backend no tipados
+  [k: string]: unknown   // extra untyped backend fields
 }
 ```
-El `[k: string]: unknown` es el escape hatch: admite cualquier campo adicional pero obliga a narrow antes de usarlo.
+The `[k: string]: unknown` is the escape hatch: it accepts any additional field but forces narrowing before using it.
 
-### Selectores Redux
+### Redux Selectors
 ```ts
 // ❌ const trips = useAppSelector(selectTrips) as any[]
 const trips = useAppSelector(selectTrips) as Trip[]
@@ -28,34 +28,34 @@ const trips = useAppSelector(selectTrips) as Trip[]
 useAppSelector((s) => (s as unknown as { route: RouteState }).route.x)
 ```
 
-### Narrowing de errores
+### Error Narrowing
 ```ts
 // ❌ catch (err: any) { setError(err.message) }
 catch (err) {
-  setError(err instanceof Error ? err.message : 'Fallback legible')
+  setError(err instanceof Error ? err.message : 'Readable fallback')
 }
 ```
 
-### Respuestas con múltiples formas
+### Responses with Multiple Shapes
 ```ts
 // ❌ as any
 const data = (await apiFetch('/x')) as { items?: T[] } | T[]
 ```
 
-## Cuándo `unknown` sí está permitido
+## When `unknown` IS Allowed
 
-- Dentro del `[k: string]: unknown` de una interfaz de dominio parcial.
-- Como parámetro de helpers que hacen narrowing (`errMsg(e: unknown, fallback: string)`).
-- En casts intermedios (`as unknown as Target`) cuando TypeScript no puede inferir la forma pero tú la conoces con certeza.
+- Inside the `[k: string]: unknown` of a partial domain interface.
+- As a parameter of helpers that do narrowing (`errMsg(e: unknown, fallback: string)`).
+- In intermediate casts (`as unknown as Target`) when TypeScript cannot infer the shape but you know it for sure.
 
-## Señal de que estás tipando mal
+## Sign that you are typing wrong
 
-Si tu interfaz tiene más de 3 `[k: string]: unknown` distintos, probablemente necesitas:
-1. Un tipo dominio centralizado en `src/types/` o cerca del service.
-2. Ajustar el schema de Pydantic para que el frontend obtenga una forma estable.
+If your interface has more than 3 distinct `[k: string]: unknown`s, you probably need:
+1. A centralized domain type in `src/types/` or near the service.
+2. Adjust the Pydantic schema so the frontend gets a stable shape.
 
-## Referencias
+## References
 
-- `docs/guides/ui-conventions.md` §7 — patrones completos
-- `frontend/eslint.config.js` — regla `@typescript-eslint/no-explicit-any: error`
-- Commit de la purga: revisar git log alrededor de 2026-04-20
+- `docs/guides/ui-conventions.md` §7 — complete patterns
+- `frontend-react/eslint.config.js` — `@typescript-eslint/no-explicit-any: error` rule
+- Purge commit: check git log around 2026-04-20

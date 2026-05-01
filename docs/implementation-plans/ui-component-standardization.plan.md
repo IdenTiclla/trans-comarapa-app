@@ -2,60 +2,60 @@
 
 ## Context
 
-El proyecto tiene componentes de formulario personalizados (`FormInput`, `FormSelect`, etc.) en `frontend-react/src/components/forms/`, pero en varios archivos se usan elementos HTML nativos (`<input>`, `<select>`, `<textarea>`, `<input type="checkbox">`) directamente, saltándose estos wrappers. Además, el toggle lista/cards/tabla está implementado de 3 maneras distintas en 4 lugares diferentes. El objetivo es unificar ambos patrones para que el código sea consistente y mantenible.
+The project has custom form components (`FormInput`, `FormSelect`, etc.) in `frontend-react/src/components/forms/`, but several files use native HTML elements (`<input>`, `<select>`, `<textarea>`, `<input type="checkbox">`) directly, bypassing these wrappers. Additionally, the list/cards/table toggle is implemented in 3 different ways in 4 different places. The goal is to unify both patterns to make the code consistent and maintainable.
 
 ---
 
-## Parte 1: Reemplazar inputs nativos con componentes propios
+## Part 1: Replace Native Inputs with Custom Components
 
-### Archivos afectados
+### Affected Files
 
-| Archivo | Elementos nativos a reemplazar |
+| File | Native Elements to Replace |
 |---|---|
-| `frontend-react/src/components/clients/ClientFilters.tsx` | `<input type="text">` (búsqueda), `<input type="checkbox">` (autoApply), `<input type="date">` ×2, `<select>` ×5 |
+| `frontend-react/src/components/clients/ClientFilters.tsx` | `<input type="text">` (search), `<input type="checkbox">` (autoApply), `<input type="date">` ×2, `<select>` ×5 |
 
-### Cambios en ClientFilters.tsx
+### Changes in ClientFilters.tsx
 
-1. **Search input** (línea 193): reemplazar `<input type="text">` con `<FormInput>` usando `leftIcon` con el ícono de búsqueda.
+1. **Search input** (line 193): Replace `<input type="text">` with `<FormInput>` using `leftIcon` with the search icon.
 
-2. **Checkbox autoApply** (línea 166): reemplazar `<input type="checkbox">` + `<label>` manual con `<FormCheckbox>`.
+2. **autoApply checkbox** (line 166): Replace manual `<input type="checkbox">` + `<label>` with `<FormCheckbox>`.
 
-3. **Selects de filtros** (líneas 207, 226, 246, 298, 308): reemplazar cada `<select>` nativo con `<FormSelect>`. Pasar las opciones como array. Notar que estos selects tienen un botón "limpiar" adosado — mantener ese botón fuera de FormSelect o agregar prop `clearable` / `onClear` al componente.
+3. **Filter selects** (lines 207, 226, 246, 298, 308): Replace each native `<select>` with `<FormSelect>`. Pass options as an array. Note that these selects have an attached "clear" button — keep that button outside `FormSelect` or add a `clearable` / `onClear` prop to the component.
 
-4. **Date inputs** (líneas 276, 285): reemplazar con `<FormInput type="date">`.
+4. **Date inputs** (lines 276, 285): Replace with `<FormInput type="date">`.
 
-### Consideración: clearable en selects
+### Consideration: clearable in selects
 
-`FormSelect` actual no tiene prop `onClear`. Dado que 3 selects tienen un botón de limpieza en ClientFilters, hay dos opciones:
-- **Opción A** (preferida): agregar props `clearable` y `onClear` a `FormSelect`, similar a como `FormInput` ya las tiene.
-- Opción B: dejar el botón externo y envolver el `FormSelect` en un `<div className="relative">`.
+The current `FormSelect` does not have an `onClear` prop. Given that 3 selects have a clear button in `ClientFilters`, there are two options:
+- **Option A** (preferred): Add `clearable` and `onClear` props to `FormSelect`, similar to how `FormInput` already has them.
+- Option B: Leave the external button and wrap the `FormSelect` in a `<div className="relative">`.
 
-→ Implementar Opción A: extender `FormSelect` con `clearable?: boolean` y `onClear?: () => void`.
+→ Implement Option A: Extend `FormSelect` with `clearable?: boolean` and `onClear?: () => void`.
 
 ---
 
-## Parte 2: Crear componente `ViewToggle` reutilizable
+## Part 2: Create Reusable `ViewToggle` Component
 
-### Problema actual
+### Current Problem
 
-El toggle lista/grid/tabla está duplicado en 4 lugares con implementaciones inconsistentes:
+The list/grid/table toggle is duplicated in 4 places with inconsistent implementations:
 
-| Archivo | Opciones | Implementación toggle |
+| File | Options | Toggle Implementation |
 |---|---|---|
-| `TripPackagesSection.tsx` (línea 59-86) | `list` / `cards` | `<button>` custom con `cn()`, incluye texto |
-| `PackagesIndexPage.tsx` (línea 351-368) | `grid` / `table` | `<Button variant>` de shadcn, solo íconos |
-| `ClientsIndexPage.tsx` (línea 251-256) | `grid` / `table` | `<button>` nativo con clases inline |
-| `BookingsPage.tsx` (línea 540-555) | `cards` / `table` | `<button>` nativo con clases inline distintas |
+| `TripPackagesSection.tsx` (line 59-86) | `list` / `cards` | Custom `<button>` with `cn()`, includes text |
+| `PackagesIndexPage.tsx` (line 351-368) | `grid` / `table` | shadcn `<Button variant>`, icons only |
+| `ClientsIndexPage.tsx` (line 251-256) | `grid` / `table` | Native `<button>` with inline classes |
+| `BookingsPage.tsx` (line 540-555) | `cards` / `table` | Native `<button>` with different inline classes |
 
-### Solución: componente `ViewToggle`
+### Solution: `ViewToggle` Component
 
-**Crear:** `frontend-react/src/components/ui/view-toggle.tsx`
+**Create:** `frontend-react/src/components/ui/view-toggle.tsx`
 
 ```tsx
 interface ViewOption<T extends string> {
   value: T
   icon: ReactNode
-  label?: string  // si se provee, se muestra el label junto al ícono
+  label?: string  // if provided, the label is shown next to the icon
   ariaLabel: string
 }
 
@@ -66,23 +66,23 @@ interface ViewToggleProps<T extends string> {
 }
 ```
 
-El componente renderiza el patrón `bg-muted/50 rounded-lg p-0.5` con botones que aplican `bg-background shadow-sm` al activo (patrón de TripPackagesSection, el más limpio visualmente).
+The component renders the `bg-muted/50 rounded-lg p-0.5` pattern with buttons that apply `bg-background shadow-sm` to the active one (pattern from `TripPackagesSection`, the cleanest visually).
 
-### Actualizar los 4 lugares
+### Update the 4 Locations
 
-1. **`TripPackagesSection.tsx`**: reemplazar bloque líneas 59-86 con `<ViewToggle>`.
-2. **`PackagesIndexPage.tsx`**: reemplazar bloque líneas 351-368 con `<ViewToggle>`.
-3. **`ClientsIndexPage.tsx`**: reemplazar bloque líneas 251-256 con `<ViewToggle>`.
-4. **`BookingsPage.tsx`**: reemplazar bloque líneas 540-555 con `<ViewToggle>`.
+1. **`TripPackagesSection.tsx`**: Replace block lines 59-86 with `<ViewToggle>`.
+2. **`PackagesIndexPage.tsx`**: Replace block lines 351-368 with `<ViewToggle>`.
+3. **`ClientsIndexPage.tsx`**: Replace block lines 251-256 with `<ViewToggle>`.
+4. **`BookingsPage.tsx`**: Replace block lines 540-555 with `<ViewToggle>`.
 
 ---
 
-## Archivos a modificar
+## Files to Modify
 
 ```
-frontend-react/src/components/forms/FormSelect.tsx        ← agregar clearable/onClear
-frontend-react/src/components/clients/ClientFilters.tsx   ← reemplazar todos los nativos
-frontend-react/src/components/ui/view-toggle.tsx          ← NUEVO
+frontend-react/src/components/forms/FormSelect.tsx        ← add clearable/onClear
+frontend-react/src/components/clients/ClientFilters.tsx   ← replace all native elements
+frontend-react/src/components/ui/view-toggle.tsx          ← NEW
 frontend-react/src/components/trips/TripPackagesSection.tsx
 frontend-react/src/pages/packages/PackagesIndexPage.tsx
 frontend-react/src/pages/clients/ClientsIndexPage.tsx
@@ -91,43 +91,43 @@ frontend-react/src/pages/BookingsPage.tsx
 
 ---
 
-## Orden de implementación
+## Implementation Order
 
-1. Extender `FormSelect` con props `clearable` y `onClear`.
-2. Actualizar `ClientFilters.tsx` reemplazando todos los elementos nativos.
-3. Crear `ViewToggle` en `components/ui/view-toggle.tsx`.
-4. Reemplazar los 4 toggles existentes con el nuevo componente.
-
----
-
-## Verificación
-
-- Navegar a `/clients` → filtros deben funcionar igual (búsqueda, selects, fechas, checkbox autoApply).
-- Navegar a `/packages` → toggle grid/tabla debe funcionar.
-- Navegar a `/trips/:id` → toggle lista/cards en sección encomiendas debe funcionar.
-- Navegar a `/bookings` → toggle cards/tabla debe funcionar.
-- No deben aparecer estilos rotos ni regresiones visuales en ninguna de esas páginas.
+1. Extend `FormSelect` with `clearable` and `onClear` props.
+2. Update `ClientFilters.tsx` replacing all native elements.
+3. Create `ViewToggle` in `components/ui/view-toggle.tsx`.
+4. Replace the 4 existing toggles with the new component.
 
 ---
 
-## Parte 3: Estandarización extendida de formularios
+## Verification
 
-Se han identificado múltiples componentes a lo largo del sistema que siguen utilizando elementos inputs nativos (`<input>`, `<select>`) en lugar de los wrappers estándar del proyecto (`FormInput`, `FormSelect`, `FormCheckbox`, etc.).
+- Navigate to `/clients` → Filters should work as before (search, selects, dates, autoApply checkbox).
+- Navigate to `/packages` → Grid/table toggle should work.
+- Navigate to `/trips/:id` → List/cards toggle in packages section should work.
+- Navigate to `/bookings` → Cards/table toggle should work.
+- No broken styles or visual regressions should appear on any of those pages.
 
-### Archivos identificados para refactorización:
+---
 
-1. **Vistas de administración y páginas principales:**
-   - `frontend-react/src/pages/admin/OfficesPage.tsx` (reemplazar selects nativos)
-   - `frontend-react/src/pages/admin/DriversPage.tsx` (reemplazar selects nativos)
-   - `frontend-react/src/pages/admin/RoutesPage.tsx` (reemplazar selects nativos)
-   - `frontend-react/src/pages/ProfilePage.tsx` (reemplazar inputs de texto y correo)
-   - `frontend-react/src/pages/BookingsPage.tsx` (reemplazar inputs nativos varios)
-   - `frontend-react/src/pages/LoginPage.tsx` (reemplazar inputs de autenticación)
+## Part 3: Extended Form Standardization
+
+Several components throughout the system have been identified that still use native input elements (`<input>`, `<select>`) instead of the project's standard wrappers (`FormInput`, `FormSelect`, `FormCheckbox`, etc.).
+
+### Files identified for refactoring:
+
+1. **Admin views and main pages:**
+   - `frontend-react/src/pages/admin/OfficesPage.tsx` (replace native selects)
+   - `frontend-react/src/pages/admin/DriversPage.tsx` (replace native selects)
+   - `frontend-react/src/pages/admin/RoutesPage.tsx` (replace native selects)
+   - `frontend-react/src/pages/ProfilePage.tsx` (replace text and email inputs)
+   - `frontend-react/src/pages/BookingsPage.tsx` (replace various native inputs)
+   - `frontend-react/src/pages/LoginPage.tsx` (replace authentication inputs)
    - `frontend-react/src/pages/dashboards/AssistantDashboard.tsx`
 
-2. **Componentes y modales:**
+2. **Components and modals:**
    - `frontend-react/src/components/packages/PackageAssignModal.tsx`
-   - `frontend-react/src/components/packages/PackageRegistrationModal.tsx` (múltiples inputs e inputs radio)
+   - `frontend-react/src/components/packages/PackageRegistrationModal.tsx` (multiple inputs and radio inputs)
    - `frontend-react/src/components/admin/UserForm.tsx`
    - `frontend-react/src/components/tickets/TicketSaleModal.tsx`
    - `frontend-react/src/components/admin/SeatLayoutEditor.tsx`
@@ -136,7 +136,7 @@ Se han identificado múltiples componentes a lo largo del sistema que siguen uti
    - `frontend-react/src/components/admin/RouteScheduleManager.tsx`
    - `frontend-react/src/components/admin/settlements/WithdrawModal.tsx`
 
-### Acciones necesarias
-- Intercambiar todo uso de `<input type="text|email|number|date">` en formularios por `<FormInput>` manteniendo su funcionalidad equivalente.
-- Intercambiar todo el uso de opciones `<select>` por `<FormSelect>` pasándole limpiamente la convención de `options`.
-- Mapear correctamente checkboxes e inputs de radio por componentes estilizados del UI library o `FormCheckbox`.
+### Necessary Actions
+- Exchange all use of `<input type="text|email|number|date">` in forms for `<FormInput>` maintaining equivalent functionality.
+- Exchange all use of `<select>` options for `<FormSelect>` cleanly passing the `options` convention.
+- Correctly map checkboxes and radio inputs to styled UI library components or `FormCheckbox`.

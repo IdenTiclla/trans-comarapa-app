@@ -1,29 +1,29 @@
-# Lesson 002: No llamar `.toFixed()` directamente sobre datos de API
+# Lesson 002: Do not call `.toFixed()` directly on API data
 
-**Fecha:** 2026-03-10
-**Contexto:** Página de reportes mensuales con datos del backend
+**Date:** 2026-03-10
+**Context:** Monthly reports page with data from the backend
 
 ## Error
 
-Se llamó `.toFixed(2)` directamente sobre campos numéricos de la respuesta API sin validar que existieran:
+`.toFixed(2)` was called directly on numerical fields from the API response without validating that they existed:
 
 ```tsx
-// MAL - si r.amount es undefined/null, crashea
+// WRONG - if r.amount is undefined/null, it crashes
 `Bs ${r.amount.toFixed(2)}`
 
-// MAL - si d.by_status es null, Object.entries crashea
+// WRONG - if d.by_status is null, Object.entries crashes
 Object.entries(d.by_status).map(...)
 ```
 
-**Resultado:** `TypeError: Cannot read properties of undefined (reading 'toFixed')` y `TypeError: Cannot convert undefined or null to object` al abrir tabs de reportes sin datos.
+**Result:** `TypeError: Cannot read properties of undefined (reading 'toFixed')` and `TypeError: Cannot convert undefined or null to object` when opening report tabs without data.
 
-## Causa raíz
+## Root Cause
 
-El backend retorna campos como `null` o los omite cuando no hay datos (ej: no hay encomiendas → `by_status` es `null`, `amount` de un row puede ser `undefined`). El frontend asumía que siempre vendrían con valores.
+The backend returns fields as `null` or omits them when there is no data (e.g., no packages → `by_status` is `null`, `amount` of a row could be `undefined`). The frontend assumed they would always come with values.
 
-## Solución
+## Solution
 
-Usar una función helper con fallback a 0 y `?? {}` para objetos:
+Use a helper function with a fallback to 0 and `?? {}` for objects:
 
 ```tsx
 // Helper
@@ -31,14 +31,14 @@ function fmt(value: number | undefined | null, decimals = 2): string {
   return (value ?? 0).toFixed(decimals)
 }
 
-// BIEN - nunca crashea
+// GOOD - never crashes
 `Bs ${fmt(r.amount)}`
 
-// BIEN - Object.entries recibe {} si es null
+// GOOD - Object.entries receives {} if it is null
 const byStatus = (data.by_status as Record<string, Info>) ?? {}
 Object.entries(byStatus).map(...)
 ```
 
-## Regla
+## Rule
 
-Nunca llamar `.toFixed()`, `.toString()`, o iterar con `Object.entries()`/`Object.keys()` directamente sobre datos de API sin default. Los campos pueden ser `null`/`undefined` cuando no hay datos. Siempre usar `?? 0` para números y `?? {}` para objetos antes de operar.
+Never call `.toFixed()`, `.toString()`, or iterate with `Object.entries()`/`Object.keys()` directly on API data without a default. Fields can be `null`/`undefined` when there is no data. Always use `?? 0` for numbers and `?? {}` for objects before operating.

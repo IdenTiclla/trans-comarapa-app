@@ -1,30 +1,30 @@
-# Plan de Implementación: Flujo Interceptado de Apertura de Caja
+# Implementation Plan: Intercepted Cash Register Opening Flow
 
-## Contexto y Objetivo
-Se busca simplificar la experiencia de la secretaria al momento de vender. En lugar de bloquear la interfaz o mostrar mensajes restrictivos obligando a ir a otra pantalla cuando no hay una caja abierta, el sistema le permitirá intentar la venta con normalidad. Si no existe una caja abierta, el sistema la pausará un segundo mostrando un modal pidiendo la cantidad inicial ("Fondo de Cambio"), abrirá la caja, e inmediatamente continuará con la venta sin perder su trabajo.
+## Context and Objective
+The goal is to simplify the secretary's experience during a sale. Instead of blocking the interface or showing restrictive messages forcing them to another screen when there is no open register, the system will allow them to attempt the sale normally. If no open register exists, the system will pause for a moment showing a modal asking for the initial amount ("Change Fund"), open the register, and immediately continue with the sale without losing their work.
 
-## Cambios Propuestos
+## Proposed Changes
 
-### Mantenimiento de la Arquitectura Backend
-- **El Backend se mantiene estricto:** No se alterarán los servicios del backend (`ticket_service.py`, `package_service.py`), seguirán exigiendo que exista una "Caja Abierta" para proteger la integridad de los datos.
+### Backend Architecture Maintenance
+- **The Backend remains strict:** Backend services (`ticket_service.py`, `package_service.py`) will not be altered and will continue to require an "Open Register" to protect data integrity.
 
-### Interceptor Visual (Frontend-React)
+### Visual Interceptor (Frontend-React)
 
-#### [MODIFY] Eliminación de Bloqueos Previos en UI
-- **Desbloquear Botones:** En componentes como `PackageDeliveryModal.tsx`, `TripTicketsView.tsx` y `PackageReceptionModal.tsx`, los botones de "Vender" o "Cobrar" dejarán de estar deshabilitados si la caja localmente parece cerrada.
-- **Remover Letreros Rojos:** Se eliminarán los textos disuasorios como *"Debe abrir caja antes de cobrar este paquete..."* para no abrumar al usuario.
+#### [MODIFY] Removal of Previous UI Blocks
+- **Unlock Buttons:** In components such as `PackageDeliveryModal.tsx`, `TripTicketsView.tsx`, and `PackageReceptionModal.tsx`, "Sell" or "Collect" buttons will no longer be disabled if the register locally appears closed.
+- **Remove Red Warnings:** Deterrent texts such as *"You must open the register before collecting for this package..."* will be removed to avoid overwhelming the user.
 
-#### [MODIFY] Lógica de Intercepción al Vender
-1. **Verificación Just-in-Time:** Al dar clic en "Cobrar/Vender", el controlador de la vista verificará el estado de `isRegisterOpen`.
-2. **Despliegue del Modal:** Si la caja está cerrada, se invocará el modal existente `OpenRegisterModal.tsx` o similar, poniéndolo sobre la venta actual, preguntando únicamente el **Monto Inicial**.
-3. **Reanudación Automática:** Al darle "Confirmar" al monto inicial, el Frontend llamará a la API para abrir la caja e inmediatamente después, de forma transparente, gatillará la petición de la venta/cobro que estaba pendiente.
+#### [MODIFY] Interception Logic on Sale
+1. **Just-in-Time Verification:** Upon clicking "Collect/Sell", the view controller will verify the `isRegisterOpen` status.
+2. **Modal Deployment:** If the register is closed, the existing `OpenRegisterModal.tsx` or similar will be invoked, overlaying the current sale, asking only for the **Initial Amount**.
+3. **Automatic Resumption:** Upon clicking "Confirm" for the initial amount, the Frontend will call the API to open the register and immediately after, transparently, trigger the pending sale/collection request.
 
-## Proceso de Verificación
+## Verification Process
 
-### Pruebas Manuales y E2E
-1. Iniciar sesión con una caja cerrada.
-2. Llenar los datos para vender un boleto o cobrar una encomienda.
-3. Presionar "Vender".
-4. Confirmar que aparece el modal solicitando el fondo inicial.
-5. Ingresar un monto `X` y presionar confirmar.
-6. Validar que la caja se abrió con el monto `X` y que en el mismo instante el boleto fue emitido correctamente sin obligar al usuario a volver a tipear información.
+### Manual and E2E Testing
+1. Log in with a closed register.
+2. Fill in the data to sell a ticket or collect for a package.
+3. Press "Sell".
+4. Confirm that a modal appears requesting the initial fund.
+5. Enter an amount `X` and press confirm.
+6. Validate that the register opened with amount `X` and that the ticket was issued correctly at the same moment without forcing the user to re-type information.

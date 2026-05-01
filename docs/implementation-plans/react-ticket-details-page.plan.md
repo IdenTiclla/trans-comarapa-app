@@ -2,46 +2,46 @@
 
 ## Context
 
-Actualmente la aplicación React tiene el listado (`/tickets`) y la confirmación post-venta (`/tickets/confirmation`), pero no hay una página dedicada para inspeccionar un boleto individual. Secretarías, administradores y clientes necesitan ver toda la información de un boleto (pasajero, viaje, asiento, pago, estado) en un solo lugar y poder ejecutar acciones comunes: imprimir, cancelar, editar.
+Currently, the React application has the listing (`/tickets`) and post-sale confirmation (`/tickets/confirmation`), but there is no dedicated page to inspect an individual ticket. Secretaries, administrators, and clients need to see all information for a ticket (passenger, trip, seat, payment, status) in one place and be able to perform common actions: print, cancel, edit.
 
-Este plan implementa **solo el MVP** con los datos que ya expone el backend. Elementos del mock visual que no tienen respaldo en el modelo actual (QR code, timeline/historial de auditoría, desglose de impuestos, email digital copy, estado "Validated") quedan fuera de alcance y se pueden agregar en iteraciones posteriores cuando exista soporte en backend.
+This plan implements **only the MVP** with the data already exposed by the backend. Elements from the visual mockup that are not supported by the current model (QR code, timeline/audit history, tax breakdown, digital email copy, "Validated" status) are out of scope and can be added in later iterations when backend support exists.
 
 ## Scope
 
-### Incluido
-- Ruta nueva `/tickets/:id` en `frontend/src/router/index.tsx`.
-- Página `TicketDetailPage.tsx` con layout asimétrico (8/4 columnas) inspirado en el mock.
-- Secciones: Passenger Info, Trip Logistics, Seat Card, Financial Summary (solo `price` y `payment_method`), Assigned Vehicle, Quick Actions.
-- Acciones: Imprimir (reutilizar ruta de impresión existente o `window.print()`), Cancelar ticket (`PUT /tickets/:id/cancel` con confirmación), Editar (navegar a edición futura o abrir modal básico — ver "Edit" abajo).
-- Estados: loading, error, not-found.
-- Navegación: agregar link "Ver detalles" en `TicketsIndexPage` filas.
+### Included
+- New route `/tickets/:id` in `frontend/src/router/index.tsx`.
+- `TicketDetailPage.tsx` page with an asymmetric layout (8/4 columns) inspired by the mockup.
+- Sections: Passenger Info, Trip Logistics, Seat Card, Financial Summary (only `price` and `payment_method`), Assigned Vehicle, Quick Actions.
+- Actions: Print (reuse existing print route or `window.print()`), Cancel ticket (`PUT /tickets/:id/cancel` with confirmation), Edit (navigate to future edit page or open a basic modal — see "Edit" below).
+- States: loading, error, not-found.
+- Navigation: Add "View details" link in `TicketsIndexPage` rows.
 
-### Excluido (gaps vs mock)
-- **QR code**: omitido (el backend no genera token de validación; el mock lo muestra como "Validation Token").
-- **Timeline/History**: no existe endpoint de audit log para tickets.
-- **Taxes/Insurance breakdown**: el schema tiene un único campo `price`. Mostrar solo total.
-- **Email Digital Copy**: no existe endpoint de envío de email.
-- **Boarding Status "Ready to Board" / estado "Validated"**: el enum `TicketState` solo tiene `pending | confirmed | cancelled`. Mapear visualmente a badges existentes.
-- **Upper Deck / Window metadata**: verificar `SeatSchema` — si no tiene deck/window, mostrar solo el número.
+### Excluded (gaps vs mockup)
+- **QR code**: Omitted (backend does not generate a validation token; mockup shows it as "Validation Token").
+- **Timeline/History**: No audit log endpoint exists for tickets.
+- **Taxes/Insurance breakdown**: The schema has a single `price` field. Show only the total.
+- **Email Digital Copy**: No email sending endpoint exists.
+- **Boarding Status "Ready to Board" / "Validated" status**: The `TicketState` enum only has `pending | confirmed | cancelled`. Map visually to existing badges.
+- **Upper Deck / Window metadata**: Check `SeatSchema` — if it doesn't have deck/window, show only the number.
 
 ## Critical Files
 
-### Nuevos
-- `frontend/src/pages/tickets/TicketDetailPage.tsx` — página principal.
-- `frontend/src/hooks/use-ticket-detail.ts` — hook que orquesta las llamadas (ticket + trip + bus/route si hacen falta extras).
+### New
+- `frontend/src/pages/tickets/TicketDetailPage.tsx` — main page.
+- `frontend/src/hooks/use-ticket-detail.ts` — hook that orchestrates calls (ticket + trip + bus/route if extra info is needed).
 
-### Modificados
-- `frontend/src/router/index.tsx:91` — agregar ruta `{ path: '/tickets/:id', lazy: () => import('@/pages/tickets/TicketDetailPage') }` justo después de `/tickets/confirmation`.
-- `frontend/src/pages/tickets/TicketsIndexPage.tsx` — en las filas de la tabla, agregar acción/link a `/tickets/${ticket.id}`.
+### Modified
+- `frontend/src/router/index.tsx:91` — add route `{ path: '/tickets/:id', lazy: () => import('@/pages/tickets/TicketDetailPage') }` right after `/tickets/confirmation`.
+- `frontend/src/pages/tickets/TicketsIndexPage.tsx` — in table rows, add action/link to `/tickets/${ticket.id}`.
 
-### Reutilizados (no modificar)
-- `frontend/src/services/ticket.service.ts:10` — `getById(id)` ya existe.
-- `frontend/src/services/ticket.service.ts` — agregar método `cancel(id)` que llame `PUT /tickets/{id}/cancel` (actualmente `TicketsIndexPage` usa `update({state:'cancelled'})`, pero el endpoint dedicado es mejor: `backend/routes/ticket.py:103`).
-- `frontend/src/services/trip.service.ts` — para obtener datos del viaje (ruta origen/destino, fecha, hora, bus).
+### Reused (do not modify)
+- `frontend/src/services/ticket.service.ts:10` — `getById(id)` already exists.
+- `frontend/src/services/ticket.service.ts` — add `cancel(id)` method calling `PUT /tickets/{id}/cancel` (currently `TicketsIndexPage` uses `update({state:'cancelled'})`, but the dedicated endpoint is better: `backend/routes/ticket.py:103`).
+- `frontend/src/services/trip.service.ts` — to get trip data (origin/destination route, date, time, bus).
 - `frontend/src/lib/api.ts` — `apiFetch`.
-- `frontend/src/pages/trips/TripDetailPage.tsx` — patrón de referencia (hook + secciones + estados loading/error).
-- `sonner` toast para feedback de cancelación.
-- Confirmación: reutilizar diálogo de confirmación existente (revisar `TicketsIndexPage.tsx:402` para patrón actual).
+- `frontend/src/pages/trips/TripDetailPage.tsx` — reference pattern (hook + sections + loading/error states).
+- `sonner` toast for cancellation feedback.
+- Confirmation: Reuse existing confirmation dialog (see `TicketsIndexPage.tsx:402` for current pattern).
 
 ## Data Flow
 
@@ -49,64 +49,64 @@ Este plan implementa **solo el MVP** con los datos que ya expone el backend. Ele
 /tickets/:id
    ↓ useParams → ticketId
    ↓ useTicketDetail(ticketId)
-      ├── ticketService.getById(id)           → ticket (incluye client, seat, secretary)
-      └── tripService.getById(ticket.trip_id) → trip (incluye route, bus, date, time)
+      ├── ticketService.getById(id)           → ticket (includes client, seat, secretary)
+      └── tripService.getById(ticket.trip_id) → trip (includes route, bus, date, time)
    ↓
 TicketDetailPage render
 ```
 
-El ticket schema no incluye `trip` anidado, por eso se hace una segunda llamada. Ambas en paralelo con `Promise.all` dentro del hook.
+The ticket schema does not include an embedded `trip`, so a second call is made. Both in parallel with `Promise.all` within the hook.
 
-## Layout Structure (adaptado del mock)
+## Layout Structure (adapted from mockup)
 
 ```
 Header: Breadcrumb · Ticket ID · State badge · Issued date · Actions (Edit, Print)
 Grid 12 col:
   Col 8 (main):
-    - Card: Passenger Info | Seat Card (2 col interior)
-    - Section: Trip Logistics (origen → bus → destino, fecha/hora/tipo)
-    - Card: Financial Summary (total, método de pago)
+    - Card: Passenger Info | Seat Card (inner 2 col)
+    - Section: Trip Logistics (origin → bus → destination, date/time/type)
+    - Card: Financial Summary (total, payment method)
   Col 4 (aside):
-    - Card: Ticket State / Metadata (created_at, secretary que emitió)
+    - Card: Ticket State / Metadata (created_at, issuing secretary)
     - Card: Quick Actions (Cancel Ticket)
-    - Card: Assigned Vehicle (bus placa, modelo, capacidad)
+    - Card: Assigned Vehicle (bus plate, model, capacity)
 ```
 
-## Acciones detalladas
+## Detailed Actions
 
-- **Print Ticket**: redirigir a ruta de impresión si existe, o `window.print()` con CSS print-friendly. Investigar si hay `PrintLayout` reutilizable en `router/index.tsx:106`.
-- **Edit Information**: en MVP, navegar a un placeholder o deshabilitar si no hay página de edición aún. Confirmar con usuario si se implementa ahora o se deja como stub.
-- **Cancel Ticket**: diálogo de confirmación → `ticketService.cancel(id)` → refrescar ticket → toast éxito/error. Solo mostrar si `state !== 'cancelled'`.
+- **Print Ticket**: Redirect to print route if it exists, or `window.print()` with print-friendly CSS. Check if there is a reusable `PrintLayout` in `router/index.tsx:106`.
+- **Edit Information**: In MVP, navigate to a placeholder or disable if no edit page exists yet. Confirm with user whether to implement now or leave as a stub.
+- **Cancel Ticket**: Confirmation dialog → `ticketService.cancel(id)` → refresh ticket → success/error toast. Only show if `state !== 'cancelled'`.
 
 ## State Mapping (visual)
 
-- `pending` → badge amarillo "Pendiente"
-- `confirmed` → badge verde "Confirmado"
-- `cancelled` → badge rojo "Cancelado"
+- `pending` → yellow "Pending" badge.
+- `confirmed` → green "Confirmed" badge.
+- `cancelled` → red "Cancelled" badge.
 
-(Seguir convenciones ya usadas en `TicketsIndexPage`.)
+(Follow conventions already used in `TicketsIndexPage`.)
 
 ## Verification
 
-1. `docker compose up` y seed: `make seed`.
-2. Login como `secretary1@transcomarapa.com` / `123456`.
-3. Navegar a `/tickets`, click en un boleto → debe ir a `/tickets/:id` y mostrar todos los datos.
-4. Verificar estados:
-   - Ticket `pending` → muestra badge amarillo, botón Cancelar visible.
-   - Ticket `confirmed` → badge verde.
-   - Ticket `cancelled` → badge rojo, botón Cancelar oculto.
-5. Probar cancelación: click → confirmar → verificar toast y cambio de estado sin recargar.
-6. Probar print: click Print → preview/impresión limpia.
-7. Estados de error:
-   - `/tickets/99999` (inexistente) → muestra mensaje "Boleto no encontrado".
-   - Simular API down → muestra error con botón de reintento.
-8. Responsive: verificar grid colapsa a 1 columna en móvil.
-9. Role-based: verificar acceso con roles admin, secretary, client (cliente solo puede ver sus propios tickets — revisar si el endpoint `getById` lo restringe).
+1. `docker compose up` and seed: `make seed`.
+2. Login as `secretary1@transcomarapa.com` / `123456`.
+3. Navigate to `/tickets`, click a ticket → should go to `/tickets/:id` and show all data.
+4. Verify statuses:
+   - `pending` ticket → shows yellow badge, Cancel button visible.
+   - `confirmed` ticket → green badge.
+   - `cancelled` ticket → red badge, Cancel button hidden.
+5. Test cancellation: click → confirm → verify toast and status change without reload.
+6. Test print: click Print → clean preview/printout.
+7. Error states:
+   - `/tickets/99999` (non-existent) → shows "Ticket not found" message.
+   - Simulate API down → shows error with retry button.
+8. Responsive: verify grid collapses to 1 column on mobile.
+9. Role-based: verify access with admin, secretary, client roles (client should only see their own tickets — check if `getById` endpoint restricts this).
 
-## Out of Scope (futuras iteraciones)
+## Out of Scope (future iterations)
 
-- Endpoint backend de audit log + sección History/Timeline.
-- Generación de token QR firmado en backend + render con `qrcode.react`.
-- Breakdown de precio (requiere agregar campos `tax`, `insurance_surcharge` al schema).
-- Endpoint `POST /tickets/:id/send-email` + acción Email Digital Copy.
-- Estado `validated` en el enum `TicketState` (para registro de abordaje).
+- Backend audit log endpoint + History/Timeline section.
+- Backend-signed QR token generation + render with `qrcode.react`.
+- Price breakdown (requires adding `tax`, `insurance_surcharge` fields to schema).
+- `POST /tickets/:id/send-email` endpoint + Digital Email Copy action.
+- `validated` state in `TicketState` enum (for boarding registration).

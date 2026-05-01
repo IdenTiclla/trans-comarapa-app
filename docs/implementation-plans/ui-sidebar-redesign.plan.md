@@ -1,41 +1,41 @@
-# Plan: Migración de UI a diseño con Sidebar
+# Plan: UI Migration to Sidebar Design
 
-## Contexto
+## Context
 
-La app actualmente usa navegación horizontal (top header). Se quiere migrar a un diseño con **sidebar lateral oscuro (navy)**, header superior limpio con breadcrumbs, y estilo visual con botones CTA marrones, cards limpias y tipografía profesional — similar al mockup "Kinetic Fleet" proporcionado.
+The app currently uses horizontal navigation (top header). We want to migrate to a design with a **dark (navy) sidebar**, a clean top header with breadcrumbs, and a visual style with brown CTA buttons, clean cards, and professional typography — similar to the provided "Kinetic Fleet" mockup.
 
-## Resumen de Fases
+## Phase Summary
 
-| Fase | Descripción | Archivos principales |
+| Phase | Description | Main Files |
 |------|-------------|---------------------|
-| 1 | Design tokens (colores, tipografía) | `globals.css` |
-| 2 | Sidebar + Layout shell | Instalar shadcn sidebar, crear `AppSidebar`, `navigation.ts`, modificar `DefaultLayout` |
-| 3 | Header superior | Crear `AppHeader` con breadcrumbs y controles |
-| 4A | Dashboards | 4 páginas de dashboard |
-| 4B | Viajes | 3 páginas + componentes de trips |
-| 4C | Encomiendas | 4 páginas + componentes de packages |
-| 4D | Admin | ~10 páginas admin |
-| 4E | Otros | Clientes, boletos, perfil, bookings |
-| 5 | Cleanup | Eliminar código obsoleto, auditoría |
+| 1 | Design tokens (colors, typography) | `globals.css` |
+| 2 | Sidebar + Layout shell | Install shadcn sidebar, create `AppSidebar`, `navigation.ts`, modify `DefaultLayout` |
+| 3 | Top Header | Create `AppHeader` with breadcrumbs and controls |
+| 4A | Dashboards | 4 dashboard pages |
+| 4B | Trips | 3 pages + trip components |
+| 4C | Packages | 4 pages + package components |
+| 4D | Admin | ~10 admin pages |
+| 4E | Others | Clients, tickets, profile, bookings |
+| 5 | Cleanup | Remove obsolete code, audit |
 
 ---
 
-## Fase 1: Design Tokens
+## Phase 1: Design Tokens
 
-**Objetivo:** Actualizar paleta de colores sin cambiar layout.
+**Objective:** Update color palette without changing layout.
 
-**Modificar:** `frontend-react/src/styles/globals.css`
+**Modify:** `frontend-react/src/styles/globals.css`
 
-Cambios:
-- Actualizar variables CSS del sidebar a navy oscuro:
+Changes:
+- Update sidebar CSS variables to dark navy:
   ```
   --sidebar: dark navy (#1B2A4A)
   --sidebar-foreground: white
   --sidebar-primary: blue accent (#3B82F6)
-  --sidebar-accent: navy más claro (#243656)
+  --sidebar-accent: lighter navy (#243656)
   --sidebar-border: (#2D3F5E)
   ```
-- Agregar colores custom en `@theme`:
+- Add custom colors in `@theme`:
   ```
   --color-navy-900: #1B2A4A
   --color-navy-800: #243656
@@ -46,45 +46,45 @@ Cambios:
   --color-status-medium: #F59E0B
   --color-status-full: #EF4444
   ```
-- Actualizar `--primary` a navy oscuro
-- Actualizar `--background` a gris claro (#F8F9FA)
+- Update `--primary` to dark navy.
+- Update `--background` to light gray (#F8F9FA).
 
-**Verificación:** `npm run dev` → colores actualizados, sin errores.
+**Verification:** `npm run dev` → updated colors, no errors.
 
 ---
 
-## Fase 2: Sidebar + Layout Shell
+## Phase 2: Sidebar + Layout Shell
 
-**Objetivo:** Reemplazar navegación horizontal con sidebar lateral.
+**Objective:** Replace horizontal navigation with a side sidebar.
 
-### Paso 2.1: Instalar shadcn Sidebar
+### Step 2.1: Install shadcn Sidebar
 ```bash
 cd frontend-react && npx shadcn@latest add sidebar
 ```
 
-### Paso 2.2: Crear config de navegación
-**Nuevo:** `frontend-react/src/lib/navigation.ts`
-- Extraer `NAV_LINKS` de `AdminHeader.tsx` (líneas 6-37) a config standalone
-- Agregar iconos Lucide por cada item
-- Agrupar items por categoría (Principal, Operaciones, Gestión, Finanzas)
-- Mantener mismo mapeo por rol (admin, secretary, driver, assistant)
-- Agregar `ROLE_LABELS` para subtítulos del sidebar
+### Step 2.2: Create Navigation Config
+**New:** `frontend-react/src/lib/navigation.ts`
+- Extract `NAV_LINKS` from `AdminHeader.tsx` (lines 6-37) to a standalone config.
+- Add Lucide icons for each item.
+- Group items by category (Main, Operations, Management, Finance).
+- Maintain same role mapping (admin, secretary, driver, assistant).
+- Add `ROLE_LABELS` for sidebar subtitles.
 
-### Paso 2.3: Crear componente AppSidebar
-**Nuevo:** `frontend-react/src/components/layout/AppSidebar.tsx`
-- Usar primitivos de shadcn: `Sidebar`, `SidebarHeader`, `SidebarContent`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarFooter`
-- Header: Logo "Trans Comarapa" + rol del usuario
-- Content: Grupos de nav items con iconos, active state via `NavLink`
-- Footer: Botón CTA primario (ej: "+ Nuevo Despacho" para secretary), Settings, Logout
-- Colapsable en mobile (sheet overlay automático de shadcn)
+### Step 2.3: Create AppSidebar Component
+**New:** `frontend-react/src/components/layout/AppSidebar.tsx`
+- Use shadcn primitives: `Sidebar`, `SidebarHeader`, `SidebarContent`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarFooter`.
+- Header: "Trans Comarapa" logo + user role.
+- Content: Groups of nav items with icons, active state via `NavLink`.
+- Footer: Primary CTA button (e.g., "+ New Dispatch" for secretary), Settings, Logout.
+- Collapsible on mobile (shadcn automatic sheet overlay).
 
-### Paso 2.4: Actualizar DefaultLayout
-**Modificar:** `frontend-react/src/layouts/DefaultLayout.tsx`
+### Step 2.4: Update DefaultLayout
+**Modify:** `frontend-react/src/layouts/DefaultLayout.tsx`
 ```tsx
 <SidebarProvider>
   <AppSidebar />
   <SidebarInset>
-    <header>  {/* temporal, se completa en Fase 3 */}
+    <header>  {/* temporary, completed in Phase 3 */}
       <SidebarTrigger />
     </header>
     <main className="flex-1 p-4 lg:p-6">
@@ -93,89 +93,89 @@ cd frontend-react && npx shadcn@latest add sidebar
   </SidebarInset>
 </SidebarProvider>
 ```
-- Eliminar footer (se mueve al sidebar footer)
-- No eliminar `AdminHeader.tsx` aún (referencia)
+- Remove footer (moved to sidebar footer).
+- Do not remove `AdminHeader.tsx` yet (reference).
 
-**Verificación:**
-- Todas las páginas renderizan dentro del sidebar layout
-- Nav por rol funciona (login como admin, secretary, driver)
-- Mobile: sidebar se colapsa a overlay/sheet
-- Item activo resaltado
-- Login y Print layouts no afectados
+**Verification:**
+- All pages render within the sidebar layout.
+- Role-based navigation works (login as admin, secretary, driver).
+- Mobile: sidebar collapses to overlay/sheet.
+- Active item highlighted.
+- Login and Print layouts unaffected.
 
 ---
 
-## Fase 3: Header Superior
+## Phase 3: Top Header
 
-**Objetivo:** Header limpio con breadcrumbs, notificaciones y avatar.
+**Objective:** Clean header with breadcrumbs, notifications, and avatar.
 
-### Paso 3.1: Instalar shadcn Breadcrumb
+### Step 3.1: Install shadcn Breadcrumb
 ```bash
 npx shadcn@latest add breadcrumb
 ```
 
-### Paso 3.2: Crear hook de breadcrumb
-**Nuevo:** `frontend-react/src/hooks/use-breadcrumb.ts`
-- Deriva segmentos del breadcrumb desde `useLocation()`
-- Mapa estático de rutas a labels en español
+### Step 3.2: Create Breadcrumb Hook
+**New:** `frontend-react/src/hooks/use-breadcrumb.ts`
+- Derives breadcrumb segments from `useLocation()`.
+- Static map of routes to Spanish labels.
 
-### Paso 3.3: Crear AppHeader
-**Nuevo:** `frontend-react/src/components/layout/AppHeader.tsx`
-- Izquierda: `SidebarTrigger` + separador + Breadcrumb
-- Derecha: Botón notificaciones (bell), botón ayuda, acción rápida (navy), DropdownMenu con avatar + perfil/logout
-- Usar `useAuth()` para datos del usuario
+### Step 3.3: Create AppHeader
+**New:** `frontend-react/src/components/layout/AppHeader.tsx`
+- Left: `SidebarTrigger` + separator + Breadcrumb.
+- Right: Notifications button (bell), help button, quick action (navy), DropdownMenu with avatar + profile/logout.
+- Use `useAuth()` for user data.
 
-### Paso 3.4: Integrar en DefaultLayout
-**Modificar:** `frontend-react/src/layouts/DefaultLayout.tsx`
-- Reemplazar header temporal con `<AppHeader />`
+### Step 3.4: Integrate into DefaultLayout
+**Modify:** `frontend-react/src/layouts/DefaultLayout.tsx`
+- Replace temporary header with `<AppHeader />`.
 
-**Verificación:**
-- Breadcrumb se actualiza al navegar
-- Menú de usuario funciona (perfil, logout)
-- SidebarTrigger abre/cierra sidebar
-- Responsive en mobile
+**Verification:**
+- Breadcrumb updates when navigating.
+- User menu works (profile, logout).
+- SidebarTrigger opens/closes sidebar.
+- Responsive on mobile.
 
 ---
 
-## Fase 4A: Dashboards
+## Phase 4A: Dashboards
 
-**Modificar:**
+**Modify:**
 - `frontend-react/src/pages/dashboards/AdminDashboard.tsx`
 - `frontend-react/src/pages/dashboards/SecretaryDashboard.tsx`
 - `frontend-react/src/pages/dashboards/DriverDashboard.tsx`
 - `frontend-react/src/pages/dashboards/AssistantDashboard.tsx`
 - `frontend-react/src/components/dashboard/UpcomingTrips.tsx`
 
-**Cambios:**
-- Eliminar headers de página duplicados (ya hay breadcrumb)
-- Stat cards: números bold grandes, labels uppercase pequeños
-- Cards con shadcn Card, bordes limpios
-- Status con colores semánticos (available/medium/full)
-- Quitar gradientes indigo, usar navy
+**Changes:**
+- Remove duplicate page headers (already in breadcrumb).
+- Stat cards: bold large numbers, small uppercase labels.
+- Cards with shadcn Card, clean borders.
+- Status with semantic colors (available/medium/full).
+- Remove indigo gradients, use navy.
 
 ---
 
-## Fase 4B: Viajes
+## Phase 4B: Trips
 
-**Modificar:**
+**Modify:**
 - `frontend-react/src/pages/trips/TripsIndexPage.tsx`
 - `frontend-react/src/pages/trips/TripDetailPage.tsx`
 - `frontend-react/src/components/trips/TripInfoCard.tsx`
 - `frontend-react/src/components/trips/CreateTripModal.tsx`
 - `frontend-react/src/components/trips/TripStaffEditor.tsx`
 
-**Cambios:**
-- Trip cards con bordes dashed azules (como mockup)
-- Badges pill para estado (MAÑANA/TARDE, RETORNO)
-- Indicadores de ocupación con colores (verde/amarillo/rojo)
-- Botones CTA marrones para "Vender Boleto"
-- Layout dos columnas por ruta (ida/vuelta)
+**Changes:**
+- Trip cards with blue dashed borders (like mockup).
+- Pill badges for status (MORNING/AFTERNOON, RETURN).
+- Occupancy indicators with colors (green/yellow/red).
+- Brown CTA buttons for "Sell Ticket".
+- Two-column layout by route (outbound/inbound).
 
 ---
 
-## Fase 4C: Encomiendas
+## Phase 4C: Packages
 
-**Modificar:**
+**Modify:**
 - `frontend-react/src/pages/packages/PackagesIndexPage.tsx`
 - `frontend-react/src/pages/packages/PackageNewPage.tsx`
 - `frontend-react/src/pages/packages/PendingCollectionsPage.tsx`
@@ -186,9 +186,9 @@ npx shadcn@latest add breadcrumb
 
 ---
 
-## Fase 4D: Admin
+## Phase 4D: Admin
 
-**Modificar:**
+**Modify:**
 - `frontend-react/src/pages/admin/BusesPage.tsx`
 - `frontend-react/src/pages/admin/RoutesPage.tsx`
 - `frontend-react/src/pages/admin/CashRegisterPage.tsx`
@@ -199,39 +199,39 @@ npx shadcn@latest add breadcrumb
 - `frontend-react/src/components/admin/BusForm.tsx`
 - `frontend-react/src/components/admin/RouteForm.tsx`
 
-**Cambios:**
-- Tablas con estilo actualizado
-- Forms envueltos en Cards
-- Botones de acción consistentes
+**Changes:**
+- Tables with updated style.
+- Forms wrapped in Cards.
+- Consistent action buttons.
 
 ---
 
-## Fase 4E: Otros
+## Phase 4E: Others
 
-**Modificar:**
+**Modify:**
 - `frontend-react/src/pages/clients/ClientsIndexPage.tsx`
 - `frontend-react/src/components/clients/ClientCardList.tsx`
 - `frontend-react/src/pages/ProfilePage.tsx`
-- `frontend-react/src/pages/TripsPage.tsx` (cliente)
-- `frontend-react/src/pages/PackagesPage.tsx` (cliente)
+- `frontend-react/src/pages/TripsPage.tsx` (client)
+- `frontend-react/src/pages/PackagesPage.tsx` (client)
 
 ---
 
-## Fase 5: Cleanup
+## Phase 5: Cleanup
 
-1. **Eliminar** `frontend-react/src/components/layout/AdminHeader.tsx`
-2. **Eliminar** dependencia `@heroicons/react` del `package.json` (reemplazada por lucide-react)
-3. **Limpiar** clases CSS obsoletas de `globals.css` (gradientes comarapa si ya no se usan)
-4. **Actualizar** tests que referencien AdminHeader o layout viejo
-5. **Auditar** responsive en todos los breakpoints
-6. **Verificar** PrintLayout no afectado
+1. **Delete** `frontend-react/src/components/layout/AdminHeader.tsx`.
+2. **Remove** `@heroicons/react` dependency from `package.json` (replaced by lucide-react).
+3. **Clean** obsolete CSS classes from `globals.css` (comarapa gradients if no longer used).
+4. **Update** tests referencing AdminHeader or old layout.
+5. **Audit** responsive design across all breakpoints.
+6. **Verify** PrintLayout is unaffected.
 
 ---
 
-## Dependencias entre Fases
+## Phase Dependencies
 
 ```
-Fase 1 → Fase 2 → Fase 3 → Fase 4A-4E (independientes entre sí) → Fase 5
+Phase 1 → Phase 2 → Phase 3 → Phase 4A-4E (mutually independent) → Phase 5
 ```
 
-Cada fase deja la app funcional y revisable.
+Each phase leaves the app functional and reviewable.

@@ -16,10 +16,10 @@ Build a modern, web-based Mobile Point of Sale (PVM) system that digitizes Trans
 
 | Role | Description |
 |------|-------------|
-| **Administrador** | System administrator. Full access to configuration, user management, routes, offices, buses, and global reports. |
-| **Secretaria** | Office staff at each location. Sells tickets, registers parcels (encomiendas), manages payments, and operates the daily cash register. |
-| **Conductor** | Bus driver. Views assigned trips, passenger manifests, and parcel lists for their route. |
-| **Asistente (de viaje)** | On-board travel assistant. Helps verify passengers, manage parcels during the trip, and handle intermediate stop pickups. |
+| **Administrator** | System administrator. Full access to configuration, user management, routes, offices, buses, and global reports. |
+| **Secretary** | Office staff at each location. Sells tickets, registers parcels (encomiendas), manages payments, and operates the daily cash register. |
+| **Driver** | Bus driver. Views assigned trips, passenger manifests, and parcel lists for their route. |
+| **Assistant** | On-board travel assistant. Helps verify passengers, manage parcels during the trip, and handle intermediate stop pickups. |
 
 ---
 

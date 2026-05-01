@@ -1,28 +1,28 @@
-# Lesson 006: No uses rutas hardcodeadas en onClose de modales
+# Lesson 006: Do not use hardcoded routes in modal onClose
 
-**Fecha:** 2026-04-25
-**Contexto:** Secretary Dashboard → click "Nuevo Paquete" → cierra el modal → redirige a `/packages` en vez de volver al dashboard
+**Date:** 2026-04-25
+**Context:** Secretary Dashboard → click "New Package" → close the modal → redirects to `/packages` instead of returning to the dashboard
 
 ## Error
 
 ```tsx
-// MAL — siempre redirige a /packages sin importar de dónde vino el usuario
+// WRONG — always redirects to /packages regardless of where the user came from
 onClose={() => navigate('/packages')}
 ```
 
-**Resultado:** Al cerrar el modal desde el dashboard de secretaria, el usuario es enviado a `/packages` en vez de permanecer en el dashboard.
+**Result:** When closing the modal from the secretary dashboard, the user is sent to `/packages` instead of staying on the dashboard.
 
-## Causa raíz
+## Root Cause
 
-El `onClose` del modal estaba hardcodeado a una ruta específica (`/packages`) sin considerar que el modal puede ser accedido desde distintas páginas (dashboard, listado de paquetes, etc.).
+The modal's `onClose` was hardcoded to a specific route (`/packages`) without considering that the modal can be accessed from different pages (dashboard, package list, etc.).
 
-## Solución
+## Solution
 
 ```tsx
-// BIEN — vuelve a la página anterior
+// GOOD — goes back to the previous page
 onClose={() => navigate(-1)}
 ```
 
-## Regla
+## Rule
 
-Siempre usa `navigate(-1)` en callbacks de cierre de modales/pages que actúan como overlay, a menos que exista un destino fijo justificado.
+Always use `navigate(-1)` in modal/overlay page close callbacks, unless there is a justified fixed destination.

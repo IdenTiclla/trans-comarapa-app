@@ -1,62 +1,62 @@
-# Plan: Implementar Single Responsibility Principle (SRP)
+# Plan: Implement Single Responsibility Principle (SRP)
 
-## Contexto
+## Context
 
-El codebase tiene violaciones de SRP en ambos lados (backend y frontend). Los routes del backend contienen lógica de negocio que debería estar en services. El frontend tiene un "god component" (TripDetailPage.tsx, 676 líneas, 22+ useState, 8+ responsabilidades) y hooks que mezclan concerns no relacionados. Este plan aplica SRP de forma incremental, dejando la app funcional después de cada fase.
+The codebase has SRP violations on both sides (backend and frontend). Backend routes contain business logic that should be in services. The frontend has a "god component" (`TripDetailPage.tsx`, 676 lines, 22+ `useState`, 8+ responsibilities) and hooks that mix unrelated concerns. This plan applies SRP incrementally, leaving the app functional after each phase.
 
 ---
 
-## Fase 1: Backend — Extraer lógica de negocio de Routes a Services
+## Phase 1: Backend — Extract Business Logic from Routes to Services
 
-### 1A. Crear `backend/services/bus_service.py`
+### 1A. Create `backend/services/bus_service.py`
 
-Extraer de `backend/routes/bus.py` (335 líneas):
+Extract from `backend/routes/bus.py` (335 lines):
 
-- `_validate_seat_layout(seats, floors)` — validación de: seat numbers únicos, posiciones únicas por deck, consistencia de pisos. Actualmente duplicada en `create_bus_with_seats` (líneas 91-125) y `update_bus_seats` (líneas 247-281).
-- `create_bus(data)` — verificación de license plate + creación
-- `create_bus_with_seats(data)` — validación + creación atómica de bus + seats
-- `update_bus_seats(bus_id, seats)` — verificar tickets existentes + reemplazar seats
-- `delete_bus(bus_id)` — verificar dependencias (trips, tickets) + eliminar
+- `_validate_seat_layout(seats, floors)` — Validation of: unique seat numbers, unique positions per deck, floor consistency. Currently duplicated in `create_bus_with_seats` (lines 91-125) and `update_bus_seats` (lines 247-281).
+- `create_bus(data)` — License plate verification + creation.
+- `create_bus_with_seats(data)` — Validation + atomic creation of bus + seats.
+- `update_bus_seats(bus_id, seats)` — Verify existing tickets + replace seats.
+- `delete_bus(bus_id)` — Verify dependencies (trips, tickets) + delete.
 
-**Patrón a seguir:** `backend/services/package_service.py` — constructor con `db: Session`, usa domain exceptions de `core/exceptions.py`, el route se vuelve un delegador delgado.
+**Pattern to follow:** `backend/services/package_service.py` — Constructor with `db: Session`, uses domain exceptions from `core/exceptions.py`, the route becomes a thin delegator.
 
-**Archivos:**
-- Crear: `backend/services/bus_service.py`
-- Modificar: `backend/routes/bus.py` — reducir a ~50 líneas de delegación
+**Files:**
+- Create: `backend/services/bus_service.py`
+- Modify: `backend/routes/bus.py` — Reduce to ~50 lines of delegation.
 
-### 1B. Crear `backend/services/route_service.py`
+### 1B. Create `backend/services/route_service.py`
 
-Extraer de `backend/routes/route.py` (352 líneas):
+Extract from `backend/routes/route.py` (352 lines):
 
-- `_validate_locations(origin_id, destination_id)` — verificación de existencia de locations (duplicada en create líneas 24-36 y update líneas 137-151)
-- `create_route(data)` — validación de unicidad + creación
-- `update_route(route_id, data)` — validación + actualización
-- `create_schedule(route_id, data)` — verificar duplicados + crear
-- `delete_route(route_id)` / `delete_schedule(schedule_id)` — verificar dependencias
+- `_validate_locations(origin_id, destination_id)` — Location existence verification (duplicated in create lines 24-36 and update lines 137-151).
+- `create_route(data)` — Uniqueness validation + creation.
+- `update_route(route_id, data)` — Validation + update.
+- `create_schedule(route_id, data)` — Verify duplicates + create.
+- `delete_route(route_id)` / `delete_schedule(schedule_id)` — Verify dependencies.
 
-**Archivos:**
-- Crear: `backend/services/route_service.py`
-- Modificar: `backend/routes/route.py`
+**Files:**
+- Create: `backend/services/route_service.py`
+- Modify: `backend/routes/route.py`
 
-### 1C. Crear `backend/services/person_service.py`
+### 1C. Create `backend/services/person_service.py`
 
-Extraer el patrón duplicado de creación usuario+persona de:
-- `backend/routes/secretary.py` (líneas 25-118)
-- `backend/routes/administrator.py` (líneas 17-108)
+Extract the duplicated user+person creation pattern from:
+- `backend/routes/secretary.py` (lines 25-118)
+- `backend/routes/administrator.py` (lines 17-108)
 
-Ambos hacen exactamente lo mismo: verificar email/username únicos, hashear password, crear User, crear entidad rol, commit transacción.
+Both do exactly the same thing: verify unique email/username, hash password, create User, create role entity, commit transaction.
 
-- `create_person_with_user(person_data, user_data, role, PersonModel)` — método genérico que unifica la lógica
+- `create_person_with_user(person_data, user_data, role, PersonModel)` — Generic method that unifies the logic.
 
-**Archivos:**
-- Crear: `backend/services/person_service.py`
-- Modificar: `backend/routes/secretary.py` — `create_secretary_with_user` pasa a ~5 líneas
-- Modificar: `backend/routes/administrator.py` — `create_administrator_with_user` pasa a ~5 líneas
+**Files:**
+- Create: `backend/services/person_service.py`
+- Modify: `backend/routes/secretary.py` — `create_secretary_with_user` becomes ~5 lines.
+- Modify: `backend/routes/administrator.py` — `create_administrator_with_user` becomes ~5 lines.
 
-### Verificación Fase 1
+### Phase 1 Verification
 ```bash
 cd backend && pytest -v --cov=.
-# Probar manualmente en Swagger:
+# Manually test in Swagger:
 # POST /api/v1/buses/with-seats
 # POST /api/v1/secretaries
 # POST /api/v1/routes
@@ -65,19 +65,19 @@ cd backend && pytest -v --cov=.
 
 ---
 
-## Fase 2: Frontend — Descomponer TripDetailPage (676 líneas → ~200)
+## Phase 2: Frontend — Decompose TripDetailPage (676 lines → ~200)
 
-### 2A. Crear `hooks/use-trip-detail-page.ts`
+### 2A. Create `hooks/use-trip-detail-page.ts`
 
-Extraer TODA la lógica stateful de `pages/trips/TripDetailPage.tsx`:
+Extract ALL stateful logic from `pages/trips/TripDetailPage.tsx`:
 
-- Los 22+ `useState` (líneas 48-91)
-- Todas las funciones async: `executeDispatch`, `executeFinish`, `saveDriver`, `saveAssistant`, `handleUnassignPackage`, `handleCancelReservation`, `executeConfirmSale`, `confirmSeatChange`
-- Los `useEffect` de data fetching (líneas 109-122)
-- El `useMemo` de `ticketStats` (líneas 349-354)
-- Los handlers de seat map: `handleSellTicket`, `handleReserveSeat`, `handleClearSelection`, etc.
+- All 22+ `useState` (lines 48-91).
+- All async functions: `executeDispatch`, `executeFinish`, `saveDriver`, `saveAssistant`, `handleUnassignPackage`, `handleCancelReservation`, `executeConfirmSale`, `confirmSeatChange`.
+- `useEffect` for data fetching (lines 109-122).
+- `useMemo` for `ticketStats` (lines 349-354).
+- Seat map handlers: `handleSellTicket`, `handleReserveSeat`, `handleClearSelection`, etc.
 
-Retorna un objeto estructurado agrupando state relacionado:
+Returns a structured object grouping related state:
 ```typescript
 return {
   trip, loading, error, ticketStats,
@@ -93,9 +93,9 @@ return {
 }
 ```
 
-### 2B. Crear `hooks/use-keyboard-shortcuts.ts`
+### 2B. Create `hooks/use-keyboard-shortcuts.ts`
 
-Extraer líneas 318-346. Hook genérico reutilizable:
+Extract lines 318-346. Reusable generic hook:
 ```typescript
 function useKeyboardShortcuts(
   shortcuts: Record<string, () => void>,
@@ -103,196 +103,196 @@ function useKeyboardShortcuts(
 ): void
 ```
 
-TripDetailPage lo usa con las teclas V, R, C, Escape, Enter.
+`TripDetailPage` uses it with keys V, R, C, Escape, Enter.
 
-### 2C. Crear `components/trips/TripStaffEditor.tsx`
+### 2C. Create `components/trips/TripStaffEditor.tsx`
 
-Extraer líneas 468-509 — el UI de edición inline de conductor/asistente con select dropdowns.
+Extract lines 468-509 — inline editing UI for driver/assistant with select dropdowns.
 
-Props: `drivers`, `assistants`, `staff` state del hook.
+Props: `drivers`, `assistants`, `staff` state from the hook.
 
-### 2D. Crear `components/trips/TripInfoCard.tsx`
+### 2D. Create `components/trips/TripInfoCard.tsx`
 
-Extraer líneas 452-525 — card de info del viaje con status badge, grid fecha/hora/bus/precio, y widget de ocupación.
+Extract lines 452-525 — Trip info card with status badge, date/time/bus/price grid, and occupancy widget.
 
 Props: `trip`, `ticketStats`, `formatTimeAmPm`, `staffEditor` component.
 
-### 2E. Crear `components/trips/TripConfirmationModals.tsx`
+### 2E. Create `components/trips/TripConfirmationModals.tsx`
 
-Extraer los 4 modales inline (líneas 569-672): Dispatch, Finish, Confirm Sale, Seat Change. Comparten el mismo patrón de modal de confirmación.
+Extract the 4 inline modals (lines 569-672): Dispatch, Finish, Confirm Sale, Seat Change. They share the same confirmation modal pattern.
 
-Props: los objetos `dispatch`, `finish`, `seatChange`, `ticketSale` del hook.
+Props: `dispatch`, `finish`, `seatChange`, `ticketSale` objects from the hook.
 
-**Archivos:**
-- Crear: `frontend-react/src/hooks/use-trip-detail-page.ts`
-- Crear: `frontend-react/src/hooks/use-keyboard-shortcuts.ts`
-- Crear: `frontend-react/src/components/trips/TripStaffEditor.tsx`
-- Crear: `frontend-react/src/components/trips/TripInfoCard.tsx`
-- Crear: `frontend-react/src/components/trips/TripConfirmationModals.tsx`
-- Modificar: `frontend-react/src/pages/trips/TripDetailPage.tsx` — queda ~150-200 líneas de composición JSX
+**Files:**
+- Create: `frontend-react/src/hooks/use-trip-detail-page.ts`
+- Create: `frontend-react/src/hooks/use-keyboard-shortcuts.ts`
+- Create: `frontend-react/src/components/trips/TripStaffEditor.tsx`
+- Create: `frontend-react/src/components/trips/TripInfoCard.tsx`
+- Create: `frontend-react/src/components/trips/TripConfirmationModals.tsx`
+- Modify: `frontend-react/src/pages/trips/TripDetailPage.tsx` — Remains ~150-200 lines of JSX composition.
 
-### Verificación Fase 2
+### Phase 2 Verification
 ```bash
-cd frontend-react && npm run build  # 0 errores TypeScript
+cd frontend-react && npm run build  # 0 TypeScript errors
 ```
-Probar manualmente en el navegador:
-- Navegar a detalle de un viaje
-- Vender boleto, reservar, confirmar venta, cancelar reserva
-- Cambiar asiento
-- Despachar/terminar viaje
-- Editar conductor/asistente
-- Atajos de teclado: V (vender), R (reservar), C (limpiar), Escape
+Manually test in browser:
+- Navigate to trip detail.
+- Sell ticket, reserve, confirm sale, cancel reservation.
+- Change seat.
+- Dispatch/finish trip.
+- Edit driver/assistant.
+- Keyboard shortcuts: V (sell), R (reserve), C (clear), Escape.
 
 ---
 
-## Fase 3: Frontend — Limpiar hooks y extraer presentación
+## Phase 3: Frontend — Clean Hooks and Extract Presentation
 
-### 3A. Convertir `use-package-status.ts` → `lib/package-status.ts`
+### 3A. Convert `use-package-status.ts` → `lib/package-status.ts`
 
-El hook actual (66 líneas) NO es un hook real — tiene 0 useState/useEffect. Son funciones puras de mapeo. Además `package.service.ts` (líneas 7-52) duplica las mismas constantes.
+The current hook (66 lines) is NOT a real hook — it has 0 `useState`/`useEffect`. They are pure mapping functions. Also `package.service.ts` (lines 7-52) duplicates the same constants.
 
-- Crear `lib/package-status.ts` con exports: `getPackageStatusLabel`, `getPackageStatusColor`, `getPaymentStatusLabel`, `getPaymentStatusVariant`
-- Actualizar todos los consumidores (buscar `usePackageStatus` con Grep)
-- Eliminar `hooks/use-package-status.ts`
-- Remover constantes duplicadas de `services/package.service.ts`
+- Create `lib/package-status.ts` with exports: `getPackageStatusLabel`, `getPackageStatusColor`, `getPaymentStatusLabel`, `getPaymentStatusVariant`.
+- Update all consumers (Grep for `usePackageStatus`).
+- Delete `hooks/use-package-status.ts`.
+- Remove duplicated constants from `services/package.service.ts`.
 
-### 3B. Crear `lib/trip-formatters.ts`
+### 3B. Create `lib/trip-formatters.ts`
 
-Extraer de `hooks/use-trip-details.ts` (líneas 44-85): `formatDate`, `formatTime`, `getStatusClass`, `getStatusText`.
+Extract from `hooks/use-trip-details.ts` (lines 44-85): `formatDate`, `formatTime`, `getStatusClass`, `getStatusText`.
 
-También consolidar con los duplicados en `TripDetailPage.tsx` (líneas 18-32): `STATUS_MAP`, `STATUS_BADGE`, `formatTimeAmPm`.
+Also consolidate with duplicates in `TripDetailPage.tsx` (lines 18-32): `STATUS_MAP`, `STATUS_BADGE`, `formatTimeAmPm`.
 
-- Crear `lib/trip-formatters.ts` con todas las funciones de formato y mapeo de estado de viajes
-- Modificar `hooks/use-trip-details.ts` — queda solo: `soldTickets`, `reservedSeatNumbers`, `fetchSoldTickets`
-- Modificar `pages/trips/TripDetailPage.tsx` — importar desde `lib/trip-formatters.ts`
+- Create `lib/trip-formatters.ts` with all formatting and trip status mapping functions.
+- Modify `hooks/use-trip-details.ts` — Remains only: `soldTickets`, `reservedSeatNumbers`, `fetchSoldTickets`.
+- Modify `pages/trips/TripDetailPage.tsx` — Import from `lib/trip-formatters.ts`.
 
-### 3C. Mover stats de `sales.service.ts` a `stats.service.ts`
+### 3C. Move Stats from `sales.service.ts` to `stats.service.ts`
 
-`sales.service.ts` mezcla endpoints de `/sales` con endpoints de `/stats/sales/`. Las funciones `getRecentSales` y `getSalesSummary` pertenecen a `stats.service.ts`.
+`sales.service.ts` mixes `/sales` endpoints with `/stats/sales/` endpoints. The `getRecentSales` and `getSalesSummary` functions belong to `stats.service.ts`.
 
-- Modificar `services/sales.service.ts` — remover funciones de stats
-- Modificar `services/stats.service.ts` — agregar `getRecentSales`, `getSalesSummary`
-- Actualizar consumidores
+- Modify `services/sales.service.ts` — Remove stats functions.
+- Modify `services/stats.service.ts` — Add `getRecentSales`, `getSalesSummary`.
+- Update consumers.
 
-### 3D. Extraer constantes de `package.service.ts`
+### 3D. Extract Constants from `package.service.ts`
 
-Mover `PACKAGE_STATUSES`, `PAYMENT_METHODS`, `calculatePackageTotal`, `calculateItemsCount`, `validatePackageData` (líneas 1-99) fuera del servicio.
+Move `PACKAGE_STATUSES`, `PAYMENT_METHODS`, `calculatePackageTotal`, `calculateItemsCount`, `validatePackageData` (lines 1-99) out of the service.
 
-- Las constantes van a `lib/package-status.ts` (creado en 3A)
-- Las funciones de cálculo/validación van a `lib/package-utils.ts`
-- `services/package.service.ts` queda solo con llamadas API
+- Constants go to `lib/package-status.ts` (created in 3A).
+- Calculation/validation functions go to `lib/package-utils.ts`.
+- `services/package.service.ts` remains only with API calls.
 
-**Archivos:**
-- Crear: `frontend-react/src/lib/package-status.ts`
-- Crear: `frontend-react/src/lib/trip-formatters.ts`
-- Crear: `frontend-react/src/lib/package-utils.ts`
-- Eliminar: `frontend-react/src/hooks/use-package-status.ts`
-- Modificar: `frontend-react/src/hooks/use-trip-details.ts`
-- Modificar: `frontend-react/src/services/package.service.ts`
-- Modificar: `frontend-react/src/services/sales.service.ts`
-- Modificar: `frontend-react/src/services/stats.service.ts`
-- Modificar: consumidores de `usePackageStatus` (Grep para encontrar)
+**Files:**
+- Create: `frontend-react/src/lib/package-status.ts`
+- Create: `frontend-react/src/lib/trip-formatters.ts`
+- Create: `frontend-react/src/lib/package-utils.ts`
+- Delete: `frontend-react/src/hooks/use-package-status.ts`
+- Modify: `frontend-react/src/hooks/use-trip-details.ts`
+- Modify: `frontend-react/src/services/package.service.ts`
+- Modify: `frontend-react/src/services/sales.service.ts`
+- Modify: `frontend-react/src/services/stats.service.ts`
+- Modify: Consumers of `usePackageStatus` (Grep to find).
 
-### Verificación Fase 3
+### Phase 3 Verification
 ```bash
-cd frontend-react && npm run build  # 0 errores
+cd frontend-react && npm run build  # 0 errors
 ```
-- Probar página de detalle de paquetes (badges de estado)
-- Probar dashboard (estadísticas de ventas recientes)
-- Probar flujo de venta de boletos
+- Test package detail page (status badges).
+- Test dashboard (recent sales stats).
+- Test ticket sale flow.
 
 ---
 
-## Fase 4: Backend — Limpieza media/baja prioridad
+## Phase 4: Backend — Medium/Low Priority Cleanup
 
-### 4A. Consolidar endpoints de perfil por rol en `auth.py`
+### 4A. Consolidate Role-based Profile Endpoints in `auth.py`
 
-`backend/routes/auth.py` líneas 200-302 tiene 5 endpoints casi idénticos (`/me/secretary`, `/me/driver`, etc.) que repiten el mismo patrón.
+`backend/routes/auth.py` lines 200-302 has 5 almost identical endpoints (`/me/secretary`, `/me/driver`, etc.) that repeat the same pattern.
 
-- Crear `AuthService.get_role_profile(user, expected_role)` en `services/auth_service.py`
-- Cada endpoint en `auth.py` se reduce a 3 líneas delegando al service
+- Create `AuthService.get_role_profile(user, expected_role)` in `services/auth_service.py`.
+- Each endpoint in `auth.py` is reduced to 3 lines delegating to the service.
 
-### 4B. Extraer password hashing de `models/user.py`
+### 4B. Extract Password Hashing from `models/user.py`
 
-`User` model (líneas 48-77) contiene `verify_password`, `get_password_hash`, y configuración de `passlib`. El modelo ORM no debería poseer infraestructura de hashing.
+`User` model (lines 48-77) contains `verify_password`, `get_password_hash`, and `passlib` configuration. An ORM model should not possess hashing infrastructure.
 
-- Crear `backend/core/security.py` con `verify_password(plain, hashed)` y `hash_password(plain)`
-- `User.get_password_hash` y `User.verify_password` delegan al nuevo módulo (mantener como wrappers para compatibilidad)
+- Create `backend/core/security.py` with `verify_password(plain, hashed)` and `hash_password(plain)`.
+- `User.get_password_hash` and `User.verify_password` delegate to the new module (keep as wrappers for compatibility).
 
-**Archivos:**
-- Crear: `backend/core/security.py`
-- Modificar: `backend/models/user.py`
-- Modificar: `backend/services/auth_service.py`
-- Modificar: `backend/routes/auth.py`
+**Files:**
+- Create: `backend/core/security.py`
+- Modify: `backend/models/user.py`
+- Modify: `backend/services/auth_service.py`
+- Modify: `backend/routes/auth.py`
 
-### Verificación Fase 4
+### Phase 4 Verification
 ```bash
 cd backend && pytest -v --cov=.
 ```
-- Probar login/logout
-- Probar GET /api/v1/auth/me/secretary, /me/driver, etc.
+- Test login/logout.
+- Test `GET /api/v1/auth/me/secretary`, `/me/driver`, etc.
 
 ---
 
-## Fase 5: Actualizar documentación del proyecto
+## Phase 5: Update Project Documentation
 
-Después de implementar las fases 1-4, actualizar la documentación para que futuros agentes de AI y desarrolladores sigan escribiendo código limpio con SRP.
+After implementing phases 1-4, update the documentation so future AI agents and developers follow SRP for clean code.
 
-### 5A. Actualizar `CLAUDE.md`
+### 5A. Update `CLAUDE.md`
 
-Agregar sección **SRP Rules** dentro de "Development Patterns" con reglas explícitas:
+Add **SRP Rules** section within "Development Patterns" with explicit rules:
 
 **Backend:**
-- Routes son delegadores delgados: reciben request → llaman service → retornan response. MAX ~10 líneas por endpoint.
-- Services contienen TODA la lógica de negocio, validación, y orquestación. Un service por dominio.
-- Repositories solo acceso a datos. Sin lógica de negocio.
-- Models solo definición ORM. Sin lógica de infraestructura (hashing, etc.).
-- Validaciones complejas van en métodos privados del service (`_validate_*`).
+- Routes are thin delegators: receive request → call service → return response. MAX ~10 lines per endpoint.
+- Services contain ALL business logic, validation, and orchestration. One service per domain.
+- Repositories only data access. No business logic.
+- Models only ORM definition. No infrastructure logic (hashing, etc.).
+- Complex validations go into private service methods (`_validate_*`).
 
 **Frontend:**
-- Pages son composición de componentes. MAX ~200 líneas. Sin lógica de negocio.
-- Hooks encapsulan lógica stateful (useState, useEffect). Un hook por feature/concern.
-- Funciones puras de formato/mapeo van en `lib/` (NO en hooks).
-- Services solo llamadas API con `apiFetch`. Sin constantes, sin validación, sin cálculos.
-- Constantes y mapeos de estado van en `lib/constants.ts` o `lib/[entity]-status.ts`.
+- Pages are component compositions. MAX ~200 lines. No business logic.
+- Hooks encapsulate stateful logic (`useState`, `useEffect`). One hook per feature/concern.
+- Pure formatting/mapping functions go to `lib/` (NOT in hooks).
+- Services only API calls with `apiFetch`. No constants, no validation, no calculations.
+- Constants and status mappings go into `lib/constants.ts` or `lib/[entity]-status.ts`.
 
-### 5B. Actualizar `.agents/rules/best-practices.md`
+### 5B. Update `.agents/rules/best-practices.md`
 
-Agregar sección "Single Responsibility Checklist" que los agentes deben verificar antes de escribir código:
+Add "Single Responsibility Checklist" that agents must verify before writing code:
 
-- [ ] ¿El route/page hace más que delegar?
-- [ ] ¿El service/hook mezcla concerns no relacionados?
-- [ ] ¿Hay lógica de presentación en hooks o services?
-- [ ] ¿Hay constantes/mapeos dentro de services o hooks?
-- [ ] ¿El componente/archivo supera ~250 líneas?
+- [ ] Does the route/page do more than delegate?
+- [ ] Does the service/hook mix unrelated concerns?
+- [ ] Is there presentation logic in hooks or services?
+- [ ] Are there constants/mappings inside services or hooks?
+- [ ] Does the component/file exceed ~250 lines?
 
-### 5C. Actualizar `.agents/skills/backend-dev/SKILL.md`
+### 5C. Update `.agents/skills/backend-dev/SKILL.md`
 
-Agregar ejemplos concretos del patrón correcto post-refactoring:
-- Ejemplo de route delgado delegando a service (usar `bus.py` refactorizado como referencia)
-- Ejemplo de service con validación privada (`_validate_seat_layout`)
-- Ejemplo de `person_service.py` como patrón genérico reutilizable
+Add concrete examples of the correct pattern post-refactoring:
+- Example of a thin route delegating to a service (use refactored `bus.py` as reference).
+- Example of a service with private validation (`_validate_seat_layout`).
+- Example of `person_service.py` as a generic reusable pattern.
 
-### 5D. Actualizar `.agents/skills/frontend-dev/SKILL.md`
+### 5D. Update `.agents/skills/frontend-dev/SKILL.md`
 
-Agregar reglas post-refactoring:
-- Ejemplo de page como composición (usar `TripDetailPage.tsx` refactorizado)
-- Regla: hooks son para lógica stateful, `lib/` para funciones puras
-- Regla: services solo API calls, constantes en `lib/`
-- Listar los nuevos archivos `lib/` como referencia: `trip-formatters.ts`, `package-status.ts`, `package-utils.ts`
+Add post-refactoring rules:
+- Example of a page as composition (use refactored `TripDetailPage.tsx`).
+- Rule: Hooks are for stateful logic, `lib/` for pure functions.
+- Rule: Services only for API calls, constants in `lib/`.
+- List new `lib/` files as reference: `trip-formatters.ts`, `package-status.ts`, `package-utils.ts`.
 
-### 5E. Actualizar `docs/architecture.md`
+### 5E. Update `docs/architecture.md`
 
-Agregar en cada capa del diagrama las restricciones SRP:
+Add SRP constraints in each layer of the diagram:
 - Routes: "Thin adapters only. No validation, no business logic, no response formatting."
 - Services: "Single domain per service. Owns validation via private methods."
 - Lib (frontend): "Pure functions only. Formatters, constants, utility calculations."
 
-### 5F. Actualizar `frontend-react/README.md`
+### 5F. Update `frontend-react/README.md`
 
-Reflejar los nuevos archivos en `lib/` y `hooks/` creados durante el refactoring. Actualizar el inventario de hooks y la sección de arquitectura.
+Reflect the new `lib/` and `hooks/` files created during the refactoring. Update the hooks inventory and the architecture section.
 
-**Archivos a modificar:**
+**Files to modify:**
 - `CLAUDE.md`
 - `.agents/rules/best-practices.md`
 - `.agents/skills/backend-dev/SKILL.md`
@@ -300,19 +300,19 @@ Reflejar los nuevos archivos en `lib/` y `hooks/` creados durante el refactoring
 - `docs/architecture.md`
 - `frontend-react/README.md`
 
-### Verificación Fase 5
-- Revisar que cada archivo de documentación refleje la nueva estructura
-- Verificar que no haya contradicciones entre CLAUDE.md, best-practices.md y los SKILLs
-- Confirmar que los inventarios de archivos (hooks, lib, services) estén actualizados
+### Phase 5 Verification
+- Review that each documentation file reflects the new structure.
+- Verify no contradictions between `CLAUDE.md`, `best-practices.md`, and the SKILLs.
+- Confirm that file inventories (hooks, lib, services) are up to date.
 
 ---
 
-## Resumen
+## Summary
 
-| Fase | Severidad | Archivos nuevos | Archivos modificados | Riesgo |
-|------|-----------|-----------------|---------------------|--------|
-| 1: Backend routes→services | HIGH | 3 | 4 | Bajo (patrón existente) |
-| 2: TripDetailPage decomposition | CRITICAL | 5 | 1 | Medio (UI compleja) |
-| 3: Frontend hooks/presentación | HIGH+MEDIUM | 3 | ~7 | Bajo |
-| 4: Backend limpieza | MEDIUM+LOW | 1 | 3 | Muy bajo |
-| 5: Actualizar documentación | — | 0 | 6 | Ninguno |
+| Phase | Severity | New Files | Modified Files | Risk |
+|------|-----------|-----------|----------------|------|
+| 1: Backend routes→services | HIGH | 3 | 4 | Low (existing pattern) |
+| 2: TripDetailPage decomposition | CRITICAL | 5 | 1 | Medium (complex UI) |
+| 3: Frontend hooks/presentation | HIGH+MEDIUM | 3 | ~7 | Low |
+| 4: Backend cleanup | MEDIUM+LOW | 1 | 3 | Very low |
+| 5: Update documentation | — | 0 | 6 | None |
