@@ -2,6 +2,7 @@
 .PHONY: help build up down logs clean restart shell-backend shell-frontend shell-db seed seed-test-users clear-db setup test test-watch test-coverage
 
 # Variables
+DOCKER_COMPOSE = docker compose
 COMPOSE_FILE = docker-compose.yml
 COMPOSE_PROD_FILE = docker-compose.prod.yml
 
@@ -33,76 +34,76 @@ help:
 
 # Comandos principales
 up:
-	docker-compose -f $(COMPOSE_FILE) up -d
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) up -d
 
 up-prod:
-	docker-compose -f $(COMPOSE_PROD_FILE) up -d
+	$(DOCKER_COMPOSE) -f $(COMPOSE_PROD_FILE) up -d
 
 down:
-	docker-compose -f $(COMPOSE_FILE) down
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down
 
 down-prod:
-	docker-compose -f $(COMPOSE_PROD_FILE) down
+	$(DOCKER_COMPOSE) -f $(COMPOSE_PROD_FILE) down
 
 build:
-	docker-compose -f $(COMPOSE_FILE) build
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) build
 
 build-prod:
-	docker-compose -f $(COMPOSE_PROD_FILE) build
+	$(DOCKER_COMPOSE) -f $(COMPOSE_PROD_FILE) build
 
 rebuild:
-	docker-compose -f $(COMPOSE_FILE) build --no-cache
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) build --no-cache
 
 rebuild-prod:
-	docker-compose -f $(COMPOSE_PROD_FILE) build --no-cache
+	$(DOCKER_COMPOSE) -f $(COMPOSE_PROD_FILE) build --no-cache
 
 # Logs
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs
 
 logs-f:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs -f
 
 logs-backend:
-	docker-compose -f $(COMPOSE_FILE) logs backend
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs backend
 
 logs-frontend:
-	docker-compose -f $(COMPOSE_FILE) logs frontend
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs frontend
 
 logs-db:
-	docker-compose -f $(COMPOSE_FILE) logs db
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs db
 
 # Reiniciar servicios
 restart:
-	docker-compose -f $(COMPOSE_FILE) restart
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) restart
 
 restart-backend:
-	docker-compose -f $(COMPOSE_FILE) restart backend
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) restart backend
 
 restart-frontend:
-	docker-compose -f $(COMPOSE_FILE) restart frontend
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) restart frontend
 
 restart-db:
-	docker-compose -f $(COMPOSE_FILE) restart db
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) restart db
 
 # Acceso a shells
 shell-backend:
-	docker-compose -f $(COMPOSE_FILE) exec backend bash
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend bash
 
 shell-frontend:
-	docker-compose -f $(COMPOSE_FILE) exec frontend sh
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend sh
 
 shell-db:
-	docker-compose -f $(COMPOSE_FILE) exec db mysql -u root -p trans_comarapa
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec db mysql -u root -p trans_comarapa
 
 # Limpieza
 clean:
-	docker-compose -f $(COMPOSE_FILE) down -v
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down -v
 	docker system prune -f
 	docker volume prune -f
 
 clean-all:
-	docker-compose -f $(COMPOSE_FILE) down -v --rmi all
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down -v --rmi all
 	docker system prune -af
 	docker volume prune -f
 
@@ -139,51 +140,51 @@ setup: ## Configuración inicial del proyecto
 
 # Estado de los servicios
 status:
-	docker-compose -f $(COMPOSE_FILE) ps
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) ps
 
 # Actualizar dependencias
 update-deps:
-	docker-compose -f $(COMPOSE_FILE) exec backend pip install --upgrade -r requirements.txt
-	docker-compose -f $(COMPOSE_FILE) exec frontend npm update
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend pip install --upgrade -r requirements.txt
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend npm update
 
 # Database operations
 seed: ## Seed the database with sample data (development environment)
 	@echo "🌱 Seeding database with development data..."
-	docker-compose exec backend python db/seed.py
+	$(DOCKER_COMPOSE) exec backend python db/seed.py
 
 seed-minimal: ## Seed with minimal data (fast for testing)
 	@echo "🌱 Seeding database with minimal data..."
-	docker-compose exec backend python -c "import os; os.environ['SEED_ENV']='minimal'; exec(open('db/seed.py').read())"
+	$(DOCKER_COMPOSE) exec backend python -c "import os; os.environ['SEED_ENV']='minimal'; exec(open('db/seed.py').read())"
 
 seed-testing: ## Seed with testing data
 	@echo "🌱 Seeding database with testing data..."
-	docker-compose exec backend python -c "import os; os.environ['SEED_ENV']='testing'; exec(open('db/seed.py').read())"
+	$(DOCKER_COMPOSE) exec backend python -c "import os; os.environ['SEED_ENV']='testing'; exec(open('db/seed.py').read())"
 
 seed-demo: ## Seed with demo data (lots of data for presentations)
 	@echo "🌱 Seeding database with demo data..."
-	docker-compose exec backend python -c "import os; os.environ['SEED_ENV']='demo'; exec(open('db/seed.py').read())"
+	$(DOCKER_COMPOSE) exec backend python -c "import os; os.environ['SEED_ENV']='demo'; exec(open('db/seed.py').read())"
 
 seed-test-users: ## Create test users only (faster for development)
 	@echo "👥 Creating test users..."
-	docker-compose exec backend python -c "from db.seed import create_test_users; create_test_users()"
+	$(DOCKER_COMPOSE) exec backend python -c "from db.seed import create_test_users; create_test_users()"
 
 clear-db: ## Clear all data from database (DANGEROUS!)
 	@echo "⚠️  WARNING: This will delete ALL data from the database!"
 	@read -p "Are you sure? Type 'yes' to continue: " confirm && [ "$$confirm" = "yes" ] || exit 1
-	docker-compose exec backend python -c "from db.seed import clear_db; clear_db()"
+	$(DOCKER_COMPOSE) exec backend python -c "from db.seed import clear_db; clear_db()"
 
 # Pruebas
 test: ## Ejecutar todas las pruebas
 	@echo "🧪  Ejecutando pruebas..."
-	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --run
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend npm run test -- --run
 
 test-watch: ## Ejecutar pruebas en modo observador
 	@echo "👀  Ejecutando pruebas en modo observador..."
-	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend npm run test
 
 test-coverage: ## Generar reporte de cobertura de pruebas
 	@echo "📊  Generando reporte de cobertura..."
-	docker-compose -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend npm run test -- --coverage
 
 # ── Linting ──────────────────────────────────────────────
 lint-install: ## Instalar hooks de pre-commit
@@ -195,16 +196,16 @@ lint: ## Ejecutar linter en todos los archivos
 # ── Database Migrations ──────────────────────────────────────────────
 db-migrate: ## Generar nueva migración Alembic (autogenerate)
 	@echo "🔄  Generando migración..."
-	docker-compose -f $(COMPOSE_FILE) exec backend alembic revision --autogenerate -m "$(msg)"
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend alembic revision --autogenerate -m "$(msg)"
 
 db-upgrade: ## Aplicar migraciones pendientes
 	@echo "⬆️  Aplicando migraciones..."
-	docker-compose -f $(COMPOSE_FILE) exec backend alembic upgrade head
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend alembic upgrade head
 
 db-downgrade: ## Revertir última migración
 	@echo "⬇️  Revirtiendo migración..."
-	docker-compose -f $(COMPOSE_FILE) exec backend alembic downgrade -1
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend alembic downgrade -1
 
 db-history: ## Ver historial de migraciones
 	@echo "📜  Historial de migraciones:"
-	docker-compose -f $(COMPOSE_FILE) exec backend alembic history --verbose 
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend alembic history --verbose 
