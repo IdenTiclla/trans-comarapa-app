@@ -1,7 +1,3 @@
-"""
-Report service - generates monthly reports for tickets, packages, and cash registers.
-"""
-
 import csv
 import io
 from datetime import datetime, date
@@ -9,23 +5,14 @@ from typing import Optional, Any, Dict, List
 from calendar import monthrange
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, and_, case
 
-from models.ticket import Ticket
-from models.package import Package
-from models.package_item import PackageItem
-from models.cash_register import CashRegister
-from models.cash_transaction import CashTransaction
-from models.trip import Trip
-from models.route import Route
-from models.location import Location
-from models.secretary import Secretary
-from core.enums import CashRegisterStatus
+from repositories.report_repository import ReportRepository
 
 
 class ReportService:
     def __init__(self, db: Session):
         self.db = db
+        self.repo = ReportRepository(db)
 
     def _date_range(self, year: int, month: int):
         _, last_day = monthrange(year, month)
@@ -33,38 +20,15 @@ class ReportService:
         end = datetime(year, month, last_day, 23, 59, 59)
         return start, end
 
-    def _office_filter_for_secretary(self, secretary_id: int):
-        """Get office_id for a secretary to restrict reports."""
-        sec = self.db.query(Secretary).filter(Secretary.id == secretary_id).first()
-        return sec.office_id if sec else None
-
     def monthly_ticket_report(
         self, year: int, month: int, office_id: Optional[int] = None
     ) -> Dict[str, Any]:
         start, end = self._date_range(year, month)
-
-        query = self.db.query(Ticket).filter(
-            Ticket.created_at >= start,
-            Ticket.created_at <= end,
-            Ticket.state != "cancelled",
-        )
-
-        if office_id:
-            sec_ids = [
-                s.id for s in
-                self.db.query(Secretary.id).filter(Secretary.office_id == office_id).all()
-            ]
-            if sec_ids:
-                query = query.filter(Ticket.secretary_id.in_(sec_ids))
-            else:
-                query = query.filter(False)  # no secretaries → no results
-
-        tickets = query.all()
+        tickets = self.repo.get_tickets_in_range(start, end, office_id)
 
         total_count = len(tickets)
         total_revenue = float(sum(t.price for t in tickets))
 
-        # By payment method
         by_payment = {}
         for t in tickets:
             pm = t.payment_method or "unknown"
@@ -73,7 +37,6 @@ class ReportService:
             by_payment[pm]["count"] += 1
             by_payment[pm]["total"] += float(t.price)
 
-        # By route
         by_route = {}
         for t in tickets:
             trip = t.trip
@@ -88,7 +51,6 @@ class ReportService:
             by_route[key]["count"] += 1
             by_route[key]["total"] += float(t.price)
 
-        # Detail rows for CSV
         rows = []
         for t in tickets:
             trip = t.trip
@@ -124,23 +86,7 @@ class ReportService:
         self, year: int, month: int, office_id: Optional[int] = None
     ) -> Dict[str, Any]:
         start, end = self._date_range(year, month)
-
-        query = self.db.query(Package).filter(
-            Package.created_at >= start,
-            Package.created_at <= end,
-        )
-
-        if office_id:
-            sec_ids = [
-                s.id for s in
-                self.db.query(Secretary.id).filter(Secretary.office_id == office_id).all()
-            ]
-            if sec_ids:
-                query = query.filter(Package.secretary_id.in_(sec_ids))
-            else:
-                query = query.filter(False)
-
-        packages = query.all()
+        packages = self.repo.get_packages_in_range(start, end, office_id)
 
         total_count = len(packages)
         total_revenue = 0.0
@@ -197,15 +143,7 @@ class ReportService:
         self, year: int, month: int, office_id: Optional[int] = None
     ) -> Dict[str, Any]:
         start, end = self._date_range(year, month)
-
-        query = self.db.query(CashRegister).filter(
-            CashRegister.opened_at >= start,
-            CashRegister.opened_at <= end,
-        )
-        if office_id:
-            query = query.filter(CashRegister.office_id == office_id)
-
-        registers = query.order_by(CashRegister.opened_at).all()
+        registers = self.repo.get_registers_in_range(start, end, office_id)
 
         total_income = 0.0
         total_withdrawals = 0.0
@@ -254,8 +192,6 @@ class ReportService:
             "by_transaction_type": by_transaction_type,
             "rows": rows,
         }
-
-    # --- CSV generators ---
 
     def ticket_report_csv(self, year: int, month: int, office_id: Optional[int] = None) -> str:
         report = self.monthly_ticket_report(year, month, office_id)

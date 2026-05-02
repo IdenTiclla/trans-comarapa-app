@@ -1,15 +1,8 @@
-"""
-Trip service - contains trip business logic.
-
-Extracted from routes/trip.py.
-"""
-
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Any, Dict
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from core.exceptions import (
     ForbiddenException,
@@ -18,13 +11,8 @@ from core.exceptions import (
     ValidationException,
 )
 from models.trip import Trip
-from models.driver import Driver
-from models.assistant import Assistant
-from models.bus import Bus
-from models.route import Route
 from models.seat import Seat
 from models.ticket import Ticket
-from models.secretary import Secretary
 from models.package import Package
 from models.person import Person
 from models.user import User
@@ -32,6 +20,7 @@ from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
 from repositories.trip_repository import TripRepository
 from repositories.package_repository import PackageRepository
+from repositories.ticket_repository import TicketRepository
 from schemas.trip import TripCreate, TripUpdate
 from core.state_machines import validate_transition, TRIP_TRANSITIONS
 from core.enums import TripStatus, PackageStatus
@@ -40,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class TripService:
-    """Business logic for trip operations."""
 
     def __init__(
         self,
@@ -69,7 +57,6 @@ class TripService:
         sort_by: str = "trip_datetime",
         sort_direction: str = "asc",
     ) -> Dict[str, Any]:
-        """Get trips with filtering and pagination. Returns dict with trips and pagination info."""
         trips, total = self.repo.get_with_filters(
             skip=skip,
             limit=limit,
@@ -104,12 +91,7 @@ class TripService:
 
             total_seats = trip.bus.capacity if trip.bus else 0
 
-            occupied_seats_count = (
-                self.db.query(func.count(Ticket.id))
-                .filter(Ticket.trip_id == trip.id, Ticket.state != "cancelled")
-                .scalar()
-                or 0
-            )
+            occupied_seats_count = self.repo.count_occupied_seats(trip.id)
 
             available_seats = total_seats - occupied_seats_count
 
@@ -181,20 +163,8 @@ class TripService:
         occupied_seat_ids = set()
 
         if trip.bus:
-            bus_seats = (
-                self.db.query(Seat)
-                .filter(Seat.bus_id == trip.bus_id)
-                .order_by(Seat.seat_number)
-                .all()
-            )
-            trip_tickets = (
-                self.db.query(Ticket)
-                .filter(
-                    Ticket.trip_id == trip.id,
-                    Ticket.state.in_(["pending", "confirmed"]),
-                )
-                .all()
-            )
+            bus_seats = self.repo.get_seats_by_bus(trip.bus_id)
+            trip_tickets = self.repo.get_active_tickets_by_trip(trip.id)
 
             occupied_seat_ids = {t.seat_id for t in trip_tickets}
 
@@ -274,7 +244,7 @@ class TripService:
         if not trip.bus:
             raise NotFoundException(f"Bus not found for trip {trip_id}")
 
-        bus_seats = self.db.query(Seat).filter(Seat.bus_id == trip.bus.id).all()
+        bus_seats = self.repo.get_seats_by_bus(trip.bus.id)
         if not bus_seats:
             return {
                 "total_seats": trip.bus.capacity,
@@ -284,11 +254,7 @@ class TripService:
                 "available_seat_numbers": list(range(1, trip.bus.capacity + 1)),
             }
 
-        occupied_tickets = (
-            self.db.query(Ticket)
-            .filter(Ticket.trip_id == trip_id, Ticket.state != "cancelled")
-            .all()
-        )
+        occupied_tickets = self.repo.get_non_cancelled_tickets_by_trip(trip_id)
 
         occupied_seat_ids = {t.seat_id for t in occupied_tickets}
         available_seats = [s for s in bus_seats if s.id not in occupied_seat_ids]
@@ -318,11 +284,8 @@ class TripService:
         }
 
     def create_trip(self, data: TripCreate) -> Trip:
-        """Create a new trip with validation."""
         min_departure = datetime.now() + timedelta(minutes=30)
-        # Fix tz-naive vs tz-aware comparison
         if data.trip_datetime.tzinfo is None:
-            # Assume it's local time if naive, just compare without tz
             min_departure = min_departure.replace(tzinfo=None)
 
         if data.trip_datetime.replace(tzinfo=None) < min_departure:
@@ -332,24 +295,20 @@ class TripService:
 
         if (
             data.driver_id
-            and not self.db.query(Driver).filter(Driver.id == data.driver_id).first()
+            and not self.repo.get_driver_by_id(data.driver_id)
         ):
             raise NotFoundException(f"Driver with id {data.driver_id} not found")
-        if not self.db.query(Bus).filter(Bus.id == data.bus_id).first():
+        if not self.repo.get_bus_by_id(data.bus_id):
             raise NotFoundException(f"Bus with id {data.bus_id} not found")
-        if not self.db.query(Route).filter(Route.id == data.route_id).first():
+        if not self.repo.get_route_by_id(data.route_id):
             raise NotFoundException(f"Route with id {data.route_id} not found")
         if (
-            not self.db.query(Secretary)
-            .filter(Secretary.id == data.secretary_id)
-            .first()
+            not self.repo.get_secretary_by_id(data.secretary_id)
         ):
             raise NotFoundException(f"Secretary with id {data.secretary_id} not found")
         if (
             data.assistant_id
-            and not self.db.query(Assistant)
-            .filter(Assistant.id == data.assistant_id)
-            .first()
+            and not self.repo.get_assistant_by_id(data.assistant_id)
         ):
             raise NotFoundException(f"Assistant with id {data.assistant_id} not found")
 
@@ -383,7 +342,7 @@ class TripService:
 
         trip_data = data.model_dump()
         new_trip = Trip(**trip_data)
-        self.db.add(new_trip)
+        self.repo.create_trip(new_trip)
         try:
             self.db.commit()
             self.db.refresh(new_trip)
@@ -396,16 +355,11 @@ class TripService:
         return new_trip
 
     def update_trip(self, trip_id: int, data: TripUpdate) -> Trip:
-        """Update a trip."""
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
         update_data = data.model_dump(exclude_unset=True)
 
         if "driver_id" in update_data and update_data["driver_id"]:
-            if (
-                not self.db.query(Driver)
-                .filter(Driver.id == update_data["driver_id"])
-                .first()
-            ):
+            if not self.repo.get_driver_by_id(update_data["driver_id"]):
                 raise NotFoundException(
                     f"Driver with id {update_data['driver_id']} not found"
                 )
@@ -421,7 +375,7 @@ class TripService:
                 )
 
         if "bus_id" in update_data and update_data["bus_id"]:
-            if not self.db.query(Bus).filter(Bus.id == update_data["bus_id"]).first():
+            if not self.repo.get_bus_by_id(update_data["bus_id"]):
                 raise NotFoundException(
                     f"Bus with id {update_data['bus_id']} not found"
                 )
@@ -437,11 +391,7 @@ class TripService:
                 )
 
         if "assistant_id" in update_data and update_data["assistant_id"]:
-            if (
-                not self.db.query(Assistant)
-                .filter(Assistant.id == update_data["assistant_id"])
-                .first()
-            ):
+            if not self.repo.get_assistant_by_id(update_data["assistant_id"]):
                 raise NotFoundException(
                     f"Assistant with id {update_data['assistant_id']} not found"
                 )
@@ -457,11 +407,7 @@ class TripService:
                 )
 
         if "route_id" in update_data and update_data["route_id"]:
-            if (
-                not self.db.query(Route)
-                .filter(Route.id == update_data["route_id"])
-                .first()
-            ):
+            if not self.repo.get_route_by_id(update_data["route_id"]):
                 raise NotFoundException(
                     f"Route with id {update_data['route_id']} not found"
                 )
@@ -486,15 +432,14 @@ class TripService:
         return trip
 
     def delete_trip(self, trip_id: int) -> None:
-        """Delete a trip."""
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
-        ticket_count = self.db.query(Ticket).filter(Ticket.trip_id == trip_id).count()
+        ticket_count = self.repo.count_tickets_for_trip(trip_id)
         if ticket_count > 0:
             raise ValidationException(
                 f"Cannot delete trip with id {trip_id} because it has {ticket_count} associated tickets. Delete the tickets first."
             )
 
-        self.db.delete(trip)
+        self.repo.delete_trip(trip)
         self.db.commit()
 
     def get_trip_driver(self, trip_id: int):
@@ -513,11 +458,7 @@ class TripService:
         self, trip_id: int, from_status: str, to_status: str
     ) -> None:
         package_repo = PackageRepository(self.db)
-        packages = (
-            self.db.query(Package)
-            .filter(Package.trip_id == trip_id, Package.status == from_status)
-            .all()
-        )
+        packages = self.repo.get_packages_by_trip_and_status(trip_id, from_status)
 
         for pkg in packages:
             old_status = pkg.status
@@ -528,10 +469,6 @@ class TripService:
 
     def dispatch_trip(self, trip_id: int) -> Trip:
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
-        if trip.status not in [TripStatus.SCHEDULED, TripStatus.BOARDING]:
-            # Adjust mapping appropriately if current state makes DEPARTED valid
-            # according to the TRIP_TRANSITIONS, but actually we use validate_transition
-            pass
 
         current_time = datetime.now()
         trip_time = (
@@ -560,7 +497,6 @@ class TripService:
         validate_transition("trip", TRIP_TRANSITIONS, trip.status, TripStatus.ARRIVED)
 
         trip.status = TripStatus.ARRIVED
-        # Removed automatic package status change. Packages must be received manually.
         self.db.commit()
         self.db.refresh(trip)
         return trip
@@ -568,25 +504,11 @@ class TripService:
     def get_my_trips(
         self, current_user: User, *, status_filter: Optional[str] = None
     ) -> list[Dict[str, Any]]:
-        """Get trips assigned to the current user as driver or assistant."""
-        person = self.db.query(Person).filter(Person.user_id == current_user.id).first()
+        person = self.repo.get_person_by_user_id(current_user.id)
         if not person:
             return []
 
-        query = self.db.query(Trip)
-        if person.type == "driver":
-            query = query.filter(Trip.driver_id == person.id)
-        elif person.type == "assistant":
-            query = query.filter(Trip.assistant_id == person.id)
-        else:
-            return []
-
-        if status_filter:
-            statuses = [s.strip() for s in status_filter.split(",")]
-            query = query.filter(Trip.status.in_(statuses))
-
-        query = query.order_by(Trip.trip_datetime.desc())
-        trips = query.all()
+        trips = self.repo.get_trips_by_person(person.type, person.id, status_filter)
 
         result = []
         for trip in trips:
@@ -602,26 +524,11 @@ class TripService:
             )
 
             total_seats = trip.bus.capacity if trip.bus else 0
-            ticket_count = (
-                self.db.query(func.count(Ticket.id))
-                .filter(Ticket.trip_id == trip.id, Ticket.state != "cancelled")
-                .scalar()
-                or 0
-            )
+            ticket_count = self.repo.count_occupied_seats(trip.id)
 
-            package_count = (
-                self.db.query(func.count(Package.id))
-                .filter(Package.trip_id == trip.id)
-                .scalar()
-                or 0
-            )
+            package_count = self.repo.count_packages_by_trip(trip.id)
 
-            # Package details for this trip
-            trip_packages = (
-                self.db.query(Package)
-                .filter(Package.trip_id == trip.id)
-                .all()
-            )
+            trip_packages = self.repo.get_packages_by_trip(trip.id)
             packages_data = []
             for pkg in trip_packages:
                 sender_name = "—"
@@ -642,19 +549,11 @@ class TripService:
                     "item_count": pkg.total_items_count,
                 })
 
-            # Passenger manifest
             passengers = []
             if trip.bus:
-                trip_tickets = (
-                    self.db.query(Ticket)
-                    .filter(
-                        Ticket.trip_id == trip.id,
-                        Ticket.state.in_(["pending", "confirmed"]),
-                    )
-                    .all()
-                )
+                trip_tickets = self.repo.get_active_tickets_by_trip(trip.id)
                 for t in trip_tickets:
-                    seat = self.db.query(Seat).filter(Seat.id == t.seat_id).first()
+                    seat = self.repo.get_seat_by_id(t.seat_id)
                     client_name = "—"
                     if t.client:
                         client_name = (
@@ -699,16 +598,10 @@ class TripService:
         return result
 
     def transition_trip(self, trip_id: int, action: str, current_user: User) -> Trip:
-        """Transition a trip's status based on an action.
-
-        Actions: start_boarding, depart, arrive.
-        Only the assigned driver/assistant or admin can transition.
-        """
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
 
-        # Permission check: admin or assigned driver/assistant
         if current_user.role.value != "admin":
-            person = self.db.query(Person).filter(Person.user_id == current_user.id).first()
+            person = self.repo.get_person_by_user_id(current_user.id)
             if not person:
                 raise ForbiddenException("No tienes permiso para cambiar el estado de este viaje")
             is_assigned = (
@@ -730,7 +623,6 @@ class TripService:
                 f"Acción inválida: '{action}'. Acciones válidas: {', '.join(action_map.keys())}"
             )
 
-        # For start_boarding, validate that trip datetime is today or past
         if action == "start_boarding":
             now = datetime.now()
             trip_dt = (
@@ -747,7 +639,6 @@ class TripService:
 
         trip.status = target_status
 
-        # Side effects based on transition
         if target_status == TripStatus.DEPARTED:
             self._bulk_transition_packages(
                 trip_id, PackageStatus.ASSIGNED_TO_TRIP, PackageStatus.IN_TRANSIT
@@ -762,9 +653,8 @@ class TripService:
         validate_transition("trip", TRIP_TRANSITIONS, trip.status, TripStatus.CANCELLED)
 
         trip.status = TripStatus.CANCELLED
-        # Unassign packages and return them to office
         package_repo = PackageRepository(self.db)
-        packages = self.db.query(Package).filter(Package.trip_id == trip_id).all()
+        packages = self.repo.get_packages_by_trip(trip_id)
 
         for pkg in packages:
             old_status = pkg.status

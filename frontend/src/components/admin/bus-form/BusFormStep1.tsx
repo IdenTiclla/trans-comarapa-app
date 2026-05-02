@@ -23,7 +23,7 @@ export function BusFormStep1({
   onSubmit, onCancel, onGoStep2,
 }: Props) {
   return (
-    <form onSubmit={onSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
+    <form onSubmit={onSubmit} className="flex-1 min-h-0 overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar">
       <FormInput
         label="Placa *"
         id="license_plate"

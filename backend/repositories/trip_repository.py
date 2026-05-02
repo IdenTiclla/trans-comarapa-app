@@ -1,18 +1,20 @@
-"""
-Trip repository with domain-specific query methods.
-"""
-
-from typing import Optional, Any
+from typing import Optional
 from datetime import datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_, func, desc, asc
+from sqlalchemy import or_, func, desc, asc
 
 from models.trip import Trip
 from models.route import Route
 from models.location import Location
 from models.ticket import Ticket
 from models.bus import Bus
+from models.seat import Seat
+from models.driver import Driver
+from models.assistant import Assistant
+from models.secretary import Secretary
+from models.package import Package
+from models.person import Person
 from repositories.base import BaseRepository
 
 
@@ -75,12 +77,10 @@ class TripRepository(BaseRepository[Trip]):
             query = query.filter(Trip.driver_id == driver_id)
         else:
             query = query.filter(Trip.driver_id == None)
-            
         if assistant_id:
             query = query.filter(Trip.assistant_id == assistant_id)
         else:
             query = query.filter(Trip.assistant_id == None)
-            
         return query.first()
 
     def get_with_filters(
@@ -102,7 +102,6 @@ class TripRepository(BaseRepository[Trip]):
         sort_by: str = "trip_datetime",
         sort_direction: str = "asc",
     ) -> tuple[list[Trip], int]:
-        """Get trips with filtering, sorting, and pagination. Returns (trips, total_count)."""
         query = self.db.query(Trip)
 
         if upcoming:
@@ -169,7 +168,6 @@ class TripRepository(BaseRepository[Trip]):
 
         total = query.count()
 
-        # Sorting
         sort_column = getattr(Trip, sort_by, Trip.trip_datetime)
         order_func = desc if sort_direction.lower() == "desc" else asc
         query = query.order_by(order_func(sort_column))
@@ -178,8 +176,6 @@ class TripRepository(BaseRepository[Trip]):
         return trips, total
 
     def get_upcoming(self, limit: int = 5) -> list[Trip]:
-        """Get the next upcoming trips ordered by datetime."""
-        from datetime import datetime
         return (
             self.db.query(Trip)
             .filter(Trip.trip_datetime >= datetime.now())
@@ -187,3 +183,105 @@ class TripRepository(BaseRepository[Trip]):
             .limit(limit)
             .all()
         )
+
+    def get_driver_by_id(self, driver_id: int) -> Optional[Driver]:
+        return self.db.query(Driver).filter(Driver.id == driver_id).first()
+
+    def get_assistant_by_id(self, assistant_id: int) -> Optional[Assistant]:
+        return self.db.query(Assistant).filter(Assistant.id == assistant_id).first()
+
+    def get_bus_by_id(self, bus_id: int) -> Optional[Bus]:
+        return self.db.query(Bus).filter(Bus.id == bus_id).first()
+
+    def get_route_by_id(self, route_id: int) -> Optional[Route]:
+        return self.db.query(Route).filter(Route.id == route_id).first()
+
+    def get_secretary_by_id(self, secretary_id: int) -> Optional[Secretary]:
+        return self.db.query(Secretary).filter(Secretary.id == secretary_id).first()
+
+    def get_person_by_user_id(self, user_id: int) -> Optional[Person]:
+        return self.db.query(Person).filter(Person.user_id == user_id).first()
+
+    def create_trip(self, trip: Trip) -> Trip:
+        self.db.add(trip)
+        self.db.flush()
+        return trip
+
+    def delete_trip(self, trip: Trip) -> None:
+        self.db.delete(trip)
+        self.db.flush()
+
+    def get_seats_by_bus(self, bus_id: int) -> list[Seat]:
+        return (
+            self.db.query(Seat)
+            .filter(Seat.bus_id == bus_id)
+            .order_by(Seat.seat_number)
+            .all()
+        )
+
+    def get_active_tickets_by_trip(self, trip_id: int) -> list[Ticket]:
+        return (
+            self.db.query(Ticket)
+            .filter(
+                Ticket.trip_id == trip_id,
+                Ticket.state.in_(["pending", "confirmed"]),
+            )
+            .all()
+        )
+
+    def count_occupied_seats(self, trip_id: int) -> int:
+        return (
+            self.db.query(func.count(Ticket.id))
+            .filter(Ticket.trip_id == trip_id, Ticket.state != "cancelled")
+            .scalar()
+            or 0
+        )
+
+    def count_packages_by_trip(self, trip_id: int) -> int:
+        return (
+            self.db.query(func.count(Package.id))
+            .filter(Package.trip_id == trip_id)
+            .scalar()
+            or 0
+        )
+
+    def get_tickets_by_trip(self, trip_id: int) -> list[Ticket]:
+        return self.db.query(Ticket).filter(Ticket.trip_id == trip_id).all()
+
+    def get_non_cancelled_tickets_by_trip(self, trip_id: int) -> list[Ticket]:
+        return (
+            self.db.query(Ticket)
+            .filter(Ticket.trip_id == trip_id, Ticket.state != "cancelled")
+            .all()
+        )
+
+    def get_packages_by_trip(self, trip_id: int) -> list[Package]:
+        return self.db.query(Package).filter(Package.trip_id == trip_id).all()
+
+    def get_packages_by_trip_and_status(self, trip_id: int, status: str) -> list[Package]:
+        return (
+            self.db.query(Package)
+            .filter(Package.trip_id == trip_id, Package.status == status)
+            .all()
+        )
+
+    def get_trips_by_person(
+        self, person_type: str, person_id: int, status_filter: Optional[str] = None
+    ) -> list[Trip]:
+        query = self.db.query(Trip)
+        if person_type == "driver":
+            query = query.filter(Trip.driver_id == person_id)
+        elif person_type == "assistant":
+            query = query.filter(Trip.assistant_id == person_id)
+        else:
+            return []
+        if status_filter:
+            statuses = [s.strip() for s in status_filter.split(",")]
+            query = query.filter(Trip.status.in_(statuses))
+        return query.order_by(Trip.trip_datetime.desc()).all()
+
+    def count_tickets_for_trip(self, trip_id: int) -> int:
+        return self.db.query(Ticket).filter(Ticket.trip_id == trip_id).count()
+
+    def get_seat_by_id(self, seat_id: int) -> Optional[Seat]:
+        return self.db.query(Seat).filter(Seat.id == seat_id).first()

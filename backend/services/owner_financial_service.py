@@ -1,16 +1,14 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from typing import List, Dict, Any
 from collections import defaultdict
-from models.trip import Trip
-from models.bus import Bus
-from models.owner import Owner
-from models.user import User
-from models.ticket import Ticket
-from models.package import Package
 from models.owner_withdrawal import OwnerWithdrawal
 from models.cash_transaction import CashTransaction
 from services.cash_register_service import CashRegisterService
+from repositories.owner_repository import OwnerRepository
+from repositories.package_repository import PackageRepository
+from repositories.ticket_repository import TicketRepository
+from repositories.trip_repository import TripRepository
+from repositories.person_repository import PersonRepository
 from core.exceptions import NotFoundException, ValidationException
 import logging
 
@@ -21,11 +19,12 @@ class OwnerFinancialService:
     def __init__(self, db: Session):
         self.db = db
         self.cash_register_service = CashRegisterService(db)
+        self.owner_repo = OwnerRepository(db)
 
     def get_owner_trips_financials(
         self, owner_id: int, bus_id: int = None
     ) -> List[Dict[str, Any]]:
-        owner = self.db.query(Owner).filter(Owner.id == owner_id).first()
+        owner = self.owner_repo.get_by_id_or_none(owner_id)
         if not owner:
             raise NotFoundException(f"Dueño con ID {owner_id} no encontrado")
 
@@ -38,7 +37,9 @@ class OwnerFinancialService:
                 raise ValidationException("El bus no pertenece a este socio")
             bus_ids = [bus_id]
 
-        trips = self.db.query(Trip).filter(Trip.bus_id.in_(bus_ids)).all()
+        trips = self.owner_repo.get_trips_by_bus_ids(bus_ids)
+        ticket_repo = TicketRepository(self.db)
+        package_repo = PackageRepository(self.db)
 
         financials = []
         for trip in trips:
@@ -57,8 +58,7 @@ class OwnerFinancialService:
                 if not office_data[oid]["office_name"]:
                     office_data[oid]["office_name"] = name
 
-            # 1. Boletos — dinero en la oficina de la secretaria que vendió
-            tickets = self.db.query(Ticket).filter(Ticket.trip_id == trip.id).all()
+            tickets = ticket_repo.get_by_trip(trip.id)
             tickets_total = 0.0
             for t in tickets:
                 if t.state.lower() in ("confirmed", "completed"):
@@ -74,8 +74,7 @@ class OwnerFinancialService:
                         )
                         office_data[oid]["tickets_amount"] += amt
 
-            # 2. Encomiendas
-            packages = self.db.query(Package).filter(Package.trip_id == trip.id).all()
+            packages = package_repo.get_by_trip(trip.id)
             pkg_paid_total = 0.0
             pkg_collected_total = 0.0
             pkg_pending_total = 0.0
@@ -87,7 +86,6 @@ class OwnerFinancialService:
                 payment_status = getattr(p, "payment_status", None)
                 pkg_status = getattr(p, "status", "").lower()
 
-                # Resolver oficina de origen: origin_office_id o secretary.office_id
                 origin_oid = p.origin_office_id
                 origin_name = p.origin_office.name if p.origin_office else None
                 if not origin_oid and p.secretary and p.secretary.office_id:
@@ -98,14 +96,12 @@ class OwnerFinancialService:
                 if origin_oid and not origin_name:
                     origin_name = f"Oficina {origin_oid}"
 
-                # Resolver oficina de destino: destination_office_id
                 dest_oid = p.destination_office_id
                 dest_name = p.destination_office.name if p.destination_office else None
                 if dest_oid and not dest_name:
                     dest_name = f"Oficina {dest_oid}"
 
                 if payment_status == "paid_on_send":
-                    # Pagado al enviar → dinero en oficina de origen
                     pkg_paid_total += amt
                     if origin_oid:
                         _ensure_office(origin_oid, origin_name)
@@ -113,20 +109,17 @@ class OwnerFinancialService:
 
                 elif payment_status == "collect_on_delivery":
                     if pkg_status == "delivered":
-                        # Cobrado en destino → dinero en oficina de destino
                         pkg_collected_total += amt
                         if dest_oid:
                             _ensure_office(dest_oid, dest_name)
                             office_data[dest_oid]["packages_collected_amount"] += amt
                     else:
-                        # Pendiente de cobro → se espera en oficina de destino
                         pkg_pending_total += amt
                         if dest_oid:
                             _ensure_office(dest_oid, dest_name)
                             office_data[dest_oid]["packages_pending_amount"] += amt
 
                 else:
-                    # Sin payment_status explícito
                     if pkg_status in ("delivered", "paid", "pagado"):
                         pkg_paid_total += amt
                         if origin_oid:
@@ -140,23 +133,13 @@ class OwnerFinancialService:
                             _ensure_office(fallback_oid, fallback_name)
                             office_data[fallback_oid]["packages_pending_amount"] += amt
 
-            # 3. Retiros anteriores
-            withdrawals = (
-                self.db.query(OwnerWithdrawal)
-                .filter(
-                    OwnerWithdrawal.owner_id == owner_id,
-                    OwnerWithdrawal.trip_id == trip.id,
-                )
-                .all()
+            withdrawals = self.owner_repo.get_withdrawals_by_owner(
+                owner_id, [trip.id]
             )
 
             total_withdrawn = 0.0
             for w in withdrawals:
-                ct = (
-                    self.db.query(CashTransaction)
-                    .filter(CashTransaction.id == w.cash_transaction_id)
-                    .first()
-                )
+                ct = self.owner_repo.get_cash_transaction(w.cash_transaction_id)
                 if ct:
                     w_amount = float(ct.amount)
                     total_withdrawn += w_amount
@@ -170,7 +153,6 @@ class OwnerFinancialService:
                         )
                         office_data[oid]["withdrawn_amount"] += w_amount
 
-            # 4. Totales del viaje
             tickets_total = round(tickets_total, 2)
             pkg_paid_total = round(pkg_paid_total, 2)
             pkg_collected_total = round(pkg_collected_total, 2)
@@ -181,7 +163,6 @@ class OwnerFinancialService:
             total_withdrawn = round(total_withdrawn, 2)
             available_balance = round(total_collected - total_withdrawn, 2)
 
-            # 5. Desglose por oficina
             office_breakdown = []
             for oid, d in office_data.items():
                 t_amt = round(d["tickets_amount"], 2)
@@ -238,13 +219,12 @@ class OwnerFinancialService:
         office_id: int,
         secretary_user_id: int,
     ) -> OwnerWithdrawal:
-        # Validar dueño
-        owner = self.db.query(Owner).filter(Owner.id == owner_id).first()
+        owner = self.owner_repo.get_by_id_or_none(owner_id)
         if not owner:
             raise NotFoundException("Dueño no encontrado")
 
-        # Validar viaje y que pertenezca a sus buses
-        trip = self.db.query(Trip).filter(Trip.id == trip_id).first()
+        trip_repo = TripRepository(self.db)
+        trip = trip_repo.get_by_id(trip_id)
         if not trip:
             raise NotFoundException("Viaje no encontrado")
 
@@ -254,7 +234,6 @@ class OwnerFinancialService:
                 "Este viaje no pertenece a un bus del dueño especificado"
             )
 
-        # Verificar que el amount <= available_balance
         financials = self.get_owner_trips_financials(owner_id)
         trip_fin = next((f for f in financials if f["trip_id"] == trip_id), None)
 
@@ -266,7 +245,6 @@ class OwnerFinancialService:
 
         amount = round(amount, 2)
 
-        # Validar por oficina si se especifica office_id
         office_breakdown = trip_fin.get("office_breakdown", [])
         office_entry = next(
             (o for o in office_breakdown if o["office_id"] == office_id), None
@@ -282,24 +260,18 @@ class OwnerFinancialService:
                 f"El monto excede el saldo disponible ({trip_fin['available_balance']:.2f})"
             )
 
-        # Encontrar secretary de secretaria
         from models.secretary import Secretary
 
-        secretary = (
-            self.db.query(Secretary)
-            .filter(Secretary.user_id == secretary_user_id)
-            .first()
-        )
+        person_repo = PersonRepository(self.db)
+        secretary = person_repo.get_secretary_by_user_id(secretary_user_id)
         if not secretary:
             raise ValidationException("El usuario actual no tiene rol de Secretario")
 
-        # Validar que el secretario pertenezca a la oficina del retiro
         if secretary.office_id != office_id:
             raise ValidationException(
                 "Solo puede realizar retiros desde la oficina donde está asignado"
             )
 
-        # Encontrar la caja abierta de la oficina
         register = self.cash_register_service.get_current_register(office_id)
         if not register:
             raise ValidationException(f"No hay caja abierta en la oficina {office_id}")
@@ -307,12 +279,11 @@ class OwnerFinancialService:
         description = f"Retiro de Socio: {owner.full_name} por Viaje ID {trip_id}"
 
         try:
-            # Buscar el user completo para record_withdrawal
-            user = self.db.query(User).filter(User.id == secretary_user_id).first()
+            user_repo = __import__('repositories.user_repository', fromlist=['UserRepository']).UserRepository(self.db)
+            user = user_repo.get_by_id(secretary_user_id)
             if not user:
                 raise ValidationException("Usuario secretario no encontrado")
 
-            # Registrar el retiro en la caja abierta
             cash_tx = self.cash_register_service.record_withdrawal(
                 register_id=register.id,
                 amount=amount,
@@ -320,7 +291,6 @@ class OwnerFinancialService:
                 user=user,
             )
 
-            # Crear el record interno de OwnerWithdrawal
             withdrawal = OwnerWithdrawal(
                 owner_id=owner_id,
                 trip_id=trip_id,
@@ -328,7 +298,7 @@ class OwnerFinancialService:
                 secretary_id=secretary.id,
             )
 
-            self.db.add(withdrawal)
+            self.owner_repo.create_withdrawal(withdrawal)
             self.db.commit()
             self.db.refresh(withdrawal)
 
@@ -343,34 +313,25 @@ class OwnerFinancialService:
     def get_owner_withdrawals(
         self, owner_id: int, bus_id: int = None
     ) -> List[Dict[str, Any]]:
-        owner = self.db.query(Owner).filter(Owner.id == owner_id).first()
+        owner = self.owner_repo.get_by_id_or_none(owner_id)
         if not owner:
             raise NotFoundException(f"Dueño con ID {owner_id} no encontrado")
 
-        query = self.db.query(OwnerWithdrawal).filter(
-            OwnerWithdrawal.owner_id == owner_id
-        )
-
+        trip_ids = None
         if bus_id is not None:
             bus_ids = [b.id for b in owner.buses]
             if bus_id not in bus_ids:
                 raise ValidationException("El bus no pertenece a este socio")
-            trip_ids = [
-                t.id for t in self.db.query(Trip).filter(Trip.bus_id == bus_id).all()
-            ]
+            trips = self.owner_repo.get_trips_by_bus_id(bus_id)
+            trip_ids = [t.id for t in trips]
             if not trip_ids:
                 return []
-            query = query.filter(OwnerWithdrawal.trip_id.in_(trip_ids))
 
-        withdrawals = query.order_by(OwnerWithdrawal.created_at.desc()).all()
+        withdrawals = self.owner_repo.get_withdrawals_by_owner(owner_id, trip_ids)
 
         result = []
         for w in withdrawals:
-            ct = (
-                self.db.query(CashTransaction)
-                .filter(CashTransaction.id == w.cash_transaction_id)
-                .first()
-            )
+            ct = self.owner_repo.get_cash_transaction(w.cash_transaction_id)
             office_name = "N/A"
             if ct and ct.cash_register and ct.cash_register.office:
                 office_name = ct.cash_register.office.name

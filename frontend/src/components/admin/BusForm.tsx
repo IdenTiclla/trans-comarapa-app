@@ -29,7 +29,7 @@ export default function BusForm({
 
   return (
     <div className={cn(
-      'bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-h-[90vh] overflow-hidden flex flex-col',
+      'bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-h-[90vh] overflow-hidden flex flex-col min-h-0',
       s.currentStep === 2 ? 'max-w-5xl' : 'max-w-md',
     )}>
       <BusFormHeader

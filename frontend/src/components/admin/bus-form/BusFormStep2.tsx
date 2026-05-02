@@ -47,7 +47,7 @@ export function BusFormStep2({
   const total = seats.length
 
   return (
-    <div className="px-6 py-4">
+    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
       {floors === 2 && (
         <div className="mb-4 text-center">
           <div className="border-b border-gray-200 inline-block">

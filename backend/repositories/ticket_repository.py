@@ -1,13 +1,15 @@
-"""
-Ticket repository with domain-specific query methods.
-"""
-
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
 from models.ticket import Ticket
 from models.ticket_state_history import TicketStateHistory
+from models.seat import Seat
+from models.client import Client
+from models.trip import Trip
+from models.secretary import Secretary
+from models.user import User
+from models.cash_transaction import CashTransaction
 from repositories.base import BaseRepository
 
 
@@ -15,22 +17,21 @@ class TicketRepository(BaseRepository[Ticket]):
     def __init__(self, db: Session):
         super().__init__(Ticket, db)
 
+    def get_all_tickets(self) -> list[Ticket]:
+        return self.db.query(Ticket).all()
+
     def get_by_trip(self, trip_id: int) -> list[Ticket]:
-        """Get all tickets for a given trip."""
         return self.db.query(Ticket).filter(Ticket.trip_id == trip_id).all()
 
     def get_by_client(self, client_id: int) -> list[Ticket]:
-        """Get all tickets for a given client."""
         return self.db.query(Ticket).filter(Ticket.client_id == client_id).all()
 
     def get_by_seat(self, seat_id: int) -> list[Ticket]:
-        """Get all tickets for a given seat."""
         return self.db.query(Ticket).filter(Ticket.seat_id == seat_id).all()
 
     def get_active_by_seat_and_trip(
         self, seat_id: int, trip_id: int, exclude_ticket_id: int | None = None
     ) -> Optional[Ticket]:
-        """Find an active (pending/confirmed) ticket for a seat+trip combo."""
         query = self.db.query(Ticket).filter(
             Ticket.seat_id == seat_id,
             Ticket.trip_id == trip_id,
@@ -43,7 +44,6 @@ class TicketRepository(BaseRepository[Ticket]):
     def get_active_by_client_and_trip(
         self, client_id: int, trip_id: int, exclude_ticket_id: int | None = None
     ) -> Optional[Ticket]:
-        """Find an active ticket for a client+trip combo."""
         query = self.db.query(Ticket).filter(
             Ticket.client_id == client_id,
             Ticket.trip_id == trip_id,
@@ -54,7 +54,6 @@ class TicketRepository(BaseRepository[Ticket]):
         return query.first()
 
     def count_occupied_seats(self, trip_id: int) -> int:
-        """Count the number of occupied (active) seats for a trip."""
         return (
             self.db.query(Ticket)
             .filter(
@@ -71,7 +70,6 @@ class TicketRepository(BaseRepository[Ticket]):
         old_state: Optional[str] = None,
         changed_by_user_id: Optional[int] = None,
     ) -> TicketStateHistory:
-        """Create a ticket state history entry."""
         entry = TicketStateHistory(
             ticket_id=ticket_id,
             old_state=old_state,
@@ -83,8 +81,6 @@ class TicketRepository(BaseRepository[Ticket]):
         return entry
 
     def search(self, term: str, limit: int = 20) -> list[Ticket]:
-        """Search tickets by ID, client name, or document ID."""
-        from models.client import Client
         from sqlalchemy import or_
 
         term_lower = f"%{term.lower()}%"
@@ -106,3 +102,84 @@ class TicketRepository(BaseRepository[Ticket]):
             )
         )
         return query.limit(limit).all()
+
+    def get_seat_by_id(self, seat_id: int) -> Optional[Seat]:
+        return self.db.query(Seat).filter(Seat.id == seat_id).first()
+
+    def get_client_by_id(self, client_id: int) -> Optional[Client]:
+        return self.db.query(Client).filter(Client.id == client_id).first()
+
+    def get_trip_by_id(self, trip_id: int) -> Optional[Trip]:
+        return self.db.query(Trip).filter(Trip.id == trip_id).first()
+
+    def get_secretary_by_id(self, secretary_id: int) -> Optional[Secretary]:
+        return self.db.query(Secretary).filter(Secretary.id == secretary_id).first()
+
+    def get_secretary_by_user_id(self, user_id: int) -> Optional[Secretary]:
+        return self.db.query(Secretary).filter(Secretary.user_id == user_id).first()
+
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        return self.db.query(User).filter(User.id == user_id).first()
+
+    def create_ticket(self, ticket: Ticket) -> Ticket:
+        self.db.add(ticket)
+        self.db.flush()
+        return ticket
+
+    def delete_ticket(self, ticket: Ticket) -> None:
+        self.db.delete(ticket)
+        self.db.flush()
+
+    def get_cash_transaction_by_reference(
+        self, reference_type: str, reference_id: int
+    ) -> Optional[CashTransaction]:
+        return (
+            self.db.query(CashTransaction)
+            .filter(
+                CashTransaction.reference_type == reference_type,
+                CashTransaction.reference_id == reference_id,
+            )
+            .first()
+        )
+
+    def get_active_ticket_for_seat_change(
+        self, trip_id: int, seat_id: int
+    ) -> Optional[Ticket]:
+        return (
+            self.db.query(Ticket)
+            .filter(
+                Ticket.trip_id == trip_id,
+                Ticket.seat_id == seat_id,
+                Ticket.state.in_(["sold", "confirmed", "reserved"]),
+            )
+            .first()
+        )
+
+    def count_tickets_for_trip(self, trip_id: int) -> int:
+        return self.db.query(Ticket).filter(Ticket.trip_id == trip_id).count()
+
+    def get_non_cancelled_by_trip(self, trip_id: int) -> list[Ticket]:
+        return (
+            self.db.query(Ticket)
+            .filter(Ticket.trip_id == trip_id, Ticket.state != "cancelled")
+            .all()
+        )
+
+    def count_non_cancelled_by_trip(self, trip_id: int) -> int:
+        from sqlalchemy import func
+        return (
+            self.db.query(func.count(Ticket.id))
+            .filter(Ticket.trip_id == trip_id, Ticket.state != "cancelled")
+            .scalar()
+            or 0
+        )
+
+    def get_active_by_trip(self, trip_id: int) -> list[Ticket]:
+        return (
+            self.db.query(Ticket)
+            .filter(
+                Ticket.trip_id == trip_id,
+                Ticket.state.in_(["pending", "confirmed"]),
+            )
+            .all()
+        )

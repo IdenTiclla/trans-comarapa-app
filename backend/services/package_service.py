@@ -1,13 +1,7 @@
-"""
-Package service - contains all package/encomienda business logic.
-
-Extracted from routes/package.py.
-"""
-
 import logging
 from typing import Optional
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from core.exceptions import (
     NotFoundException,
@@ -17,7 +11,6 @@ from core.exceptions import (
 from core.state_machines import PACKAGE_TRANSITIONS, validate_transition
 from models.package import Package
 from models.package_item import PackageItem
-from models.package_state_history import PackageStateHistory
 from models.trip import Trip
 from repositories.package_repository import PackageRepository
 from schemas.package import (
@@ -32,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class PackageService:
-    """Business logic for package operations."""
 
     def __init__(
         self,
@@ -42,34 +34,21 @@ class PackageService:
         self.db = db
         self.repo = repo or PackageRepository(db)
 
-    # ── Read operations ──────────────────────────────────────────────────
-
     def get_all(
         self, skip: int = 0, limit: int = 100, status: Optional[str] = None
     ) -> list[Package]:
-        """Get all packages with optional status filter."""
-        query = self.db.query(Package).options(
-            joinedload(Package.sender),
-            joinedload(Package.recipient),
-            joinedload(Package.items),
-        )
-        if status and status.lower() != "all":
-            query = query.filter(Package.status == status)
-        return query.order_by(Package.created_at.desc()).offset(skip).limit(limit).all()
+        return self.repo.get_all_with_filters(skip, limit, status)
 
     def get_by_id(self, package_id: int) -> Package:
-        """Get a package by ID with relationships."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException(f"Package with id {package_id} not found")
         return pkg
 
     def get_unassigned(self, skip: int = 0, limit: int = 100) -> list[Package]:
-        """Get packages without a trip assignment."""
         return self.repo.get_unassigned(skip, limit)
 
     def get_by_tracking(self, tracking_number: str) -> Package:
-        """Get package by tracking number."""
         pkg = self.repo.search_by_tracking(tracking_number)
         if not pkg:
             raise NotFoundException(
@@ -89,13 +68,9 @@ class PackageService:
     def get_pending_collections(
         self, office_id: int, skip: int = 0, limit: int = 100
     ) -> list[Package]:
-        """Get packages pending collection at destination office."""
         return self.repo.get_pending_collections(office_id, skip, limit)
 
-    # ── Create / Update / Delete ─────────────────────────────────────────
-
     def create_package(self, data: PackageCreate) -> Package:
-        """Create a new package with items and auto-generate tracking number."""
         import uuid
 
         logger.debug("Creating package with data: %s", data)
@@ -103,13 +78,10 @@ class PackageService:
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
         from core.enums import CashTransactionType, PaymentMethod
-        from models.secretary import Secretary
 
         cash_service = CashRegisterService(self.db)
 
-        secretary = (
-            self.db.query(Secretary).filter(Secretary.id == data.secretary_id).first()
-        )
+        secretary = self.repo.get_secretary_by_id(data.secretary_id)
 
         origin_office_id = data.origin_office_id
         if not origin_office_id and secretary and secretary.office_id:
@@ -136,22 +108,18 @@ class PackageService:
         package_data["destination_office_id"] = data.destination_office_id
         actual_status = package_data.get("status", "registered_at_office")
         db_package = Package(**package_data)
-        self.db.add(db_package)
-        self.db.flush()
+        self.repo.create_package(db_package)
 
-        # Generate tracking number ENC-XXXXXX
         db_package.tracking_number = f"ENC-{db_package.id:06d}"
 
-        # Create items
         total_amount = 0.0
         for item_data in data.items:
             item_dict = item_data.model_dump()
             item_dict["total_price"] = item_dict["quantity"] * item_dict["unit_price"]
             item_dict["package_id"] = db_package.id
             total_amount += item_dict["total_price"]
-            self.db.add(PackageItem(**item_dict))
+            self.repo.create_item(PackageItem(**item_dict))
 
-        # Record transaction if paid on send
         if (
             data.payment_status == "paid_on_send"
             and current_register
@@ -175,7 +143,6 @@ class PackageService:
                 )
             )
 
-        # Log initial state
         self.repo.log_state_change(
             package_id=db_package.id,
             old_state=None,
@@ -184,13 +151,11 @@ class PackageService:
 
         self.db.commit()
 
-        # Re-query with eager loading
         result = self.repo.get_by_id_eager(db_package.id)
         logger.debug("Package created: %d with %d items", result.id, len(result.items))
         return result
 
     def update_package(self, package_id: int, data: PackageUpdate) -> Package:
-        """Update package metadata (not items)."""
         pkg = self.repo.get_by_id_or_raise(package_id, "Package")
         for field, value in data.model_dump(exclude_unset=True).items():
             if value is not None:
@@ -200,17 +165,13 @@ class PackageService:
         return pkg
 
     def delete_package(self, package_id: int) -> str:
-        """Delete a package and return its tracking number."""
         pkg = self.repo.get_by_id_or_raise(package_id, "Package")
         tracking = pkg.tracking_number
-        self.db.delete(pkg)
+        self.repo.delete_package(pkg)
         self.db.commit()
         return tracking
 
-    # ── Trip assignment ──────────────────────────────────────────────────
-
     def assign_to_trip(self, package_id: int, data: PackageAssignTrip) -> Package:
-        """Assign a package to a trip."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
@@ -220,7 +181,7 @@ class PackageService:
                 f"Solo se pueden asignar encomiendas en estado 'registered_at_office'. Estado actual: '{pkg.status}'"
             )
 
-        trip = self.db.query(Trip).filter(Trip.id == data.trip_id).first()
+        trip = self.repo.get_trip_by_id(data.trip_id)
         if not trip:
             raise NotFoundException("Viaje no encontrado")
 
@@ -238,7 +199,6 @@ class PackageService:
         return pkg
 
     def unassign_from_trip(self, package_id: int) -> Package:
-        """Remove a package from its assigned trip."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
@@ -262,12 +222,10 @@ class PackageService:
         return pkg
 
     def update_status(self, package_id: int, data: PackageStatusUpdate) -> Package:
-        """Update package status with state machine validation."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
 
-        # Use state machine for validation
         validate_transition("package", PACKAGE_TRANSITIONS, pkg.status, data.new_status)
 
         old_status = pkg.status
@@ -289,7 +247,6 @@ class PackageService:
         payment_method: str,
         changed_by_user_id: Optional[int] = None,
     ) -> Package:
-        """Deliver a package and handle payment status."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
@@ -297,7 +254,6 @@ class PackageService:
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
         from core.enums import CashTransactionType, PaymentMethod as EnumPaymentMethod
-        from models.secretary import Secretary
 
         cash_service = CashRegisterService(self.db)
 
@@ -308,10 +264,8 @@ class PackageService:
                 raise ValidationException(
                     "Se requiere el usuario operador para entregas por cobrar."
                 )
-            delivering_secretary = (
-                self.db.query(Secretary)
-                .filter(Secretary.user_id == changed_by_user_id)
-                .first()
+            delivering_secretary = self.repo.get_secretary_by_user_id(
+                changed_by_user_id
             )
             office_id = (
                 delivering_secretary.office_id
@@ -378,7 +332,6 @@ class PackageService:
         return pkg
 
     def cancel_package(self, package_id: int) -> Package:
-        """Cancel a package and create reversal if applicable."""
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
             raise NotFoundException("Encomienda no encontrada")
@@ -402,31 +355,22 @@ class PackageService:
         return pkg
 
     def _create_reversal_if_applicable(self, pkg: Package) -> None:
-        """Create a reversal adjustment if there was a cash transaction for this package."""
-        from models.cash_transaction import CashTransaction
-        from models.secretary import Secretary
-        from services.cash_register_service import CashRegisterService
-        from schemas.cash_register import CashTransactionCreate
         from core.enums import CashTransactionType, PaymentMethod
+        from models.cash_transaction import CashTransaction
 
-        original_tx = (
-            self.db.query(CashTransaction)
-            .filter(
-                CashTransaction.reference_type == "package",
-                CashTransaction.reference_id == pkg.id,
-                CashTransaction.type == CashTransactionType.PACKAGE_PAYMENT,
-            )
-            .first()
+        original_tx = self.repo.get_cash_transaction_by_reference(
+            "package", pkg.id, CashTransactionType.PACKAGE_PAYMENT
         )
 
         if not original_tx:
             return
 
-        secretary = (
-            self.db.query(Secretary).filter(Secretary.id == pkg.secretary_id).first()
-        )
+        secretary = self.repo.get_secretary_by_id(pkg.secretary_id)
         if not secretary or not secretary.office_id:
             return
+
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
 
         cash_service = CashRegisterService(self.db)
         open_register = cash_service.get_current_register(secretary.office_id)
@@ -446,32 +390,23 @@ class PackageService:
             )
         )
 
-    # ── Package items ────────────────────────────────────────────────────
-
     def get_items(self, package_id: int) -> list[PackageItem]:
-        """Get items for a package."""
         self.repo.get_by_id_or_raise(package_id, "Package")
-        return (
-            self.db.query(PackageItem)
-            .filter(PackageItem.package_id == package_id)
-            .all()
-        )
+        return self.repo.get_items(package_id)
 
     def add_item(self, package_id: int, item_data: dict) -> PackageItem:
-        """Add an item to a package."""
         self.repo.get_by_id_or_raise(package_id, "Package")
         item_dict = item_data.model_dump()
         item_dict["total_price"] = item_dict["quantity"] * item_dict["unit_price"]
         item_dict["package_id"] = package_id
         db_item = PackageItem(**item_dict)
-        self.db.add(db_item)
+        self.repo.create_item(db_item)
         self.db.commit()
         self.db.refresh(db_item)
         return db_item
 
     def update_item(self, item_id: int, item_data: dict) -> PackageItem:
-        """Update a package item."""
-        db_item = self.db.query(PackageItem).filter(PackageItem.id == item_id).first()
+        db_item = self.repo.get_item_by_id(item_id)
         if not db_item:
             raise NotFoundException("Package item not found")
 
@@ -485,71 +420,26 @@ class PackageService:
         return db_item
 
     def delete_item(self, item_id: int) -> None:
-        """Delete a package item (must keep at least one)."""
-        db_item = self.db.query(PackageItem).filter(PackageItem.id == item_id).first()
+        db_item = self.repo.get_item_by_id(item_id)
         if not db_item:
             raise NotFoundException("Package item not found")
 
-        count = (
-            self.db.query(PackageItem)
-            .filter(PackageItem.package_id == db_item.package_id)
-            .count()
-        )
+        count = self.repo.count_items(db_item.package_id)
         if count <= 1:
             raise ValidationException(
                 "Cannot delete the last item of a package. Delete the entire package instead."
             )
 
-        self.db.delete(db_item)
+        self.repo.delete_item(db_item)
         self.db.commit()
-
-    # ── Search ──────────────────────────────────────────────────────────
 
     def search_packages(
         self, term: str, skip: int = 0, limit: int = 100
     ) -> list[Package]:
-        from models.client import Client
-        from sqlalchemy import or_
-        from sqlalchemy.orm import aliased
-
-        Sender = aliased(Client)
-        Recipient = aliased(Client)
-        search_term = f"%{term}%"
-
-        query = (
-            self.db.query(Package)
-            .outerjoin(Sender, Package.sender_id == Sender.id)
-            .outerjoin(Recipient, Package.recipient_id == Recipient.id)
-            .outerjoin(Package.items)
-            .filter(
-                or_(
-                    Package.tracking_number.ilike(search_term),
-                    Sender.firstname.ilike(search_term),
-                    Sender.lastname.ilike(search_term),
-                    Recipient.firstname.ilike(search_term),
-                    Recipient.lastname.ilike(search_term),
-                    PackageItem.description.ilike(search_term),
-                )
-            )
-            .options(
-                joinedload(Package.sender),
-                joinedload(Package.recipient),
-                joinedload(Package.items),
-                joinedload(Package.trip).joinedload(Trip.route).joinedload(Route.origin_location),
-                joinedload(Package.trip).joinedload(Trip.route).joinedload(Route.destination_location),
-                joinedload(Package.origin_office),
-                joinedload(Package.destination_office),
-            )
-            .distinct()
-        )
-
-        return query.order_by(Package.created_at.desc()).offset(skip).limit(limit).all()
-
-    # ── Helpers ──────────────────────────────────────────────────────────
+        return self.repo.search_packages(term, skip, limit)
 
     @staticmethod
     def to_summary(pkg: Package) -> PackageSummary:
-        """Convert a Package model to a summary schema."""
         items_preview = []
         if getattr(pkg, "items", None):
             items_preview = pkg.items[:5]

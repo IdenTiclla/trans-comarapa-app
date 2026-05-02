@@ -29,15 +29,12 @@ class CashRegisterService:
         return office
 
     def get_current_register(self, office_id: int):
-        """Returns the currently open register for an office, or None if there isn't one."""
         self._validate_office(office_id)
         return self.cash_repo.get_open_register_by_office(office_id)
 
     def open_register(self, office_id: int, opened_by_id: int, initial_balance: float):
-        """Opens a new cash register for the day."""
         self._validate_office(office_id)
 
-        # Check if there is already an open register
         current = self.cash_repo.get_open_register_by_office(office_id)
         if current:
             raise ConflictException(
@@ -45,8 +42,6 @@ class CashRegisterService:
             )
 
         today = date.today()
-        # You could potentially allow multiple registers per day (one after another)
-        # but let's just make sure there isn't an OPEN one, which we just checked.
 
         register_obj = CashRegister(
             **{
@@ -64,7 +59,6 @@ class CashRegisterService:
         return register
 
     def close_register(self, register_id: int, closed_by_id: int, final_balance: float):
-        """Closes an open cash register."""
         register = self.cash_repo.get_by_id(register_id)
         if not register:
             raise NotFoundException(f"Cash register {register_id} not found")
@@ -84,8 +78,6 @@ class CashRegisterService:
         return updated
 
     def record_transaction(self, data: CashTransactionCreate):
-        """Records a new cash transaction manually or automatically."""
-        # Ensure register is valid and open
         register = self.cash_repo.get_by_id(data.cash_register_id)
         if not register:
             raise NotFoundException(f"Cash register {data.cash_register_id} not found")
@@ -102,7 +94,6 @@ class CashRegisterService:
     def record_withdrawal(
         self, register_id: int, amount: float, description: str, user: User
     ):
-        """Records a withdrawal from an open cash register."""
         register = self.cash_repo.get_by_id(register_id)
         if not register:
             raise NotFoundException(f"Cash register {register_id} not found")
@@ -134,14 +125,12 @@ class CashRegisterService:
         return transaction
 
     def get_register_transactions(self, register_id: int):
-        """Retrieves all transactions for a register."""
         register = self.cash_repo.get_by_id(register_id)
         if not register:
             raise NotFoundException(f"Cash register {register_id} not found")
         return self.cash_repo.get_transactions(register_id)
 
     def get_daily_summary(self, register_id: int):
-        """Calculates the summary for the given register."""
         register = self.cash_repo.get_by_id(register_id)
         if not register:
             raise NotFoundException(f"Cash register {register_id} not found")
@@ -178,7 +167,6 @@ class CashRegisterService:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
     ) -> CashRegisterHistoryResponse:
-        """Gets closed cash register history with computed values."""
         if not date_from:
             date_from = date.today() - timedelta(days=7)
         if not date_to:

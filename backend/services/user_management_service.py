@@ -1,14 +1,7 @@
-"""
-User management service - contains user CRUD business logic.
-
-Extracted from routes/user_management.py.
-"""
-
 import logging
 from typing import Optional, Tuple
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from core.exceptions import (
     NotFoundException,
@@ -29,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class UserManagementService:
-    """Business logic for user management operations."""
 
     def __init__(self, db: Session):
         self.db = db
@@ -44,7 +36,6 @@ class UserManagementService:
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
     ) -> Tuple[list[User], int]:
-        """Get filtered/paginated user list."""
         return self.repo.search_users(
             skip=skip,
             limit=limit,
@@ -54,22 +45,14 @@ class UserManagementService:
         )
 
     def get_by_id(self, user_id: int) -> User:
-        """Get a user by ID."""
         return self.repo.get_by_id_or_raise(user_id, "User")
 
     def create_user(self, user_data: dict) -> User:
-        """Create a new user with validation."""
-        # Check email uniqueness
         existing = self.repo.get_by_email(user_data.get("email", ""))
         if existing:
             raise ConflictException("El email ya está registrado")
 
-        # Check username uniqueness
-        existing_username = (
-            self.db.query(User)
-            .filter(User.username == user_data.get("username", ""))
-            .first()
-        )
+        existing_username = self.repo.get_by_username(user_data.get("username", ""))
         if existing_username:
             raise ConflictException("El nombre de usuario ya está registrado")
 
@@ -83,45 +66,38 @@ class UserManagementService:
             is_active=user_data.get("is_active", True),
             is_admin=user_data.get("is_admin", False),
         )
-        self.db.add(user)
+        self.repo.create_user(user)
         self.db.commit()
         self.db.refresh(user)
         logger.info("User created: %d (%s)", user.id, user.email)
 
-        # If the new user is a secretary, create an associated secretary record
         if user.role == UserRole.SECRETARY:
             secretary_data = Secretary(
                 firstname=user.firstname,
                 lastname=user.lastname,
                 user_id=user.id,
             )
-            self.db.add(secretary_data)
+            from repositories.person_repository import PersonRepository
+            person_repo = PersonRepository(self.db)
+            person_repo.create_person(secretary_data)
             self.db.commit()
             self.db.refresh(secretary_data)
 
         return user
 
     def update_user(self, user_id: int, update_data: dict) -> User:
-        """Update a user."""
         user = self.repo.get_by_id_or_raise(user_id, "User")
 
-        # If email is changing, check uniqueness
         if "email" in update_data and update_data["email"] != user.email:
             existing = self.repo.get_by_email(update_data["email"])
             if existing:
                 raise ConflictException("El email ya está registrado")
 
-        # If username is changing, check uniqueness
         if "username" in update_data and update_data["username"] != user.username:
-            existing_username = (
-                self.db.query(User)
-                .filter(User.username == update_data["username"])
-                .first()
-            )
+            existing_username = self.repo.get_by_username(update_data["username"])
             if existing_username:
                 raise ConflictException("El nombre de usuario ya está registrado")
 
-        # Handle password hashing
         if "password" in update_data and update_data["password"]:
             update_data["hashed_password"] = User.get_password_hash(
                 update_data.pop("password")
@@ -138,15 +114,13 @@ class UserManagementService:
         return user
 
     def delete_user(self, user_id: int, current_user_id: int) -> None:
-        """Delete a user."""
         if user_id == current_user_id:
             raise ForbiddenException("No puedes eliminar tu propio usuario")
         user = self.repo.get_by_id_or_raise(user_id, "User")
-        self.db.delete(user)
+        self.repo.delete_user(user)
         self.db.commit()
 
     def activate_user(self, user_id: int) -> User:
-        """Activate a user."""
         user = self.repo.get_by_id_or_raise(user_id, "User")
         user.is_active = True
         self.db.commit()
@@ -154,7 +128,6 @@ class UserManagementService:
         return user
 
     def deactivate_user(self, user_id: int, current_user_id: int) -> User:
-        """Deactivate a user."""
         if user_id == current_user_id:
             raise ForbiddenException("No puedes desactivar tu propio usuario")
         user = self.repo.get_by_id_or_raise(user_id, "User")
@@ -165,44 +138,28 @@ class UserManagementService:
 
     @staticmethod
     def get_available_roles() -> list[dict]:
-        """Get list of available roles."""
         return [
             {"value": role.value, "label": role.value.replace("_", " ").title()}
             for role in UserRole
         ]
 
+    def _get_person_entity(self, user: User):
+        role_map = {
+            UserRole.ADMIN: (self.repo.get_administrator_by_user_id, None),
+            UserRole.SECRETARY: (self.repo.get_secretary_by_user_id, None),
+            UserRole.DRIVER: (self.repo.get_driver_by_user_id, None),
+            UserRole.ASSISTANT: (self.repo.get_assistant_by_user_id, None),
+            UserRole.CLIENT: (self.repo.get_client_by_user_id, None),
+        }
+        entry = role_map.get(user.role)
+        if entry:
+            return entry[0](user.id)
+        return None
+
     def get_my_profile(self, current_user: User) -> dict:
-        """Get complete profile of authenticated user."""
+        person_entity = self._get_person_entity(current_user)
+
         person_data = None
-        person_entity = None
-
-        if current_user.role == UserRole.ADMIN:
-            person_entity = (
-                self.db.query(Administrator)
-                .filter(Administrator.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.SECRETARY:
-            person_entity = (
-                self.db.query(Secretary)
-                .filter(Secretary.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.DRIVER:
-            person_entity = (
-                self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
-            )
-        elif current_user.role == UserRole.ASSISTANT:
-            person_entity = (
-                self.db.query(Assistant)
-                .filter(Assistant.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.CLIENT:
-            person_entity = (
-                self.db.query(Client).filter(Client.user_id == current_user.id).first()
-            )
-
         if person_entity:
             person_data = {
                 "id": person_entity.id,
@@ -283,7 +240,6 @@ class UserManagementService:
         return response_data
 
     def update_my_profile(self, current_user: User, profile_data: dict) -> dict:
-        """Update authenticated user's profile."""
         user_updated = False
         email = profile_data.get("email")
         if email and email != current_user.email:
@@ -297,33 +253,7 @@ class UserManagementService:
             self.db.commit()
             self.db.refresh(current_user)
 
-        person_entity = None
-        if current_user.role == UserRole.ADMIN:
-            person_entity = (
-                self.db.query(Administrator)
-                .filter(Administrator.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.SECRETARY:
-            person_entity = (
-                self.db.query(Secretary)
-                .filter(Secretary.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.DRIVER:
-            person_entity = (
-                self.db.query(Driver).filter(Driver.user_id == current_user.id).first()
-            )
-        elif current_user.role == UserRole.ASSISTANT:
-            person_entity = (
-                self.db.query(Assistant)
-                .filter(Assistant.user_id == current_user.id)
-                .first()
-            )
-        elif current_user.role == UserRole.CLIENT:
-            person_entity = (
-                self.db.query(Client).filter(Client.user_id == current_user.id).first()
-            )
+        person_entity = self._get_person_entity(current_user)
 
         if person_entity:
             person_updated = False

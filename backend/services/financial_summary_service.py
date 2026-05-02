@@ -1,12 +1,9 @@
 from datetime import date, datetime
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from models.cash_register import CashRegister
-from models.cash_transaction import CashTransaction
-from models.office import Office
-from core.enums import CashRegisterStatus, CashTransactionType
+from repositories.report_repository import ReportRepository
+from core.enums import CashRegisterStatus
 
 
 class OfficeFinancialSummary:
@@ -54,27 +51,21 @@ class WithdrawalRecord:
 class FinancialSummaryService:
     def __init__(self, db: Session):
         self.db = db
+        self.repo = ReportRepository(db)
 
     def get_offices_financial_summary(self, target_date: Optional[date] = None):
         if target_date is None:
             target_date = date.today()
 
-        offices = self.db.query(Office).all()
+        offices = self.repo.get_all_offices()
         summaries = []
         totals = {"total_in": 0.0, "total_out": 0.0, "total_available": 0.0}
 
         for office in offices:
-            register = (
-                self.db.query(CashRegister)
-                .filter(
-                    CashRegister.office_id == office.id,
-                    CashRegister.date == target_date,
-                )
-                .first()
-            )
+            register = self.repo.get_register_by_date(office.id, target_date)
 
             if register:
-                total_in, total_out = self._calculate_totals(register.id)
+                total_in, total_out = self.repo.calculate_totals(register.id)
                 available_cash = register.initial_balance + total_in - total_out
                 status = register.status.value
 
@@ -108,82 +99,13 @@ class FinancialSummaryService:
 
         return {"offices": summaries, "totals": totals}
 
-    def _calculate_totals(self, register_id: int) -> tuple:
-        in_types = [
-            CashTransactionType.TICKET_SALE,
-            CashTransactionType.PACKAGE_PAYMENT,
-            CashTransactionType.POR_COBRAR_COLLECTION,
-        ]
-        out_types = [CashTransactionType.WITHDRAWAL]
-
-        total_in = (
-            self.db.query(func.sum(CashTransaction.amount))
-            .filter(
-                CashTransaction.cash_register_id == register_id,
-                CashTransaction.type.in_(in_types),
-            )
-            .scalar()
-            or 0.0
-        )
-
-        total_out = (
-            self.db.query(func.sum(CashTransaction.amount))
-            .filter(
-                CashTransaction.cash_register_id == register_id,
-                CashTransaction.type.in_(out_types),
-            )
-            .scalar()
-            or 0.0
-        )
-
-        adjustments = (
-            self.db.query(func.sum(CashTransaction.amount))
-            .filter(
-                CashTransaction.cash_register_id == register_id,
-                CashTransaction.type == CashTransactionType.ADJUSTMENT,
-            )
-            .scalar()
-            or 0.0
-        )
-
-        if adjustments > 0:
-            total_in += adjustments
-        else:
-            total_out += abs(adjustments)
-
-        return float(total_in), float(total_out)
-
     def get_withdrawal_history(
         self,
         office_id: Optional[int] = None,
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
     ) -> List[dict]:
-        query = (
-            self.db.query(
-                CashTransaction.id,
-                CashRegister.date,
-                CashRegister.office_id,
-                Office.name.label("office_name"),
-                CashTransaction.amount,
-                CashTransaction.description,
-                CashTransaction.created_at,
-            )
-            .join(CashRegister, CashTransaction.cash_register_id == CashRegister.id)
-            .join(Office, CashRegister.office_id == Office.id)
-            .filter(CashTransaction.type == CashTransactionType.WITHDRAWAL)
-        )
-
-        if office_id:
-            query = query.filter(CashRegister.office_id == office_id)
-
-        if date_from:
-            query = query.filter(CashRegister.date >= date_from)
-
-        if date_to:
-            query = query.filter(CashRegister.date <= date_to)
-
-        results = query.order_by(CashTransaction.created_at.desc()).all()
+        results = self.repo.get_withdrawal_history(office_id, date_from, date_to)
 
         withdrawals = []
         for row in results:
@@ -214,9 +136,7 @@ class FinancialSummaryService:
         if target_date is None:
             target_date = date.today()
 
-        registers = (
-            self.db.query(CashRegister).filter(CashRegister.date == target_date).all()
-        )
+        registers = self.repo.get_registers_by_date(target_date)
 
         total_income = 0.0
         total_withdrawals = 0.0
@@ -227,7 +147,7 @@ class FinancialSummaryService:
             if reg.status == CashRegisterStatus.OPEN:
                 registers_open += 1
 
-            total_in, total_out = self._calculate_totals(reg.id)
+            total_in, total_out = self.repo.calculate_totals(reg.id)
             total_income += total_in
             total_withdrawals += total_out
             total_available += reg.initial_balance + total_in - total_out
@@ -245,25 +165,8 @@ class FinancialSummaryService:
         if target_date is None:
             target_date = date.today()
 
-        query = (
-            self.db.query(
-                Office.id.label("office_id"),
-                Office.name.label("office_name"),
-                func.sum(CashTransaction.amount).label("total_collected"),
-                func.count(CashTransaction.id).label("transactions_count"),
-            )
-            .join(CashRegister, CashRegister.office_id == Office.id)
-            .join(CashTransaction, CashTransaction.cash_register_id == CashRegister.id)
-            .filter(
-                CashRegister.date == target_date,
-                CashTransaction.type == CashTransactionType.POR_COBRAR_COLLECTION,
-            )
-            .group_by(Office.id, Office.name)
-            .order_by(Office.name)
-        )
-
         results = []
-        for row in query.all():
+        for row in self.repo.get_collections_by_office(target_date):
             results.append(
                 {
                     "office_id": row.office_id,
