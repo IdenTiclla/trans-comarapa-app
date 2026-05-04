@@ -1,98 +1,20 @@
-import { useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/api'
-import { officeService } from '@/services/office.service'
+import { useSecretariesPage } from '@/hooks/use-secretaries-page'
 import { toast } from 'sonner'
-import type { Office } from '@/types/office'
 import { Button } from '@/components/ui/button'
 import FormSelect from '@/components/forms/FormSelect'
 
-interface Secretary {
-  id: number
-  firstname: string
-  lastname: string
-  phone?: string | null
-  office_id?: number | null
-  user_id?: number | null
-}
-
-interface SecretaryWithEmail extends Secretary {
-  email?: string
-  is_active?: boolean
-}
-
 export function Component() {
-  const [secretaries, setSecretaries] = useState<SecretaryWithEmail[]>([])
-  const [offices, setOffices] = useState<Office[]>([])
-  const [loading, setLoading] = useState(true)
-  const [savingId, setSavingId] = useState<number | null>(null)
-  // Tracks the pending office_id changes per secretary before saving
-  const [pendingOffice, setPendingOffice] = useState<Record<number, number | null>>({})
+  const {
+    secretaries, offices, loading, savingId,
+    handleOfficeChange, saveOffice, getOfficeName,
+    hasPendingChange, currentOfficeValue,
+  } = useSecretariesPage()
 
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const [secs, offs] = await Promise.all([
-        apiFetch<Secretary[]>('/secretaries'),
-        officeService.getAll(),
-      ])
-      setOffices(offs)
-
-      // Enrich secretaries with user email by calling by-user endpoint
-      const enriched: SecretaryWithEmail[] = await Promise.all(
-        secs.map(async (s) => {
-          if (!s.user_id) return s
-          try {
-            const user = await apiFetch<{ email: string; is_active: boolean }>(`/secretaries/${s.id}/user`)
-            return { ...s, email: user.email, is_active: user.is_active }
-          } catch {
-            return s
-          }
-        })
-      )
-      setSecretaries(enriched)
-    } catch (e) {
-      toast.error('Error al cargar secretarias: ' + (e as Error).message)
-    } finally {
-      setLoading(false)
-    }
+  const handleSave = async (sec: Parameters<typeof saveOffice>[0]) => {
+    const ok = await saveOffice(sec)
+    if (ok) toast.success('Oficina asignada correctamente')
+    else toast.error('Error al asignar oficina')
   }
-
-  useEffect(() => { loadData() }, [])
-
-  const handleOfficeChange = (secId: number, value: string) => {
-    setPendingOffice((prev) => ({ ...prev, [secId]: value ? Number(value) : null }))
-  }
-
-  const saveOffice = async (sec: SecretaryWithEmail) => {
-    const newOfficeId = pendingOffice[sec.id] !== undefined ? pendingOffice[sec.id] : sec.office_id
-    setSavingId(sec.id)
-    try {
-      await apiFetch(`/secretaries/${sec.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ office_id: newOfficeId }),
-      })
-      toast.success('Oficina asignada correctamente')
-      // Update state locally without full reload
-      setSecretaries((prev) =>
-        prev.map((s) => (s.id === sec.id ? { ...s, office_id: newOfficeId } : s))
-      )
-      // Clear pending
-      setPendingOffice((prev) => { const next = { ...prev }; delete next[sec.id]; return next })
-    } catch (e) {
-      toast.error('Error: ' + (e as Error).message)
-    } finally {
-      setSavingId(null)
-    }
-  }
-
-  const getOfficeName = (officeId?: number | null) =>
-    offices.find((o) => o.id === officeId)?.name ?? null
-
-  const hasPendingChange = (sec: SecretaryWithEmail) =>
-    pendingOffice[sec.id] !== undefined && pendingOffice[sec.id] !== sec.office_id
-
-  const currentOfficeValue = (sec: SecretaryWithEmail) =>
-    pendingOffice[sec.id] !== undefined ? pendingOffice[sec.id] : sec.office_id
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -145,7 +67,6 @@ export function Component() {
 
                 return (
                   <tr key={sec.id} className={`hover:bg-gray-50 transition-colors ${!sec.office_id && !pending ? 'bg-amber-50/40' : ''}`}>
-                    {/* Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${officeName ? 'bg-blue-500' : 'bg-amber-400'}`}>
@@ -157,18 +78,12 @@ export function Component() {
                         </div>
                       </div>
                     </td>
-
-                    {/* Email */}
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {sec.email ?? <span className="italic text-gray-400">—</span>}
                     </td>
-
-                    {/* Phone */}
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {sec.phone ?? <span className="italic text-gray-400">—</span>}
                     </td>
-
-                    {/* Office select — the key column */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="flex-1">
@@ -182,10 +97,9 @@ export function Component() {
                             className={officeName ? '' : 'border-amber-300 bg-amber-50 text-amber-700'}
                           />
                         </div>
-
                         {pending && (
                           <Button
-                            onClick={() => saveOffice(sec)}
+                            onClick={() => handleSave(sec)}
                             disabled={saving}
                             className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 h-auto whitespace-nowrap"
                           >
@@ -197,8 +111,6 @@ export function Component() {
                         <p className="text-xs text-amber-600 mt-1">⚠️ Sin oficina — no puede operar la caja</p>
                       )}
                     </td>
-
-                    {/* Status */}
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                         sec.is_active !== false

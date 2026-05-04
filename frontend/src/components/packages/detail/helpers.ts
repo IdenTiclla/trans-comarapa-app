@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export const formatDateTime = (dateStr: string | null | undefined, includeTime = true) => {
   if (!dateStr) return '---'
   const date = new Date(dateStr)
@@ -21,7 +20,7 @@ export const getStatusNumber = (status: string | undefined) => {
   }
 }
 
-export const resolveLocations = (pkg: any) => {
+export const resolveLocations = (pkg: Record<string, unknown>) => {
   const originName =
     pkg.origin_office?.name ||
     pkg.origin_office_name ||
@@ -45,8 +44,9 @@ export const resolveLocations = (pkg: any) => {
   return { originName, destinationName }
 }
 
-export const makeGetHistoryDate = (pkg: any) => (stateName: string) => {
+export const makeGetHistoryDate = (pkg: Record<string, unknown>) => (stateName: string) => {
   if (!pkg.state_history) return null
-  const historyItem = pkg.state_history.find((h: any) => h.new_state === stateName)
+  const history = pkg.state_history as Array<Record<string, unknown>>
+  const historyItem = history.find((h) => h.new_state === stateName)
   return historyItem ? historyItem.changed_at : null
 }

@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { ticketService } from '@/services/ticket.service'
+import type { RootState } from '@/store'
+import type { Ticket } from '@/types'
 
-interface TicketState { tickets: unknown[]; isLoading: boolean; error: string | null }
+interface TicketState { tickets: Ticket[]; isLoading: boolean; error: string | null }
 const initialState: TicketState = { tickets: [], isLoading: false, error: null }
 
 export const fetchTickets = createAsyncThunk('ticket/fetchAll', async (params: Record<string, unknown> = {}, { rejectWithValue }) => {
@@ -21,12 +23,12 @@ const ticketSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchTickets.pending, (s) => { s.isLoading = true; s.error = null })
-            .addCase(fetchTickets.fulfilled, (s, a) => { s.isLoading = false; s.tickets = a.payload as unknown[] })
+            .addCase(fetchTickets.fulfilled, (s, a) => { s.isLoading = false; s.tickets = a.payload as Ticket[] })
             .addCase(fetchTickets.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string })
-            .addCase(fetchTicketsByTrip.fulfilled, (s, a) => { s.tickets = a.payload as unknown[] })
+            .addCase(fetchTicketsByTrip.fulfilled, (s, a) => { s.tickets = a.payload as Ticket[] })
     },
 })
 
-export const selectTickets = (state: { ticket: TicketState }) => state.ticket.tickets
-export const selectTicketLoading = (state: { ticket: TicketState }) => state.ticket.isLoading
+export const selectTickets = (state: RootState) => state.ticket.tickets
+export const selectTicketLoading = (state: RootState) => state.ticket.isLoading
 export default ticketSlice.reducer

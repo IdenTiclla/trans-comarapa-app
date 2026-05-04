@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { statsService } from '@/services/stats.service'
 import { salesService } from '@/services/sales.service'
+import type { RootState } from '@/store'
 import { AbortError } from '@/lib/api'
 
 interface StatData {
@@ -97,17 +98,17 @@ const statsSlice = createSlice({
 
 export const { clearStatsError } = statsSlice.actions
 
-export const selectDashboardStats = (state: { stats: StatsState }) => state.stats.dashboardStats
+export const selectDashboardStats = (state: RootState) => state.stats.dashboardStats
 
 const defaultStatData: StatData = { count: 0, amount: 0, trend: 0 }
 const defaultPackageData: StatData = { count: 0, trend: 0 }
 const defaultSalesSummary: SalesSummary = { totalAmount: 0, ticketCount: 0, packageCount: 0, trend: 0 }
 
-export const selectTicketStats = (state: { stats: StatsState }) => state.stats.dashboardStats.tickets || defaultStatData
-export const selectPackageStats = (state: { stats: StatsState }) => state.stats.dashboardStats.packages || defaultPackageData
-export const selectTripStats = (state: { stats: StatsState }) => state.stats.dashboardStats.trips || defaultPackageData
-export const selectSalesSummary = (state: { stats: StatsState }) => state.stats.salesSummary || defaultSalesSummary
-export const selectStatsLoading = (state: { stats: StatsState }) => state.stats.isLoading
-export const selectStatsError = (state: { stats: StatsState }) => state.stats.error
+export const selectTicketStats = (state: RootState) => state.stats.dashboardStats.tickets || defaultStatData
+export const selectPackageStats = (state: RootState) => state.stats.dashboardStats.packages || defaultPackageData
+export const selectTripStats = (state: RootState) => state.stats.dashboardStats.trips || defaultPackageData
+export const selectSalesSummary = (state: RootState) => state.stats.salesSummary || defaultSalesSummary
+export const selectStatsLoading = (state: RootState) => state.stats.isLoading
+export const selectStatsError = (state: RootState) => state.stats.error
 
 export default statsSlice.reducer

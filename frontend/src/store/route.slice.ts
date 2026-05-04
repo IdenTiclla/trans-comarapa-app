@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { routeService } from '@/services/route.service'
+import type { RootState } from '@/store'
+import type { Route, RouteWithSchedules } from '@/types'
 
 interface RouteState {
-    routes: unknown[]
-    routesWithSchedules: unknown[]
-    currentRoute: unknown | null
+    routes: Route[]
+    routesWithSchedules: RouteWithSchedules[]
+    currentRoute: Route | null
     isLoading: boolean
     error: string | null
 }
@@ -40,9 +42,9 @@ const routeSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchRoutes.pending, (s) => { s.isLoading = true; s.error = null })
-            .addCase(fetchRoutes.fulfilled, (s, a) => { s.isLoading = false; s.routes = a.payload as unknown[] })
+            .addCase(fetchRoutes.fulfilled, (s, a) => { s.isLoading = false; s.routes = a.payload as Route[] })
             .addCase(fetchRoutes.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; s.routes = [] })
-            .addCase(fetchRoutesWithSchedules.fulfilled, (s, a) => { s.routesWithSchedules = a.payload as unknown[] })
+            .addCase(fetchRoutesWithSchedules.fulfilled, (s, a) => { s.routesWithSchedules = a.payload as RouteWithSchedules[] })
             .addCase(createRoute.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(updateRoute.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(deleteRoute.rejected, (s, a) => { s.error = a.payload as string })
@@ -50,7 +52,7 @@ const routeSlice = createSlice({
 })
 
 export const { clearCurrentRoute } = routeSlice.actions
-export const selectRoutes = (state: { route: RouteState }) => state.route.routes
-export const selectRouteLoading = (state: { route: RouteState }) => state.route.isLoading
-export const selectRouteError = (state: { route: RouteState }) => state.route.error
+export const selectRoutes = (state: RootState) => state.route.routes
+export const selectRouteLoading = (state: RootState) => state.route.isLoading
+export const selectRouteError = (state: RootState) => state.route.error
 export default routeSlice.reducer

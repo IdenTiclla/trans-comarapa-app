@@ -1,25 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getEffectiveName } from '@/lib/person-utils'
+import type { PackageItem } from '@/types'
 import { receiptPrintStyles } from './print-styles'
 
-export function computeTotalAmount(packageData: any): number {
-  if (packageData?.total_amount !== undefined) return packageData.total_amount
-  if (!packageData?.items) return 0
-  return packageData.items.reduce((total: number, item: any) => {
+export function computeTotalAmount(packageData: Record<string, unknown>): number {
+  if (packageData?.total_amount !== undefined) return packageData.total_amount as number
+  const items = packageData?.items as PackageItem[] | undefined
+  if (!items) return 0
+  return items.reduce((total: number, item) => {
     const price = item.unit_price ?? (item.total_price ? item.total_price / (item.quantity || 1) : 0)
     return total + item.quantity * price
   }, 0)
 }
 
-export function resolveNames(packageData: any) {
-  const sender = packageData?.sender
-  const recipient = packageData?.recipient
-  const senderName = !sender && packageData?.sender_name ? packageData.sender_name : getEffectiveName(sender)
-  const recipientName = !recipient && packageData?.recipient_name ? packageData.recipient_name : getEffectiveName(recipient)
+export function resolveNames(packageData: Record<string, unknown>) {
+  const sender = packageData?.sender as Record<string, unknown> | undefined
+  const recipient = packageData?.recipient as Record<string, unknown> | undefined
+  const senderName = !sender && packageData?.sender_name ? packageData.sender_name as string : getEffectiveName(sender)
+  const recipientName = !recipient && packageData?.recipient_name ? packageData.recipient_name as string : getEffectiveName(recipient)
   return { senderName, recipientName }
 }
 
-export function resolveLocations(packageData: any) {
+export function resolveLocations(packageData: Record<string, unknown>) {
   const originName =
     packageData?.origin ||
     packageData?.origin_office_name ||

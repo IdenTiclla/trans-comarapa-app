@@ -1,9 +1,7 @@
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { toast } from 'sonner'
 import { AlertCircle } from 'lucide-react'
 import { useTicketDetail } from '@/hooks/use-ticket-detail'
-import { ticketService } from '@/services/ticket.service'
+import { useTicketDetailPage } from '@/hooks/use-ticket-detail-page'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
@@ -30,31 +28,18 @@ export function Component() {
   const navigate = useNavigate()
   const { ticket, trip, loading, error, reload } = useTicketDetail(ticketId)
 
-  const [showCancelDialog, setShowCancelDialog] = useState(false)
-  const [cancelling, setCancelling] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [autoPrintPreview, setAutoPrintPreview] = useState(false)
-
-  const canCancel = Boolean(ticket?.state && !['cancelled', 'completed'].includes(ticket.state.toLowerCase()))
-
-  const handleCancel = async () => {
-    if (!ticket) return
-    setCancelling(true)
-    try {
-      await ticketService.cancel(ticket.id)
-      toast.success('Boleto cancelado correctamente')
-      setShowCancelDialog(false)
-      await reload()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo cancelar el boleto')
-    } finally {
-      setCancelling(false)
-    }
-  }
-
-  const handlePreview = () => { setAutoPrintPreview(false); setShowPreview(true) }
-  const handlePrint = () => { setAutoPrintPreview(true); setShowPreview(true) }
-  const handleClosePreview = () => { setShowPreview(false); setAutoPrintPreview(false) }
+  const {
+    showCancelDialog,
+    setShowCancelDialog,
+    cancelling,
+    canCancel,
+    showPreview,
+    autoPrintPreview,
+    handleCancel,
+    handlePreview,
+    handlePrint,
+    handleClosePreview,
+  } = useTicketDetailPage(ticket, reload)
 
   if (loading && !ticket) {
     return (

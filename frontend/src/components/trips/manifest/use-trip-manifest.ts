@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
-import { apiFetch } from '@/lib/api'
+import { packageService } from '@/services/package.service'
+import { errMsg } from '@/lib/error-utils'
 import type { TripPackage } from './helpers'
 
 export function useTripManifest(tripId: number) {
@@ -20,10 +21,10 @@ export function useTripManifest(tripId: number) {
       setPkgError(null)
       try {
         await dispatch(fetchTripById(tripId))
-        const data = await apiFetch(`/packages/by-trip/${tripId}`) as TripPackage[] | { items?: TripPackage[] }
+        const data = await packageService.getByTrip(tripId) as TripPackage[] | { items?: TripPackage[] }
         setPackages(Array.isArray(data) ? data : data?.items || [])
       } catch (err) {
-        setPkgError(err instanceof Error ? err.message : 'Error al cargar el manifiesto.')
+        setPkgError(errMsg(err, 'Error al cargar el manifiesto.'))
       } finally {
         setLoadingPkgs(false)
       }

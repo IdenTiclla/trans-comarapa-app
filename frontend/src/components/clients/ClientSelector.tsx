@@ -40,7 +40,6 @@ export default function ClientSelector({
     // Watch for external selectedClientId changes
     useEffect(() => {
         if (selectedClientId && !selectedClient) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setClientType('existing')
             // Parent might pass ID, but we ideally need full info; if only ID is known, we might fetch it or let parent handle
         } else if (clientDetails && clientDetails.name && !selectedClientId) {
@@ -52,6 +51,7 @@ export default function ClientSelector({
                 doc_id: clientDetails.doc_id || ''
             })
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedClientId, clientDetails])
 
     // Broadcast new client changes

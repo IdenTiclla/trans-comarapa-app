@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Eye } from 'lucide-react'
+import type { Trip } from '@/types'
 import TicketDisplay from '../TicketDisplay'
 
 interface Props {
-  previewTicket: any
-  trip: any
+  previewTicket: Record<string, unknown> | null
+  trip: Trip
 }
 
 export function TicketPreviewPanel({ previewTicket, trip }: Props) {

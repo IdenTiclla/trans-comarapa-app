@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
@@ -12,7 +11,7 @@ interface ClientForm {
     email: string
     city: string
     state: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 interface ClientModalProps {

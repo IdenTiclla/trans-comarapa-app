@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ReceiptDocument } from './receipt/ReceiptDocument'
@@ -11,7 +10,7 @@ import {
 
 interface PackageReceiptModalProps {
   show: boolean
-  packageData: any
+  packageData: Record<string, unknown> | null
   onClose: () => void
 }
 

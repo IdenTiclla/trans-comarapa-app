@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link } from 'react-router'
 import { Bus } from 'lucide-react'
 import { formatDateTime } from './helpers'
+import type { Package } from '@/types'
 
 interface Props {
-  pkg: any
+  pkg: Package
 }
 
 export function AssignedTripCard({ pkg }: Props) {

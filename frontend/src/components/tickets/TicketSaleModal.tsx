@@ -1,6 +1,5 @@
 import type React from 'react'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { useAppSelector } from '@/store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, Loader2, Ticket as TicketIcon, User } from 'lucide-react'
@@ -17,7 +16,7 @@ import type { TicketSaleModalProps } from './ticket-sale/types'
 export default function TicketSaleModal({
   show, trip, selectedSeats = [], actionType, onClose, onTicketCreated,
 }: TicketSaleModalProps) {
-  const { user } = useSelector((state: RootState) => state.auth)
+  const { user } = useAppSelector((state) => state.auth)
   const s = useTicketSale({ show, trip, selectedSeats, actionType, userId: user?.id })
 
   const { clientSearch } = s

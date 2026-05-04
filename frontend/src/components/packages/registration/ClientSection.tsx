@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
+import type { Client } from '@/types'
 
 interface ClientSearchLike {
   clientType: string
-  setClientType: (v: any) => void
+  setClientType: (v: string) => void
   clientSearchQuery: string
   searchClients: (q: string) => void
   searchingClients: boolean
-  foundClients: any[]
+  foundClients: Client[]
   hasSearched: boolean
   hasSelectedExistingClient: boolean
-  selectedExistingClient: any
-  selectExistingClient: (c: any) => void
+  selectedExistingClient: Client | null
+  selectExistingClient: (c: Client) => void
   clearExistingClientSelection: () => void
 }
 

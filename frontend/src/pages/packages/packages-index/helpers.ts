@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Package, PackageItem } from '@/types'
+
 export const STATUS_OPTIONS = [
   { value: 'all', label: 'Todos' },
   { value: 'registered_at_office', label: 'En oficina' },
@@ -15,7 +16,7 @@ export interface PackageFilters {
   dateTo: string
 }
 
-export function filterPackages(packages: any[], f: PackageFilters): any[] {
+export function filterPackages(packages: Package[], f: PackageFilters): Package[] {
   let filtered = [...packages]
 
   if (f.searchTerm) {
@@ -27,7 +28,7 @@ export function filterPackages(packages: any[], f: PackageFilters): any[] {
       (pkg.recipient?.lastname && pkg.recipient.lastname.toLowerCase().includes(term)) ||
       (pkg.tracking_number && pkg.tracking_number.toLowerCase().includes(term)) ||
       (pkg.tracking_code && pkg.tracking_code.toLowerCase().includes(term)) ||
-      (pkg.items && pkg.items.some((i: any) => i.description.toLowerCase().includes(term))),
+      (pkg.items && (pkg.items as PackageItem[]).some((i) => i.description.toLowerCase().includes(term))),
     )
   }
 
@@ -50,7 +51,7 @@ export function filterPackages(packages: any[], f: PackageFilters): any[] {
   return filtered
 }
 
-export function computeStats(packages: any[]) {
+export function computeStats(packages: Package[]) {
   const today = new Date().toDateString()
   return {
     total: packages.length,

@@ -5,12 +5,13 @@ import { fetchDrivers, selectDrivers } from '@/store/driver.slice'
 import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import { tripService } from '@/services/trip.service'
 import { seatService } from '@/services/seat.service'
-import { apiFetch } from '@/lib/api'
+import { ticketService } from '@/services/ticket.service'
 import { useTripDetails } from '@/hooks/use-trip-details'
 import { useTripSeatLocks } from '@/hooks/use-trip-seat-locks'
 import { useTripPackagesPanel } from '@/hooks/use-trip-packages-panel'
 import { useTripStaffEditor } from '@/hooks/use-trip-staff-editor'
 import { toast } from 'sonner'
+import { errMsg } from '@/lib/error-utils'
 
 interface Seat {
     id: number
@@ -35,13 +36,6 @@ interface Trip {
 interface Person {
     id: number
     [key: string]: unknown
-}
-
-function errMsg(e: unknown, fallback: string): string {
-    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
-        return (e as { message: string }).message
-    }
-    return fallback
 }
 
 function showNotification(type: 'success' | 'error', title: string, message: string) {
@@ -140,7 +134,7 @@ export function useTripDetailPage(tripId: number) {
         if (!seatChangeTicket || !newSelectedSeat) return
         setSeatChangeLoading(true)
         try {
-            await apiFetch(`/tickets/${seatChangeTicket.id}/change-seat/${newSelectedSeat.id}`, { method: 'PUT' })
+            await ticketService.changeSeat(seatChangeTicket.id, newSelectedSeat.id)
             showNotification('success', 'Asiento cambiado', 'El cambio de asiento se realizó con éxito.')
             refreshTrip()
             cancelSeatChange()
@@ -153,7 +147,7 @@ export function useTripDetailPage(tripId: number) {
         if (!ticketToConfirm) return
         setConfirmingSale(true)
         try {
-            await apiFetch(`/tickets/${ticketToConfirm.id}`, { method: 'PUT', body: { state: 'confirmed' } })
+            await ticketService.confirmSale(ticketToConfirm.id)
             showNotification('success', 'Venta confirmada', 'La reserva ha sido confirmada como venta.')
             refreshTrip()
             setSeatMapKey(prev => prev + 1)
@@ -214,7 +208,7 @@ export function useTripDetailPage(tripId: number) {
         const ticket = soldTickets.find(t => t.seat?.seat_number === seat.number && t.state === 'pending')
         if (ticket) {
             try {
-                await apiFetch(`/tickets/${ticket.id}/cancel`, { method: 'PUT' })
+                await ticketService.cancel(ticket.id)
                 showNotification('success', 'Reserva cancelada', 'La reserva ha sido cancelada exitosamente.')
                 refreshTrip()
                 setSeatMapKey(prev => prev + 1)

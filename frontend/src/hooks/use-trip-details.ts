@@ -1,15 +1,6 @@
 import { useState, useCallback } from 'react'
-import { apiFetch } from '@/lib/api'
-
-interface SoldTicket {
-    id: number
-    state: string
-    seat?: { seat_number: number; deck?: number }
-    client?: { firstname: string; lastname: string; document_id?: string }
-    destination?: string
-    price?: number
-    [key: string]: unknown
-}
+import { ticketService } from '@/services/ticket.service'
+import type { SoldTicket } from '@/types'
 
 export function useTripDetails() {
     const [soldTickets, setSoldTickets] = useState<SoldTicket[]>([])
@@ -19,7 +10,7 @@ export function useTripDetails() {
     const fetchSoldTickets = useCallback(async (tripId: number) => {
         setLoadingTickets(true)
         try {
-            const data = await apiFetch(`/tickets/trip/${tripId}`)
+            const data = await ticketService.getByTripId(tripId)
             const tickets = Array.isArray(data) ? data : []
             setSoldTickets(tickets)
             const reserved = tickets

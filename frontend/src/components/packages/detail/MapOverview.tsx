@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Package } from '@/types'
+
 interface Props {
-  pkg: any
+  pkg: Package
 }
 
 const STATUS_TEXT: Record<string, string> = {

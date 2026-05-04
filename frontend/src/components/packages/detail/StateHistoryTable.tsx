@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from './helpers'
+import type { Package } from '@/types'
 
 interface Props {
-  pkg: any
+  pkg: Package
   originName: string
   destinationName: string
 }
@@ -28,7 +28,7 @@ const getLocation = (state: string, originName: string, destinationName: string)
 }
 
 export function StateHistoryTable({ pkg, originName, destinationName }: Props) {
-  const history = pkg.state_history && pkg.state_history.length > 0 ? [...pkg.state_history].reverse() : []
+  const history = pkg.state_history && (pkg.state_history as Array<Record<string, unknown>>).length > 0 ? [...(pkg.state_history as Array<Record<string, unknown>>)].reverse() : []
   const tripId = pkg.trip_id || pkg.trip?.id || null
 
   return (
@@ -52,7 +52,7 @@ export function StateHistoryTable({ pkg, originName, destinationName }: Props) {
           </thead>
           <tbody className="divide-y divide-gray-50">
             {history.length > 0 ? (
-              history.map((event: any, idx: number) => (
+              history.map((event, idx: number) => (
                 <tr key={idx} className="bg-white hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 text-[13px] text-gray-600 whitespace-nowrap">
                     {formatDateTime(event.changed_at, true).replace(',', '')}

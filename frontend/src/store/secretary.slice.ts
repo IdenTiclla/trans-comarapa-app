@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { secretaryService, type Secretary } from '@/services/secretary.service'
+import type { RootState } from '@/store'
 
 interface SecretaryState {
     secretaries: Secretary[]
@@ -45,7 +46,7 @@ const secretarySlice = createSlice({
     },
 })
 
-export const selectSecretaries = (state: { secretary: SecretaryState }) => state.secretary.secretaries
-export const selectSecretaryLoading = (state: { secretary: SecretaryState }) => state.secretary.isLoading
+export const selectSecretaries = (state: RootState) => state.secretary.secretaries
+export const selectSecretaryLoading = (state: RootState) => state.secretary.isLoading
 
 export default secretarySlice.reducer

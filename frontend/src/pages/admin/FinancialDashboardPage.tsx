@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react'
-import { financialService } from '@/services/financial.service'
-import type { OfficeFinancialSummary, FinancialTotals, OfficeCollection } from '@/services/financial.service'
-import { toast } from 'sonner'
+import { useFinancialDashboard } from '@/hooks/use-financial-dashboard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import FormDatePicker from '@/components/forms/FormDatePicker'
@@ -22,34 +19,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function Component() {
-  const [offices, setOffices] = useState<OfficeFinancialSummary[]>([])
-  const [totals, setTotals] = useState<FinancialTotals | null>(null)
-  const [collections, setCollections] = useState<OfficeCollection[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
-
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const [summaryResponse, collectionsData] = await Promise.all([
-        financialService.getOfficesSummary(selectedDate),
-        financialService.getCollectionsByOffice(selectedDate)
-      ])
-      setOffices(summaryResponse.offices)
-      setTotals(summaryResponse.totals)
-      setCollections(collectionsData)
-    } catch {
-      toast.error('Error al cargar datos financieros')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [selectedDate])
+  const { offices, totals, collections, loading, selectedDate, setSelectedDate } = useFinancialDashboard()
 
   return (
     <div className="w-full space-y-6">

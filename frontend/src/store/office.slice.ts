@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { officeService } from '@/services/office.service'
 import type { Office } from '@/types/office'
+import type { RootState } from '@/store'
 
 interface OfficeState {
     offices: Office[]
@@ -60,8 +61,8 @@ const officeSlice = createSlice({
     },
 })
 
-export const selectOffices = (state: { office: OfficeState }) => state.office.offices
-export const selectOfficeLoading = (state: { office: OfficeState }) => state.office.isLoading
-export const selectOfficeError = (state: { office: OfficeState }) => state.office.error
+export const selectOffices = (state: RootState) => state.office.offices
+export const selectOfficeLoading = (state: RootState) => state.office.isLoading
+export const selectOfficeError = (state: RootState) => state.office.error
 
 export default officeSlice.reducer

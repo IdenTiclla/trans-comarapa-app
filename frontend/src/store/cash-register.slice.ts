@@ -9,6 +9,7 @@ import type {
   RecordTransactionPayload,
   WithdrawalPayload
 } from "@/types/cash-register";
+import type { RootState } from "@/store";
 
 interface CashRegisterState {
   currentRegister: CashRegister | null;
@@ -213,11 +214,11 @@ const cashRegisterSlice = createSlice({
 
 export const { clearError, clearCurrentRegister } = cashRegisterSlice.actions;
 
-export const selectIsSubmitting = (state: { cashRegister: CashRegisterState }) => state.cashRegister.isSubmitting;
-export const selectCurrentRegister = (state: { cashRegister: CashRegisterState }) => state.cashRegister.currentRegister;
-export const selectDailySummary = (state: { cashRegister: CashRegisterState }) => state.cashRegister.dailySummary;
-export const selectTransactions = (state: { cashRegister: CashRegisterState }) => state.cashRegister.transactions;
-export const selectIsLoading = (state: { cashRegister: CashRegisterState }) => state.cashRegister.isLoading;
-export const selectError = (state: { cashRegister: CashRegisterState }) => state.cashRegister.error;
+export const selectIsSubmitting = (state: RootState) => state.cashRegister.isSubmitting;
+export const selectCurrentRegister = (state: RootState) => state.cashRegister.currentRegister;
+export const selectDailySummary = (state: RootState) => state.cashRegister.dailySummary;
+export const selectTransactions = (state: RootState) => state.cashRegister.transactions;
+export const selectIsLoading = (state: RootState) => state.cashRegister.isLoading;
+export const selectError = (state: RootState) => state.cashRegister.error;
 
 export default cashRegisterSlice.reducer;

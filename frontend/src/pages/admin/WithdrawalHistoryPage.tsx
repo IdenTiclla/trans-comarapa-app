@@ -1,8 +1,4 @@
-import { useEffect, useState } from 'react'
-import { financialService } from '@/services/financial.service'
-import type { WithdrawalRecord } from '@/services/financial.service'
-import { toast } from 'sonner'
-import { API_BASE_URL } from '@/lib/constants'
+import { useWithdrawalHistory } from '@/hooks/use-withdrawal-history'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2, Filter } from 'lucide-react'
@@ -31,40 +27,10 @@ function formatDateTime(dateStr: string): string {
 }
 
 export function Component() {
-  const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
-
-  const fetchWithdrawals = async () => {
-    setLoading(true)
-    try {
-      const data = await financialService.getWithdrawals(
-        undefined,
-        dateFrom || undefined,
-        dateTo || undefined
-      )
-      setWithdrawals(data)
-    } catch {
-      toast.error('Error al cargar historial de retiros')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchWithdrawals()
-  }, [])
-
-  const handleExport = () => {
-    const params = new URLSearchParams()
-    if (dateFrom) params.append('date_from', dateFrom)
-    if (dateTo) params.append('date_to', dateTo)
-    const qs = params.toString()
-    window.open(`${API_BASE_URL}/financial/withdrawals/csv${qs ? `?${qs}` : ''}`, '_blank')
-  }
-
-  const totalAmount = withdrawals.reduce((sum, w) => sum + w.amount, 0)
+  const {
+    withdrawals, loading, dateFrom, setDateFrom, dateTo, setDateTo,
+    fetchWithdrawals, handleExport, totalAmount,
+  } = useWithdrawalHistory()
 
   return (
     <div className="w-full space-y-6">

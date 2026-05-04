@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getPackageStatusLabel } from '@/lib/package-status'
+import type { Package } from '@/types'
 
 interface Props {
-  pkg: any
+  pkg: Package
   onEdit: () => void
   onShowReceipt: () => void
   onMarkReceived: () => void

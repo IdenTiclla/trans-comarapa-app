@@ -1,18 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useAppDispatch, useAppSelector } from '@/store'
 import { useAuth } from '@/hooks/use-auth'
-import {
-  fetchDashboardStats,
-  selectTicketStats,
-  selectPackageStats,
-  selectTripStats,
-  selectSalesSummary,
-  selectStatsLoading,
-  selectStatsError,
-} from '@/store/stats.slice'
-import { financialService } from '@/services/financial.service'
-import type { CashSummaryResponse } from '@/services/financial.service'
+import { useAdminDashboard } from '@/hooks/use-admin-dashboard'
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
 import UpcomingTrips from '@/components/dashboard/UpcomingTrips'
 import RecentSales from '@/components/dashboard/RecentSales'
@@ -20,31 +8,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export function Component() {
-  const dispatch = useAppDispatch()
   const navigate = useNavigate()
   useAuth()
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const ticketStats = useAppSelector(selectTicketStats)
-  const packageStats = useAppSelector(selectPackageStats)
-  const tripStats = useAppSelector(selectTripStats)
-  const salesSummary = useAppSelector(selectSalesSummary)
-  const isLoading = useAppSelector(selectStatsLoading)
-  const error = useAppSelector(selectStatsError)
-
-  const [cashSummary, setCashSummary] = useState<CashSummaryResponse | null>(null)
-
-  useEffect(() => {
-    dispatch(fetchDashboardStats('today'))
-    intervalRef.current = setInterval(() => dispatch(fetchDashboardStats('today')), 5 * 60 * 1000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [dispatch])
-
-  useEffect(() => {
-    financialService.getCashSummary().then(setCashSummary).catch(() => {})
-  }, [])
+  const {
+    ticketStats, packageStats, tripStats, salesSummary,
+    isLoading, error, cashSummary, refresh,
+  } = useAdminDashboard()
 
   return (
     <div className="w-full space-y-6">
@@ -64,7 +33,7 @@ export function Component() {
             <p className="text-red-700 mt-1">{error}</p>
             <Button
               variant="outline"
-              onClick={() => dispatch(fetchDashboardStats('today'))}
+              onClick={refresh}
               className="mt-3 border-red-300 text-red-800 hover:bg-red-100"
             >
               Intentar nuevamente

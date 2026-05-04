@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authService } from '@/services/auth.service'
 import { profileService } from '@/services/profile.service'
+import type { RootState } from '@/store'
 import type { AuthUser } from '@/types/auth'
 
 interface AuthState {
@@ -197,10 +198,10 @@ const authSlice = createSlice({
 export const { initAuth, clearError } = authSlice.actions
 
 // Selectors
-export const selectUser = (state: { auth: AuthState }) => state.auth.user
-export const selectIsAuthenticated = (state: { auth: AuthState }) => !!state.auth.user
-export const selectUserRole = (state: { auth: AuthState }) => state.auth.user?.role ?? null
-export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading
-export const selectAuthError = (state: { auth: AuthState }) => state.auth.error
+export const selectUser = (state: RootState) => state.auth.user
+export const selectIsAuthenticated = (state: RootState) => !!state.auth.user
+export const selectUserRole = (state: RootState) => state.auth.user?.role ?? null
+export const selectAuthLoading = (state: RootState) => state.auth.loading
+export const selectAuthError = (state: RootState) => state.auth.error
 
 export default authSlice.reducer

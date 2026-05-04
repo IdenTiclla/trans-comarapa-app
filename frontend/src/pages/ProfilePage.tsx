@@ -1,49 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/hooks/use-auth'
-import { officeService } from '@/services/office.service'
-import { toast } from 'sonner'
-import type { Office } from '@/types/office'
+import { useProfilePage } from '@/hooks/use-profile-page'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Mail } from 'lucide-react'
 import FormInput from '@/components/forms/FormInput'
 
+const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', secretary: 'Secretaria', driver: 'Conductor', assistant: 'Asistente', client: 'Cliente' }
+
 export function Component() {
-  const { user, userFullName, userInitials, userRole, updateProfile, loading } = useAuth()
-  const [formData, setFormData] = useState({
-    firstname: user?.firstname || '',
-    lastname: user?.lastname || '',
-    email: user?.email || '',
-  })
-  const [saving, setSaving] = useState(false)
-  const [office, setOffice] = useState<Office | null>(null)
-  const [officeLoading, setOfficeLoading] = useState(false)
-
-  const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', secretary: 'Secretaria', driver: 'Conductor', assistant: 'Asistente', client: 'Cliente' }
-
-  useEffect(() => {
-    if (userRole === 'secretary' && user?.office_id) {
-      setOfficeLoading(true)
-      officeService.getById(user.office_id)
-        .then(setOffice)
-        .catch(() => toast.error('Error al cargar la oficina'))
-        .finally(() => setOfficeLoading(false))
-    }
-  }, [userRole, user?.office_id])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      await updateProfile(formData)
-      toast.success('Perfil actualizado correctamente')
-    } catch {
-      toast.error('Error al actualizar perfil')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const {
+    user, userFullName, userInitials, userRole, loading,
+    formData, setFormData, saving, office, officeLoading, handleSubmit,
+  } = useProfilePage()
 
   return (
     <div className="w-full space-y-6 max-w-2xl">

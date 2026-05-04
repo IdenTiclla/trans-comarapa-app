@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Bus, Seat } from '@/types'
+
 export interface Owner {
   id: number
   firstname: string
@@ -20,11 +21,11 @@ export interface BusFormState {
 export type Deck = 'FIRST' | 'SECOND'
 
 export interface BusFormProps {
-  bus?: any
+  bus?: Bus
   loading?: boolean
   isEditing?: boolean
-  existingSeats?: any[]
-  onSubmit: (busData: any) => void
+  existingSeats?: Seat[]
+  onSubmit: (busData: Record<string, unknown>) => void
   onCancel: () => void
 }
 

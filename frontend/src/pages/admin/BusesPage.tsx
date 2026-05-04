@@ -1,108 +1,16 @@
-import { useEffect, useState } from 'react'
-import { useAppDispatch, useAppSelector } from '@/store'
-import { fetchBuses, createBus, updateBus, deleteBus, createBusWithSeats, updateBusSeats, selectBuses, selectBusLoading, selectBusError } from '@/store/bus.slice'
-import { ownerService } from '@/services/owner.service'
-import { busService } from '@/services/bus.service'
+import { useBusesPage } from '@/hooks/use-buses-page'
 import BusForm from '@/components/admin/BusForm'
-import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Bus, Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
-
-interface Bus {
-    id: number
-    plate_number?: string
-    license_plate?: string
-    model?: string
-    brand?: string
-    capacity?: number
-    floors?: number
-    is_active?: boolean
-    owner_id?: number | null
-    [key: string]: unknown
-}
-
-interface Owner {
-    id: number
-    firstname: string
-    lastname: string
-}
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 
 export function Component() {
-    const dispatch = useAppDispatch()
-    const buses = useAppSelector(selectBuses) as Bus[]
-    const loading = useAppSelector(selectBusLoading)
-    const error = useAppSelector(selectBusError)
-
-    const [showForm, setShowForm] = useState(false)
-    const [editingBus, setEditingBus] = useState<Bus | null>(null)
-    const [existingSeats, setExistingSeats] = useState<unknown[]>([])
-    const [saving, setSaving] = useState(false)
-    const [owners, setOwners] = useState<Owner[]>([])
-
-    useEffect(() => {
-        dispatch(fetchBuses({}))
-        ownerService.getAll().then(data => {
-            setOwners(Array.isArray(data) ? data : [])
-        }).catch(err => console.error("Error cargando socios:", err))
-    }, [dispatch])
-
-    const openCreate = () => {
-        setEditingBus(null)
-        setExistingSeats([])
-        setShowForm(true)
-    }
-
-    const openEdit = async (bus: Bus) => {
-        setEditingBus(bus)
-        setSaving(true)
-        try {
-            const seats = await busService.getSeats(bus.id)
-            setExistingSeats(Array.isArray(seats) ? seats : [])
-        } catch (err) {
-            console.error("Error cargando asientos:", err)
-            setExistingSeats([])
-        } finally {
-            setSaving(false)
-        }
-        setShowForm(true)
-    }
-
-    const handleFormSubmit = async (busData: Record<string, unknown>) => {
-        setSaving(true)
-        try {
-            if (editingBus) {
-                await dispatch(updateBus({ id: editingBus.id, data: busData })).unwrap()
-                if (busData.seatsModified && busData.seats) {
-                    await dispatch(updateBusSeats({ busId: editingBus.id, seats: busData.seats as unknown[] })).unwrap()
-                }
-                toast.success('Bus actualizado correctamente')
-            } else {
-                if (busData.seats && (busData.seats as unknown[]).length > 0) {
-                    await dispatch(createBusWithSeats(busData)).unwrap()
-                } else {
-                    await dispatch(createBus(busData)).unwrap()
-                }
-                toast.success('Bus creado correctamente')
-            }
-            setShowForm(false)
-        } catch (err) {
-            toast.error(`Error: ${err}`)
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    const handleDelete = async (bus: Bus) => {
-        if (!confirm(`¿Eliminar bus ${bus.plate_number || bus.license_plate}?`)) return
-        try {
-            await dispatch(deleteBus(bus.id)).unwrap()
-            toast.success('Bus eliminado correctamente')
-        } catch (err) {
-            toast.error(`Error: ${err}`)
-        }
-    }
+    const {
+        buses, loading, error, showForm, setShowForm,
+        editingBus, existingSeats, saving, owners,
+        openCreate, openEdit, handleFormSubmit, handleDelete,
+    } = useBusesPage()
 
     return (
         <div className="w-full space-y-6">

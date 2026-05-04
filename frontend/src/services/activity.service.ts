@@ -5,8 +5,7 @@ export const activityService = {
         try {
             const data = await apiFetch<{ activities?: unknown[] }>('/activities/recent')
             return data.activities || []
-        } catch (error) {
-            console.error('Error fetching recent activities:', error)
+        } catch {
             return []
         }
     },

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormCheckbox from '@/components/forms/FormCheckbox'
 import { Button } from '@/components/ui/button'
 import PackageReceiptModal from './PackageReceiptModal'
@@ -12,7 +11,7 @@ interface PackageRegistrationModalProps {
   show: boolean
   tripId?: number | string | null
   onClose: () => void
-  onPackageRegistered?: (pkg: any) => void
+  onPackageRegistered?: (pkg: Record<string, unknown>) => void
 }
 
 const senderIcon = (
@@ -101,7 +100,7 @@ export default function PackageRegistrationModal({
                     icon={senderIcon}
                     search={r.senderSearch}
                     newForm={r.newSenderForm}
-                    setNewForm={r.setNewSenderForm as any}
+                    setNewForm={r.setNewSenderForm as React.Dispatch<React.SetStateAction<{ firstname: string; lastname: string; document_id: string; phone: string }>>}
                   />
 
                   <ClientSection
@@ -110,7 +109,7 @@ export default function PackageRegistrationModal({
                     icon={recipientIcon}
                     search={r.recipientSearch}
                     newForm={r.newRecipientForm}
-                    setNewForm={r.setNewRecipientForm as any}
+                    setNewForm={r.setNewRecipientForm as React.Dispatch<React.SetStateAction<{ firstname: string; lastname: string; document_id: string; phone: string }>>}
                     headerExtra={showCopyButton && (
                       <Button
                         type="button"
@@ -141,7 +140,7 @@ export default function PackageRegistrationModal({
                     <div className="flex-1 bg-white rounded-lg p-3 border border-gray-200 flex items-center">
                       <FormCheckbox
                         checked={r.packageData.received_confirmation}
-                        onChange={(checked) => r.setPackageData((prev: any) => ({ ...prev, received_confirmation: checked }))}
+                        onChange={(checked) => r.setPackageData((prev) => ({ ...prev, received_confirmation: checked }))}
                         label="El cliente declara que el contenido es lícito y RECIBE CONFORME su comprobante."
                       />
                     </div>

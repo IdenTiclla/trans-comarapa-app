@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from '@/components/ui/button'
 import FormSelect from '@/components/forms/FormSelect'
 import { Check, User, Users } from 'lucide-react'
+import type { Trip, Driver, Assistant } from '@/types'
 
 interface StaffState {
     editingDriver: boolean
@@ -19,9 +19,9 @@ interface StaffState {
 }
 
 interface Props {
-    drivers: any[]
-    assistants: any[]
-    trip: any
+    drivers: Driver[]
+    assistants: Assistant[]
+    trip: Trip
     staff: StaffState
     compact?: boolean
 }
@@ -68,7 +68,7 @@ function StaffEditCard({
 }: {
     label: string
     selectedId: string
-    options: any[]
+    options: (Driver | Assistant)[]
     saving: boolean
     onChangeId: (id: string) => void
     onSave: () => void
@@ -81,7 +81,7 @@ function StaffEditCard({
                 value={selectedId}
                 onChange={onChangeId}
                 placeholder="Sin asignar"
-                options={(options || []).map((o: any) => ({ value: String(o.id), label: `${o.firstname} ${o.lastname}` }))}
+                options={(options || []).map((o) => ({ value: String(o.id), label: `${o.firstname} ${o.lastname}` }))}
             />
             <div className="flex gap-2 mt-2">
                 <Button size="sm" onClick={onSave} disabled={saving} className="flex-1 gap-1 h-7 text-xs">

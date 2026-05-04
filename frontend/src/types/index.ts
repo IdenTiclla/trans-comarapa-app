@@ -17,7 +17,16 @@ export interface PaginatedResponse<T> {
   pages: number
 }
 
-export interface ApiError {
-  detail: string
-  status: number
-}
+export type { ApiError as ApiErrorClass } from '@/lib/api'
+
+export * from './trip'
+export * from './ticket'
+export * from './client'
+export * from './bus'
+export * from './package'
+export * from './driver'
+export * from './assistant'
+export * from './secretary'
+export * from './owner'
+export * from './location'
+export * from './route'

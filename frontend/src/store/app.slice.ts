@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { RootState } from '@/store'
 
 interface Notification {
     id: number
@@ -36,8 +37,8 @@ const appSlice = createSlice({
 
 export const { setLoading, addNotification, removeNotification } = appSlice.actions
 
-export const selectAppName = (state: { app: AppState }) => state.app.appName
-export const selectIsLoading = (state: { app: AppState }) => state.app.isLoading
-export const selectNotifications = (state: { app: AppState }) => state.app.notifications
+export const selectAppName = (state: RootState) => state.app.appName
+export const selectIsLoading = (state: RootState) => state.app.isLoading
+export const selectNotifications = (state: RootState) => state.app.notifications
 
 export default appSlice.reducer

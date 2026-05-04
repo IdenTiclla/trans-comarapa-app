@@ -1,25 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { useAppSelector } from '@/store'
-import { packageService } from '@/services/package.service'
-import { cashRegisterService } from '@/services/cash-register.service'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { usePackageDeliveryModal, type PackageData, type PackageItem } from './use-package-delivery'
 import { Check, X, CreditCard, CheckCircle, Banknote, QrCode, AlertTriangle, Wallet, AlertCircle, Loader2 } from 'lucide-react'
-
-interface Person { firstname?: string; lastname?: string }
-interface PackageItem { id?: number; description?: string; quantity?: number; [k: string]: unknown }
-interface PackageData {
-    id: number
-    payment_status?: string
-    sender_name?: string
-    receiver_name?: string
-    recipient_name?: string
-    sender?: Person
-    recipient?: Person
-    items?: PackageItem[]
-    [k: string]: unknown
-}
 
 interface PackageDeliveryModalProps {
     show: boolean
@@ -35,96 +18,19 @@ export default function PackageDeliveryModal({
     onConfirm
 }: PackageDeliveryModalProps) {
     const navigate = useNavigate()
-    const { user } = useAppSelector((state) => state.auth)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('')
-    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qr'>('cash')
-    const [isCashRegisterOpen, setIsCashRegisterOpen] = useState<boolean | null>(null)
-    const [, setCheckingCashRegister] = useState(false)
+    const {
+        isSubmitting,
+        errorMessage,
+        paymentMethod,
+        setPaymentMethod,
+        isCashRegisterOpen,
+        isReadyToDeliver,
+        getSenderName,
+        getRecipientName,
+        confirmDelivery,
+    } = usePackageDeliveryModal(show, packageData)
 
-    useEffect(() => {
-        if (show) {
-            setPaymentMethod('cash')
-            setIsSubmitting(false)
-            setErrorMessage('')
-            setIsCashRegisterOpen(null)
-        }
-    }, [show])
-
-    useEffect(() => {
-        const checkCashRegister = async () => {
-            if (!show || !packageData) return
-            if (packageData.payment_status !== 'collect_on_delivery') {
-                setIsCashRegisterOpen(true)
-                return
-            }
-            const officeId = user?.office_id
-            if (!officeId) {
-                setIsCashRegisterOpen(false)
-                return
-            }
-            setCheckingCashRegister(true)
-            try {
-                const register = await cashRegisterService.getCurrentRegister(officeId)
-                setIsCashRegisterOpen(register?.status === 'open')
-            } catch {
-                setIsCashRegisterOpen(false)
-            } finally {
-                setCheckingCashRegister(false)
-            }
-        }
-        checkCashRegister()
-    }, [show, packageData, user?.office_id])
-
-    const isReadyToDeliver = useMemo(() => {
-        if (!packageData) return false
-        if (packageData.payment_status === 'collect_on_delivery') {
-            if (paymentMethod === null) return false
-            if (isCashRegisterOpen === false) return false
-        }
-        return true
-    }, [packageData, paymentMethod, isCashRegisterOpen])
-
-    const getSenderName = (pkg: PackageData | null) => {
-        if (!pkg) return 'N/A'
-        if (pkg.sender_name) return pkg.sender_name
-        if (pkg.sender) return `${pkg.sender.firstname || ''} ${pkg.sender.lastname || ''}`.trim() || 'N/A'
-        return 'N/A'
-    }
-
-    const getRecipientName = (pkg: PackageData | null) => {
-        if (!pkg) return 'N/A'
-        if (pkg.receiver_name) return pkg.receiver_name
-        if (pkg.recipient_name) return pkg.recipient_name
-        if (pkg.recipient) return `${pkg.recipient.firstname || ''} ${pkg.recipient.lastname || ''}`.trim() || 'N/A'
-        return 'N/A'
-    }
-
-    const confirmDelivery = async () => {
-        if (!isReadyToDeliver || !packageData) return
-
-        setIsSubmitting(true)
-        setErrorMessage('')
-
-        try {
-            const defaultMethod = 'cash'
-            let finalPaymentMethod = defaultMethod
-
-            if (packageData.payment_status === 'collect_on_delivery') {
-                finalPaymentMethod = paymentMethod
-            } else {
-                finalPaymentMethod = packageData.payment_method || defaultMethod
-            }
-
-            await packageService.deliver(packageData.id, finalPaymentMethod, user?.id || null)
-            onConfirm({ packageId: packageData.id })
-        } catch (error) {
-            console.error('Error in confirm delivery:', error)
-            setErrorMessage(error.data?.detail || (error instanceof Error ? error.message : String(error)) || 'Error al confirmar la entrega. Por favor, intente nuevamente.')
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
+    const handleConfirm = () => confirmDelivery(onConfirm)
 
     if (!show || !packageData) return null
 
@@ -315,7 +221,7 @@ export default function PackageDeliveryModal({
                             Cancelar
                         </Button>
                         <Button
-                            onClick={confirmDelivery}
+                            onClick={handleConfirm}
                             disabled={isSubmitting || !isReadyToDeliver}
                             className="gap-1.5"
                         >

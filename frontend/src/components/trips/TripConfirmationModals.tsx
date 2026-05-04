@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Trip } from '@/types'
+import type { SelectedSeat } from '@/components/tickets/ticket-sale/types'
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 import { Button } from '@/components/ui/button'
 
@@ -18,7 +19,7 @@ interface FinishState {
 
 interface ConfirmSaleState {
     show: boolean
-    ticket: any
+    ticket: Record<string, unknown>
     executing: boolean
     execute: () => void
     close: () => void
@@ -26,8 +27,8 @@ interface ConfirmSaleState {
 
 interface SeatChangeState {
     mode: boolean
-    ticket: any
-    newSeat: any
+    ticket: Record<string, unknown>
+    newSeat: SelectedSeat
     showConfirm: boolean
     loading: boolean
     confirm: () => void
@@ -37,13 +38,13 @@ interface SeatChangeState {
 interface TicketSaleState {
     show: boolean
     actionType: 'sell' | 'reserve'
-    seats: any[]
+    seats: SelectedSeat[]
     close: () => void
     onCreated: () => void
 }
 
 interface Props {
-    trip: any
+    trip: Trip
     dispatch: DispatchState
     finish: FinishState
     confirmSale: ConfirmSaleState
@@ -108,7 +109,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                             </div>
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900">Confirmar Venta</h3>
-                                <p className="text-sm text-gray-500 mt-2">¿Confirmar la venta del asiento {confirmSale.ticket.seat?.seat_number} para {confirmSale.ticket.client?.firstname} {confirmSale.ticket.client?.lastname}?</p>
+                                <p className="text-sm text-gray-500 mt-2">¿Confirmar la venta del asiento {(confirmSale.ticket.seat as Record<string, unknown>)?.seat_number} para {((confirmSale.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((confirmSale.ticket.client as Record<string, unknown>)?.lastname) ?? ''}?</p>
                                 <p className="text-sm font-bold mt-2">Monto a cobrar: Bs. {confirmSale.ticket.price}</p>
                             </div>
                         </div>
@@ -133,7 +134,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900">Confirmar Cambio de Asiento</h3>
                                 <p className="text-sm text-gray-500 mt-2">
-                                    ¿Mover al pasajero <strong>{seatChange.ticket.client?.firstname} {seatChange.ticket.client?.lastname}</strong> del asiento <strong>{seatChange.ticket.seat?.seat_number}</strong> al asiento <strong>{seatChange.newSeat.number}</strong>?
+                                    ¿Mover al pasajero <strong>{((seatChange.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((seatChange.ticket.client as Record<string, unknown>)?.lastname) ?? ''}</strong> del asiento <strong>{(seatChange.ticket.seat as Record<string, unknown>)?.seat_number}</strong> al asiento <strong>{seatChange.newSeat.number}</strong>?
                                 </p>
                             </div>
                         </div>

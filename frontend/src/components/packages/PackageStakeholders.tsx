@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { User, UserCheck, ShieldCheck, Mail, Phone, Fingerprint } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -64,9 +63,9 @@ const StakeholderCard = ({ title, name, subtitle, icon, colorClass, bgColorClass
 }
 
 interface PackageStakeholdersProps {
-  sender?: any
-  recipient?: any
-  secretary?: any
+  sender?: Record<string, unknown>
+  recipient?: Record<string, unknown>
+  secretary?: Record<string, unknown>
   senderName?: string
   recipientName?: string
 }

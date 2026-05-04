@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { PackageItem } from '@/types'
+
 interface Props {
-  items: any[]
+  items: PackageItem[]
   totalAmount: number
 }
 
@@ -15,7 +16,7 @@ export function ReceiptItemsTable({ items, totalAmount }: Props) {
       </div>
 
       <div className="bg-gray-50 text-sm">
-        {items.map((item: any, index: number) => {
+        {items.map((item, index) => {
           const price = item.unit_price ?? (item.total_price ? item.total_price / (item.quantity || 1) : 0)
           return (
             <div key={index} className="grid grid-cols-12 border-b border-gray-300">

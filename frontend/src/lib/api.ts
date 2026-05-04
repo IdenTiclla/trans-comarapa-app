@@ -14,6 +14,19 @@ export class AbortError extends Error {
   }
 }
 
+export class ApiError extends Error {
+  readonly status: number
+  readonly data: unknown
+
+  constructor(status: number, data: unknown) {
+    const detail = (data as Record<string, string>)?.detail ?? `HTTP ${status}`
+    super(detail)
+    this.name = 'ApiError'
+    this.status = status
+    this.data = data
+  }
+}
+
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
 let isLoggingOut = false
@@ -121,12 +134,7 @@ export async function apiFetch<T = unknown>(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      const error = new Error(
-        (errorData as Record<string, string>).detail || `HTTP ${response.status}`
-      )
-        ; (error as Error & { status: number; data: unknown }).status = response.status
-        ; (error as Error & { status: number; data: unknown }).data = errorData
-      throw error
+      throw new ApiError(response.status, errorData)
     }
 
     if (response.status === 204) {

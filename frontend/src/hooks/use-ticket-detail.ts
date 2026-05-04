@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ticketService } from '@/services/ticket.service'
 import { tripService } from '@/services/trip.service'
+import { errMsg } from '@/lib/error-utils'
 
 export interface TicketDetailClient {
   id: number
@@ -95,7 +96,7 @@ export function useTicketDetail(ticketId: number | null) {
         setTrip(null)
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al cargar el boleto'
+      const message = errMsg(err, 'Error al cargar el boleto')
       setError(message)
       setTicket(null)
       setTrip(null)

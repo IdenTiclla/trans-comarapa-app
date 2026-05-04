@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { tripService, type TripQueryParams } from '@/services/trip.service'
+import type { RootState } from '@/store'
+import type { Trip } from '@/types'
 
 interface TripState {
-    trips: unknown[]
-    currentTrip: unknown | null
+    trips: Trip[]
+    currentTrip: Trip | null
     totalItems: number
     isLoading: boolean
     error: string | null
@@ -37,24 +39,24 @@ const tripSlice = createSlice({
             .addCase(fetchTrips.fulfilled, (s, a) => {
                 s.isLoading = false
                 const data = a.payload
-                if (Array.isArray(data)) { s.trips = data; s.totalItems = data.length }
+                if (Array.isArray(data)) { s.trips = data as Trip[]; s.totalItems = data.length }
                 else {
-                    const d = data as { items?: unknown[]; trips?: unknown[]; pagination?: { total: number }; total?: number }
+                    const d = data as { items?: Trip[]; trips?: Trip[]; pagination?: { total: number }; total?: number }
                     s.trips = d.trips || d.items || [];
                     s.totalItems = d.pagination?.total || d.total || s.trips.length
                 }
             })
             .addCase(fetchTrips.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; s.trips = [] })
             .addCase(fetchTripById.pending, (s) => { s.isLoading = true })
-            .addCase(fetchTripById.fulfilled, (s, a) => { s.isLoading = false; s.currentTrip = a.payload })
+            .addCase(fetchTripById.fulfilled, (s, a) => { s.isLoading = false; s.currentTrip = a.payload as Trip })
             .addCase(fetchTripById.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string })
     },
 })
 
 export const { clearCurrentTrip } = tripSlice.actions
-export const selectTrips = (state: { trip: TripState }) => state.trip.trips
-export const selectCurrentTrip = (state: { trip: TripState }) => state.trip.currentTrip
-export const selectTripLoading = (state: { trip: TripState }) => state.trip.isLoading
-export const selectTripError = (state: { trip: TripState }) => state.trip.error
-export const selectTripTotal = (state: { trip: TripState }) => state.trip.totalItems
+export const selectTrips = (state: RootState) => state.trip.trips
+export const selectCurrentTrip = (state: RootState) => state.trip.currentTrip
+export const selectTripLoading = (state: RootState) => state.trip.isLoading
+export const selectTripError = (state: RootState) => state.trip.error
+export const selectTripTotal = (state: RootState) => state.trip.totalItems
 export default tripSlice.reducer

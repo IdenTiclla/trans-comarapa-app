@@ -1,128 +1,38 @@
-import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams, Navigate } from 'react-router'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/store'
-import { apiFetch } from '@/lib/api'
+import { useAppSelector } from '@/store'
+import { selectUser } from '@/store/auth.slice'
+import { useTicketConfirmation } from '@/hooks/use-ticket-confirmation'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
+
+function formatDate(dateStringOrDate?: string | Date) {
+  if (!dateStringOrDate) return 'Fecha no disponible'
+  const date = new Date(dateStringOrDate)
+  if (isNaN(date.getTime())) return 'Fecha inválida'
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  }).format(date)
+}
 
 export function Component() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user } = useSelector((state: RootState) => state.auth)
+  const user = useAppSelector(selectUser)
   const isAuthenticated = !!user
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  type TripLike = Record<string, unknown>
-  type TicketLike = { id: number; client_id?: number; seat_id?: number; seat?: { seat_number?: number | string }; [k: string]: unknown }
-  type ClientLike = Record<string, unknown>
-  const [confirmedTrip, setConfirmedTrip] = useState<TripLike | null>(null)
-  const [fetchedTickets, setFetchedTickets] = useState<TicketLike[]>([])
-  const [confirmedClient, setConfirmedClient] = useState<ClientLike | null>(null)
-
-  useEffect(() => {
-    async function loadConfirmation() {
-      if (!isAuthenticated) return
-
-      try {
-        setLoading(true)
-        setError(null)
-
-        const tripId = searchParams.get('tripId')
-        const ticketIdsParam = searchParams.get('ids')
-
-        if (!tripId || !ticketIdsParam) {
-          throw new Error('Información de viaje o boletos no encontrada en la URL.')
-        }
-
-        // Fetch trip details
-        const tripRes = await apiFetch(`/trips/${tripId}`)
-        if (!tripRes) {
-          throw new Error('No se pudo cargar la información del viaje.')
-        }
-        setConfirmedTrip(tripRes as TripLike)
-
-        // Fetch ticket details
-        const ticketIdArray = ticketIdsParam.split(',')
-        const tickets: TicketLike[] = []
-        let firstClientId: number | null = null
-
-        if (ticketIdArray.length > 0) {
-          for (const ticketId of ticketIdArray) {
-            try {
-              const ticketRes = await apiFetch(`/tickets/${ticketId}`) as TicketLike
-              if (ticketRes) {
-                tickets.push(ticketRes)
-                if (!firstClientId && ticketRes.client_id) {
-                  firstClientId = ticketRes.client_id
-                }
-              }
-            } catch (err) {
-              console.warn(`No se pudo cargar el boleto ID: ${ticketId}`, err)
-            }
-          }
-        }
-
-        if (tickets.length === 0) {
-          throw new Error('No se pudieron cargar los detalles de los boletos.')
-        }
-        setFetchedTickets(tickets)
-
-        // Fetch client details if possible
-        if (firstClientId) {
-          try {
-            const clientRes = await apiFetch(`/clients/${firstClientId}`)
-            if (clientRes) {
-              setConfirmedClient(clientRes as ClientLike)
-            }
-          } catch (err) {
-            console.warn(`No se pudo cargar el cliente ID: ${firstClientId}`, err)
-          }
-        }
-      } catch (err) {
-        console.error("Error en TicketConfirmationPage:", err)
-        setError(err instanceof Error ? err.message : 'Ocurrió un error al cargar los detalles de la confirmación.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadConfirmation()
-  }, [searchParams, isAuthenticated])
-
-  const primaryTicket = useMemo(() => {
-    return fetchedTickets.length > 0 ? fetchedTickets[0] : null
-  }, [fetchedTickets])
-
-  const seatNumbersDisplay = useMemo(() => {
-    if (fetchedTickets.length > 0) {
-      return fetchedTickets.map(t => t.seat?.seat_number || t.seat_id).join(', ')
-    }
-    return searchParams.get('ids')
-  }, [fetchedTickets, searchParams])
-
-  const totalAmountDisplay = useMemo(() => {
-    return fetchedTickets.reduce((sum, ticket) => sum + (parseFloat(ticket.price) || 0), 0).toFixed(2)
-  }, [fetchedTickets])
-
-  const formatDate = (dateStringOrDate?: string | Date) => {
-    if (!dateStringOrDate) return 'Fecha no disponible'
-    const date = new Date(dateStringOrDate)
-    if (isNaN(date.getTime())) return 'Fecha inválida'
-    return new Intl.DateTimeFormat('es-ES', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-    }).format(date)
-  }
-
-  const printTicket = () => {
-    window.print()
-  }
+  const {
+    loading,
+    error,
+    confirmedTrip,
+    primaryTicket,
+    confirmedClient,
+    seatNumbersDisplay,
+    totalAmountDisplay,
+  } = useTicketConfirmation(searchParams, isAuthenticated)
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
@@ -205,7 +115,7 @@ export function Component() {
 
                 <div className="mt-8 border-t border-gray-200 pt-6">
                   <div className="flex justify-between">
-                    <Button variant="outline" onClick={printTicket}>
+                    <Button variant="outline" onClick={() => window.print()}>
                       <Printer className="h-5 w-5 mr-2 text-gray-500" />
                       Imprimir boleto
                     </Button>

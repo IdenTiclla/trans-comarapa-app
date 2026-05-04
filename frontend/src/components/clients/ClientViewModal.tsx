@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from '@/components/ui/button'
 import { X, Pencil } from 'lucide-react'
+import type { Client } from '@/types'
 
 interface ClientViewModalProps {
     show: boolean
-    client: Record<string, any> | null
+    client: Client | null
     onClose: () => void
-    onEdit: (client: Record<string, any>) => void
+    onEdit: (client: Client) => void
 }
 
 export default function ClientViewModal({ show, client, onClose, onEdit }: ClientViewModalProps) {
     if (!show || !client) return null
 
-    const getEffectiveName = (c: any) => {
+    const getEffectiveName = (c: Record<string, unknown>) => {
         if (!c) return 'No registrado'
         return c.full_name || `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'No registrado'
     }

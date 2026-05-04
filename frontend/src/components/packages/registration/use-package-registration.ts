@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { createPackage } from '@/store/package.slice'
-import { apiFetch } from '@/lib/api'
+import { officeService } from '@/services/office.service'
+import { secretaryService } from '@/services/secretary.service'
 import { useClientSearch } from '@/hooks/use-client-search'
 import { toast } from 'sonner'
+import { ApiError } from '@/lib/api'
 
 export interface Office {
   id: number
@@ -16,7 +16,7 @@ interface UsePackageRegistrationParams {
   show: boolean
   tripId?: number | string | null
   onClose: () => void
-  onPackageRegistered?: (pkg: any) => void
+  onPackageRegistered?: (pkg: Record<string, unknown>) => void
 }
 
 const generateTrackingNumber = () => {
@@ -26,8 +26,8 @@ const generateTrackingNumber = () => {
 }
 
 export function usePackageRegistration({ show, tripId = null, onClose, onPackageRegistered }: UsePackageRegistrationParams) {
-  const dispatch = useDispatch<any>()
-  const authStore = useSelector((state: RootState) => state.auth)
+  const dispatch = useAppDispatch()
+  const authStore = useAppSelector((state) => state.auth)
 
   const senderSearch = useClientSearch()
   const recipientSearch = useClientSearch()
@@ -57,7 +57,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
   })
 
   const [showReceiptModal, setShowReceiptModal] = useState(false)
-  const [registeredPackageData, setRegisteredPackageData] = useState<any>({})
+  const [registeredPackageData, setRegisteredPackageData] = useState<Record<string, unknown>>({})
 
   const totalAmount = useMemo(
     () => packageData.items.reduce((t, item) => t + item.quantity * item.unit_price, 0),
@@ -82,6 +82,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     const sDoc = getSenderDocument()
     const rDoc = getRecipientDocument()
     return Boolean(sDoc && rDoc && String(sDoc).trim() === String(rDoc).trim())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [senderSearch.clientType, senderSearch.selectedExistingClient, newSenderForm.document_id, recipientSearch.clientType, recipientSearch.selectedExistingClient, newRecipientForm.document_id])
 
   const hasSender = useMemo(() => {
@@ -135,10 +136,10 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     const fetchOffices = async () => {
       setLoadingOffices(true)
       try {
-        const response = await apiFetch('/offices')
-        setOffices(response)
-      } catch (error) {
-        console.error('Error fetching offices:', error)
+        const response = await officeService.getAll()
+        setOffices(response as Office[])
+      } catch {
+        // offices load failed - non-critical
       } finally {
         setLoadingOffices(false)
       }
@@ -176,10 +177,10 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     }
   }
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: unknown) => {
     setPackageData(prev => {
       const newItems = [...prev.items]
-      ;(newItems[index] as any)[field] = value
+      ;(newItems[index] as Record<string, unknown>)[field] = value
       return { ...prev, items: newItems }
     })
   }
@@ -215,10 +216,10 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     setIsSubmitting(true)
     try {
       const senderPayload = senderSearch.clientType === 'existing' ? senderSearch.selectedExistingClient : newSenderForm
-      const finalSender: any = await senderSearch.getOrCreateClient(senderPayload)
+      const finalSender = await senderSearch.getOrCreateClient(senderPayload) as Record<string, unknown>
 
       const recipientPayload = recipientSearch.clientType === 'existing' ? recipientSearch.selectedExistingClient : newRecipientForm
-      const finalRecipient: any = await recipientSearch.getOrCreateClient(recipientPayload)
+      const finalRecipient = await recipientSearch.getOrCreateClient(recipientPayload) as Record<string, unknown>
 
       if (finalSender.id === finalRecipient.id) {
         throw new Error('El remitente y el destinatario no pueden ser el mismo registro en la base de datos.')
@@ -230,7 +231,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
 
       let secretaryId = null
       try {
-        const secretaryResponse: any = await apiFetch(`/secretaries/by-user/${authStore.user.id}`, { method: 'GET' })
+        const secretaryResponse = await secretaryService.getByUserId(authStore.user.id)
         secretaryId = secretaryResponse.id
       } catch {
         throw new Error('No se pudo verificar su rol de secretario o no tiene los permisos suficientes.')
@@ -295,8 +296,11 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
         resetForm()
       }
     } catch (error) {
-      console.error('Error registrando encomienda:', error)
-      setFormErrorMessage((error instanceof Error ? error.message : String(error)) || error.data?.detail || 'Hubo un error al registrar la encomienda.')
+      setFormErrorMessage(
+        error instanceof ApiError
+          ? (error.data as Record<string, string>)?.detail || error.message
+          : error instanceof Error ? error.message : 'Hubo un error al registrar la encomienda.',
+      )
     } finally {
       setIsSubmitting(false)
     }

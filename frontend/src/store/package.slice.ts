@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { packageService } from '@/services/package.service'
 import type { RootState } from '@/store'
+import type { Package } from '@/types'
 
 interface Pagination {
     currentPage: number
@@ -9,22 +10,17 @@ interface Pagination {
     itemsPerPage: number
 }
 
-interface PackageRecord {
-    id: number
-    [key: string]: unknown
-}
-
 interface PaginatedPackages {
-    items?: PackageRecord[]
-    packages?: PackageRecord[]
+    items?: Package[]
+    packages?: Package[]
     total?: number
     pages?: number
     page?: number
 }
 
 interface PackageState {
-    packages: PackageRecord[]
-    currentPackage: PackageRecord | null
+    packages: Package[]
+    currentPackage: Package | null
     loading: boolean
     error: string | null
     pagination: Pagination
@@ -87,11 +83,10 @@ const packageSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // fetchPackages
             .addCase(fetchPackages.pending, (s) => { s.loading = true; s.error = null })
             .addCase(fetchPackages.fulfilled, (s, a) => {
                 s.loading = false
-                const data = a.payload as PackageRecord[] | PaginatedPackages
+                const data = a.payload as Package[] | PaginatedPackages
                 if (Array.isArray(data)) {
                     s.packages = data
                     s.pagination.totalItems = data.length
@@ -103,18 +98,15 @@ const packageSlice = createSlice({
                 }
             })
             .addCase(fetchPackages.rejected, (s, a) => { s.loading = false; s.error = a.payload as string })
-            // fetchPackageById
             .addCase(fetchPackageById.pending, (s) => { s.loading = true; s.error = null })
-            .addCase(fetchPackageById.fulfilled, (s, a) => { s.loading = false; s.currentPackage = a.payload as PackageRecord })
+            .addCase(fetchPackageById.fulfilled, (s, a) => { s.loading = false; s.currentPackage = a.payload as Package })
             .addCase(fetchPackageById.rejected, (s, a) => { s.loading = false; s.error = a.payload as string })
-            // updatePackage
             .addCase(updatePackage.fulfilled, (s, a) => {
-                const payload = a.payload as PackageRecord
+                const payload = a.payload as Package
                 s.currentPackage = payload
                 const idx = s.packages.findIndex((p) => p.id === payload.id)
                 if (idx !== -1) s.packages[idx] = payload
             })
-            // deletePackage
             .addCase(deletePackage.fulfilled, (s, a) => {
                 s.packages = s.packages.filter((p) => p.id !== a.payload)
             })
@@ -123,14 +115,12 @@ const packageSlice = createSlice({
 
 export const { clearCurrentPackage, clearError } = packageSlice.actions
 
-// Selectors
 export const selectPackages = (state: RootState) => state.package.packages
 export const selectCurrentPackage = (state: RootState) => state.package.currentPackage
 export const selectPackageLoading = (state: RootState) => state.package.loading
 export const selectPackageError = (state: RootState) => state.package.error
 export const selectPackagePagination = (state: RootState) => state.package.pagination
 
-// Legacy aliases used in some pages
 export const selectIsLoading = selectPackageLoading
 
 export default packageSlice.reducer

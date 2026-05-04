@@ -24,8 +24,8 @@ export function useRouteForm(route: RouteFormProps['route']) {
       try {
         const data = await locationService.getAll()
         setLocations(data)
-      } catch (err) {
-        console.error('Error loading locations:', err)
+      } catch {
+        // locations load failed - non-critical
       }
     }
     load()

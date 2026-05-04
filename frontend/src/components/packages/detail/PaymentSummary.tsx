@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box } from 'lucide-react'
+import type { Package, PackageItem } from '@/types'
 
 interface Props {
-  pkg: any
+  pkg: Package
 }
 
 export function PaymentSummary({ pkg }: Props) {
@@ -40,7 +40,7 @@ export function PaymentSummary({ pkg }: Props) {
         <p className="text-[10px] font-bold uppercase tracking-widest text-[#1e293b] mb-6">Manifiesto de ítems</p>
         <div className="space-y-5">
           {(pkg.items || []).length > 0 ? (
-            pkg.items.map((item: any) => (
+            (pkg.items as PackageItem[] || []).map((item) => (
               <div key={item.id} className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded bg-[#F1F5F9] border border-gray-200 flex items-center justify-center flex-shrink-0 text-[#1e293b]">
                   <Box className="w-5 h-5 fill-current" />

@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { clientService } from '@/services/client.service'
 import { ticketService } from '@/services/ticket.service'
 import { tripService } from '@/services/trip.service'
-import { packageService, PACKAGE_STATUS_LABELS } from '@/services/package.service'
+import { errMsg } from '@/lib/error-utils'
+import { packageService } from '@/services/package.service'
+import { PACKAGE_STATUS_LABELS } from '@/lib/package-constants'
 import type { CategoryId, SearchResult, ViewMode } from './types'
 
 export function useQuickSearch() {
@@ -59,7 +60,7 @@ export function useQuickSearch() {
       switch (categoryId) {
         case 'client': {
           const response = await clientService.search(term)
-          data = (response.clients || response || []).map((c: any) => ({
+          data = (response.clients || response || []).map((c: Record<string, unknown>) => ({
             id: c.id,
             title: `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'Sin nombre',
             subtitle: `CI: ${c.document_id || 'N/A'} - ${c.phone || 'Sin telefono'}`,
@@ -71,7 +72,7 @@ export function useQuickSearch() {
         case 'ticket': {
           const response = await ticketService.search(term, 20)
           const tickets = response.tickets || response || []
-          data = tickets.map((t: any) => ({
+          data = tickets.map((t: Record<string, unknown>) => ({
             id: t.id,
             title: `Boleto #${t.id}`,
             subtitle: `${t.client?.firstname || ''} ${t.client?.lastname || ''} - Asiento ${t.seat?.seat_number || 'N/A'}`,
@@ -83,7 +84,7 @@ export function useQuickSearch() {
         case 'trip': {
           const response = await tripService.getAll({ search: term, limit: 20 })
           const trips = response.trips || response || []
-          data = trips.map((t: any) => ({
+          data = trips.map((t: Record<string, unknown>) => ({
             id: t.id,
             title: `${t.origin} -> ${t.destination}`,
             subtitle: `${t.date} - ${t.departure_time || ''} - Bus: ${t.bus?.plate || 'N/A'}`,
@@ -95,7 +96,7 @@ export function useQuickSearch() {
         case 'package': {
           const response = await packageService.search(term)
           const packages = response.packages || response || []
-          data = packages.map((p: any) => ({
+          data = packages.map((p: Record<string, unknown>) => ({
             id: p.id,
             title: `Paquete ${p.tracking_number || `#${p.id}`}`,
             subtitle: `${p.recipient_name || 'Sin destinatario'} - ${PACKAGE_STATUS_LABELS[p.status] || p.status}`,
@@ -107,8 +108,8 @@ export function useQuickSearch() {
       }
       setResults(data)
       if (data.length === 0) setError('No se encontraron resultados')
-    } catch (err: any) {
-      setError(err.message || 'Error al buscar')
+    } catch (err: unknown) {
+      setError(errMsg(err, 'Error al buscar'))
       setResults([])
     } finally {
       setIsLoading(false)

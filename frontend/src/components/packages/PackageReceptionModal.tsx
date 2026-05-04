@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Check, Loader2 } from 'lucide-react'
+import type { Package, PackageItem } from '@/types'
 
 interface PackageReceptionModalProps {
     show: boolean
-    packageData: any
+    packageData: Package | Record<string, unknown> | null
     onClose: () => void
     onConfirm: (packageId: number) => void
 }
@@ -25,14 +25,14 @@ export default function PackageReceptionModal({
         }
     }, [show])
 
-    const getSenderName = (pkg: any) => {
+    const getSenderName = (pkg: Record<string, unknown> | null) => {
         if (!pkg) return 'N/A'
         if (pkg.sender_name) return pkg.sender_name
         if (pkg.sender) return `${pkg.sender.firstname || ''} ${pkg.sender.lastname || ''}`.trim() || 'N/A'
         return 'N/A'
     }
 
-    const getRecipientName = (pkg: any) => {
+    const getRecipientName = (pkg: Record<string, unknown> | null) => {
         if (!pkg) return 'N/A'
         if (pkg.receiver_name) return pkg.receiver_name
         if (pkg.recipient_name) return pkg.recipient_name
@@ -46,8 +46,7 @@ export default function PackageReceptionModal({
 
         try {
             await onConfirm(packageData.id)
-        } catch (error) {
-            console.error('Error confirming reception', error)
+        } catch {
             setIsSubmitting(false)
         }
     }
@@ -94,7 +93,7 @@ export default function PackageReceptionModal({
                                                     <div className="bg-white rounded border border-gray-100 p-2 max-h-32 overflow-y-auto overflow-x-hidden">
                                                         {packageData.items && packageData.items.length > 0 ? (
                                                             <ul className="space-y-1">
-                                                                {packageData.items.map((item: any) => (
+                                                                {((packageData.items as PackageItem[]) || []).map((item) => (
                                                                     <li key={item.id} className="flex justify-between items-center text-xs py-1 border-b border-gray-50 last:border-0">
                                                                         <span className="flex items-start min-w-0 pr-4">
                                                                             <span className="font-bold text-gray-700 mr-2 flex-shrink-0">{item.quantity}x</span>

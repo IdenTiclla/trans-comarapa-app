@@ -55,7 +55,7 @@ export function Component() {
 
     useEffect(() => {
         loadClients()
-    }, [dispatch, filters, sorting])
+    }, [dispatch, filters, sorting]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const totalClients = clients.length
     const activeClients = clients.filter((c: Client) => c.status === 'active').length

@@ -1,20 +1,10 @@
-import { useState, useMemo, useEffect } from 'react'
-import { packageService } from '@/services/package.service'
 import FormInput from '@/components/forms/FormInput'
 import FormCheckbox from '@/components/forms/FormCheckbox'
 import { cn } from '@/lib/utils'
 import { getPackageDestination } from '@/lib/package-status'
 import { Button } from '@/components/ui/button'
 import { Plus, X, Loader2, Package } from 'lucide-react'
-
-interface PackageItem {
-    id: number
-    tracking_number?: string
-    sender_name?: string
-    receiver_name?: string
-    created_at?: string
-    [k: string]: unknown
-}
+import { usePackageAssignModal } from './use-package-assign'
 
 interface PackageAssignModalProps {
     show: boolean
@@ -36,72 +26,18 @@ export default function PackageAssignModal({
     onPackagesAssigned,
     onOpenRegistration
 }: PackageAssignModalProps) {
-    const [searchQuery, setSearchQuery] = useState('')
-    const [selectedIds, setSelectedIds] = useState<number[]>([])
-    const [loading, setLoading] = useState(false)
-    const [assigning, setAssigning] = useState(false)
-    const [unassignedPackages, setUnassignedPackages] = useState<PackageItem[]>([])
-
-    useEffect(() => {
-        if (show && tripId) {
-            setLoading(true)
-            setSelectedIds([])
-            setSearchQuery('')
-            packageService.getUnassigned()
-                .then(res => {
-                    const data = Array.isArray(res) ? res : ((res as { packages?: PackageItem[]; data?: PackageItem[] }).packages || (res as { packages?: PackageItem[]; data?: PackageItem[] }).data || [])
-                    setUnassignedPackages(data)
-                })
-                .catch(err => {
-                    console.error('Error loading unassigned packages:', err)
-                })
-                .finally(() => {
-                    setLoading(false)
-                })
-        }
-    }, [show, tripId])
-
-    const filteredPackages = useMemo(() => {
-        if (!searchQuery.trim()) return unassignedPackages
-        const term = searchQuery.toLowerCase()
-        return unassignedPackages.filter(pkg =>
-            (pkg.tracking_number && pkg.tracking_number.toLowerCase().includes(term)) ||
-            (pkg.sender_name && pkg.sender_name.toLowerCase().includes(term)) ||
-            (pkg.recipient_name && pkg.recipient_name.toLowerCase().includes(term))
-        )
-    }, [searchQuery, unassignedPackages])
-
-    const allSelected = filteredPackages.length > 0 && filteredPackages.every(p => selectedIds.includes(p.id))
-
-    const toggleSelect = (id: number) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        )
-    }
-
-    const toggleSelectAll = () => {
-        if (allSelected) {
-            setSelectedIds([])
-        } else {
-            setSelectedIds(filteredPackages.map(p => p.id))
-        }
-    }
-
-    const confirmAssignment = async () => {
-        if (selectedIds.length === 0) return
-        setAssigning(true)
-        try {
-            for (const pkgId of selectedIds) {
-                await packageService.assignToTrip(pkgId, Number(tripId))
-            }
-            onPackagesAssigned()
-            onClose()
-        } catch (error) {
-            console.error('Error assigning packages:', error)
-        } finally {
-            setAssigning(false)
-        }
-    }
+    const {
+        searchQuery,
+        setSearchQuery,
+        loading,
+        assigning,
+        filteredPackages,
+        allSelected,
+        toggleSelect,
+        toggleSelectAll,
+        confirmAssignment,
+        selectedIds,
+    } = usePackageAssignModal(show, tripId)
 
     if (!show) return null
 
@@ -222,7 +158,7 @@ export default function PackageAssignModal({
                                 Cancelar
                             </Button>
                             <Button
-                                onClick={confirmAssignment}
+                                onClick={() => confirmAssignment(onPackagesAssigned, onClose)}
                                 disabled={selectedIds.length === 0 || assigning}
                                 className="bg-indigo-600 hover:bg-indigo-700"
                             >

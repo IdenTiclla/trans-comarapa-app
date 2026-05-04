@@ -1,17 +1,11 @@
 import { useState, useCallback } from 'react'
-import { apiFetch } from '@/lib/api'
+import { packageService } from '@/services/package.service'
 import { toast } from 'sonner'
+import { errMsg } from '@/lib/error-utils'
 
 interface TripPackage {
     id: number
     [key: string]: unknown
-}
-
-function errMsg(e: unknown, fallback: string): string {
-    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
-        return (e as { message: string }).message
-    }
-    return fallback
 }
 
 function notify(type: 'success' | 'error', title: string, message: string) {
@@ -35,7 +29,7 @@ export function useTripPackagesPanel(tripId: number) {
     const fetchPackages = useCallback(async (tId: number) => {
         setLoadingPackages(true)
         try {
-            const data = await apiFetch(`/packages/by-trip/${tId}`)
+            const data = await packageService.getByTrip(tId)
             setTripPackages(Array.isArray(data) ? (data as TripPackage[]) : [])
         } catch { setTripPackages([]) }
         finally { setLoadingPackages(false) }
@@ -43,7 +37,7 @@ export function useTripPackagesPanel(tripId: number) {
 
     const handleUnassignPackage = async (packageId: number) => {
         try {
-            await apiFetch(`/packages/${packageId}/unassign`, { method: 'POST' })
+            await packageService.unassign(packageId)
             notify('success', 'Encomienda removida', 'La encomienda fue removida del viaje.')
             fetchPackages(tripId)
         } catch (err) {
@@ -89,10 +83,7 @@ export function useTripPackagesPanel(tripId: number) {
 
     const handleReceptionConfirm = async (packageId: number) => {
         try {
-            await apiFetch(`/packages/${packageId}/update-status`, {
-                method: 'PUT',
-                body: { new_status: 'arrived_at_destination' },
-            })
+            await packageService.updateStatus(packageId, 'arrived_at_destination')
             setShowPackageReceptionModal(false)
             setSelectedPackageForReception(null)
             fetchPackages(tripId)

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
@@ -7,11 +6,11 @@ import { Button } from '@/components/ui/button'
 import { X, Loader2 } from 'lucide-react'
 
 interface UserFormProps {
-    user?: any
+    user?: Record<string, unknown>
     roles?: string[]
     loading?: boolean
     isEditing?: boolean
-    onSubmit: (data: any) => void
+    onSubmit: (data: Record<string, unknown>) => void
     onCancel: () => void
 }
 
@@ -124,7 +123,7 @@ export default function UserForm({
         return Object.keys(newErrors).length === 0
     }
 
-    const handleChange = (field: string, value: any) => {
+    const handleChange = (field: string, value: unknown) => {
         setForm(prev => ({ ...prev, [field]: value }))
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }))
@@ -134,7 +133,7 @@ export default function UserForm({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validate()) {
-            const userData: any = {
+            const userData: Record<string, unknown> = {
                 firstname: form.firstname,
                 lastname: form.lastname,
                 username: form.username,

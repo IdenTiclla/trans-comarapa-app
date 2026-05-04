@@ -1,17 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { X, AlertCircle, Loader2, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react'
 
 interface UserDetailProps {
-    user?: any
+    user?: Record<string, unknown>
     loading?: boolean
     error?: string | null
     onClose: () => void
-    onEdit: (user: any) => void
-    onDelete: (user: any) => void
-    onActivate: (user: any) => void
-    onDeactivate: (user: any) => void
+    onEdit: (user: Record<string, unknown>) => void
+    onDelete: (user: Record<string, unknown>) => void
+    onActivate: (user: Record<string, unknown>) => void
+    onDeactivate: (user: Record<string, unknown>) => void
     onRefresh: () => void
 }
 
@@ -26,20 +25,20 @@ export default function UserDetail({
     onDeactivate,
     onRefresh
 }: UserDetailProps) {
-    const getEffectiveName = (u: any) => {
+    const getEffectiveName = (u: Record<string, unknown>) => {
         if (!u) return ''
         if (u.firstname && u.lastname) return `${u.firstname} ${u.lastname}`
         return u.username || 'Usuario Desconocido'
     }
 
-    const getInitials = (u: any) => {
+    const getInitials = (u: Record<string, unknown>) => {
         if (!u) return 'U'
         if (u.firstname && u.lastname) return `${u.firstname.charAt(0)}${u.lastname.charAt(0)}`.toUpperCase()
         if (u.username) return u.username.substring(0, 2).toUpperCase()
         return 'U'
     }
 
-    const getEffectivePhone = (u: any) => {
+    const getEffectivePhone = (u: Record<string, unknown>) => {
         if (!u) return ''
         if (u.phone) return u.phone
         if (u.related_entity && u.related_entity.phone) return u.related_entity.phone

@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { ownerService } from '@/services/owner.service'
 import type { SeatPos } from '../SeatLayoutEditor'
 import type { BusFormState, Deck, Owner } from './types'
+import type { Bus, Seat } from '@/types'
 
 const EMPTY_FORM: BusFormState = {
   license_plate: '',
@@ -14,7 +14,7 @@ const EMPTY_FORM: BusFormState = {
   owner_id: null,
 }
 
-export function useBusForm(bus: any, isEditing: boolean, existingSeats: any[]) {
+export function useBusForm(bus: Bus | undefined, isEditing: boolean, existingSeats: Seat[]) {
   const [currentStep, setCurrentStep] = useState(1)
   const [activeDeck, setActiveDeck] = useState<Deck>('FIRST')
   const [form, setForm] = useState<BusFormState>(EMPTY_FORM)
@@ -30,8 +30,8 @@ export function useBusForm(bus: any, isEditing: boolean, existingSeats: any[]) {
       try {
         const response = await ownerService.getAll()
         setOwners(response)
-      } catch (error) {
-        console.error('Error fetching owners:', error)
+      } catch {
+        // owners load failed - non-critical
       } finally {
         setLoadingOwners(false)
       }

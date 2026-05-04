@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
 import { AlertCircle } from 'lucide-react'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
@@ -22,9 +20,9 @@ import { MapOverview } from '@/components/packages/detail/MapOverview'
 export function Component() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const dispatch = useDispatch<any>()
+  const dispatch = useAppDispatch()
 
-  const { currentPackage, loading, error } = useSelector((state: RootState) => state.package)
+  const { currentPackage, loading, error } = useAppSelector((state) => state.package)
 
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showReceptionModal, setShowReceptionModal] = useState(false)

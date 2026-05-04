@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useSelector } from 'react-redux'
-import { useAppDispatch } from '@/store'
-import type { RootState } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
 import { fetchTrips } from '@/store/trip.slice'
 import FormInput from '@/components/forms/FormInput'
@@ -21,8 +19,8 @@ export function Component() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
-  const { currentPackage, loading, error } = useSelector((state: RootState) => state.package)
-  const { trips } = useSelector((state: RootState) => state.trip)
+  const { currentPackage, loading, error } = useAppSelector((state) => state.package)
+  const { trips } = useAppSelector((state) => state.trip)
 
   const [formData, setFormData] = useState<Record<string, unknown>>({
     description: '',
@@ -86,8 +84,8 @@ export function Component() {
 
       await dispatch(updatePackage({ id: Number(id), data: payload })).unwrap()
       navigate(`/packages/${id}`)
-    } catch (err) {
-      console.error('Error updating package', err)
+    } catch {
+      // update failed - error handled by UI state
     }
   }
 

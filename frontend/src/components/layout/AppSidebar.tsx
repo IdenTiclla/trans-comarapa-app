@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router'
-import { useEffect, useState } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -15,22 +14,14 @@ import {
 } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
+import { useSidebarOffice } from '@/hooks/use-sidebar-office'
 import { NAV_GROUPS, ROLE_LABELS } from '@/lib/navigation'
 import type { Role } from '@/lib/constants'
 import { LogOut, Settings, Bus, MapPin } from 'lucide-react'
-import { officeService } from '@/services/office.service'
 
 export default function AppSidebar() {
   const { user, userRole, logout } = useAuth()
-  const [officeName, setOfficeName] = useState<string>("")
-
-  useEffect(() => {
-    if (user?.office_id) {
-      officeService.getById(user.office_id)
-        .then(office => setOfficeName(office.name))
-        .catch(() => setOfficeName(""))
-    }
-  }, [user?.office_id])
+  const { officeName } = useSidebarOffice(user?.office_id)
 
   const groups = NAV_GROUPS[userRole as Role] ?? []
   const roleLabel = ROLE_LABELS[userRole as Role] ?? userRole ?? ''

@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { driverService } from '@/services/driver.service'
+import type { RootState } from '@/store'
+import type { Driver } from '@/types'
 
-interface DriverState { drivers: unknown[]; isLoading: boolean; error: string | null }
+interface DriverState { drivers: Driver[]; isLoading: boolean; error: string | null }
 const initialState: DriverState = { drivers: [], isLoading: false, error: null }
 
 export const fetchDrivers = createAsyncThunk('driver/fetchAll', async (params: Record<string, unknown> = {}, { rejectWithValue }) => {
@@ -15,10 +17,10 @@ const driverSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchDrivers.pending, (s) => { s.isLoading = true; s.error = null })
-            .addCase(fetchDrivers.fulfilled, (s, a) => { s.isLoading = false; s.drivers = a.payload as unknown[] })
+            .addCase(fetchDrivers.fulfilled, (s, a) => { s.isLoading = false; s.drivers = a.payload as Driver[] })
             .addCase(fetchDrivers.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string })
     },
 })
 
-export const selectDrivers = (state: { driver: DriverState }) => state.driver.drivers
+export const selectDrivers = (state: RootState) => state.driver.drivers
 export default driverSlice.reducer

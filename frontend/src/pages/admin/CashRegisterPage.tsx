@@ -1,11 +1,4 @@
-import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { 
-  fetchCurrentRegister, 
-  fetchDailySummary, 
-  fetchTransactions,
-  clearError
-} from "@/store/cash-register.slice";
+import { useCashRegisterPage } from '@/hooks/use-cash-register-page'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -18,89 +11,14 @@ import { WithdrawalModal } from "@/components/cash-register/WithdrawalModal";
 import { RegisterHistoryTable } from "@/components/cash-register/RegisterHistoryTable";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { officeService } from "@/services/office.service";
-import { cashRegisterService } from "@/services/cash-register.service";
-import type { CashRegisterHistoryItem } from "@/types/cash-register";
 
 export function Component() {
-  const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const { 
-    currentRegister, 
-    dailySummary, 
-    transactions, 
-    isLoading, 
-    error 
-  } = useAppSelector((state) => state.cashRegister);
-  const [officeName, setOfficeName] = useState<string>("");
-  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
-  const [history, setHistory] = useState<CashRegisterHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-
-  // office_id comes from the login response for secretaries
-  const officeId = user?.office_id;
-  const userId = user?.id || 0;
-
-  useEffect(() => {
-    loadRegisterData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [officeId]);
-
-  useEffect(() => {
-    if (currentRegister?.id) {
-      dispatch(fetchDailySummary(currentRegister.id));
-      dispatch(fetchTransactions(currentRegister.id));
-    }
-  }, [currentRegister?.id, dispatch]);
-
-  useEffect(() => {
-    if (!officeId) return;
-    const loadOfficeName = async () => {
-      try {
-        const office = await officeService.getById(officeId);
-        setOfficeName(office.name);
-      } catch {
-        setOfficeName("");
-      }
-    };
-    loadOfficeName();
-    loadHistory();
-  }, [officeId]);
-
-  const loadRegisterData = async () => {
-    if (!officeId) return;
-    dispatch(clearError());
-    await dispatch(fetchCurrentRegister(officeId));
-  };
-
-  const loadHistory = async () => {
-    if (!officeId) return;
-    setHistoryLoading(true);
-    try {
-      const response = await cashRegisterService.getHistory(officeId);
-      setHistory(response.registers);
-    } catch {
-      setHistory([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  const handleRegisterOpened = () => {
-    loadRegisterData();
-  };
-
-  const handleRegisterClosed = () => {
-    loadRegisterData();
-    loadHistory();
-  };
-
-  const handleWithdrawalSuccess = () => {
-    if (currentRegister?.id) {
-      dispatch(fetchDailySummary(currentRegister.id));
-      dispatch(fetchTransactions(currentRegister.id));
-    }
-  };
+  const {
+    currentRegister, dailySummary, transactions, isLoading, error,
+    officeName, withdrawalModalOpen, setWithdrawalModalOpen,
+    history, historyLoading, officeId, userId, isOpen,
+    handleRegisterOpened, handleRegisterClosed, handleWithdrawalSuccess,
+  } = useCashRegisterPage()
 
   if (isLoading && !currentRegister) {
     return <div className="p-8 text-center text-muted-foreground">Cargando estado de la caja...</div>;
@@ -117,8 +35,6 @@ export function Component() {
       </div>
     );
   }
-
-  const isOpen = currentRegister?.status === 'open';
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">

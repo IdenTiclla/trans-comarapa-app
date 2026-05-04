@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { locationService } from '@/services/location.service'
+import type { RootState } from '@/store'
+import type { Location } from '@/types'
 
 interface LocationState {
-    locations: unknown[]
+    locations: Location[]
     isLoading: boolean
     error: string | null
 }
@@ -29,11 +31,11 @@ const locationSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchLocations.pending, (s) => { s.isLoading = true; s.error = null })
-            .addCase(fetchLocations.fulfilled, (s, a) => { s.isLoading = false; s.locations = a.payload as unknown[] })
+            .addCase(fetchLocations.fulfilled, (s, a) => { s.isLoading = false; s.locations = a.payload as Location[] })
             .addCase(fetchLocations.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string })
     },
 })
 
-export const selectLocations = (state: { location: LocationState }) => state.location.locations
-export const selectLocationLoading = (state: { location: LocationState }) => state.location.isLoading
+export const selectLocations = (state: RootState) => state.location.locations
+export const selectLocationLoading = (state: RootState) => state.location.isLoading
 export default locationSlice.reducer

@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import { Clock, Plus, Trash2, CheckCircle, XCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import type { Route, RouteSchedule } from '@/types'
 
 interface RouteScheduleManagerProps {
-    route: any
+    route: Route
     onClose: () => void
-    onAdd: (routeId: string | number, data: any) => Promise<void>
-    onUpdate: (routeId: string | number, scheduleId: string | number, data: any) => Promise<void>
+    onAdd: (routeId: string | number, data: Record<string, unknown>) => Promise<void>
+    onUpdate: (routeId: string | number, scheduleId: string | number, data: Record<string, unknown>) => Promise<void>
     onRemove: (routeId: string | number, scheduleId: string | number) => Promise<void>
 }
 
@@ -26,7 +26,7 @@ export default function RouteScheduleManager({
 
     const sortedSchedules = useMemo(() => {
         if (!route?.schedules) return []
-        return [...route.schedules].sort((a: any, b: any) => {
+        return [...(route.schedules as RouteSchedule[])].sort((a, b) => {
             return a.departure_time.localeCompare(b.departure_time)
         })
     }, [route])
@@ -46,26 +46,29 @@ export default function RouteScheduleManager({
         try {
             await onAdd(route.id, { departure_time: newTime + ':00', is_active: true })
             setNewTime('')
-        } catch (err: any) {
-            setErrorMessage(err?.data?.detail || err?.message || 'Error al agregar horario')
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Error al agregar horario'
+            setErrorMessage(msg)
         } finally {
             setAddingSchedule(false)
         }
     }
 
-    const toggleActive = async (schedule: any) => {
+    const toggleActive = async (schedule: RouteSchedule) => {
         try {
             await onUpdate(route.id, schedule.id, { is_active: !schedule.is_active })
-        } catch (err: any) {
-            setErrorMessage(err?.data?.detail || err?.message || 'Error al actualizar horario')
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Error al actualizar horario'
+            setErrorMessage(msg)
         }
     }
 
-    const removeSchedule = async (schedule: any) => {
+    const removeSchedule = async (schedule: RouteSchedule) => {
         try {
             await onRemove(route.id, schedule.id)
-        } catch (err: any) {
-            setErrorMessage(err?.data?.detail || err?.message || 'Error al eliminar horario')
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Error al eliminar horario'
+            setErrorMessage(msg)
         }
     }
 
@@ -140,7 +143,7 @@ export default function RouteScheduleManager({
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {sortedSchedules.map((schedule: any) => (
+                        {sortedSchedules.map((schedule) => (
                             <div
                                 key={schedule.id}
                                 className={cn(

@@ -1,70 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'
-import { tripService } from '@/services/trip.service'
-import { toast } from 'sonner'
+import { useAssistantDashboard } from '@/hooks/use-assistant-dashboard'
 import { Button } from '@/components/ui/button'
 import { KpiCard } from '@/components/dashboards/assistant/KpiCard'
 import { TripCard } from '@/components/dashboards/assistant/TripCard'
 import { formatTime, formatDate } from '@/components/dashboards/assistant/constants'
-import type { MyTrip, TripTab } from '@/components/dashboards/assistant/types'
 
 export function Component() {
-  const [trips, setTrips] = useState<MyTrip[]>([])
-  const [loading, setLoading] = useState(true)
-  const [expandedTrip, setExpandedTrip] = useState<number | null>(null)
-  const [filter, setFilter] = useState<'active' | 'all'>('active')
-  const [tab, setTab] = useState<TripTab>('passengers')
-  const [transitioning, setTransitioning] = useState<number | null>(null)
-
-  useEffect(() => {
-    loadTrips()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter])
-
-  async function loadTrips() {
-    setLoading(true)
-    try {
-      const status = filter === 'active' ? 'scheduled,boarding,departed' : undefined
-      const data = await tripService.getMyTrips(status ? { status } : undefined)
-      setTrips(data)
-      for (const trip of data) {
-        if (trip.status === 'arrived' || trip.status === 'cancelled') {
-          localStorage.removeItem(`boarding-checklist-${trip.id}`)
-        }
-      }
-    } catch {
-      setTrips([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleTransition(tripId: number, action: string, label: string) {
-    setTransitioning(tripId)
-    try {
-      await tripService.transitionTrip(tripId, action)
-      toast.success(`Viaje actualizado: ${label}`)
-      await loadTrips()
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al actualizar viaje'
-      toast.error(message)
-    } finally {
-      setTransitioning(null)
-    }
-  }
-
-  const todayTrips = useMemo(() => {
-    const today = new Date().toDateString()
-    return trips.filter(t => new Date(t.trip_datetime).toDateString() === today)
-  }, [trips])
-
-  const upcomingTrips = useMemo(() => {
-    const today = new Date().toDateString()
-    return trips.filter(t => new Date(t.trip_datetime).toDateString() !== today)
-  }, [trips])
-
-  const totalPassengers = todayTrips.reduce((sum, t) => sum + t.occupied_seats, 0)
-  const totalPackages = todayTrips.reduce((sum, t) => sum + t.package_count, 0)
-  const nextScheduled = todayTrips.find(t => t.status === 'scheduled')
+  const {
+    loading, expandedTrip, setExpandedTrip, filter, setFilter,
+    tab, setTab, transitioning, handleTransition,
+    todayTrips, upcomingTrips, totalPassengers, totalPackages, nextScheduled,
+  } = useAssistantDashboard()
 
   return (
     <div className="w-full">
@@ -99,7 +44,7 @@ export function Component() {
           <div className="flex justify-center py-16">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
           </div>
-        ) : trips.length === 0 ? (
+        ) : todayTrips.length === 0 && upcomingTrips.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <svg className="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

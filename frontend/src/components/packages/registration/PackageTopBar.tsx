@@ -1,12 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormSelect from '@/components/forms/FormSelect'
 import type { Office } from './use-package-registration'
+
+interface PackageDataLike {
+  origin_office_id: number | null
+  destination_office_id: number | null
+  payment_status: string
+  payment_method: string
+  [key: string]: unknown
+}
 
 interface Props {
   offices: Office[]
   loadingOffices: boolean
-  packageData: any
-  setPackageData: (updater: any) => void
+  packageData: PackageDataLike
+  setPackageData: (updater: PackageDataLike | ((prev: PackageDataLike) => PackageDataLike)) => void
   fieldErrors: Record<string, string>
   tripId: number | string | null
 }
@@ -18,7 +25,7 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
         <FormSelect
           label="Oficina Origen *"
           value={packageData.origin_office_id?.toString() || ''}
-          onChange={(val) => setPackageData((prev: any) => ({ ...prev, origin_office_id: val ? Number(val) : null }))}
+          onChange={(val) => setPackageData((prev) => ({ ...prev, origin_office_id: val ? Number(val) : null }))}
           required
           options={offices.map(o => ({ value: o.id.toString(), label: o.name }))}
           error={fieldErrors.origin_office_id}
@@ -27,7 +34,7 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
         <FormSelect
           label="Oficina Destino *"
           value={packageData.destination_office_id?.toString() || ''}
-          onChange={(val) => setPackageData((prev: any) => ({ ...prev, destination_office_id: val ? Number(val) : null }))}
+          onChange={(val) => setPackageData((prev) => ({ ...prev, destination_office_id: val ? Number(val) : null }))}
           required
           options={offices.filter(o => o.id !== packageData.origin_office_id).map(o => ({ value: o.id.toString(), label: o.name }))}
           error={fieldErrors.destination_office_id}
@@ -36,7 +43,7 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
         <FormSelect
           label="Estado del Pago *"
           value={packageData.payment_status}
-          onChange={(val) => setPackageData((prev: any) => ({ ...prev, payment_status: val }))}
+          onChange={(val) => setPackageData((prev) => ({ ...prev, payment_status: val }))}
           required
           options={[
             { value: 'paid_on_send', label: 'Pagado al enviar' },
@@ -47,7 +54,7 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
           <FormSelect
             label="Método *"
             value={packageData.payment_method}
-            onChange={(val) => setPackageData((prev: any) => ({ ...prev, payment_method: val }))}
+            onChange={(val) => setPackageData((prev) => ({ ...prev, payment_method: val }))}
             required
             options={[
               { value: 'cash', label: '💵 Físico' },

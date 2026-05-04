@@ -1,24 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { packageService } from '@/services/package.service'
 import PackageDeliveryModal from './PackageDeliveryModal'
+import { usePendingCollections } from './use-pending-collections'
 import { Package, Clock, MapPin, User, ArrowRight, DollarSign, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-interface PendingPackage {
-    id: number
-    tracking_number: string
-    status: string
-    total_amount: number
-    total_items_count: number
-    sender_name: string | null
-    recipient_name: string | null
-    origin_office_name: string | null
-    destination_office_name: string | null
-    payment_status: string
-    created_at: string
-    items: Array<{ id: number; description: string; quantity: number; unit_price: number; total_price: number }>
-}
 
 interface PendingCollectionsProps {
     officeId: number
@@ -47,40 +32,11 @@ export default function PendingCollections({
     onViewAll
 }: PendingCollectionsProps) {
     const navigate = useNavigate()
-    const [packages, setPackages] = useState<PendingPackage[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [selectedPackage, setSelectedPackage] = useState<PendingPackage | null>(null)
+    const { packages, loading, error, totalAmount, fetchPendingCollections } = usePendingCollections(officeId, limit)
+    const [selectedPackage, setSelectedPackage] = useState<Parameters<typeof PackageDeliveryModal>[0]['packageData'] | null>(null)
     const [showDeliveryModal, setShowDeliveryModal] = useState(false)
 
-    const fetchPendingCollections = useCallback(async () => {
-        if (!officeId) {
-            setLoading(false)
-            return
-        }
-        try {
-            setLoading(true)
-            setError(null)
-            const params = limit ? { limit } : {}
-            const data = await packageService.getPendingCollections(officeId, params)
-            setPackages(data as PendingPackage[])
-        } catch (err: unknown) {
-            const errorObj = err as { data?: { detail?: string }; message?: string }
-            setError(errorObj.data?.detail || errorObj.message || 'Error al cargar cobros pendientes')
-        } finally {
-            setLoading(false)
-        }
-    }, [officeId, limit])
-
-    useEffect(() => {
-        fetchPendingCollections()
-    }, [fetchPendingCollections])
-
-    const totalAmount = useMemo(() => {
-        return packages.reduce((sum, pkg) => sum + (pkg.total_amount || 0), 0)
-    }, [packages])
-
-    const handleDeliver = (pkg: PendingPackage) => {
+    const handleDeliver = (pkg: typeof packages[number]) => {
         setSelectedPackage(pkg)
         setShowDeliveryModal(true)
     }

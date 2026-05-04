@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { apiFetch } from '@/lib/api'
+import { clientService } from '@/services/client.service'
 
 export interface ClientRecord {
     id?: number
@@ -42,11 +42,10 @@ export function useClientSearch() {
         debounceRef.current = setTimeout(async () => {
             setSearchingClients(true)
             try {
-                const resp = await apiFetch(`/clients/search?q=${encodeURIComponent(query)}`) as ClientRecord[] | unknown
+                const resp = await clientService.search(query) as ClientRecord[] | unknown
                 setFoundClients(Array.isArray(resp) ? resp : [])
                 setHasSearched(true)
-            } catch (err) {
-                console.error('Error searching clients:', err)
+            } catch {
                 setFoundClients([])
                 setHasSearched(true)
             } finally {
@@ -93,10 +92,7 @@ export function useClientSearch() {
             if (!firstname || !lastname || !document_id) {
                 throw new Error('Los datos del cliente nuevo son incompletos.')
             }
-            const created = await apiFetch('/clients', {
-                method: 'POST',
-                body: { firstname, lastname, document_id, phone: phone || null }
-            }) as ClientRecord
+            const created = await clientService.create({ firstname, lastname, document_id, phone: phone || null }) as ClientRecord
             return created
         }
     }, [clientType])

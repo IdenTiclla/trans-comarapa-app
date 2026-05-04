@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from '@/components/ui/button'
 import { ClickableCard } from '@/components/ui/clickable-card'
 import { Loader2, X } from 'lucide-react'
 import FormInput from '@/components/forms/FormInput'
+import type { Client } from '@/types'
 
 interface Props {
   searchTerm: string
   onSearchChange: (v: string) => void
   searching: boolean
   hasSearched: boolean
-  foundClients: any[]
-  selectedClient: any | null
+  foundClients: Client[]
+  selectedClient: Client | null
   hasSelected: boolean
-  onSelect: (c: any) => void
+  onSelect: (c: Client) => void
   onClear: () => void
 }
 

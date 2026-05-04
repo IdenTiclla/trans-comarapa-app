@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Trip } from '@/types'
+
 export type ActionType = 'sell' | 'reserve'
 
 export interface NewClientForm {
@@ -28,11 +29,11 @@ export interface SelectedSeat {
 
 export interface TicketSaleModalProps {
   show: boolean
-  trip: any
+  trip: Trip
   selectedSeats: SelectedSeat[]
   actionType: ActionType
   onClose: () => void
-  onTicketCreated: (tickets: any[]) => void
+  onTicketCreated: (tickets: Record<string, unknown>[]) => void
 }
 
 export const INITIAL_NEW_CLIENT: NewClientForm = {

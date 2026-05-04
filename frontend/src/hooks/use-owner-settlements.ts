@@ -3,6 +3,7 @@ import { ownerService } from '@/services/owner.service'
 import { useAuth } from '@/hooks/use-auth'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+import { errMsg } from '@/lib/error-utils'
 
 export interface OwnerOption {
     id: number
@@ -172,6 +173,7 @@ export function useOwnerSettlements() {
             .catch(() => setBuses([]))
         loadFinancials(ownerId)
         loadWithdrawals(ownerId)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedOwnerId, ownerId, loadFinancials, loadWithdrawals])
 
     useEffect(() => {
@@ -232,7 +234,7 @@ export function useOwnerSettlements() {
             loadFinancials(ownerId, busId)
             loadWithdrawals(ownerId, busId)
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Error al procesar el retiro')
+            toast.error(errMsg(err, 'Error al procesar el retiro'))
         } finally {
             setProcessing(false)
         }

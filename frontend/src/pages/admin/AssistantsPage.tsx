@@ -1,33 +1,7 @@
-import { useEffect, useState } from 'react'
-import { assistantService } from '@/services/assistant.service'
-import { toast } from 'sonner'
-
-interface Assistant {
-  id: number
-  firstname: string
-  lastname: string
-  phone?: string | null
-  user_id?: number | null
-  email?: string | null
-}
+import { useAssistantsPage } from '@/hooks/use-assistants-page'
 
 export function Component() {
-  const [assistants, setAssistants] = useState<Assistant[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const data = await assistantService.getAll()
-      setAssistants(Array.isArray(data) ? data : (data as { items?: Assistant[] }).items || [])
-    } catch (e) {
-      toast.error('Error al cargar asistentes: ' + (e as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { loadData() }, [])
+  const { assistants, loading } = useAssistantsPage()
 
   return (
     <div className="container mx-auto px-4 py-8">

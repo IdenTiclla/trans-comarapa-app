@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReceiptHeader } from './ReceiptHeader'
 import { ReceiptItemsTable } from './ReceiptItemsTable'
 
 interface Props {
-  packageData: any
+  packageData: Record<string, unknown>
   packageNumber: string
   senderName: string
   recipientName: string

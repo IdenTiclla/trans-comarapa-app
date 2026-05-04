@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { busService } from '@/services/bus.service'
+import type { RootState } from '@/store'
+import type { Bus, Seat } from '@/types'
 
 interface BusState {
-    buses: unknown[]
-    currentBus: unknown | null
+    buses: Bus[]
+    currentBus: Bus | null
     isLoading: boolean
     error: string | null
 }
@@ -33,7 +35,7 @@ export const deleteBus = createAsyncThunk('bus/delete', async (id: number, { dis
 export const createBusWithSeats = createAsyncThunk('bus/createWithSeats', async (data: Record<string, unknown>, { dispatch, rejectWithValue }) => {
     try { const r = await busService.createWithSeats(data); dispatch(fetchBuses({})); return r } catch (e) { return rejectWithValue((e as Error).message) }
 })
-export const updateBusSeats = createAsyncThunk('bus/updateSeats', async ({ busId, seats }: { busId: number; seats: unknown[] }, { dispatch, rejectWithValue }) => {
+export const updateBusSeats = createAsyncThunk('bus/updateSeats', async ({ busId, seats }: { busId: number; seats: Seat[] }, { dispatch, rejectWithValue }) => {
     try { const r = await busService.updateSeats(busId, seats); dispatch(fetchBuses({})); return r } catch (e) { return rejectWithValue((e as Error).message) }
 })
 
@@ -44,9 +46,9 @@ const busSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchBuses.pending, (s) => { s.isLoading = true; s.error = null })
-            .addCase(fetchBuses.fulfilled, (s, a) => { s.isLoading = false; s.buses = a.payload as unknown[] })
+            .addCase(fetchBuses.fulfilled, (s, a) => { s.isLoading = false; s.buses = a.payload as Bus[] })
             .addCase(fetchBuses.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; s.buses = [] })
-            .addCase(fetchBusById.fulfilled, (s, a) => { s.currentBus = a.payload })
+            .addCase(fetchBusById.fulfilled, (s, a) => { s.currentBus = a.payload as Bus })
             .addCase(createBus.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(updateBus.rejected, (s, a) => { s.error = a.payload as string })
             .addCase(deleteBus.rejected, (s, a) => { s.error = a.payload as string })
@@ -56,7 +58,7 @@ const busSlice = createSlice({
 })
 
 export const { clearCurrentBus } = busSlice.actions
-export const selectBuses = (state: { bus: BusState }) => state.bus.buses
-export const selectBusLoading = (state: { bus: BusState }) => state.bus.isLoading
-export const selectBusError = (state: { bus: BusState }) => state.bus.error
+export const selectBuses = (state: RootState) => state.bus.buses
+export const selectBusLoading = (state: RootState) => state.bus.isLoading
+export const selectBusError = (state: RootState) => state.bus.error
 export default busSlice.reducer

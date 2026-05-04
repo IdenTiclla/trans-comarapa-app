@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -14,7 +13,7 @@ interface Props {
   totalAmount: number
   onAdd: () => void
   onRemove: (index: number) => void
-  onUpdate: (index: number, field: string, value: any) => void
+  onUpdate: (index: number, field: string, value: unknown) => void
 }
 
 export function ItemsSection({ items, totalAmount, onAdd, onRemove, onUpdate }: Props) {

@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronDown, ChevronUp, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cashRegisterService } from "@/services/cash-register.service";
-import type { CashRegisterHistoryItem, CashTransaction } from "@/types/cash-register";
+import { useRegisterTransactions } from "./use-register-transactions";
+import type { CashRegisterHistoryItem } from "@/types/cash-register";
 import { TransactionList } from "./TransactionList";
 
 interface RegisterHistoryTableProps {
@@ -13,28 +12,7 @@ interface RegisterHistoryTableProps {
 }
 
 export function RegisterHistoryTable({ registers, isLoading }: RegisterHistoryTableProps) {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [expandedTransactions, setExpandedTransactions] = useState<CashTransaction[]>([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(false);
-
-  const handleToggle = async (registerId: number) => {
-    if (expandedId === registerId) {
-      setExpandedId(null);
-      setExpandedTransactions([]);
-      return;
-    }
-
-    setExpandedId(registerId);
-    setLoadingTransactions(true);
-    try {
-      const transactions = await cashRegisterService.getTransactions(registerId);
-      setExpandedTransactions(transactions);
-    } catch {
-      setExpandedTransactions([]);
-    } finally {
-      setLoadingTransactions(false);
-    }
-  };
+  const { expandedId, expandedTransactions, loadingTransactions, toggleExpand } = useRegisterTransactions();
 
   const formatCurrency = (amount: number) => {
     return `${amount.toFixed(2)} Bs`;
@@ -64,7 +42,7 @@ export function RegisterHistoryTable({ registers, isLoading }: RegisterHistoryTa
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             className="flex items-center w-full p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-            onClick={() => handleToggle(reg.id)}
+            onClick={() => toggleExpand(reg.id)}
           >
             <div className="flex-1 grid grid-cols-2 md:grid-cols-7 gap-4 text-sm">
               <div>

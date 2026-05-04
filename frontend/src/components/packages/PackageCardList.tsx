@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import PackageCard from './PackageCard'
 import SkeletonLoader from '@/components/common/SkeletonLoader'
@@ -7,9 +6,10 @@ import { getPackageStatusLabel as getStatusLabel, getPackageStatusBg as getStatu
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Check, Eye, Pencil, Trash2, Package, ArrowRight } from 'lucide-react'
+import type { Package as Pkg } from '@/types'
 
 interface PackageCardListProps {
-    packages: any[]
+    packages: Pkg[]
     isLoading?: boolean
     viewMode?: 'grid' | 'table'
     onViewPackage?: (id: number) => void

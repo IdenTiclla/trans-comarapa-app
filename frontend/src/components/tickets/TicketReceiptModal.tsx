@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef } from 'react'
+import type { Trip } from '@/types'
 import TicketDisplay from './TicketDisplay'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 
 interface TicketReceiptModalProps {
     show: boolean
-    tickets: any[]
-    trip: any
+    tickets: Record<string, unknown>[]
+    trip: Trip
     onClose: () => void
     autoPrint?: boolean
 }
@@ -88,7 +88,10 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                                 Boleto{tickets.length > 1 ? 's' : ''} Registrado{tickets.length > 1 ? 's' : ''}
                             </h3>
                             <p className="text-blue-100 text-sm">
-                                Asiento{tickets.length > 1 ? 's' : ''}: {tickets.map((t: any) => t.seat?.seat_number).filter(Boolean).join(', ')}
+                                Asiento{tickets.length > 1 ? 's' : ''}: {tickets.map((t) => {
+                                    const seat = t.seat as Record<string, unknown> | undefined
+                                    return seat?.seat_number
+                                }).filter(Boolean).join(', ')}
                             </p>
                         </div>
                     </div>

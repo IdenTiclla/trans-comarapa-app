@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchPackages, deletePackage } from '@/store/package.slice'
 import { debounce } from 'lodash'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
@@ -22,9 +20,9 @@ const ITEMS_PER_PAGE = 12
 
 export function Component() {
   const navigate = useNavigate()
-  const dispatch = useDispatch<any>()
+  const dispatch = useAppDispatch()
 
-  const { packages, loading, error } = useSelector((state: RootState) => state.package)
+  const { packages, loading, error } = useAppSelector((state) => state.package)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -35,7 +33,7 @@ export function Component() {
 
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
-  const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<any>(null)
+  const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     dispatch(fetchPackages({ limit: 100 }))

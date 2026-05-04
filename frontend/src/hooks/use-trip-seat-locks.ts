@@ -100,7 +100,7 @@ export function useTripSeatLocks(tripId: number) {
                 wsRef.current = null
             }
         }
-    }, [tripId, currentUser?.id, fetchLockedSeats])
+    }, [tripId, currentUser?.id, fetchLockedSeats]) // eslint-disable-line react-hooks/exhaustive-deps
 
     return { lockedSeats, fetchLockedSeats }
 }

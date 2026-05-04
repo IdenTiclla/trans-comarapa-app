@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { apiFetch } from '@/lib/api'
+import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
 
 function notify(type: 'success' | 'error', title: string, message: string) {
@@ -31,7 +31,7 @@ export function useTripStaffEditor(tripId: number, trip: StaffTrip | null, refre
     const saveDriver = async () => {
         setSavingDriver(true)
         try {
-            await apiFetch(`/trips/${tripId}`, { method: 'PUT', body: { driver_id: selectedDriverId ? Number(selectedDriverId) : null } })
+            await tripService.update(tripId, { driver_id: selectedDriverId ? Number(selectedDriverId) : null })
             setEditingDriver(false)
             notify('success', 'Conductor actualizado', 'El conductor ha sido actualizado.')
             refreshTrip()
@@ -42,7 +42,7 @@ export function useTripStaffEditor(tripId: number, trip: StaffTrip | null, refre
     const saveAssistant = async () => {
         setSavingAssistant(true)
         try {
-            await apiFetch(`/trips/${tripId}`, { method: 'PUT', body: { assistant_id: selectedAssistantId ? Number(selectedAssistantId) : null } })
+            await tripService.update(tripId, { assistant_id: selectedAssistantId ? Number(selectedAssistantId) : null })
             setEditingAssistant(false)
             notify('success', 'Asistente actualizado', 'El asistente ha sido actualizado.')
             refreshTrip()

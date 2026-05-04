@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import type { SelectedSeat } from '@/components/tickets/ticket-sale/types'
 
 interface SelectedSeatsPanelProps {
-    selectedSeats: any[]
+    selectedSeats: SelectedSeat[]
     selectionEnabled?: boolean
     onSellTicket: () => void
     onReserveSeat: () => void
     onClearSelection: () => void
-    onRemoveSeat: (seat: any) => void
+    onRemoveSeat: (seat: SelectedSeat) => void
 }
 
 export default function SelectedSeatsPanel({

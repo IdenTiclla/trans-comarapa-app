@@ -43,6 +43,13 @@ export default defineConfig([
       }],
       'no-restricted-syntax': ['error', ...noRestrictedSyntax],
       'max-lines': ['error', { max: 400, skipBlankLines: true, skipComments: true }],
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@/lib/api'],
+          importNames: ['apiFetch'],
+          message: 'NO uses apiFetch directamente. Debes usar un Service de @/services/.',
+        }],
+      }],
       'jsx-a11y/alt-text': 'error',
       'jsx-a11y/anchor-has-content': 'error',
       'jsx-a11y/anchor-is-valid': 'error',
@@ -87,6 +94,50 @@ export default defineConfig([
     rules: {
       'no-restricted-syntax': 'off',
       'max-lines': 'off',
+      'no-restricted-imports': 'off',
+    },
+  },
+  {
+    files: ['src/services/**/*.{ts,tsx}', 'src/lib/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+  {
+    files: ['src/pages/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['@/lib/api'],
+            importNames: ['apiFetch'],
+            message: 'NO uses apiFetch directamente. Debes usar un Service de @/services/.',
+          },
+          {
+            group: ['@/services', '@/services/*'],
+            message: 'NO importes Services directamente en Pages. Extrae la lógica a un Hook.',
+          },
+        ],
+      }],
+    },
+  },
+  {
+    files: ['src/components/**/*.{ts,tsx}'],
+    ignores: ['**/use-*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['@/lib/api'],
+            importNames: ['apiFetch'],
+            message: 'NO uses apiFetch directamente. Debes usar un Service de @/services/.',
+          },
+          {
+            group: ['@/services', '@/services/*'],
+            message: 'NO importes Services directamente en Components. Extrae la lógica a un Hook (use-*.ts).',
+          },
+        ],
+      }],
     },
   },
 ])

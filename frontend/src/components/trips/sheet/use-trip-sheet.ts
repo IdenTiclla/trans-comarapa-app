@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchTripById, selectCurrentTrip, selectTripLoading, selectTripError } from '@/store/trip.slice'
-import { apiFetch } from '@/lib/api'
+import { ticketService } from '@/services/ticket.service'
+import { errMsg } from '@/lib/error-utils'
 import type { Passenger } from './helpers'
 
 export function useTripSheet(tripId: number) {
@@ -20,7 +21,7 @@ export function useTripSheet(tripId: number) {
       setPassError(null)
       try {
         await dispatch(fetchTripById(tripId))
-        const tickets = await apiFetch(`/tickets/trip/${tripId}`)
+        const tickets = await ticketService.getByTripId(tripId)
         const confirmed = (Array.isArray(tickets) ? tickets : [])
           .filter((t: Passenger) => ['confirmed', 'sold', 'paid'].includes(t.state))
           .sort((a: Passenger, b: Passenger) => (a.seat?.seat_number || 0) - (b.seat?.seat_number || 0))
@@ -31,7 +32,7 @@ export function useTripSheet(tripId: number) {
           }, {})
         )
       } catch (err) {
-        setPassError(err instanceof Error ? err.message : 'Error al cargar la planilla.')
+        setPassError(errMsg(err, 'Error al cargar la planilla.'))
       } finally {
         setLoadingPassengers(false)
       }

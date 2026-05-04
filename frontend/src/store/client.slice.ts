@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { clientService } from '@/services/client.service'
+import type { RootState } from '@/store'
+import type { Client } from '@/types'
 
 interface ClientState {
-    clients: unknown[]
+    clients: Client[]
     totalItems: number
     isLoading: boolean
     error: string | null
@@ -39,19 +41,19 @@ const clientSlice = createSlice({
             .addCase(fetchClients.fulfilled, (s, a) => {
                 s.isLoading = false
                 const data = a.payload
-                if (Array.isArray(data)) { s.clients = data; s.totalItems = data.length }
+                if (Array.isArray(data)) { s.clients = data as Client[]; s.totalItems = data.length }
                 else {
-                    const d = data as { items?: unknown[]; clients?: unknown[]; pagination?: { total: number }; total?: number };
+                    const d = data as { items?: Client[]; clients?: Client[]; pagination?: { total: number }; total?: number };
                     s.clients = d.clients || d.items || [];
                     s.totalItems = d.pagination?.total || d.total || s.clients.length
                 }
             })
             .addCase(fetchClients.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string })
-            .addCase(searchClients.fulfilled, (s, a) => { s.clients = a.payload as unknown[] })
+            .addCase(searchClients.fulfilled, (s, a) => { s.clients = a.payload as Client[] })
     },
 })
 
-export const selectClients = (state: { client: ClientState }) => state.client.clients
-export const selectClientLoading = (state: { client: ClientState }) => state.client.isLoading
-export const selectClientError = (state: { client: ClientState }) => state.client.error
+export const selectClients = (state: RootState) => state.client.clients
+export const selectClientLoading = (state: RootState) => state.client.isLoading
+export const selectClientError = (state: RootState) => state.client.error
 export default clientSlice.reducer
