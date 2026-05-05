@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
-from typing import Optional, Any, Literal
+from typing import Optional, Any, Literal, List
 from core.enums import TicketState
 from schemas.client import Client as ClientSchema
 from schemas.secretary import Secretary as SecretarySchema
 from schemas.seat import Seat as SeatSchema
 from schemas.location import Location as LocationSchema
+from schemas.ticket_state_history import TicketStateHistory as TicketStateHistorySchema
 
 class TicketBase(BaseModel):
     state: str = Field(..., description="State of the ticket", json_schema_extra={"example": "pending"})
@@ -86,5 +87,6 @@ class Ticket(TicketBase):
     client: ClientSchema
     secretary: SecretarySchema
     seat: SeatSchema
+    state_history: List[TicketStateHistorySchema] = Field(default=[], description="Historial de estados")
 
     model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)

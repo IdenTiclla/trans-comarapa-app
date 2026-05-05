@@ -187,7 +187,7 @@ export function Component() {
                   staff={page.staff}
                   actions={
                     <>
-                      {(trip.status === 'scheduled' || trip.status === 'boarding') && (
+                      {(trip.status === 'scheduled' || trip.status === 'boarding' || trip.status === 'delayed') && (
                         <Button
                           size="sm"
                           variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
@@ -200,7 +200,7 @@ export function Component() {
                           Despachar
                         </Button>
                       )}
-                      {trip.status === 'departed' && (
+                      {(trip.status === 'departed' || trip.status === 'in_progress') && (
                         <Button
                           size="sm"
                           onClick={() => page.finish.setShow(true)}

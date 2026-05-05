@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
+import { TicketJourneyProgress } from '@/components/tickets/detail/TicketJourneyProgress'
 import { TicketDetailHeader } from './ticket-detail/TicketDetailHeader'
 import { PassengerCard } from './ticket-detail/PassengerCard'
 import { TripLogisticsCard } from './ticket-detail/TripLogisticsCard'
@@ -85,6 +86,7 @@ export function Component() {
           <section className="lg:col-span-8 space-y-6">
             <PassengerCard ticket={ticket} />
             <TripLogisticsCard ticket={ticket} trip={trip} />
+            <TicketJourneyProgress ticket={ticket} />
           </section>
 
           <aside className="lg:col-span-4 space-y-6">

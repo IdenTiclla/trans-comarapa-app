@@ -267,8 +267,7 @@ export function useTripDetailPage(tripId: number) {
 
     // ── Derived state ─────────────────────────────────────────────────────
     const canDispatch = useMemo(() => {
-        if (!trip?.trip_datetime) return false
-        return new Date() >= new Date(trip.trip_datetime)
+        return !!trip
     }, [trip])
 
     const ticketStats = useMemo(() => {

@@ -23,7 +23,7 @@ export function useTripSheet(tripId: number) {
         await dispatch(fetchTripById(tripId))
         const tickets = await ticketService.getByTripId(tripId)
         const confirmed = (Array.isArray(tickets) ? tickets : [])
-          .filter((t: Passenger) => ['confirmed', 'sold', 'paid'].includes(t.state))
+          .filter((t: Passenger) => ['confirmed', 'sold', 'paid', 'completed'].includes(t.state))
           .sort((a: Passenger, b: Passenger) => (a.seat?.seat_number || 0) - (b.seat?.seat_number || 0))
         setPassengersBySeat(
           confirmed.reduce((acc: Record<number, Passenger>, p: Passenger) => {

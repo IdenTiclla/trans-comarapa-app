@@ -31,7 +31,8 @@ PACKAGE_TRANSITIONS: dict[str, list[str]] = {
 TRIP_TRANSITIONS: dict[str, list[str]] = {
     TripStatus.SCHEDULED: [TripStatus.BOARDING, TripStatus.DEPARTED, TripStatus.CANCELLED, TripStatus.DELAYED],
     TripStatus.BOARDING: [TripStatus.DEPARTED, TripStatus.CANCELLED, TripStatus.DELAYED],
-    TripStatus.DEPARTED: [TripStatus.ARRIVED],
+    TripStatus.DEPARTED: [TripStatus.IN_PROGRESS, TripStatus.ARRIVED],
+    TripStatus.IN_PROGRESS: [TripStatus.ARRIVED],
     TripStatus.ARRIVED: [],  # terminal state
     TripStatus.CANCELLED: [],  # terminal state
     TripStatus.DELAYED: [TripStatus.BOARDING, TripStatus.DEPARTED, TripStatus.CANCELLED],

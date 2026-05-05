@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from models.ticket import Ticket
 from models.ticket_state_history import TicketStateHistory
@@ -16,6 +16,18 @@ from repositories.base import BaseRepository
 class TicketRepository(BaseRepository[Ticket]):
     def __init__(self, db: Session):
         super().__init__(Ticket, db)
+
+    def _with_eager_loading(self):
+        return self.db.query(Ticket).options(
+            joinedload(Ticket.state_history),
+            joinedload(Ticket.client),
+            joinedload(Ticket.seat),
+            joinedload(Ticket.secretary),
+            joinedload(Ticket.trip),
+        )
+
+    def get_by_id_eager(self, ticket_id: int) -> Optional[Ticket]:
+        return self._with_eager_loading().filter(Ticket.id == ticket_id).first()
 
     def get_all_tickets(self) -> list[Ticket]:
         return self.db.query(Ticket).all()

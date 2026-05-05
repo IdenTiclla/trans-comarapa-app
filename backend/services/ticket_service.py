@@ -37,7 +37,10 @@ class TicketService:
         return self.repo.get_all_tickets()
 
     def get_by_id(self, ticket_id: int) -> Ticket:
-        return self.repo.get_by_id_or_raise(ticket_id, "Ticket")
+        ticket = self.repo.get_by_id_eager(ticket_id)
+        if not ticket:
+            raise NotFoundException(f"Ticket with id {ticket_id} not found")
+        return ticket
 
     def get_by_trip(self, trip_id: int) -> list[Ticket]:
         return self.repo.get_by_trip(trip_id)

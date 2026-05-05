@@ -91,6 +91,7 @@ export function Component() {
               statusNum={statusNum}
               getHistoryDate={getHistoryDate}
               createdAt={currentPackage.created_at}
+              updatedAt={currentPackage.updated_at}
             />
             <MapOverview pkg={currentPackage} />
             <StateHistoryTable pkg={currentPackage} originName={originName} destinationName={destinationName} />

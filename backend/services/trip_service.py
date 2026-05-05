@@ -22,8 +22,8 @@ from repositories.trip_repository import TripRepository
 from repositories.package_repository import PackageRepository
 from repositories.ticket_repository import TicketRepository
 from schemas.trip import TripCreate, TripUpdate
-from core.state_machines import validate_transition, TRIP_TRANSITIONS
-from core.enums import TripStatus, PackageStatus
+from core.state_machines import validate_transition, TRIP_TRANSITIONS, TICKET_TRANSITIONS
+from core.enums import TripStatus, PackageStatus, TicketState
 
 logger = logging.getLogger(__name__)
 
@@ -467,20 +467,23 @@ class TripService:
                 package_id=pkg.id, old_state=old_status, new_state=to_status
             )
 
+    def _bulk_transition_tickets(
+        self, trip_id: int, from_state: str, to_state: str
+    ) -> None:
+        ticket_repo = TicketRepository(self.db)
+        tickets = ticket_repo.get_active_by_trip(trip_id)
+        matching = [t for t in tickets if t.state == from_state]
+
+        for t in matching:
+            validate_transition("ticket", TICKET_TRANSITIONS, t.state, to_state)
+            old_state = t.state
+            t.state = to_state
+            ticket_repo.log_state_change(
+                ticket_id=t.id, old_state=old_state, new_state=to_state
+            )
+
     def dispatch_trip(self, trip_id: int) -> Trip:
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
-
-        current_time = datetime.now()
-        trip_time = (
-            trip.trip_datetime.replace(tzinfo=None)
-            if trip.trip_datetime.tzinfo
-            else trip.trip_datetime
-        )
-
-        if current_time < trip_time:
-            raise ValidationException(
-                "Cannot dispatch a trip before its scheduled departure time."
-            )
 
         validate_transition("trip", TRIP_TRANSITIONS, trip.status, TripStatus.DEPARTED)
 
@@ -497,6 +500,9 @@ class TripService:
         validate_transition("trip", TRIP_TRANSITIONS, trip.status, TripStatus.ARRIVED)
 
         trip.status = TripStatus.ARRIVED
+        self._bulk_transition_tickets(
+            trip_id, TicketState.CONFIRMED, TicketState.COMPLETED
+        )
         self.db.commit()
         self.db.refresh(trip)
         return trip

@@ -224,7 +224,7 @@ class TripRepository(BaseRepository[Trip]):
             self.db.query(Ticket)
             .filter(
                 Ticket.trip_id == trip_id,
-                Ticket.state.in_(["pending", "confirmed"]),
+                Ticket.state.in_(["pending", "confirmed", "completed"]),
             )
             .all()
         )

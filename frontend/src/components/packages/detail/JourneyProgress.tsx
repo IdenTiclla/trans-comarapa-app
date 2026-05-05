@@ -21,9 +21,10 @@ interface Props {
   statusNum: number
   getHistoryDate: (stateName: string) => string | null
   createdAt?: string | null
+  updatedAt?: string | null
 }
 
-export function JourneyProgress({ statusNum, getHistoryDate, createdAt }: Props) {
+export function JourneyProgress({ statusNum, getHistoryDate, createdAt, updatedAt }: Props) {
   return (
     <div className="bg-white rounded-xl shadow-sm border-l-4 border-l-[#16499B] border-y border-r border-y-gray-100 border-r-gray-100 p-8">
       <h2 className="text-sm font-bold tracking-widest text-gray-800 uppercase mb-10">Progreso del Viaje</h2>
@@ -37,9 +38,10 @@ export function JourneyProgress({ statusNum, getHistoryDate, createdAt }: Props)
 
         {STEPS.map((step) => {
           const active = statusNum >= step.num
+          const historyDate = getHistoryDate(step.historyKey)
           const dateSource = step.historyKey === 'registered_at_office'
-            ? getHistoryDate(step.historyKey) || createdAt
-            : getHistoryDate(step.historyKey)
+            ? historyDate || createdAt
+            : historyDate || (active && step.num === statusNum ? updatedAt : null)
           const Icon = step.icon === 'truck' ? Truck : step.icon === 'archive' ? Archive : Check
 
           return (

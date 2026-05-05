@@ -36,6 +36,7 @@ class TripStatus(str, Enum):
     SCHEDULED = "scheduled"
     BOARDING = "boarding"
     DEPARTED = "departed"
+    IN_PROGRESS = "in_progress"
     ARRIVED = "arrived"
     CANCELLED = "cancelled"
     DELAYED = "delayed"

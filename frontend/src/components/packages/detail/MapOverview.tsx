@@ -1,4 +1,5 @@
 import type { Package } from '@/types'
+import { formatDateTime } from './helpers'
 
 interface Props {
   pkg: Package
@@ -10,8 +11,18 @@ const STATUS_TEXT: Record<string, string> = {
   in_transit: 'En Viaje hacia Destino',
 }
 
+function getReceptionDate(pkg: Package): string | null {
+  if (!pkg.state_history) return null
+  const history = pkg.state_history as Array<Record<string, unknown>>
+  const entry = history.find((h) => h.new_state === 'arrived_at_destination')
+  return entry ? (entry.changed_at as string) : null
+}
+
 export function MapOverview({ pkg }: Props) {
   const text = STATUS_TEXT[pkg.status] || 'Esperando Despacho en Agencia'
+  const receptionDate = pkg.status === 'arrived_at_destination' || pkg.status === 'delivered'
+    ? getReceptionDate(pkg)
+    : null
   return (
     <div
       className="relative rounded-xl overflow-hidden shadow-sm h-[400px] bg-gray-900 bg-cover bg-center"
@@ -23,9 +34,10 @@ export function MapOverview({ pkg }: Props) {
       </div>
       <div className="absolute bottom-6 left-6 text-white z-10 w-full">
         <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Estado actual</p>
-        <div className="flex items-center gap-2">
-          <p className="text-xl font-medium">{text}</p>
-        </div>
+        <p className="text-xl font-medium">{text}</p>
+        {receptionDate && (
+          <p className="text-xs text-gray-300 mt-1">Recibido: {formatDateTime(receptionDate)}</p>
+        )}
       </div>
     </div>
   )
