@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router'
 import { EmptyState } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarClock, Plus, Settings, User } from 'lucide-react'
+import { CalendarClock, Plus, Settings, User, Users } from 'lucide-react'
 
 interface SlotRoute {
     id: number
@@ -53,6 +53,14 @@ function getDriverName(trip: Record<string, unknown>): string {
     return 'No asignado'
 }
 
+function getAssistantName(trip: Record<string, unknown>): string | null {
+    const assistant = trip.assistant as { name?: string; firstname?: string; lastname?: string } | undefined
+    if (!assistant) return null
+    if (assistant.firstname) return `${assistant.firstname} ${assistant.lastname ?? ''}`.trim()
+    if (assistant.name) return assistant.name
+    return null
+}
+
 function getBusInfo(trip: Record<string, unknown>): { plate: string; floors: number } {
     const bus = trip.bus as { license_plate?: string; floors?: number } | undefined
     return {
@@ -82,6 +90,7 @@ function TripRow({
     const isPast = isPastDate || isSlotPast
     const occ = trip ? getOccupancyInfo(trip) : { occupied: 0, total: 0, label: '--', color: 'text-muted-foreground/30' }
     const driverName = trip ? getDriverName(trip) : 'Sin viaje creado'
+    const assistantName = trip ? getAssistantName(trip) : null
     const busInfo = trip ? getBusInfo(trip) : { plate: '--', floors: 0 }
     const tripId = trip ? (trip.id as number) : null
     const isSoldOut = trip ? occ.label === 'Agotado' : false
@@ -192,14 +201,23 @@ function TripRow({
                 trip ? "border-border/50 text-muted-foreground" : "border-blue-100/30 text-muted-foreground/30"
             }`}>
                 <User className="h-3 w-3 opacity-70" />
-                <span className="flex-1">
+                <span>
                     {trip ? "Chofer: " : ""}
                     <span className={`${trip ? "text-foreground font-medium" : "italic"}`}>
                         {driverName}
                     </span>
                 </span>
+                {trip && assistantName && (
+                    <>
+                        <span className="text-border/60">|</span>
+                        <Users className="h-3 w-3 opacity-70" />
+                        <span>
+                            Asist: <span className="text-foreground font-medium">{assistantName}</span>
+                        </span>
+                    </>
+                )}
                 {trip && (
-                    <div className="flex items-center gap-1.5 opacity-50">
+                    <div className="flex items-center gap-1.5 opacity-50 ml-auto">
                         <CalendarClock className="h-3 w-3" />
                         <span className="text-[10px]">ID: {tripId}</span>
                     </div>

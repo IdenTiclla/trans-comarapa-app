@@ -102,6 +102,13 @@ class TripService:
                     "lastname": trip.driver.lastname,
                 }
 
+            assistant_info = None
+            if trip.assistant:
+                assistant_info = {
+                    "firstname": trip.assistant.firstname,
+                    "lastname": trip.assistant.lastname,
+                }
+
             bus_info = None
             if trip.bus:
                 bus_info = {
@@ -124,6 +131,7 @@ class TripService:
                         "price": route_price,
                     },
                     "driver": driver_info,
+                    "assistant": assistant_info,
                     "bus": bus_info,
                     "total_seats": total_seats,
                     "available_seats": available_seats,
