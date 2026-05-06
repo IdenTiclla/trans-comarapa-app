@@ -34,8 +34,8 @@ export function StateHistoryTable({ pkg, originName, destinationName }: Props) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-6 py-5 flex justify-between items-center bg-white border-b border-gray-50">
-        <h2 className="text-sm font-bold tracking-widest text-[#1e293b] uppercase">Bitácora de Estados</h2>
-        <Button variant="link" size="sm" className="text-[#16499B] font-bold px-0">
+        <h2 className="text-sm font-bold tracking-widest text-slate-800 uppercase">Bitácora de Estados</h2>
+        <Button variant="link" size="sm" className="text-brand-blue font-bold px-0">
           Descargar historial completo
         </Button>
       </div>
@@ -60,13 +60,13 @@ export function StateHistoryTable({ pkg, originName, destinationName }: Props) {
                   <td className="px-6 py-4 text-[13px] text-gray-700">
                     {getLocation(event.new_state, originName, destinationName)}
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-[#1e293b] font-medium">
+                  <td className="px-6 py-4 text-[13px] text-slate-800 font-medium">
                     {getEventLabel(event.new_state, tripId)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className={cn(
                       'px-2.5 py-1 text-[10px] font-bold rounded uppercase tracking-wider',
-                      idx === history.length - 1 ? 'bg-blue-50 text-blue-800' : 'bg-[#F1F5F9] text-[#64748B]',
+                      idx === history.length - 1 ? 'bg-blue-50 text-blue-800' : 'bg-slate-100 text-slate-500',
                     )}>
                       {idx === history.length - 1 ? 'Inicial' : 'Normal'}
                     </span>

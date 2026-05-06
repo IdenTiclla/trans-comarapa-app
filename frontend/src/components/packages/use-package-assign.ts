@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { packageService } from '@/services/package.service'
 
-interface PackageItem {
+interface UnassignedPackage {
     id: number
     tracking_number?: string
     sender_name?: string
@@ -16,7 +16,7 @@ export function usePackageAssignModal(show: boolean, tripId: number | string) {
     const [selectedIds, setSelectedIds] = useState<number[]>([])
     const [loading, setLoading] = useState(false)
     const [assigning, setAssigning] = useState(false)
-    const [unassignedPackages, setUnassignedPackages] = useState<PackageItem[]>([])
+    const [unassignedPackages, setUnassignedPackages] = useState<UnassignedPackage[]>([])
 
     useEffect(() => {
         if (show && tripId) {
@@ -25,7 +25,7 @@ export function usePackageAssignModal(show: boolean, tripId: number | string) {
             setSearchQuery('')
             packageService.getUnassigned()
                 .then(res => {
-                    const data = Array.isArray(res) ? res : ((res as { packages?: PackageItem[]; data?: PackageItem[] }).packages || (res as { packages?: PackageItem[]; data?: PackageItem[] }).data || [])
+                    const data = Array.isArray(res) ? res : ((res as { packages?: UnassignedPackage[]; data?: UnassignedPackage[] }).packages || (res as { packages?: UnassignedPackage[]; data?: UnassignedPackage[] }).data || [])
                     setUnassignedPackages(data)
                 })
                 .catch(() => { /* unassigned packages load failed */ })

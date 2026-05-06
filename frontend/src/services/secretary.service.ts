@@ -1,14 +1,5 @@
 import { apiFetch } from '@/lib/api'
-
-export interface Secretary {
-    id: number
-    firstname: string
-    lastname: string
-    phone?: string
-    document_id?: string
-    user_id?: number
-    is_active: boolean
-}
+import type { Secretary } from '@/types'
 
 export const secretaryService = {
     getAll: async (): Promise<Secretary[]> => {

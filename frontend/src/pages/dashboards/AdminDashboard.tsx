@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/hooks/use-auth'
 import { useAdminDashboard } from '@/hooks/use-admin-dashboard'
+import { ROUTES } from '@/lib/routes'
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
 import UpcomingTrips from '@/components/dashboard/UpcomingTrips'
 import RecentSales from '@/components/dashboard/RecentSales'
@@ -82,10 +83,10 @@ export function Component() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Gestionar Usuarios', desc: 'Administrar cuentas', path: '/admin/users' },
-              { label: 'Gestionar Buses', desc: 'Flota de vehículos', path: '/admin/buses' },
-              { label: 'Gestionar Rutas', desc: 'Rutas y horarios', path: '/admin/routes' },
-              { label: 'Ver Viajes', desc: 'Programación de viajes', path: '/trips' },
+              { label: 'Gestionar Usuarios', desc: 'Administrar cuentas', path: ROUTES.ADMIN.USERS },
+              { label: 'Gestionar Buses', desc: 'Flota de vehículos', path: ROUTES.ADMIN.BUSES },
+              { label: 'Gestionar Rutas', desc: 'Rutas y horarios', path: ROUTES.ADMIN.ROUTES },
+              { label: 'Ver Viajes', desc: 'Programación de viajes', path: ROUTES.TRIPS },
             ].map((a) => (
               <Card
                 key={a.path}
@@ -105,7 +106,7 @@ export function Component() {
           {cashSummary && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card
-                onClick={() => navigate('/admin/financial')}
+                onClick={() => navigate(ROUTES.ADMIN.FINANCIAL)}
                 className="cursor-pointer hover:shadow-lg transition-all hover:border-green-300"
               >
                 <CardContent className="p-4 lg:p-6">
@@ -125,7 +126,7 @@ export function Component() {
                 </CardContent>
               </Card>
               <Card
-                onClick={() => navigate('/admin/withdrawals')}
+                onClick={() => navigate(ROUTES.ADMIN.WITHDRAWALS)}
                 className="cursor-pointer hover:shadow-lg transition-all hover:border-red-300"
               >
                 <CardContent className="p-4 lg:p-6">
@@ -160,7 +161,7 @@ export function Component() {
                 </CardContent>
               </Card>
               <Card
-                onClick={() => navigate('/admin/financial')}
+                onClick={() => navigate(ROUTES.ADMIN.FINANCIAL)}
                 className="cursor-pointer hover:shadow-lg transition-all hover:border-emerald-300"
               >
                 <CardContent className="p-4 lg:p-6">
@@ -186,7 +187,7 @@ export function Component() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg font-bold">Próximos Viajes</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/trips')} className="text-primary">
+                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.TRIPS)} className="text-primary">
                   Ver todos
                 </Button>
               </CardHeader>

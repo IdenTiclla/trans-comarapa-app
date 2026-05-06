@@ -18,6 +18,7 @@ import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Send, Check, FileText, Package, Armchair } from 'lucide-react'
+import { ROUTES } from '@/lib/routes'
 
 const VALID_TABS = ['seats', 'packages'] as const
 type TabValue = typeof VALID_TABS[number]
@@ -154,7 +155,7 @@ export function Component() {
                   onPreviewTicket={page.seatMapHandlers.onPreviewTicket}
                   onGoToTicketPage={(seat) => {
                     const ticket = page.findTicketBySeat(seat)
-                    if (ticket) navigate(`/tickets/${ticket.id}`)
+                    if (ticket) navigate(ROUTES.ticketDetail(ticket.id))
                   }}
                 />
               </TabsContent>
@@ -210,13 +211,13 @@ export function Component() {
                           Terminar
                         </Button>
                       )}
-                      <Link to={`/trips/${tripId}/passengers-manifest`} target="_blank">
+                      <Link to={ROUTES.tripPassengersManifest(tripId)} target="_blank">
                         <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
                           <FileText className="h-3.5 w-3.5" />
                           Planilla de pasajeros
                         </Button>
                       </Link>
-                      <Link to={`/trips/${tripId}/packages-manifest`} target="_blank">
+                      <Link to={ROUTES.tripPackagesManifest(tripId)} target="_blank">
                         <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
                           <Package className="h-3.5 w-3.5" />
                           Manifiesto de encomiendas

@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { ticketService } from '@/services/ticket.service'
-import type { RootState } from '@/store'
 import type { Ticket } from '@/types'
 
 interface TicketState { tickets: Ticket[]; isLoading: boolean; error: string | null }
@@ -29,6 +28,4 @@ const ticketSlice = createSlice({
     },
 })
 
-export const selectTickets = (state: RootState) => state.ticket.tickets
-export const selectTicketLoading = (state: RootState) => state.ticket.isLoading
 export default ticketSlice.reducer

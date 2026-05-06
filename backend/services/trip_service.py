@@ -247,7 +247,7 @@ class TripService:
     def get_available_seats(self, trip_id: int) -> Dict[str, Any]:
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
         if not trip.bus:
-            raise NotFoundException(f"Bus not found for trip {trip_id}")
+            raise NotFoundException(f"No se encontró bus para el viaje {trip_id}")
 
         bus_seats = self.repo.get_seats_by_bus(trip.bus.id)
         if not bus_seats:
@@ -295,27 +295,27 @@ class TripService:
 
         if data.trip_datetime.replace(tzinfo=None) < min_departure:
             raise ValidationException(
-                f"Trip datetime must be at least {settings.TRIP_MIN_DEPARTURE_BUFFER_MINUTES} minutes in the future. Current minimum: {min_departure}"
+                f"La fecha del viaje debe ser al menos {settings.TRIP_MIN_DEPARTURE_BUFFER_MINUTES} minutos en el futuro. Mínimo actual: {min_departure}"
             )
 
         if (
             data.driver_id
             and not self.repo.get_driver_by_id(data.driver_id)
         ):
-            raise NotFoundException(f"Driver with id {data.driver_id} not found")
+            raise NotFoundException(f"Conductor con id {data.driver_id} no encontrado")
         if not self.repo.get_bus_by_id(data.bus_id):
-            raise NotFoundException(f"Bus with id {data.bus_id} not found")
+            raise NotFoundException(f"Bus con id {data.bus_id} no encontrado")
         if not self.repo.get_route_by_id(data.route_id):
-            raise NotFoundException(f"Route with id {data.route_id} not found")
+            raise NotFoundException(f"Ruta con id {data.route_id} no encontrada")
         if (
             not self.repo.get_secretary_by_id(data.secretary_id)
         ):
-            raise NotFoundException(f"Secretary with id {data.secretary_id} not found")
+            raise NotFoundException(f"Secretaria con id {data.secretary_id} no encontrada")
         if (
             data.assistant_id
             and not self.repo.get_assistant_by_id(data.assistant_id)
         ):
-            raise NotFoundException(f"Assistant with id {data.assistant_id} not found")
+            raise NotFoundException(f"Ayudante con id {data.assistant_id} no encontrado")
 
         trip_dt = data.trip_datetime.replace(tzinfo=None)
 
@@ -323,27 +323,27 @@ class TripService:
             conflict = self.repo.find_driver_conflict(data.driver_id, trip_dt)
             if conflict:
                 raise ConflictException(
-                    f"Driver {data.driver_id} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                    f"El conductor {data.driver_id} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
                 )
 
         conflict = self.repo.find_bus_conflict(data.bus_id, trip_dt)
         if conflict:
             raise ConflictException(
-                f"Bus {data.bus_id} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                f"El bus {data.bus_id} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
             )
 
         if data.assistant_id:
             conflict = self.repo.find_assistant_conflict(data.assistant_id, trip_dt)
             if conflict:
                 raise ConflictException(
-                    f"Assistant {data.assistant_id} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                    f"El ayudante {data.assistant_id} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
                 )
 
         conflict = self.repo.find_duplicate(
             trip_dt, data.bus_id, data.route_id, data.driver_id, data.assistant_id
         )
         if conflict:
-            raise ConflictException(f"Trip already exists with id {conflict.id}")
+            raise ConflictException(f"Ya existe un viaje con id {conflict.id}")
 
         trip_data = data.model_dump()
         new_trip = Trip(**trip_data)
@@ -354,7 +354,7 @@ class TripService:
         except Exception as e:
             self.db.rollback()
             raise ValidationException(
-                "Foreign key constraint failed: check provided IDs"
+                "Error de restricción de clave foránea: verifique los IDs proporcionados"
             )
 
         return new_trip
@@ -366,7 +366,7 @@ class TripService:
         if "driver_id" in update_data and update_data["driver_id"]:
             if not self.repo.get_driver_by_id(update_data["driver_id"]):
                 raise NotFoundException(
-                    f"Driver with id {update_data['driver_id']} not found"
+                    f"Conductor con id {update_data['driver_id']} no encontrado"
                 )
             trip_dt = update_data.get("trip_datetime", trip.trip_datetime).replace(
                 tzinfo=None
@@ -376,13 +376,13 @@ class TripService:
             )
             if conflict:
                 raise ConflictException(
-                    f"Driver {update_data['driver_id']} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                    f"El conductor {update_data['driver_id']} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
                 )
 
         if "bus_id" in update_data and update_data["bus_id"]:
             if not self.repo.get_bus_by_id(update_data["bus_id"]):
                 raise NotFoundException(
-                    f"Bus with id {update_data['bus_id']} not found"
+                    f"Bus con id {update_data['bus_id']} no encontrado"
                 )
             trip_dt = update_data.get("trip_datetime", trip.trip_datetime).replace(
                 tzinfo=None
@@ -392,13 +392,13 @@ class TripService:
             )
             if conflict:
                 raise ConflictException(
-                    f"Bus {update_data['bus_id']} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                    f"El bus {update_data['bus_id']} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
                 )
 
         if "assistant_id" in update_data and update_data["assistant_id"]:
             if not self.repo.get_assistant_by_id(update_data["assistant_id"]):
                 raise NotFoundException(
-                    f"Assistant with id {update_data['assistant_id']} not found"
+                    f"Ayudante con id {update_data['assistant_id']} no encontrado"
                 )
             trip_dt = update_data.get("trip_datetime", trip.trip_datetime).replace(
                 tzinfo=None
@@ -408,13 +408,13 @@ class TripService:
             )
             if conflict:
                 raise ConflictException(
-                    f"Assistant {update_data['assistant_id']} is already assigned to trip id {conflict.id} at {conflict.trip_datetime}"
+                    f"El ayudante {update_data['assistant_id']} ya está asignado al viaje id {conflict.id} en {conflict.trip_datetime}"
                 )
 
         if "route_id" in update_data and update_data["route_id"]:
             if not self.repo.get_route_by_id(update_data["route_id"]):
                 raise NotFoundException(
-                    f"Route with id {update_data['route_id']} not found"
+                    f"Ruta con id {update_data['route_id']} no encontrada"
                 )
 
         if "status" in update_data:
@@ -431,7 +431,7 @@ class TripService:
         except Exception:
             self.db.rollback()
             raise ValidationException(
-                "Foreign key constraint failed: check provided IDs"
+                "Error de restricción de clave foránea: verifique los IDs proporcionados"
             )
 
         return trip
@@ -441,7 +441,7 @@ class TripService:
         ticket_count = self.repo.count_tickets_for_trip(trip_id)
         if ticket_count > 0:
             raise ValidationException(
-                f"Cannot delete trip with id {trip_id} because it has {ticket_count} associated tickets. Delete the tickets first."
+                f"No se puede eliminar el viaje con id {trip_id} porque tiene {ticket_count} pasajes asociados. Elimine los pasajes primero."
             )
 
         self.repo.delete_trip(trip)
@@ -450,13 +450,13 @@ class TripService:
     def get_trip_driver(self, trip_id: int):
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
         if not trip.driver:
-            raise NotFoundException(f"No driver assigned to trip {trip_id}")
+            raise NotFoundException(f"No hay conductor asignado al viaje {trip_id}")
         return trip.driver
 
     def get_trip_assistant(self, trip_id: int):
         trip = self.repo.get_by_id_or_raise(trip_id, "Trip")
         if not trip.assistant:
-            raise NotFoundException(f"No assistant assigned to trip {trip_id}")
+            raise NotFoundException(f"No hay ayudante asignado al viaje {trip_id}")
         return trip.assistant
 
     def _bulk_transition_packages(

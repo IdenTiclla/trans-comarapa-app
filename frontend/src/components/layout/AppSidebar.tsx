@@ -19,6 +19,7 @@ import { NAV_GROUPS, ROLE_LABELS } from '@/lib/navigation'
 import type { Role } from '@/lib/constants'
 import { LogOut, Settings, Bus, MapPin } from 'lucide-react'
 import { COMPANY } from '@/lib/company-config'
+import { ROUTES } from '@/lib/routes'
 
 export default function AppSidebar() {
   const { user, userRole, logout } = useAuth()
@@ -81,7 +82,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Configuración">
-              <NavLink to="/profile">
+              <NavLink to={ROUTES.PROFILE}>
                 <Settings className="h-4 w-4" />
                 <span>Configuración</span>
               </NavLink>

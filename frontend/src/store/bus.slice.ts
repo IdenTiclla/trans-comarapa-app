@@ -42,7 +42,7 @@ export const updateBusSeats = createAsyncThunk('bus/updateSeats', async ({ busId
 const busSlice = createSlice({
     name: 'bus',
     initialState,
-    reducers: { clearCurrentBus(state) { state.currentBus = null } },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchBuses.pending, (s) => { s.isLoading = true; s.error = null })
@@ -57,7 +57,6 @@ const busSlice = createSlice({
     },
 })
 
-export const { clearCurrentBus } = busSlice.actions
 export const selectBuses = (state: RootState) => state.bus.buses
 export const selectBusLoading = (state: RootState) => state.bus.isLoading
 export const selectBusError = (state: RootState) => state.bus.error

@@ -14,6 +14,7 @@ import {
     clearError,
 } from '@/store/auth.slice'
 import { DASHBOARD_PATHS, type Role } from '@/lib/constants'
+import { ROUTES } from '@/lib/routes'
 
 export function useAuth() {
     const dispatch = useAppDispatch()
@@ -42,8 +43,8 @@ export function useAuth() {
     }, [user, userFullName])
 
     const dashboardPath = useMemo(() => {
-        if (!userRole) return '/login'
-        return DASHBOARD_PATHS[userRole as Role] ?? '/dashboards/dashboard-secretary'
+        if (!userRole) return ROUTES.LOGIN
+        return DASHBOARD_PATHS[userRole as Role] ?? ROUTES.DASHBOARDS.SECRETARY
     }, [userRole])
 
     const login = useCallback(
@@ -51,7 +52,7 @@ export function useAuth() {
             const result = await dispatch(loginThunk({ email, password }))
             if (loginThunk.fulfilled.match(result)) {
                 const role = result.payload.role as Role
-                navigate(DASHBOARD_PATHS[role] ?? '/dashboards/dashboard-secretary')
+                navigate(DASHBOARD_PATHS[role] ?? ROUTES.DASHBOARDS.SECRETARY)
             }
             return result
         },
@@ -60,7 +61,7 @@ export function useAuth() {
 
     const logout = useCallback(async () => {
         await dispatch(logoutThunk(false))
-        navigate('/login')
+        navigate(ROUTES.LOGIN)
     }, [dispatch, navigate])
 
     const loadProfile = useCallback(() => dispatch(loadProfileThunk()), [dispatch])

@@ -4,6 +4,7 @@ import { useTicketDetail } from '@/hooks/use-ticket-detail'
 import { useTicketDetailPage } from '@/hooks/use-ticket-detail-page'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ROUTES } from '@/lib/routes'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import {
   AlertDialog,
@@ -63,7 +64,7 @@ export function Component() {
         </h3>
         {error && <p className="mt-2 text-sm text-gray-500">{error}</p>}
         <div className="mt-6 flex justify-center gap-3">
-          <Button variant="outline" onClick={() => navigate('/tickets')}>Volver a boletos</Button>
+          <Button variant="outline" onClick={() => navigate(ROUTES.TICKETS)}>Volver a boletos</Button>
           {error && <Button onClick={reload}>Reintentar</Button>}
         </div>
       </div>
@@ -77,7 +78,7 @@ export function Component() {
           ticketId={ticket.id}
           state={ticket.state}
           createdAt={ticket.created_at}
-          onEdit={() => navigate(`/tickets?edit=${ticket.id}`)}
+          onEdit={() => navigate(ROUTES.ticketEdit(ticket.id))}
           onPreview={handlePreview}
           onPrint={handlePrint}
         />

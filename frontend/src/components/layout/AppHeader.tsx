@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 import { useBreadcrumb } from '@/hooks/use-breadcrumb'
 import { Bell, User, LogOut } from 'lucide-react'
+import { ROUTES } from '@/lib/routes'
 
 export default function AppHeader() {
   const { user, userFullName, userInitials, logout } = useAuth()
@@ -76,7 +77,7 @@ export default function AppHeader() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/profile" className="cursor-pointer">
+              <Link to={ROUTES.PROFILE} className="cursor-pointer">
                 <User className="mr-2 size-4" />
                 Perfil
               </Link>

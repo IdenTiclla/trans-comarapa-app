@@ -9,6 +9,7 @@ from core.exceptions import (
     ValidationException,
     ForbiddenException,
 )
+from core.security import get_password_hash
 from models.user import User, UserRole
 from models.secretary import Secretary
 from models.administrator import Administrator
@@ -59,7 +60,7 @@ class UserManagementService:
         user = User(
             username=user_data["username"],
             email=user_data["email"],
-            hashed_password=User.get_password_hash(user_data["password"]),
+            hashed_password=get_password_hash(user_data["password"]),
             role=user_data.get("role", UserRole.USER),
             firstname=user_data.get("firstname", ""),
             lastname=user_data.get("lastname", ""),
@@ -99,7 +100,7 @@ class UserManagementService:
                 raise ConflictException("El nombre de usuario ya está registrado")
 
         if "password" in update_data and update_data["password"]:
-            update_data["hashed_password"] = User.get_password_hash(
+            update_data["hashed_password"] = get_password_hash(
                 update_data.pop("password")
             )
         else:

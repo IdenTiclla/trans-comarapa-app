@@ -5,6 +5,7 @@ import { usePendingCollections } from './use-pending-collections'
 import { Package, Clock, MapPin, User, ArrowRight, DollarSign, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LOCALE } from '@/lib/locale-config'
+import { ROUTES } from '@/lib/routes'
 
 interface PendingCollectionsProps {
     officeId: number
@@ -283,7 +284,7 @@ export default function PendingCollections({
                                             </Button>
                                             <Button
                                                 variant="outline"
-                                                onClick={() => navigate(`/packages/${pkg.id}`)}
+                                                onClick={() => navigate(ROUTES.packageDetail(pkg.id))}
                                                 className="h-auto px-2.5 py-1.5 text-xs font-medium"
                                             >
                                                 Ver

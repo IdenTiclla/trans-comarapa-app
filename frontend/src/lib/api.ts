@@ -1,5 +1,6 @@
 import { API_BASE_URL } from './constants'
 import { TIMING } from './timing'
+import { ROUTES } from './routes'
 
 export class SessionExpiredError extends Error {
   constructor(message = 'Session expired') {
@@ -128,7 +129,7 @@ export async function apiFetch<T = unknown>(
           signal: new AbortController().signal,
         })
       } else {
-        window.location.href = '/login'
+        window.location.href = ROUTES.LOGIN
         throw new SessionExpiredError()
       }
     }

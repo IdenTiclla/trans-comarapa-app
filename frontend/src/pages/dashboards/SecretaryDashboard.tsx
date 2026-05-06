@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { useAuth } from '@/hooks/use-auth'
+import { ROUTES } from '@/lib/routes'
 import {
   fetchDashboardStats,
   selectTicketStats,
@@ -50,7 +51,7 @@ export function Component() {
       iconBg: 'bg-blue-100 group-hover:bg-blue-200',
       hoverBorder: 'hover:border-blue-300',
       textHover: 'group-hover:text-blue-700',
-      onClick: () => navigate('/trips'),
+      onClick: () => navigate(ROUTES.TRIPS),
     },
     {
       id: 'new-package',
@@ -64,7 +65,7 @@ export function Component() {
       iconBg: 'bg-green-100 group-hover:bg-green-200',
       hoverBorder: 'hover:border-green-300',
       textHover: 'group-hover:text-green-700',
-      onClick: () => navigate('/packages/new'),
+      onClick: () => navigate(ROUTES.packageNew),
     },
     {
       id: 'search-client',
@@ -78,7 +79,7 @@ export function Component() {
       iconBg: 'bg-purple-100 group-hover:bg-purple-200',
       hoverBorder: 'hover:border-purple-300',
       textHover: 'group-hover:text-purple-700',
-      onClick: () => navigate('/clients'),
+      onClick: () => navigate(ROUTES.CLIENTS),
     },
     {
       id: 'daily-report',
@@ -92,7 +93,7 @@ export function Component() {
       iconBg: 'bg-orange-100 group-hover:bg-orange-200',
       hoverBorder: 'hover:border-orange-300',
       textHover: 'group-hover:text-orange-700',
-      onClick: () => navigate('/reports'),
+      onClick: () => navigate(ROUTES.REPORTS),
     },
   ]
 
@@ -145,7 +146,7 @@ export function Component() {
                   <CardHeader>
                     <CardTitle className="text-xl font-bold">Próximos Viajes</CardTitle>
                     <CardAction>
-                      <Button variant="link" size="sm" onClick={() => navigate('/trips')}>
+                      <Button variant="link" size="sm" onClick={() => navigate(ROUTES.TRIPS)}>
                         Ver todos
                       </Button>
                     </CardAction>
@@ -160,7 +161,7 @@ export function Component() {
                     <CardTitle className="text-xl font-bold">Ventas Recientes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <RecentSales onViewAll={() => navigate('/sales')} />
+                    <RecentSales onViewAll={() => navigate(ROUTES.SALES)} />
                   </CardContent>
                 </Card>
               </div>
@@ -192,7 +193,7 @@ export function Component() {
                       limit={5}
                       showTitle={false}
                       compact={true}
-                      onViewAll={() => navigate('/packages/pending-collections')}
+                      onViewAll={() => navigate(ROUTES.packagePendingCollections)}
                     />
                   </CardContent>
                 </Card>

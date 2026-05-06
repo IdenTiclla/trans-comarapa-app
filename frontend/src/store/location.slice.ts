@@ -37,5 +37,4 @@ const locationSlice = createSlice({
 })
 
 export const selectLocations = (state: RootState) => state.location.locations
-export const selectLocationLoading = (state: RootState) => state.location.isLoading
 export default locationSlice.reducer

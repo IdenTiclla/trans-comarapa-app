@@ -4,6 +4,7 @@ from typing import Any, Type
 from sqlalchemy.orm import Session
 
 from core.exceptions import ConflictException
+from core.security import get_password_hash
 from models.user import User as UserModel
 from repositories.user_repository import UserRepository
 from repositories.person_repository import PersonRepository
@@ -32,7 +33,7 @@ class PersonService:
         if self.user_repo.get_by_username(user_data["username"]):
             raise ConflictException("Username already registered")
 
-        hashed_password = UserModel.get_password_hash(user_data["password"])
+        hashed_password = get_password_hash(user_data["password"])
         db_user = UserModel(
             username=user_data["username"],
             email=user_data["email"],

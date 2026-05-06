@@ -78,7 +78,6 @@ const packageSlice = createSlice({
     name: 'package',
     initialState,
     reducers: {
-        clearCurrentPackage(state) { state.currentPackage = null },
         clearError(state) { state.error = null },
     },
     extraReducers: (builder) => {
@@ -113,14 +112,11 @@ const packageSlice = createSlice({
     },
 })
 
-export const { clearCurrentPackage, clearError } = packageSlice.actions
+export const { clearError } = packageSlice.actions
 
 export const selectPackages = (state: RootState) => state.package.packages
 export const selectCurrentPackage = (state: RootState) => state.package.currentPackage
 export const selectPackageLoading = (state: RootState) => state.package.loading
 export const selectPackageError = (state: RootState) => state.package.error
-export const selectPackagePagination = (state: RootState) => state.package.pagination
-
-export const selectIsLoading = selectPackageLoading
 
 export default packageSlice.reducer

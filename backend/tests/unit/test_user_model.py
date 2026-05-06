@@ -4,20 +4,21 @@ Pruebas unitarias para el modelo de usuario.
 
 import pytest
 from models.user import User, UserRole
+from core.security import get_password_hash, verify_password
 
 
 @pytest.mark.unit
 def test_password_hashing():
     """Prueba de hash de contraseña."""
     password = "testpassword123"
-    hashed_password = User.get_password_hash(password)
+    hashed_password = get_password_hash(password)
 
     # Verificar que el hash no es igual a la contraseña original
     assert hashed_password != password
 
     # Verificar que la verificación funciona correctamente
-    assert User.verify_password(password, hashed_password) is True
-    assert User.verify_password("wrongpassword", hashed_password) is False
+    assert verify_password(password, hashed_password) is True
+    assert verify_password("wrongpassword", hashed_password) is False
 
 
 @pytest.mark.integration
@@ -26,7 +27,7 @@ def test_user_creation(db_session):
     user = User(
         username="testuser2",
         email="testuser2@example.com",
-        hashed_password=User.get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"),
         role=UserRole.CLIENT,
         is_active=True,
         is_admin=False,

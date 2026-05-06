@@ -15,6 +15,7 @@ from models.secretary import Secretary
 from models.ticket import Ticket
 from models.ticket_state_history import TicketStateHistory
 from models.user import User, UserRole
+from core.security import get_password_hash
 
 
 @pytest.fixture
@@ -80,7 +81,7 @@ def setup_trip_data(db_session):
     driver_user = User(
         username="driver1",
         email="driver1@example.com",
-        hashed_password=User.get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"),
         role=UserRole.DRIVER,
         is_active=True,
         is_admin=False,
@@ -91,7 +92,7 @@ def setup_trip_data(db_session):
     assistant_user = User(
         username="assistant1",
         email="assistant1@example.com",
-        hashed_password=User.get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"),
         role=UserRole.ASSISTANT,
         is_active=True,
         is_admin=False,
@@ -102,7 +103,7 @@ def setup_trip_data(db_session):
     secretary_user = User(
         username="secretary1",
         email="secretary1@example.com",
-        hashed_password=User.get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"),
         role=UserRole.SECRETARY,
         is_active=True,
         is_admin=False,

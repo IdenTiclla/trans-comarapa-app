@@ -29,7 +29,7 @@ export function MapOverview({ pkg }: Props) {
       style={{ backgroundImage: 'url(/dark_city_map.png)' }}
     >
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent" />
-      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold border border-white/20 text-[#16499B] shadow-sm flex items-center gap-2 uppercase tracking-wide">
+      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold border border-white/20 text-brand-blue shadow-sm flex items-center gap-2 uppercase tracking-wide">
         Rastreo Activo
       </div>
       <div className="absolute bottom-6 left-6 text-white z-10 w-full">

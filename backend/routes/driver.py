@@ -1,117 +1,59 @@
-import logging
-
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from schemas.driver import DriverCreate, DriverPatch, Driver as DriverSchema
-from models.driver import Driver
+
 from db.session import get_db
 from auth.jwt import get_current_user
 from models.user import User
+from schemas.driver import DriverCreate, DriverPatch, Driver as DriverSchema
+from services.driver_service import DriverService
 
-logger = logging.getLogger(__name__)
+router = APIRouter(tags=["Drivers"])
 
-router = APIRouter(
-    tags=['Drivers']
-)
 
-@router.post('', tags=["Drivers"])
+def get_service(db: Session = Depends(get_db)) -> DriverService:
+    return DriverService(db)
+
+
+@router.post("", response_model=DriverSchema, status_code=status.HTTP_201_CREATED)
 def create_driver(
     driver: DriverCreate,
-    db: Session = Depends(get_db),
+    service: DriverService = Depends(get_service),
     current_user: User = Depends(get_current_user),
-) -> DriverSchema:
-    existing_driver = db.query(Driver).filter(Driver.license_number == driver.license_number).first()
-    if existing_driver:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="License number already exists."
-        )
-    new_driver = Driver(
-        name=driver.name,
-        lastname=driver.lastname,
-        phone_number=driver.phone_number,
-        birth_date=driver.birth_date,
-        license_number=driver.license_number,
-        experience_years=driver.experience_years
-    )
-    db.add(new_driver)
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.error("Error creating driver: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while creating the driver."
-        )
-    db.refresh(new_driver)
-    return new_driver
+):
+    return service.create(driver.model_dump())
 
-@router.get('', tags=["Drivers"])
+
+@router.get("", response_model=list[DriverSchema])
 def get_all_drivers(
-    db: Session = Depends(get_db),
+    service: DriverService = Depends(get_service),
     current_user: User = Depends(get_current_user),
-) -> list[DriverSchema]:
-    drivers = db.query(Driver).all()
-    return drivers
+):
+    return service.get_all()
 
-@router.get('/{driver_id}', tags=["Drivers"])
+
+@router.get("/{driver_id}", response_model=DriverSchema)
 def get_specific_driver(
     driver_id: int,
-    db: Session = Depends(get_db),
+    service: DriverService = Depends(get_service),
     current_user: User = Depends(get_current_user),
-) -> DriverSchema:
-    driver = db.query(Driver).filter(Driver.id == driver_id).first()
-    if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Driver not found."
-        )
-    return driver
+):
+    return service.get_by_id(driver_id)
 
-@router.patch('/{driver_id}', tags=["Drivers"])
+
+@router.patch("/{driver_id}", response_model=DriverSchema)
 def patch_specific_driver(
     driver: DriverPatch,
     driver_id: int,
-    db: Session = Depends(get_db),
+    service: DriverService = Depends(get_service),
     current_user: User = Depends(get_current_user),
-) -> DriverSchema:
-    driver_db = db.query(Driver).filter(Driver.id == driver_id).first()
-    driver_with_license = db.query(Driver).filter(Driver.license_number == driver.license_number).first()
-    if driver_with_license and driver_db != driver_with_license:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="License number already exists."
-        )
-    if not driver_db:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Driver not found."
-        )
-    update_data = driver.dict(exclude_unset=True)
-    if not update_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Please enter some driver's information."
-        )
-    for field, value in update_data.items():
-        setattr(driver_db, field, value)
-    db.commit()
-    db.refresh(driver_db)
-    return driver_db
+):
+    return service.update(driver_id, driver.dict(exclude_unset=True))
 
-@router.delete('/{driver_id}', tags=["Drivers"])
+
+@router.delete("/{driver_id}", response_model=DriverSchema)
 def delete_specific_driver(
     driver_id: int,
-    db: Session = Depends(get_db),
+    service: DriverService = Depends(get_service),
     current_user: User = Depends(get_current_user),
-) -> DriverSchema:
-    driver = db.query(Driver).filter(Driver.id == driver_id).first()
-    if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Driver not found."
-        )
-    db.delete(driver)
-    db.commit()
-    return driver
+):
+    return service.delete(driver_id)

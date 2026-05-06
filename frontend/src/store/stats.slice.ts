@@ -61,11 +61,7 @@ export const fetchDashboardStats = createAsyncThunk(
 const statsSlice = createSlice({
     name: 'stats',
     initialState,
-    reducers: {
-        clearStatsError(state) {
-            state.error = null
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchDashboardStats.pending, (state) => {
@@ -95,10 +91,6 @@ const statsSlice = createSlice({
             })
     },
 })
-
-export const { clearStatsError } = statsSlice.actions
-
-export const selectDashboardStats = (state: RootState) => state.stats.dashboardStats
 
 const defaultStatData: StatData = { count: 0, amount: 0, trend: 0 }
 const defaultPackageData: StatData = { count: 0, trend: 0 }

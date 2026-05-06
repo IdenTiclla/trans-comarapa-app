@@ -5,6 +5,7 @@ import { useTicketConfirmation } from '@/hooks/use-ticket-confirmation'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
 import { LOCALE } from '@/lib/locale-config'
+import { ROUTES } from '@/lib/routes'
 
 function formatDate(dateStringOrDate?: string | Date) {
   if (!dateStringOrDate) return 'Fecha no disponible'
@@ -36,7 +37,7 @@ export function Component() {
   } = useTicketConfirmation(searchParams, isAuthenticated)
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={ROUTES.LOGIN} replace />
   }
 
   return (

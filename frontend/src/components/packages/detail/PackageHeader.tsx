@@ -16,7 +16,7 @@ export function PackageHeader({ pkg, onEdit, onShowReceipt, onMarkReceived, onDe
   return (
     <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
       <div>
-        <h4 className="text-xs font-bold tracking-widest text-[#932720] uppercase mb-2">Resumen de Encomienda</h4>
+        <h4 className="text-xs font-bold tracking-widest text-brand-crimson uppercase mb-2">Resumen de Encomienda</h4>
         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">{pkg.tracking_number}</h1>
         <p className="text-gray-600 text-lg flex items-center gap-2">
           <span className={cn(

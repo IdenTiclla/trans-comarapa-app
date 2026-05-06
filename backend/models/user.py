@@ -2,8 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum as SQLAl
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from db.base import Base
-from passlib.context import CryptContext
-from core.security import get_password_hash as _get_password_hash, verify_password as _verify_password
+from core.security import get_password_hash, verify_password
 import enum
 
 class UserRole(enum.Enum):
@@ -48,27 +47,6 @@ class User(Base):
     client = relationship("Client", uselist=False, back_populates="user", overlaps="person")
     owner = relationship("Owner", uselist=False, back_populates="user", overlaps="person")
 
-    # Legacy password context — kept for reference/type compatibility
-    _pwd_context = CryptContext(
-        schemes=["sha256_crypt"],
-        deprecated="auto",
-        sha256_crypt__min_rounds=29000,
-        sha256_crypt__max_rounds=200000,
-        sha256_crypt__default_rounds=80000
-    )
-
-    @staticmethod
-    def verify_password(plain_password, hashed_password):
-        return _verify_password(plain_password, hashed_password)
-
-    @staticmethod
-    def get_password_hash(password):
-        return _get_password_hash(password)
-
-    def set_password(self, password):
-        self.hashed_password = _get_password_hash(password)
-
-    # 🔧 PROPIEDADES DE COMPATIBILIDAD
     @property
     def effective_firstname(self):
         """Obtener firstname desde person o fallback a campo legacy"""

@@ -15,6 +15,7 @@ from models.ticket import Ticket
 from models.secretary import Secretary
 from models.package import Package
 from models.package_item import PackageItem
+from core.security import get_password_hash
 from models.user import User, UserRole
 from models.administrator import Administrator
 from models.office import Office
@@ -173,10 +174,10 @@ def _create_users_and_entities(db, fake, role, prefix, count, entity_factory, ts
     for i in range(count):
         fn, ln = _parse_name(full_names[i])
         users.append(User(
-            username=f"{prefix}{i+1}_{ts_base + i}",
-            email=f"{prefix}{i+1}_{ts_base + i}@transcomarapa.com",
+            username=f"{prefix}{i+1}",
+            email=f"{prefix}{i+1}@transcomarapa.com",
             firstname=fn, lastname=ln, role=role,
-            hashed_password=User.get_password_hash(f"{prefix}{i+1}"),
+            hashed_password=get_password_hash("123456"),
             is_active=True, is_admin=(role == "admin"),
         ))
     db.add_all(users)
@@ -409,9 +410,9 @@ def seed_db():
 
         # ── Admin ──
         admin_user = User(
-            username=f"admin_{ts_base}", email=f"admin_{ts_base}@transcomarapa.com",
+            username=f"admin_bulk", email=f"admin_bulk@transcomarapa.com",
             firstname="Administrador", lastname="Sistema", role="admin",
-            hashed_password=User.get_password_hash("admin123"),
+            hashed_password=get_password_hash("123456"),
             is_active=True, is_admin=True,
         )
         db.add(admin_user)
@@ -426,10 +427,10 @@ def seed_db():
         owner_users = []
         for i, (fn, ln) in enumerate(OWNER_NAMES):
             owner_users.append(User(
-                username=f"socio{i+1}_{ts_base + 800 + i}",
-                email=f"socio{i+1}_{ts_base + 800 + i}@transcomarapa.com",
+                username=f"socio{i+1}",
+                email=f"socio{i+1}@transcomarapa.com",
                 firstname=fn, lastname=ln, role="owner",
-                hashed_password=User.get_password_hash("socio123"),
+                hashed_password=get_password_hash("123456"),
                 is_active=True, is_admin=False,
             ))
         db.add_all(owner_users)
@@ -913,19 +914,27 @@ def seed_db():
 def create_test_users():
     db = SessionLocal()
     try:
+        secretary_configs = [
+            {"n": 1, "slug": "santacruz", "firstname": "María", "lastname": "Pérez", "phone": "77100001"},
+            {"n": 2, "slug": "santacruz", "firstname": "Laura", "lastname": "Gómez", "phone": "77100002"},
+            {"n": 1, "slug": "comarapa", "firstname": "Carmen", "lastname": "Rojas", "phone": "77100003"},
+            {"n": 2, "slug": "comarapa", "firstname": "Rosa", "lastname": "Mendoza", "phone": "77100004"},
+            {"n": 1, "slug": "losnegros", "firstname": "Ana", "lastname": "Flores", "phone": "77100005"},
+            {"n": 2, "slug": "losnegros", "firstname": "Luisa", "lastname": "Torrez", "phone": "77100006"},
+            {"n": 1, "slug": "sanisidro", "firstname": "Patricia", "lastname": "Vargas", "phone": "77100007"},
+            {"n": 2, "slug": "sanisidro", "firstname": "Gabriela", "lastname": "Herrera", "phone": "77100008"},
+        ]
+
         test_emails = [
             "admin1@transcomarapa.com",
-            "secretary1@transcomarapa.com",
-            "secretary2@transcomarapa.com",
-            "secretary3@transcomarapa.com",
-            "driver1@transcomarapa.com",
-            "assistant1@transcomarapa.com",
-            "client1@transcomarapa.com",
-            "client2@transcomarapa.com",
-            "client3@transcomarapa.com",
-            "client4@transcomarapa.com",
-            "client5@transcomarapa.com",
+            "driver1@transcomarapa.com", "driver2@transcomarapa.com", "driver3@transcomarapa.com",
+            "assistant1@transcomarapa.com", "assistant2@transcomarapa.com", "assistant3@transcomarapa.com",
+            "client1@transcomarapa.com", "client2@transcomarapa.com", "client3@transcomarapa.com",
+            "client4@transcomarapa.com", "client5@transcomarapa.com",
+            "secretary1@transcomarapa.com", "secretary2@transcomarapa.com", "secretary3@transcomarapa.com",
         ]
+        for sc in secretary_configs:
+            test_emails.append(f"secretary{sc['n']}.{sc['slug']}@transcomarapa.com")
 
         print("Limpiando datos de usuarios de prueba existentes...")
         db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
@@ -941,8 +950,8 @@ def create_test_users():
         db.commit()
         print("Datos de usuarios de prueba limpiados correctamente")
 
-        office = db.query(Office).first()
-        if not office:
+        offices = db.query(Office).all()
+        if not offices:
             location = Location(
                 name="Terminal Predeterminada",
                 latitude=-17.783333, longitude=-63.182222,
@@ -959,7 +968,20 @@ def create_test_users():
             )
             db.add(office)
             db.commit()
-            print(f"Oficina predeterminada creada con ID: {office.id}")
+            offices = [office]
+
+        office_map = {}
+        for office in offices:
+            name_lower = office.name.lower()
+            if "santa cruz" in name_lower:
+                office_map["santacruz"] = office
+            elif "comarapa" in name_lower:
+                office_map["comarapa"] = office
+            elif "los negros" in name_lower:
+                office_map["losnegros"] = office
+            elif "san isidro" in name_lower:
+                office_map["sanisidro"] = office
+        default_office = offices[0]
 
         test_users = [
             {
@@ -968,41 +990,45 @@ def create_test_users():
                 "firstname": "Admin", "lastname": "Principal",
                 "phone": "77123456", "birth_date": date(1980, 5, 15),
             },
-            {
-                "username": "secretary1", "email": "secretary1@transcomarapa.com",
+        ]
+
+        for sc in secretary_configs:
+            test_users.append({
+                "username": f"secretary{sc['n']}.{sc['slug']}",
+                "email": f"secretary{sc['n']}.{sc['slug']}@transcomarapa.com",
                 "role": "secretary", "password": "123456",
-                "firstname": "Secretaria", "lastname": "Principal",
-                "phone": "77234567", "birth_date": date(1990, 8, 20),
-                "office_id": office.id,
-            },
-            {
-                "username": "secretary2", "email": "secretary2@transcomarapa.com",
-                "role": "secretary", "password": "123456",
-                "firstname": "Ana", "lastname": "García",
-                "phone": "77234568", "birth_date": date(1988, 6, 12),
-                "office_id": office.id,
-            },
-            {
-                "username": "secretary3", "email": "secretary3@transcomarapa.com",
-                "role": "secretary", "password": "123456",
-                "firstname": "Carlos", "lastname": "López",
-                "phone": "77234569", "birth_date": date(1992, 9, 8),
-                "office_id": office.id,
-            },
-            {
-                "username": "driver1", "email": "driver1@transcomarapa.com",
+                "firstname": sc["firstname"], "lastname": sc["lastname"],
+                "phone": sc["phone"], "birth_date": date(1990, 1, 1),
+                "office_id": office_map.get(sc["slug"], default_office).id,
+            })
+
+        for n, fn, ln, ph, lc in [
+            (1, "Conductor", "Principal", "77300001", "LC123456"),
+            (2, "Jorge", "Mendoza", "77300002", "LC234567"),
+            (3, "Roberto", "Suárez", "77300003", "LC345678"),
+        ]:
+            test_users.append({
+                "username": f"driver{n}", "email": f"driver{n}@transcomarapa.com",
                 "role": "driver", "password": "123456",
-                "firstname": "Conductor", "lastname": "Principal",
-                "phone": "77345678", "birth_date": date(1982, 3, 10),
-                "license_number": "LC123456", "license_type": "A",
-                "license_expiry": date(2026, 12, 31), "status": "active",
-            },
-            {
-                "username": "assistant1", "email": "assistant1@transcomarapa.com",
+                "firstname": fn, "lastname": ln, "phone": ph,
+                "birth_date": date(1982, 3, 10),
+                "license_number": lc, "license_type": "A",
+                "license_expiry": date(2027, 12, 31), "status": "active",
+            })
+
+        for n, fn, ln, ph in [
+            (1, "Asistente", "Principal", "77400001"),
+            (2, "Carlos", "García", "77400002"),
+            (3, "Miguel", "Ángel", "77400003"),
+        ]:
+            test_users.append({
+                "username": f"assistant{n}", "email": f"assistant{n}@transcomarapa.com",
                 "role": "assistant", "password": "123456",
-                "firstname": "Asistente", "lastname": "Principal",
-                "phone": "77456789", "birth_date": date(1995, 7, 5),
-            },
+                "firstname": fn, "lastname": ln, "phone": ph,
+                "birth_date": date(1995, 7, 5),
+            })
+
+        test_users.extend([
             {
                 "username": "client1", "email": "client1@transcomarapa.com",
                 "role": "client", "password": "123456",
@@ -1043,13 +1069,13 @@ def create_test_users():
                 "document_id": "9753228", "address": "Av. Central 654",
                 "city": "Cochabamba", "state": "Cochabamba",
             },
-        ]
+        ])
 
         for ud in test_users:
             user = User(
                 username=ud["username"], email=ud["email"],
                 role=ud["role"],
-                hashed_password=User.get_password_hash(ud["password"]),
+                hashed_password=get_password_hash(ud["password"]),
                 is_active=True, is_admin=(ud["role"] == "admin"),
                 firstname=ud["firstname"], lastname=ud["lastname"],
             )
@@ -1083,32 +1109,36 @@ def create_test_users():
         db.commit()
         print("Usuarios de prueba creados/actualizados exitosamente!")
 
-        print("\nLista de usuarios para pruebas:")
-        print("================================")
-        for ud in test_users:
-            print(f"Rol: {ud['role']}")
-            print(f"Email: {ud['email']}")
-            print(f"Contraseña: {ud['password']}")
-            print(f"Nombre: {ud['firstname']} {ud['lastname']}")
-            if ud["role"] == "client" and "document_id" in ud:
-                print(f"CI: {ud['document_id']}")
-            print("--------------------------------")
-
-        print("\nClientes de prueba para búsqueda:")
-        print("=================================")
-        print("• Cliente Principal (CI: 12693562)")
-        print("• María González (CI: 9876543)")
-        print("• Pedro Rojas (CI: 5432109)")
-        print("• Luisa Morales (CI: 151985270) - Usado en pruebas de paquetes")
-        print("• Roberto Silva (CI: 9753228) - Usado en pruebas de paquetes")
-        print("\nSecretarios de prueba:")
-        print("======================")
-        print("• secretary1@transcomarapa.com (Secretaria Principal)")
-        print("• secretary2@transcomarapa.com (Ana García)")
-        print("• secretary3@transcomarapa.com (Carlos López)")
-        print("Contraseña para todos: 123456")
-        print("\nPuedes buscar por nombre, apellido o CI en el frontend")
-        print("\nPara registrar paquetes, usa cualquiera de los secretarios de arriba.")
+        print("\n╔══════════════════════════════════════════════════════════════╗")
+        print("║              USUARIOS DE PRUEBA — Trans Comarapa            ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  Password para TODOS: 123456                               ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  ADMIN                                                     ║")
+        print("║    admin1@transcomarapa.com                                ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  SECRETARIAS (2 por oficina)                               ║")
+        for sc in secretary_configs:
+            print(f"║    secretary{sc['n']}.{sc['slug']}@transcomarapa.com"
+                  f"  ({sc['firstname']} {sc['lastname']} — {sc['slug']})")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  CONDUCTORES                                               ║")
+        print("║    driver1@transcomarapa.com                               ║")
+        print("║    driver2@transcomarapa.com                               ║")
+        print("║    driver3@transcomarapa.com                               ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  ASISTENTES                                                ║")
+        print("║    assistant1@transcomarapa.com                            ║")
+        print("║    assistant2@transcomarapa.com                            ║")
+        print("║    assistant3@transcomarapa.com                            ║")
+        print("╠══════════════════════════════════════════════════════════════╣")
+        print("║  CLIENTES                                                  ║")
+        print("║    client1@transcomarapa.com  (CI: 12693562)               ║")
+        print("║    client2@transcomarapa.com  (CI: 9876543)                ║")
+        print("║    client3@transcomarapa.com  (CI: 5432109)                ║")
+        print("║    client4@transcomarapa.com  (CI: 151985270)              ║")
+        print("║    client5@transcomarapa.com  (CI: 9753228)                ║")
+        print("╚══════════════════════════════════════════════════════════════╝")
 
     except Exception as e:
         db.rollback()

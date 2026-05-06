@@ -5,16 +5,21 @@ import { cashRegisterService } from '@/services/cash-register.service'
 import { errMsg } from '@/lib/error-utils'
 
 interface Person { firstname?: string; lastname?: string }
-export interface PackageItem { id?: number; description?: string; quantity?: number; [k: string]: unknown }
+export interface DeliveryItem { id?: number; description?: string; quantity?: number; total_price?: number; [k: string]: unknown }
 export interface PackageData {
     id: number
+    tracking_number?: string
     payment_status?: string
+    payment_method?: string
     sender_name?: string
     receiver_name?: string
     recipient_name?: string
+    total_amount?: number
+    price?: number
+    total_items_count?: number
     sender?: Person
     recipient?: Person
-    items?: PackageItem[]
+    items?: DeliveryItem[]
     [k: string]: unknown
 }
 

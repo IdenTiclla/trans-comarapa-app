@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { ArrowRight } from 'lucide-react'
 import type { TicketDetail, TripDetail } from '@/hooks/use-ticket-detail'
 import { formatDate, formatTime } from './helpers'
+import { ROUTES } from '@/lib/routes'
 
 export function TripLogisticsCard({ ticket, trip }: { ticket: TicketDetail; trip: TripDetail | null }) {
   const origin = trip?.route?.origin_location?.name || trip?.route?.origin || '—'
@@ -47,7 +48,7 @@ export function TripLogisticsCard({ ticket, trip }: { ticket: TicketDetail; trip
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-tight text-gray-500">Viaje</p>
-              <Link to={`/trips/${trip.id}`} className="text-sm font-medium text-primary hover:underline">
+              <Link to={ROUTES.tripDetail(trip.id)} className="text-sm font-medium text-primary hover:underline">
                 #{trip.id}
               </Link>
             </div>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { getPackageDestination } from '@/lib/package-status'
 import { getDescription, isPaid, type TripPackage } from './helpers'
+import { ROUTES } from '@/lib/routes'
 
 interface Props {
   packages: TripPackage[]
@@ -41,7 +42,7 @@ export function ManifestTable({ packages, trip }: Props) {
             <tr key={pkg.id}>
               <td className="col-no">{idx + 1}</td>
               <td className="col-id">
-                <Link to={`/packages/${pkg.id}`}>{pkg.tracking_number || pkg.id}</Link>
+                <Link to={ROUTES.packageDetail(pkg.id)}>{pkg.tracking_number || pkg.id}</Link>
               </td>
               <td>{pkg.sender_name || '—'}</td>
               <td className="col-desc">{getDescription(pkg)}</td>

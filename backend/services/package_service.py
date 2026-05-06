@@ -42,7 +42,7 @@ class PackageService:
     def get_by_id(self, package_id: int) -> Package:
         pkg = self.repo.get_by_id_eager(package_id)
         if not pkg:
-            raise NotFoundException(f"Package with id {package_id} not found")
+            raise NotFoundException(f"Encomienda con id {package_id} no encontrada")
         return pkg
 
     def get_unassigned(self, skip: int = 0, limit: int = 100) -> list[Package]:
@@ -52,7 +52,7 @@ class PackageService:
         pkg = self.repo.search_by_tracking(tracking_number)
         if not pkg:
             raise NotFoundException(
-                f"Package with tracking number {tracking_number} not found"
+                f"Encomienda con número de seguimiento {tracking_number} no encontrada"
             )
         return pkg
 
@@ -408,7 +408,7 @@ class PackageService:
     def update_item(self, item_id: int, item_data: dict) -> PackageItem:
         db_item = self.repo.get_item_by_id(item_id)
         if not db_item:
-            raise NotFoundException("Package item not found")
+            raise NotFoundException("Ítem de encomienda no encontrado")
 
         for field, value in item_data.model_dump(exclude_unset=True).items():
             if value is not None:
@@ -422,12 +422,12 @@ class PackageService:
     def delete_item(self, item_id: int) -> None:
         db_item = self.repo.get_item_by_id(item_id)
         if not db_item:
-            raise NotFoundException("Package item not found")
+            raise NotFoundException("Ítem de encomienda no encontrado")
 
         count = self.repo.count_items(db_item.package_id)
         if count <= 1:
             raise ValidationException(
-                "Cannot delete the last item of a package. Delete the entire package instead."
+                "No se puede eliminar el último ítem de una encomienda. Elimine la encomienda completa."
             )
 
         self.repo.delete_item(db_item)

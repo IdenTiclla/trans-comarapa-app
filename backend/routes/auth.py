@@ -65,7 +65,7 @@ def login_for_access_token(
     if not form_data.username or not form_data.password:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Username and password are required",
+            detail="Nombre de usuario y contraseña son obligatorios",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -163,7 +163,7 @@ def get_current_user_person(
     if not entity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No person is associated with the current user (role: {current_user.role})"
+            detail=f"No hay persona asociada al usuario actual (rol: {current_user.role})"
         )
     
     role_str = str(current_user.role.value) if hasattr(current_user.role, 'value') else str(current_user.role)
@@ -204,14 +204,14 @@ def get_current_user_secretary(
     if current_user.role != "secretary" and getattr(current_user.role, 'value', None) != "secretary":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is not a secretary"
+            detail="El usuario no es una secretaria"
         )
     
     entity = service.get_user_person_info(current_user)
     if not entity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No secretary is associated with the current user"
+            detail="No hay secretaria asociada al usuario actual"
         )
     return entity
 
@@ -221,11 +221,11 @@ def get_current_user_driver(
     service: AuthService = Depends(get_service)
 ):
     if current_user.role != "driver" and getattr(current_user.role, 'value', None) != "driver":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a driver")
-        
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El usuario no es un conductor")
+         
     entity = service.get_user_person_info(current_user)
     if not entity:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No driver is associated with the current user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No hay conductor asociado al usuario actual")
         
     return {
         "id": entity.id,
@@ -243,11 +243,11 @@ def get_current_user_assistant(
     service: AuthService = Depends(get_service)
 ):
     if current_user.role != "assistant" and getattr(current_user.role, 'value', None) != "assistant":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not an assistant")
-        
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El usuario no es un ayudante")
+         
     entity = service.get_user_person_info(current_user)
     if not entity:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No assistant is associated with the current user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No hay ayudante asociado al usuario actual")
         
     return {
         "id": entity.id,
@@ -263,11 +263,11 @@ def get_current_user_client(
     service: AuthService = Depends(get_service)
 ):
     if current_user.role != "client" and getattr(current_user.role, 'value', None) != "client":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a client")
-        
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El usuario no es un cliente")
+         
     entity = service.get_user_person_info(current_user)
     if not entity:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No client is associated with the current user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No hay cliente asociado al usuario actual")
         
     return {
         "id": entity.id,
@@ -286,11 +286,11 @@ def get_current_user_administrator(
     service: AuthService = Depends(get_service)
 ):
     if current_user.role != "admin" and getattr(current_user.role, 'value', None) != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not an administrator")
-        
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="El usuario no es un administrador")
+         
     entity = service.get_user_person_info(current_user)
     if not entity:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No administrator is associated with the current user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No hay administrador asociado al usuario actual")
         
     return {
         "id": entity.id,

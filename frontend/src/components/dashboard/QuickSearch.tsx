@@ -6,6 +6,7 @@ import { CategoryPicker } from './quick-search/CategoryPicker'
 import { SearchResultsView } from './quick-search/SearchResultsView'
 import { useQuickSearch } from './quick-search/use-quick-search'
 import { COMPANY } from '@/lib/company-config'
+import { ROUTES } from '@/lib/routes'
 
 export default function QuickSearch() {
   const {
@@ -76,7 +77,7 @@ export default function QuickSearch() {
         onClose={handleDetailClose}
         onEdit={() => {
           handleDetailClose()
-          navigate(`/clients/${selectedItem?.id}/edit`)
+          navigate(ROUTES.clientEdit(selectedItem?.id ?? ''))
         }}
       />
     </>

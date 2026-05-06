@@ -15,6 +15,7 @@ import { QuickActions } from './packages-index/QuickActions'
 import { PackageFilters } from './packages-index/PackageFilters'
 import { Pagination } from './packages-index/Pagination'
 import { filterPackages, computeStats } from './packages-index/helpers'
+import { ROUTES } from '@/lib/routes'
 
 const ITEMS_PER_PAGE = 12
 
@@ -76,7 +77,7 @@ export function Component() {
         setCurrentPage(1)
         break
       case 'reports':
-        navigate('/reports/packages')
+        navigate(ROUTES.REPORT_PACKAGES)
         break
     }
   }
@@ -173,8 +174,8 @@ export function Component() {
           packages={paginatedPackages}
           isLoading={loading}
           viewMode={viewMode}
-          onViewPackage={(id) => navigate(`/packages/${id}`)}
-          onEditPackage={(id) => navigate(`/packages/${id}/edit`)}
+          onViewPackage={(id) => navigate(ROUTES.packageDetail(id))}
+          onEditPackage={(id) => navigate(ROUTES.packageEdit(id))}
           onDeletePackage={confirmDeletePackage}
           onDeliverPackage={handleDeliverPackage}
         />

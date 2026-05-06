@@ -15,10 +15,10 @@ export function RouteDetails({ originName, destinationName }: Props) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-bold text-[#16499B] uppercase tracking-widest">Oficina de Origen</span>
+          <span className="text-[10px] font-bold text-brand-blue uppercase tracking-widest">Oficina de Origen</span>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <Box className="w-5 h-5 text-[#16499B]" />
+              <Box className="w-5 h-5 text-brand-blue" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 leading-tight">{originName}</h3>
@@ -27,10 +27,10 @@ export function RouteDetails({ originName, destinationName }: Props) {
         </div>
 
         <div className="flex flex-col gap-2 text-right md:text-left md:items-start md:pl-12">
-          <span className="text-[10px] font-bold text-[#932720] uppercase tracking-widest">Oficina de Destino</span>
+          <span className="text-[10px] font-bold text-brand-crimson uppercase tracking-widest">Oficina de Destino</span>
           <div className="flex items-start gap-3 flex-row-reverse md:flex-row">
             <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-              <Archive className="w-5 h-5 text-[#932720]" />
+              <Archive className="w-5 h-5 text-brand-crimson" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 leading-tight">{destinationName}</h3>

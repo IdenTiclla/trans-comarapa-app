@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { login, clearError, selectAuthLoading, selectAuthError } from '@/store/auth.slice'
 import { DASHBOARD_PATHS, type Role } from '@/lib/constants'
+import { ROUTES } from '@/lib/routes'
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -68,7 +69,7 @@ export function Component() {
 
     try {
       const result = await dispatch(login({ email, password })).unwrap()
-      const dashboardPath = DASHBOARD_PATHS[result.role as Role] ?? '/dashboards/dashboard-secretary'
+      const dashboardPath = DASHBOARD_PATHS[result.role as Role] ?? ROUTES.DASHBOARDS.SECRETARY
       navigate(dashboardPath)
     } catch {
       // Error is handled by the slice

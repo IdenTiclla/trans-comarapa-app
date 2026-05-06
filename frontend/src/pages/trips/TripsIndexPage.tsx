@@ -11,6 +11,7 @@ import { Calendar, AlertCircle, RefreshCw, Printer, ChevronDown } from 'lucide-r
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { CalendarView } from '@/components/ui/calendar-view'
 import { LOCALE } from '@/lib/locale-config'
+import { ROUTES } from '@/lib/routes'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -223,8 +224,8 @@ export function Component() {
         scheduleBoard={scheduleBoard}
         loading={isLoading}
         selectedDate={selectedDate}
-        onViewTrip={(id) => navigate(`/trips/${id}`)}
-        onSellTicket={(id) => navigate(`/trips/${id}`)}
+        onViewTrip={(id) => navigate(ROUTES.tripDetail(id))}
+        onSellTicket={(id) => navigate(ROUTES.tripDetail(id))}
         onCreateTrip={({ routeId, date, time }) => {
           const routeGroup = scheduleBoard.find((g) => g.route.id === routeId)
           const routeLabel = routeGroup ? `${routeGroup.route.origin} → ${routeGroup.route.destination}` : ''
@@ -256,7 +257,7 @@ export function Component() {
             </Button>
             <Button
               size="sm"
-              className="gap-1.5 h-8 bg-[#7c2d12] hover:bg-[#9a3412]"
+              className="gap-1.5 h-8 bg-orange-900 hover:bg-orange-800"
               onClick={() => loadData(selectedDate)}
             >
               <RefreshCw className="h-3.5 w-3.5" />

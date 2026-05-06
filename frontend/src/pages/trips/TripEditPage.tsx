@@ -9,6 +9,7 @@ import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import { Button } from '@/components/ui/button'
+import { ROUTES } from '@/lib/routes'
 
 const STATUS_OPTIONS = [
   { value: 'scheduled', label: 'Programado' },
@@ -127,7 +128,7 @@ export function Component() {
       }
       const result = await dispatch(updateTrip({ id: tripId, data: payload }))
       if (result.meta.requestStatus === 'fulfilled') {
-        navigate(`/trips/${tripId}`)
+        navigate(ROUTES.tripDetail(tripId))
       } else {
         setPageError('No se pudieron guardar los cambios.')
       }

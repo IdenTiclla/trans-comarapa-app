@@ -16,7 +16,7 @@
 make setup          # Complete setup + seed DB
 ```
 
-**Test Users:** `[role]1@transcomarapa.com` / `123456` (admin, secretary, client)
+**Test Users:** `{role}@transcomarapa.com` / `123456` — admin1, secretary{1,2}.{santacruz|comarapa|losnegros|sanisidro}, driver{1-3}, assistant{1-3}, client{1-5}
 
 ## Essential Commands
 
@@ -73,6 +73,8 @@ npx tsc --noEmit  # must pass
 - `004`: Check `package.json` for routing package before importing — use `'react-router'` not `'react-router-dom'`
 - `005`: Never use `any` in React/TS — type API shapes with domain interfaces + `[key: string]: unknown` escape hatch; narrow errors with `err instanceof Error ? err.message : fallback`
 - `006`: Use `navigate(-1)` in modal onClose callbacks instead of hardcoded routes — pages can be reached from multiple locations
+- `007`: Never put business logic in routes or models — follow Route → Service → Repository pattern; use `core/security.py` for password hashing, not the User model
+- `008`: Never compare timestamps against `datetime.now()` to check entity status — always use the `status` field and state machine `validate_transition()`
 
 ## Key Resources
 

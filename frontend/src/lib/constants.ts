@@ -8,12 +8,14 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
 
+import { ROUTES } from '@/lib/routes'
+
 export const DASHBOARD_PATHS: Record<Role, string> = {
-  [ROLES.ADMIN]: '/dashboards/dashboard-admin',
-  [ROLES.SECRETARY]: '/dashboards/dashboard-secretary',
-  [ROLES.DRIVER]: '/dashboards/dashboard-driver',
-  [ROLES.ASSISTANT]: '/dashboards/dashboard-assistant',
-  [ROLES.CLIENT]: '/dashboards/dashboard-client',
+  [ROLES.ADMIN]: ROUTES.DASHBOARDS.ADMIN,
+  [ROLES.SECRETARY]: ROUTES.DASHBOARDS.SECRETARY,
+  [ROLES.DRIVER]: ROUTES.DASHBOARDS.DRIVER,
+  [ROLES.ASSISTANT]: ROUTES.DASHBOARDS.ASSISTANT,
+  [ROLES.CLIENT]: ROUTES.DASHBOARDS.CLIENT,
 }
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'

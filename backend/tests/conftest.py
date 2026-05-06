@@ -19,6 +19,7 @@ from db.session import get_db
 from main import app
 from auth.jwt import create_access_token
 from models.user import User, UserRole
+from core.security import get_password_hash
 
 # Configuración de la base de datos de prueba
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/trans_comarapa_test")
@@ -82,7 +83,7 @@ def test_user(db_session):
     user = User(
         username="testuser",
         email="test@example.com",
-        hashed_password=User.get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"),
         role=UserRole.USER,
         is_active=True,
         is_admin=False,
@@ -110,7 +111,7 @@ def test_admin(db_session):
     admin = User(
         username="testadmin",
         email="admin@example.com",
-        hashed_password=User.get_password_hash("admin123"),
+        hashed_password=get_password_hash("admin123"),
         role=UserRole.ADMIN,
         is_active=True,
         is_admin=True,

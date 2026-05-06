@@ -75,7 +75,7 @@ def record_transaction(
 ):
     """Manually record a transaction (withdrawal, adjustment, etc) for a register."""
     if data.cash_register_id != register_id:
-        raise HTTPException(status_code=400, detail="Path ID and Body ID mismatch")
+        raise HTTPException(status_code=400, detail="El ID de la ruta y el ID del cuerpo no coinciden")
     return service.record_transaction(data)
 
 
@@ -128,7 +128,7 @@ def get_register_history(
     if current_user.role.value == "secretary":
         secretary_office_id = current_user.secretary.office_id if current_user.secretary else None
         if office_id and office_id != secretary_office_id:
-            raise HTTPException(status_code=403, detail="Cannot access other offices")
+            raise HTTPException(status_code=403, detail="No puede acceder a otras oficinas")
         office_id = secretary_office_id
 
     return service.get_register_history(office_id, date_from, date_to)

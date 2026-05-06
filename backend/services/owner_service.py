@@ -6,6 +6,7 @@ from repositories.owner_repository import OwnerRepository
 from repositories.user_repository import UserRepository
 from schemas.owner import OwnerCreate, OwnerUpdate
 from core.exceptions import NotFoundException, ConflictException
+from core.security import get_password_hash
 from core.config import settings
 import time
 
@@ -33,7 +34,7 @@ class OwnerService:
         if self.user_repo.get_by_email(email):
             email = f"2_{email}"
             
-        hashed_password = User.get_password_hash(settings.DEFAULT_OWNER_PASSWORD)
+        hashed_password = get_password_hash(settings.DEFAULT_OWNER_PASSWORD)
         
         db_user = User(
             username=username,

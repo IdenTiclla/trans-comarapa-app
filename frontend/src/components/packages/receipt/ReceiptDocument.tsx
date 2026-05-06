@@ -42,8 +42,8 @@ export function ReceiptDocument({
         <div className="text-xs text-blue-700 mb-6 font-medium leading-relaxed">
           <p>📍 <strong>Of. {OFFICES.santa_cruz.name}:</strong> {OFFICES.santa_cruz.address} • <strong>Cel.:</strong> {OFFICES.santa_cruz.phone}</p>
           <p>📍 <strong>Of. {OFFICES.comarapa.name}:</strong> {OFFICES.comarapa.address} • <strong>Cel.:</strong> {OFFICES.comarapa.phone}</p>
-          <p>📍 <strong>Of. {OFFICES.san_isidro.name}:</strong> <strong>Cel.:</strong> {OFFICES.san_isidro.phone}</p>
-          <p>📍 <strong>Of. {OFFICES.los_negros.name}:</strong> <strong>Cel.:</strong> {OFFICES.los_negros.phone}</p>
+          <p>📍 <strong>Of. {OFFICES.san_isidro.name}:</strong> {OFFICES.san_isidro.address} • <strong>Cel.:</strong> {OFFICES.san_isidro.phone}</p>
+          <p>📍 <strong>Of. {OFFICES.los_negros.name}:</strong> {OFFICES.los_negros.address} • <strong>Cel.:</strong> {OFFICES.los_negros.phone}</p>
         </div>
 
         <div className="space-y-1 mb-4 text-sm">

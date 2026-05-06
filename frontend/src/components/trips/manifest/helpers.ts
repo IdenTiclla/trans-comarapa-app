@@ -1,7 +1,5 @@
-export interface PackageItem {
-  quantity: number
-  description: string
-}
+import type { PackageItem } from '@/types'
+import { LOCALE } from '@/lib/locale-config'
 
 export interface TripPackage {
   id: number
@@ -14,8 +12,6 @@ export interface TripPackage {
   payment_status?: string
   total_amount?: string | number
 }
-
-import { LOCALE } from '@/lib/locale-config'
 
 export function formatDate(dateString: string) {
   if (!dateString) return ''

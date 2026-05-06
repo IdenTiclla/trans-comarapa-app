@@ -86,7 +86,7 @@ export default function PackageStakeholders({ sender, recipient, secretary, send
         name={finalSenderName}
         subtitle="Cliente Origen"
         icon={<User />}
-        colorClass="text-[#16499B]"
+        colorClass="text-brand-blue"
         bgColorClass="bg-blue-50"
         details={[
           { label: 'C.I.', value: sender?.document_id || 'N/A' },
@@ -99,7 +99,7 @@ export default function PackageStakeholders({ sender, recipient, secretary, send
         name={finalRecipientName}
         subtitle="Cliente Destino"
         icon={<UserCheck />}
-        colorClass="text-[#932720]"
+        colorClass="text-brand-crimson"
         bgColorClass="bg-red-50"
         details={[
           { label: 'C.I.', value: recipient?.document_id || 'N/A' },

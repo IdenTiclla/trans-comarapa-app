@@ -32,7 +32,7 @@ export const deleteTrip = createAsyncThunk('trip/delete', async (id: number, { r
 const tripSlice = createSlice({
     name: 'trip',
     initialState,
-    reducers: { clearCurrentTrip(state) { state.currentTrip = null } },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchTrips.pending, (s) => { s.isLoading = true; s.error = null })
@@ -53,10 +53,8 @@ const tripSlice = createSlice({
     },
 })
 
-export const { clearCurrentTrip } = tripSlice.actions
 export const selectTrips = (state: RootState) => state.trip.trips
 export const selectCurrentTrip = (state: RootState) => state.trip.currentTrip
 export const selectTripLoading = (state: RootState) => state.trip.isLoading
 export const selectTripError = (state: RootState) => state.trip.error
-export const selectTripTotal = (state: RootState) => state.trip.totalItems
 export default tripSlice.reducer

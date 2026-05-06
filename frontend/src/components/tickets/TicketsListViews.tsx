@@ -8,6 +8,7 @@ import {
   getStatusText,
   getStatusBadgeClass,
 } from './tickets-helpers'
+import { ROUTES } from '@/lib/routes'
 
 interface ViewProps {
   tickets: Ticket[]
@@ -52,7 +53,7 @@ export function TicketsTableView({ tickets, getClientName, getTripInfo, onEdit, 
               </TableCell>
               <TableCell className="text-sm font-medium">{formatCurrency(t.price)}</TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/tickets/${t.id}`)}>
+                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.ticketDetail(t.id))}>
                   Ver
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => onEdit(t)} className="text-indigo-600 hover:text-indigo-900">
@@ -95,7 +96,7 @@ export function TicketsCardGridView({ tickets, getClientName, getTripInfo, onEdi
             <span className="font-bold text-gray-900">{formatCurrency(t.price)}</span>
           </div>
           <div className="mt-3 flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => navigate(`/tickets/${t.id}`)} className="flex-1">
+            <Button variant="secondary" size="sm" onClick={() => navigate(ROUTES.ticketDetail(t.id))} className="flex-1">
               Ver
             </Button>
             <Button variant="secondary" size="sm" onClick={() => onEdit(t)} className="flex-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100">

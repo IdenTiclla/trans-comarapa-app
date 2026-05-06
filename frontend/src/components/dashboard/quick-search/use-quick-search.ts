@@ -7,6 +7,7 @@ import { errMsg } from '@/lib/error-utils'
 import { packageService } from '@/services/package.service'
 import { PACKAGE_STATUS_LABELS } from '@/lib/package-constants'
 import { TIMING } from '@/lib/timing'
+import { ROUTES } from '@/lib/routes'
 import type { CategoryId, SearchResult, ViewMode } from './types'
 
 export function useQuickSearch() {
@@ -147,12 +148,12 @@ export function useQuickSearch() {
     }
     if (item.category === 'trip') {
       setOpen(false)
-      navigate(`/trips/${item.id}`)
+      navigate(ROUTES.tripDetail(item.id))
       return
     }
     if (item.category === 'ticket') {
       setOpen(false)
-      navigate(`/tickets/${item.id}`)
+      navigate(ROUTES.ticketDetail(item.id))
       return
     }
     if (item.category === 'package') {

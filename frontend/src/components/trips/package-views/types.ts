@@ -1,4 +1,4 @@
-export interface PackageItem {
+export interface TripPackageItem {
   id: number
   quantity: number
   description: string
@@ -14,7 +14,7 @@ export interface TripPackage {
   recipient_name?: string
   total_amount?: number
   total_items_count?: number
-  items?: PackageItem[]
+  items?: TripPackageItem[]
   origin_office_name?: string
   destination_office_name?: string
 }

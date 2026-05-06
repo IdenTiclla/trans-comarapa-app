@@ -16,6 +16,7 @@ import { StateHistoryTable } from '@/components/packages/detail/StateHistoryTabl
 import { PaymentSummary } from '@/components/packages/detail/PaymentSummary'
 import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
 import { MapOverview } from '@/components/packages/detail/MapOverview'
+import { ROUTES } from '@/lib/routes'
 
 export function Component() {
   const { id } = useParams()
@@ -67,11 +68,11 @@ export function Component() {
   const getHistoryDate = makeGetHistoryDate(currentPackage)
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-full mx-auto px-4 lg:px-12 py-8">
         <PackageHeader
           pkg={currentPackage}
-          onEdit={() => navigate(`/packages/${currentPackage.id}/edit`)}
+          onEdit={() => navigate(ROUTES.packageEdit(currentPackage.id))}
           onShowReceipt={() => setShowReceiptModal(true)}
           onMarkReceived={() => setShowReceptionModal(true)}
           onDeliver={() => setShowDeliveryModal(true)}

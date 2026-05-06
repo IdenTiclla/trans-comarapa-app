@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { LOCALE } from '@/lib/locale-config'
+import { ROUTES } from '@/lib/routes'
 
 // Note: For editing sender/recipient details, we might need to recreate the ClientSelector component logic
 // For simplicity in this edit form, we might just edit the basic fields, since sender/receiver 
@@ -84,7 +85,7 @@ export function Component() {
       if (payload.trip_id === '') payload.trip_id = null
 
       await dispatch(updatePackage({ id: Number(id), data: payload })).unwrap()
-      navigate(`/packages/${id}`)
+      navigate(ROUTES.packageDetail(id ?? ''))
     } catch {
       // update failed - error handled by UI state
     }

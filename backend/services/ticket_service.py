@@ -174,11 +174,16 @@ class TicketService:
             old_state = db_ticket.state
 
         trip = self.repo.get_trip_by_id(db_ticket.trip_id)
-        if trip and trip.trip_datetime < datetime.now():
+        DEPARTED_STATUSES = {"departed", "in_progress", "arrived"}
+        if trip and getattr(trip, "status", None) in DEPARTED_STATUSES:
             if data.state and data.state.lower() not in ["completed", "cancelled"]:
                 raise ValidationException(
                     "Trip has already departed. Ticket state can only be updated to 'completed' or 'cancelled'"
                 )
+
+        if data.state and data.state.lower() != db_ticket.state:
+            from core.state_machines import TICKET_TRANSITIONS, validate_transition
+            validate_transition("ticket", TICKET_TRANSITIONS, db_ticket.state, data.state.lower())
 
         if data.seat_id and data.seat_id != db_ticket.seat_id:
             seat = self.repo.get_seat_by_id(data.seat_id)

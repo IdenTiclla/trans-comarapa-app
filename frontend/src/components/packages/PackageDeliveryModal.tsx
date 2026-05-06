@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { usePackageDeliveryModal, type PackageData, type PackageItem } from './use-package-delivery'
+import { usePackageDeliveryModal, type PackageData, type DeliveryItem } from './use-package-delivery'
 import { Check, X, CreditCard, CheckCircle, Banknote, QrCode, AlertTriangle, Wallet, AlertCircle, Loader2 } from 'lucide-react'
+import { ROUTES } from '@/lib/routes'
 
 interface PackageDeliveryModalProps {
     show: boolean
@@ -91,7 +92,7 @@ export default function PackageDeliveryModal({
                                     <div className="bg-white rounded border border-gray-100 p-2 max-h-32 overflow-y-auto overflow-x-hidden">
                                         {packageData.items && packageData.items.length > 0 ? (
                                             <ul className="space-y-1">
-                                                {packageData.items.map((item: PackageItem) => (
+                                                {packageData.items.map((item: DeliveryItem) => (
                                                     <li key={item.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                                                         <span className="flex items-start min-w-0 pr-4">
                                                             <span className="font-bold text-gray-700 mr-2 flex-shrink-0">{item.quantity}x</span>
@@ -192,7 +193,7 @@ export default function PackageDeliveryModal({
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => navigate('/admin/cash-register')}
+                                                    onClick={() => navigate(ROUTES.ADMIN.CASH_REGISTER)}
                                                     className="mt-3 border-red-300 text-red-700 hover:bg-red-50 gap-1.5"
                                                 >
                                                     <Wallet className="h-4 w-4" />

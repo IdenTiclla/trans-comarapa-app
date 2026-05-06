@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { StatusDot } from './StatusDot'
 import { PackageActions } from './PackageActions'
 import type { PackageViewProps } from './types'
+import { ROUTES } from '@/lib/routes'
 
 export function PackageListView({
   packages,
@@ -28,7 +29,7 @@ export function PackageListView({
       {packages.map((pkg) => (
         <Link
           key={pkg.id}
-          to={`/packages/${pkg.id}`}
+          to={ROUTES.packageDetail(pkg.id)}
           className="group block rounded-lg border border-border hover:border-primary/30 bg-card hover:bg-muted/20 transition-all duration-150"
         >
           <div className="px-4 py-3.5">

@@ -10,6 +10,7 @@ import { tripService } from '@/services/trip.service'
 import { seatService } from '@/services/seat.service'
 import { toast } from 'sonner'
 import { ApiError } from '@/lib/api'
+import { ROUTES } from '@/lib/routes'
 import {
   type Ticket,
   type Client,
@@ -299,7 +300,7 @@ export function useTicketsIndexPage() {
       payment_method: '',
     })
     if (searchParams.get('trip_id'))
-      navigate(`/trips/${searchParams.get('trip_id')}`)
+      navigate(ROUTES.tripDetail(searchParams.get('trip_id') ?? ''))
   }
 
   const submitTicketForm = async (e: FormEvent) => {

@@ -149,7 +149,7 @@ async def seat_lock_websocket(ws: WebSocket, trip_id: int):
         try:
             credentials_exception = HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
+                detail="Token inválido",
             )
             token_data = verify_token(token, credentials_exception)
             db = SessionLocal()

@@ -11,6 +11,7 @@ from core.exceptions import (
     ValidationException,
 )
 from models.user import User, UserRole
+from core.security import get_password_hash, verify_password
 from models.secretary import Secretary
 from models.driver import Driver
 from models.assistant import Assistant
@@ -30,7 +31,7 @@ class AuthService:
 
     def authenticate_user(self, email: str, password: str) -> User:
         user = self.repo.get_by_email(email)
-        if not user or user.email != email or not User.verify_password(password, getattr(user, "hashed_password", "")) or not user.is_active:
+        if not user or user.email != email or not verify_password(password, getattr(user, "hashed_password", "")) or not user.is_active:
             raise UnauthorizedException("Incorrect email or password")
         return user
 
@@ -63,7 +64,7 @@ class AuthService:
         user = User(
             username=user_data["username"],
             email=user_data["email"],
-            hashed_password=User.get_password_hash(user_data["password"]),
+            hashed_password=get_password_hash(user_data["password"]),
             role=user_data.get("role", UserRole.USER),
             firstname=user_data.get("firstname", ""),
             lastname=user_data.get("lastname", ""),
@@ -164,7 +165,7 @@ class AuthService:
             user.username = update_data["username"]
                 
         if update_data.get("password"):
-            user.hashed_password = User.get_password_hash(update_data["password"])
+            user.hashed_password = get_password_hash(update_data["password"])
             
         self.db.commit()
         self.db.refresh(user)

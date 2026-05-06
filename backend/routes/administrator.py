@@ -1,31 +1,32 @@
-"""
-Administrator routes — thin adapter layer. Creation logic lives in PersonService.
-"""
-
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from db.session import get_db
-from models.administrator import Administrator as AdministratorModel
-from models.user import User as UserModel
+from models.user import User
 from schemas.administrator import Administrator as AdministratorSchema
 from schemas.administrator_with_user import AdministratorWithUser, AdministratorWithUserResponse
 from auth.jwt import get_current_admin_user
+from services.administrator_service import AdministratorService
 from services.person_service import PersonService
+from models.administrator import Administrator as AdministratorModel
 
 router = APIRouter(tags=["Administrators"])
 
 
-def get_service(db: Session = Depends(get_db)) -> PersonService:
+def get_admin_service(db: Session = Depends(get_db)) -> AdministratorService:
+    return AdministratorService(db)
+
+
+def get_person_service(db: Session = Depends(get_db)) -> PersonService:
     return PersonService(db)
 
 
 @router.post("", response_model=AdministratorWithUserResponse, status_code=status.HTTP_201_CREATED)
 async def create_administrator_with_user(
     administrator_data: AdministratorWithUser,
-    service: PersonService = Depends(get_service),
+    service: PersonService = Depends(get_person_service),
 ):
     person_data = {
         "firstname": administrator_data.firstname,
@@ -61,17 +62,17 @@ async def create_administrator_with_user(
 
 
 @router.get("", response_model=List[AdministratorSchema])
-async def get_administrators(db: Session = Depends(get_db), _: UserModel = Depends(get_current_admin_user)):
-    return db.query(AdministratorModel).all()
+async def get_administrators(
+    service: AdministratorService = Depends(get_admin_service),
+    _: User = Depends(get_current_admin_user),
+):
+    return service.get_all()
 
 
 @router.get("/{administrator_id}", response_model=AdministratorSchema)
 async def get_administrator(
     administrator_id: int,
-    db: Session = Depends(get_db),
-    _: UserModel = Depends(get_current_admin_user),
+    service: AdministratorService = Depends(get_admin_service),
+    _: User = Depends(get_current_admin_user),
 ):
-    administrator = db.query(AdministratorModel).filter(AdministratorModel.id == administrator_id).first()
-    if not administrator:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Administrator with ID {administrator_id} not found")
-    return administrator
+    return service.get_by_id(administrator_id)

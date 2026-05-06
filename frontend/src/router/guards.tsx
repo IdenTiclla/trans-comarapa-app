@@ -2,13 +2,14 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAppSelector } from '@/store'
 import { selectIsAuthenticated, selectUser } from '@/store/auth.slice'
 import { DASHBOARD_PATHS, type Role } from '@/lib/constants'
+import { ROUTES } from '@/lib/routes'
 
 export function ProtectedRoute() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const location = useLocation()
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />
   }
 
   return <Outlet />
@@ -18,7 +19,7 @@ export function RoleGuard({ roles, children }: { roles: string[]; children: Reac
   const user = useAppSelector(selectUser)
 
   if (!user || !roles.includes(user.role)) {
-    const dashboardPath = DASHBOARD_PATHS[(user?.role as Role) ?? ''] ?? '/dashboards/dashboard-secretary'
+    const dashboardPath = DASHBOARD_PATHS[(user?.role as Role) ?? ''] ?? ROUTES.DASHBOARDS.SECRETARY
     return <Navigate to={dashboardPath} replace />
   }
 
@@ -29,7 +30,7 @@ export function RoleGuardOutlet({ roles }: { roles: string[] }) {
   const user = useAppSelector(selectUser)
 
   if (!user || !roles.includes(user.role)) {
-    const dashboardPath = DASHBOARD_PATHS[(user?.role as Role) ?? ''] ?? '/dashboards/dashboard-secretary'
+    const dashboardPath = DASHBOARD_PATHS[(user?.role as Role) ?? ''] ?? ROUTES.DASHBOARDS.SECRETARY
     return <Navigate to={dashboardPath} replace />
   }
 
@@ -41,7 +42,7 @@ export function RedirectIfAuthenticated() {
   const user = useAppSelector(selectUser)
 
   if (isAuthenticated && user) {
-    const dashboardPath = DASHBOARD_PATHS[(user.role as Role)] ?? '/dashboards/dashboard-secretary'
+    const dashboardPath = DASHBOARD_PATHS[(user.role as Role)] ?? ROUTES.DASHBOARDS.SECRETARY
     return <Navigate to={dashboardPath} replace />
   }
 

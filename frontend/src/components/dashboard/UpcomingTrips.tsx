@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useUpcomingTrips } from './use-upcoming-trips'
 import { LOCALE } from '@/lib/locale-config'
+import { ROUTES } from '@/lib/routes'
 
 function formatDateTime(dateStr: string) {
   return new Intl.DateTimeFormat(LOCALE, {
@@ -37,7 +38,7 @@ export default function UpcomingTrips() {
           // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
           <div
             key={trip.id}
-            onClick={() => navigate(`/trips/${trip.id}`)}
+            onClick={() => navigate(ROUTES.tripDetail(trip.id))}
             className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors border border-gray-200 hover:border-blue-200"
           >
             <div className="flex-1 min-w-0">

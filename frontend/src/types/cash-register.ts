@@ -30,10 +30,6 @@ export interface CashRegister {
   updated_at: string;
 }
 
-export interface CashRegisterWithTransactions extends CashRegister {
-  transactions: CashTransaction[];
-}
-
 export interface DailySummary {
   office_id: number;
   date: string;

@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { CashRegister, DailySummary } from '@/types/cash-register'
+import { ROUTES } from '@/lib/routes'
 
 interface Props {
   loading: boolean
@@ -40,7 +41,7 @@ export function CashRegisterWidget({ loading, cashRegister, dailySummary, onNavi
                 <span className="font-bold text-emerald-700">{(dailySummary?.expected_balance ?? cashRegister.initial_balance).toFixed(2)} Bs</span>
               </div>
             </div>
-            <Button variant="link" size="sm" onClick={() => onNavigate('/admin/cash-register')} className="w-full mt-2">
+            <Button variant="link" size="sm" onClick={() => onNavigate(ROUTES.ADMIN.CASH_REGISTER)} className="w-full mt-2">
               Ver detalles →
             </Button>
           </div>
@@ -51,7 +52,7 @@ export function CashRegisterWidget({ loading, cashRegister, dailySummary, onNavi
               <span className="text-sm font-semibold text-red-700">Caja Cerrada</span>
             </div>
             <p className="text-sm text-gray-600">No hay una caja abierta para tu oficina.</p>
-            <Button onClick={() => onNavigate('/admin/cash-register')} className="w-full">
+            <Button onClick={() => onNavigate(ROUTES.ADMIN.CASH_REGISTER)} className="w-full">
               Abrir Caja
             </Button>
           </div>

@@ -3,6 +3,7 @@ import FormSelect from '@/components/forms/FormSelect'
 import FormDatePicker from '@/components/forms/FormDatePicker'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router'
+import { ROUTES } from '@/lib/routes'
 
 interface Props {
   searchQuery: string
@@ -50,7 +51,7 @@ export function TicketsFilters(props: Props) {
             Filtros Avanzados {activeFiltersCount > 0 && `(${activeFiltersCount})`}
           </Button>
         </div>
-        <Button onClick={() => navigate('/trips')} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => navigate(ROUTES.TRIPS)} className="bg-indigo-600 hover:bg-indigo-700">
           Vender Boleto
         </Button>
       </div>

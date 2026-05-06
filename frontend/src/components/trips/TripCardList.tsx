@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/common'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarClock, Plus, Settings, User, Users } from 'lucide-react'
+import { ROUTES } from '@/lib/routes'
 
 interface SlotRoute {
     id: number
@@ -103,7 +104,7 @@ function TripRow({
         : "border-2 border-dashed border-blue-200 rounded-lg px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
 
     const timeClasses = trip
-        ? "text-2xl font-bold text-[#1a365d]"
+        ? "text-2xl font-bold text-brand-navy"
         : "text-2xl font-bold text-muted-foreground/30"
 
     const dividerClasses = trip ? "bg-border" : isPast ? "bg-muted" : "bg-blue-100"
@@ -174,7 +175,7 @@ function TripRow({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-[11px] font-bold text-[#1a365d] h-8 w-full border-[#1a365d]/20 hover:bg-[#1a365d]/5"
+                                className="text-[11px] font-bold text-brand-navy h-8 w-full border-brand-navy/20 hover:bg-brand-navy/5"
                                 onClick={(e) => { e.stopPropagation(); onViewTrip?.(tripId!) }}
                             >
                                 Ver
@@ -185,7 +186,7 @@ function TripRow({
                                 size="sm"
                                 disabled={isSoldOut}
                                 className={`text-[11px] font-bold uppercase h-8 w-full ${
-                                    isSoldOut ? '' : 'bg-[#1a365d] hover:bg-[#2a4a7f]'
+                                    isSoldOut ? '' : 'bg-brand-navy hover:bg-brand-navy-light'
                                 }`}
                                 onClick={(e) => { e.stopPropagation(); onSellTicket?.(tripId!) }}
                             >
@@ -267,7 +268,7 @@ export default function TripCardList({
                 description="No se encontraron rutas con horarios activos. Configure horarios desde la administración de rutas."
                 icon={<CalendarClock className="h-10 w-10 text-muted-foreground" />}
                 action={
-                    <Button onClick={() => navigate('/admin/routes')} className="gap-2">
+                    <Button onClick={() => navigate(ROUTES.ADMIN.ROUTES)} className="gap-2">
                         <Settings className="h-4 w-4" />
                         Configurar Rutas
                     </Button>
@@ -288,7 +289,7 @@ export default function TripCardList({
                             </h2>
                             <p className="text-xs text-muted-foreground">Salidas desde {group.route.origin}</p>
                         </div>
-                        <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider border-[#1a365d] text-[#1a365d]">
+                        <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider border-brand-navy text-brand-navy">
                             {group.slots.length} Horarios
                         </Badge>
                     </div>

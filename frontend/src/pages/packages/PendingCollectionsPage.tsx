@@ -3,6 +3,7 @@ import { useAppSelector } from '@/store'
 import PendingCollections from '@/components/packages/PendingCollections'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { ROUTES } from '@/lib/routes'
 
 export function Component() {
     const navigate = useNavigate()
@@ -11,7 +12,7 @@ export function Component() {
     return (
         <div className="w-full space-y-6">
             <div className="flex items-center justify-end">
-                <Button variant="outline" onClick={() => navigate('/packages')}>
+                <Button variant="outline" onClick={() => navigate(ROUTES.PACKAGES)}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Ver todas las encomiendas
                 </Button>

@@ -43,13 +43,3 @@ export interface Trip {
   destination_name?: string
   [key: string]: unknown
 }
-
-export interface TripQueryParams {
-  origin_id?: number
-  destination_id?: number
-  date?: string
-  status?: string
-  page?: number
-  per_page?: number
-  [key: string]: unknown
-}

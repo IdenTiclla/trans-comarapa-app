@@ -38,7 +38,7 @@ export const deleteRoute = createAsyncThunk('route/delete', async (id: number, {
 const routeSlice = createSlice({
     name: 'route',
     initialState,
-    reducers: { clearCurrentRoute(state) { state.currentRoute = null } },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchRoutes.pending, (s) => { s.isLoading = true; s.error = null })
@@ -51,7 +51,6 @@ const routeSlice = createSlice({
     },
 })
 
-export const { clearCurrentRoute } = routeSlice.actions
 export const selectRoutes = (state: RootState) => state.route.routes
 export const selectRouteLoading = (state: RootState) => state.route.isLoading
 export const selectRouteError = (state: RootState) => state.route.error
