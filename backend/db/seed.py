@@ -1,5 +1,7 @@
 from sqlalchemy import create_engine, text, func
 from sqlalchemy.orm import sessionmaker
+from collections import defaultdict
+
 from models.person import Person
 from models.driver import Driver
 from models.bus import Bus
@@ -29,57 +31,251 @@ from db.base import Base
 from db.session import get_db
 from dotenv import load_dotenv
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time as dt_time
 import random
 import warnings
 from faker import Faker
 
-# Suprimir advertencias de passlib/bcrypt
 warnings.filterwarnings("ignore", message=".*error reading bcrypt version.*")
 
-# Load environment variables
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# ── Constants ────────────────────────────────────────────────────────────────
+
+_LF = ["name", "latitude", "longitude", "address", "city", "state", "country", "description"]
+LOCATIONS_RAW = [
+    ("Santa Cruz", -17.783333, -63.182222, "Av. Omar Chávez Ortiz", "Santa Cruz de la Sierra", "Santa Cruz", "Bolivia", "Terminal Bimodal Santa Cruz"),
+    ("La Guardia", -17.8833, -63.3167, "Plaza Principal", "La Guardia", "Santa Cruz", "Bolivia", "Pueblo de La Guardia"),
+    ("San José", -17.9167, -63.45, "Plaza Central", "San José", "Santa Cruz", "Bolivia", "Pueblo de San José"),
+    ("Santa Rita", -17.95, -63.5833, "Centro del pueblo", "Santa Rita", "Santa Cruz", "Bolivia", "Pueblo de Santa Rita"),
+    ("El Torno", -17.9833, -63.7167, "Plaza Principal", "El Torno", "Santa Cruz", "Bolivia", "Pueblo de El Torno"),
+    ("Limoncito", -18.0167, -63.85, "Centro", "Limoncito", "Santa Cruz", "Bolivia", "Pueblo de Limoncito"),
+    ("Jorochito", -18.05, -63.9833, "Plaza Central", "Jorochito", "Santa Cruz", "Bolivia", "Pueblo de Jorochito"),
+    ("Taruma", -18.0833, -64.1167, "Centro del pueblo", "Taruma", "Santa Cruz", "Bolivia", "Pueblo de Taruma"),
+    ("San Luis", -18.1167, -64.25, "Plaza Principal", "San Luis", "Santa Cruz", "Bolivia", "Pueblo de San Luis"),
+    ("La Angostura", -18.15, -64.3833, "Centro", "La Angostura", "Santa Cruz", "Bolivia", "Pueblo de La Angostura"),
+    ("Cuevas", -18.1833, -64.5167, "Plaza Central", "Cuevas", "Santa Cruz", "Bolivia", "Pueblo de Cuevas"),
+    ("Achiras", -18.2167, -64.65, "Centro del pueblo", "Achiras", "Santa Cruz", "Bolivia", "Pueblo de Achiras"),
+    ("Samaipata", -18.183333, -63.866667, "Plaza Principal", "Samaipata", "Santa Cruz", "Bolivia", "Ciudad de Samaipata"),
+    ("Mairana", -18.116667, -63.95, "Plaza Central", "Mairana", "Santa Cruz", "Bolivia", "Ciudad de Mairana"),
+    ("Hierba Buena", -18.25, -64.7833, "Centro", "Hierba Buena", "Santa Cruz", "Bolivia", "Pueblo de Hierba Buena"),
+    ("Agua Clara", -18.2833, -64.9167, "Plaza Principal", "Agua Clara", "Santa Cruz", "Bolivia", "Pueblo de Agua Clara"),
+    ("Los Negros", -18.3167, -65.05, "Centro del pueblo", "Los Negros", "Santa Cruz", "Bolivia", "Pueblo de Los Negros"),
+    ("Mataral", -18.35, -65.1833, "Plaza Central", "Mataral", "Santa Cruz", "Bolivia", "Pueblo de Mataral"),
+    ("El Quiñe", -18.3833, -65.3167, "Centro", "El Quiñe", "Santa Cruz", "Bolivia", "Pueblo de El Quiñe"),
+    ("La Palizada", -18.4167, -65.45, "Plaza Principal", "La Palizada", "Santa Cruz", "Bolivia", "Pueblo de La Palizada"),
+    ("San Isidro", -18.45, -65.5833, "Centro del pueblo", "San Isidro", "Santa Cruz", "Bolivia", "Pueblo de San Isidro"),
+    ("Tambo", -18.4833, -65.7167, "Plaza Central", "Tambo", "Santa Cruz", "Bolivia", "Pueblo de Tambo"),
+    ("Comarapa", -17.916667, -64.533333, "Terminal de Buses", "Comarapa", "Santa Cruz", "Bolivia", "Terminal de Comarapa"),
+]
+LOCATION_DATA = [dict(zip(_LF, loc)) for loc in LOCATIONS_RAW]
+
+OFFICES_RAW = [
+    ("Oficina Santa Cruz", "78175576", "santacruz@transcomarapa.com", "Santa Cruz"),
+    ("Oficina Comarapa", "78175578", "comarapa@transcomarapa.com", "Comarapa"),
+    ("Oficina Los Negros", "78175579", "losnegros@transcomarapa.com", "Los Negros"),
+    ("Oficina San Isidro", "78175580", "sanisidro@transcomarapa.com", "San Isidro"),
+]
+
+ROUTE_DATA = [
+    {"origin": "Santa Cruz", "destination": "Comarapa", "distance": 240.5, "duration": 4.5, "price": 35.0},
+    {"origin": "Comarapa", "destination": "Santa Cruz", "distance": 240.5, "duration": 4.5, "price": 35.0},
+]
+
+SCZ_TO_COM_TIMES = [dt_time(10, 30), dt_time(14, 0), dt_time(18, 30), dt_time(20, 30)]
+COM_TO_SCZ_TIMES = [dt_time(8, 30), dt_time(14, 0), dt_time(20, 30), dt_time(23, 30)]
+SCZ_TO_COM_HM = [(10, 30), (14, 0), (18, 30), (20, 30)]
+COM_TO_SCZ_HM = [(8, 30), (14, 0), (20, 30), (23, 30)]
+
+TRIP_STATUSES_WEIGHTED = ["scheduled"] * 4 + ["in_progress", "completed", "cancelled"]
+TICKET_PAYMENT_METHODS = ["cash", "credit_card", "qr_payment", "bank_transfer"]
+DESTINATION_NAMES = [
+    "Comarapa", "Santa Cruz", "Samaipata", "Mairana", "Los Negros",
+    "San Isidro", "Tambo", "La Angostura", "Cuevas", "Achiras",
+]
+INTERMEDIATE_PRICES = {"Samaipata": 0.6, "Mairana": 0.6, "Los Negros": 0.8, "San Isidro": 0.8}
+
+BOLIVIAN_CITIES = [
+    "Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija",
+    "Oruro", "Potosí", "Trinidad", "Cobija", "Montero", "Warnes", "Vallegrande",
+]
+BOLIVIAN_STATES = [
+    "Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija",
+    "Oruro", "Potosí", "Beni", "Pando",
+]
+
+BUS_FLEET = [
+    ("O-500RS", "Mercedes Benz", "Azul Trans Comarapa", 45, 1),
+    ("9900", "Volvo", "Blanco", 50, 2),
+    ("K450", "Scania", "Rojo", 42, 1),
+    ("O-400RSD", "Mercedes Benz", "Verde", 48, 2),
+    ("B450R", "Volvo", "Amarillo", 46, 1),
+    ("Marcopolo Paradiso", "Marcopolo", "Azul Marino", 52, 2),
+    ("Irizar Century", "Irizar", "Plata", 44, 1),
+]
+
+OWNER_NAMES = [
+    ("Ricardo", "Mendoza Quiroga"),
+    ("Fernando", "Vargas Soliz"),
+    ("Miguel", "Torrez Arce"),
+    ("Patricia", "Rojas de Mendoza"),
+    ("Jorge", "Gutiérrez Flores"),
+]
+
+PACKAGE_ITEM_DESCRIPTIONS = [
+    "Documentos importantes", "Ropa de temporada 2025", "Equipos electrónicos nuevos",
+    "Productos alimenticios locales", "Medicamentos esenciales", "Libros y material educativo",
+    "Herramientas de trabajo especializadas", "Artículos de hogar modernos",
+    "Productos de belleza y cuidado personal", "Juguetes educativos",
+    "Artículos deportivos premium", "Electrodomésticos pequeños inteligentes",
+    "Repuestos automotrices", "Instrumentos musicales", "Material de construcción",
+    "Productos artesanales bolivianos",
+]
+
+NUM_CLIENTS = 50
+NUM_DRIVERS = 12
+NUM_SECRETARIES = 8
+NUM_ASSISTANTS = 12
+NUM_TRIPS = 80
+NUM_UNASSIGNED_PACKAGES = 15
+TICKETS_PER_TRIP = (10, 20)
+PACKAGES_PER_TRIP = (3, 8)
+SEED_DAYS = 180
+
+ROLE_ENTITY_MAP = {
+    "admin": Administrator,
+    "secretary": Secretary,
+    "driver": Driver,
+    "assistant": Assistant,
+    "client": Client,
+}
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def _parse_name(full_name):
+    parts = full_name.split()
+    if not parts:
+        return "SinNombre", "SinApellido"
+    return parts[0], " ".join(parts[1:]) if len(parts) > 1 else parts[0]
+
+
+def _phone():
+    return f"7{random.randint(1000000, 9999999)}"
+
+
+def _create_users_and_entities(db, fake, role, prefix, count, entity_factory, ts_base):
+    full_names = [fake.name() for _ in range(count)]
+    users = []
+    for i in range(count):
+        fn, ln = _parse_name(full_names[i])
+        users.append(User(
+            username=f"{prefix}{i+1}_{ts_base + i}",
+            email=f"{prefix}{i+1}_{ts_base + i}@transcomarapa.com",
+            firstname=fn, lastname=ln, role=role,
+            hashed_password=User.get_password_hash(f"{prefix}{i+1}"),
+            is_active=True, is_admin=(role == "admin"),
+        ))
+    db.add_all(users)
+    db.flush()
+
+    entities = []
+    for i, user in enumerate(users):
+        fn, ln = _parse_name(full_names[i])
+        entities.append(entity_factory(i, user, fn, ln))
+    db.add_all(entities)
+    db.flush()
+    return users, entities
+
+
+def _ticket_state_for_trip(trip_status):
+    if trip_status == "cancelled":
+        return "cancelled"
+    if trip_status == "completed":
+        return random.choices(["completed", "confirmed"], weights=[70, 30])[0]
+    if trip_status == "in_progress":
+        return "confirmed"
+    return random.choices(["pending", "confirmed"], weights=[65, 35])[0]
+
+
+def _package_state_for_trip(trip_status):
+    if trip_status == "cancelled":
+        return "registered_at_office"
+    if trip_status == "completed":
+        return random.choices(
+            ["delivered", "arrived_at_destination", "in_transit"],
+            weights=[50, 35, 15],
+        )[0]
+    if trip_status == "in_progress":
+        return "in_transit"
+    return random.choices(
+        ["assigned_to_trip", "registered_at_office"], weights=[70, 30],
+    )[0]
+
+
+def _ticket_history_meta(final_state, created_at, trip_dt, route_duration, user_id):
+    chain = [(None, "pending", created_at, user_id)]
+    if final_state in ("confirmed", "completed"):
+        ts = created_at + timedelta(hours=random.randint(1, 12))
+        chain.append(("pending", "confirmed", ts, user_id))
+        if final_state == "completed":
+            chain.append((
+                "confirmed", "completed",
+                trip_dt + timedelta(hours=route_duration + random.uniform(0.5, 1.5)),
+                user_id,
+            ))
+    elif final_state == "cancelled":
+        chain.append((
+            "pending", "cancelled",
+            created_at + timedelta(hours=random.randint(1, 24)),
+            user_id,
+        ))
+    return chain
+
+
+def _package_history_meta(final_state, created_at, trip_dt, route_duration, user_id):
+    chain = [(None, "registered_at_office", created_at, user_id)]
+    if final_state == "registered_at_office":
+        return chain
+    chain.append((
+        "registered_at_office", "assigned_to_trip",
+        created_at + timedelta(hours=random.randint(1, 12)),
+        user_id,
+    ))
+    if final_state == "assigned_to_trip":
+        return chain
+    chain.append(("assigned_to_trip", "in_transit", trip_dt, user_id))
+    if final_state == "in_transit":
+        return chain
+    arrived_at = trip_dt + timedelta(hours=route_duration)
+    chain.append(("in_transit", "arrived_at_destination", arrived_at, user_id))
+    if final_state == "arrived_at_destination":
+        return chain
+    chain.append((
+        "arrived_at_destination", "delivered",
+        arrived_at + timedelta(hours=random.randint(1, 48)),
+        user_id,
+    ))
+    return chain
+
+
+# ── clear_db ─────────────────────────────────────────────────────────────────
 
 def clear_db():
     db = SessionLocal()
     try:
-        # Disable foreign key checks temporarily for SQLite
         db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
-        
-        # Delete all data in reverse order of dependencies
-        db.query(PackageStateHistory).delete()
-        db.query(TicketStateHistory).delete()
-        db.query(Ticket).delete()
-        db.query(PackageItem).delete()
-        db.query(Package).delete()
-        db.query(Seat).delete()
-        db.query(Trip).delete()
-        db.query(Client).delete()
-        db.query(RouteSchedule).delete()
-        db.query(Route).delete()
-        db.query(Assistant).delete()
-        db.query(Driver).delete()
-        db.query(OwnerWithdrawal).delete()
-        db.query(CashTransaction).delete()
-        db.query(CashRegister).delete()
-        db.query(Owner).delete()
-        db.query(Bus).delete()
-        db.query(Office).delete()
-        db.query(Location).delete()
-        db.query(Secretary).delete()
-        db.query(Administrator).delete()
-        db.query(ActivityModel).delete()
-        # Delete Person instances before User since Person has FK to User
-        db.query(Person).delete()
-        db.query(User).delete()
-
-        # Re-enable foreign key checks
+        for model in [
+            PackageStateHistory, TicketStateHistory, Ticket, PackageItem, Package,
+            Seat, Trip, Client, RouteSchedule, Route, Assistant, Driver,
+            OwnerWithdrawal, CashTransaction, CashRegister, Owner, Bus,
+            Office, Location, Secretary, Administrator, ActivityModel, Person, User,
+        ]:
+            db.query(model).delete()
         db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
-        
         db.commit()
         print("Database cleared successfully!")
     except Exception as e:
@@ -88,1326 +284,511 @@ def clear_db():
     finally:
         db.close()
 
+
+# ── seed_db ──────────────────────────────────────────────────────────────────
+
 def seed_db():
     db = SessionLocal()
-    # Inicializar Faker con localización española para nombres más realistas
-    fake = Faker(['es_ES'])
+    fake = Faker(["es_ES"])
     try:
-        # Create real locations for Trans Comarapa route
-        location_data = [
-            # Terminal principal Santa Cruz
-            {
-                "name": "Santa Cruz",
-                "latitude": -17.783333,
-                "longitude": -63.182222,
-                "address": "Av. Omar Chávez Ortiz",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Terminal Bimodal Santa Cruz"
-            },
-            # Pueblos en orden de la ruta Santa Cruz -> Comarapa
-            {
-                "name": "La Guardia",
-                "latitude": -17.8833,
-                "longitude": -63.3167,
-                "address": "Plaza Principal",
-                "city": "La Guardia",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de La Guardia"
-            },
-            {
-                "name": "San José",
-                "latitude": -17.9167,
-                "longitude": -63.45,
-                "address": "Plaza Central",
-                "city": "San José",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de San José"
-            },
-            {
-                "name": "Santa Rita",
-                "latitude": -17.95,
-                "longitude": -63.5833,
-                "address": "Centro del pueblo",
-                "city": "Santa Rita",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Santa Rita"
-            },
-            {
-                "name": "El Torno",
-                "latitude": -17.9833,
-                "longitude": -63.7167,
-                "address": "Plaza Principal",
-                "city": "El Torno",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de El Torno"
-            },
-            {
-                "name": "Limoncito",
-                "latitude": -18.0167,
-                "longitude": -63.85,
-                "address": "Centro",
-                "city": "Limoncito",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Limoncito"
-            },
-            {
-                "name": "Jorochito",
-                "latitude": -18.05,
-                "longitude": -63.9833,
-                "address": "Plaza Central",
-                "city": "Jorochito",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Jorochito"
-            },
-            {
-                "name": "Taruma",
-                "latitude": -18.0833,
-                "longitude": -64.1167,
-                "address": "Centro del pueblo",
-                "city": "Taruma",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Taruma"
-            },
-            {
-                "name": "San Luis",
-                "latitude": -18.1167,
-                "longitude": -64.25,
-                "address": "Plaza Principal",
-                "city": "San Luis",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de San Luis"
-            },
-            {
-                "name": "La Angostura",
-                "latitude": -18.15,
-                "longitude": -64.3833,
-                "address": "Centro",
-                "city": "La Angostura",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de La Angostura"
-            },
-            {
-                "name": "Cuevas",
-                "latitude": -18.1833,
-                "longitude": -64.5167,
-                "address": "Plaza Central",
-                "city": "Cuevas",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Cuevas"
-            },
-            {
-                "name": "Achiras",
-                "latitude": -18.2167,
-                "longitude": -64.65,
-                "address": "Centro del pueblo",
-                "city": "Achiras",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Achiras"
-            },
-            {
-                "name": "Samaipata",
-                "latitude": -18.183333,
-                "longitude": -63.866667,
-                "address": "Plaza Principal",
-                "city": "Samaipata",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Ciudad de Samaipata"
-            },
-            {
-                "name": "Mairana",
-                "latitude": -18.116667,
-                "longitude": -63.95,
-                "address": "Plaza Central",
-                "city": "Mairana",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Ciudad de Mairana"
-            },
-            {
-                "name": "Hierba Buena",
-                "latitude": -18.25,
-                "longitude": -64.7833,
-                "address": "Centro",
-                "city": "Hierba Buena",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Hierba Buena"
-            },
-            {
-                "name": "Agua Clara",
-                "latitude": -18.2833,
-                "longitude": -64.9167,
-                "address": "Plaza Principal",
-                "city": "Agua Clara",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Agua Clara"
-            },
-            {
-                "name": "Los Negros",
-                "latitude": -18.3167,
-                "longitude": -65.05,
-                "address": "Centro del pueblo",
-                "city": "Los Negros",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Los Negros"
-            },
-            {
-                "name": "Mataral",
-                "latitude": -18.35,
-                "longitude": -65.1833,
-                "address": "Plaza Central",
-                "city": "Mataral",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Mataral"
-            },
-            {
-                "name": "El Quiñe",
-                "latitude": -18.3833,
-                "longitude": -65.3167,
-                "address": "Centro",
-                "city": "El Quiñe",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de El Quiñe"
-            },
-            {
-                "name": "La Palizada",
-                "latitude": -18.4167,
-                "longitude": -65.45,
-                "address": "Plaza Principal",
-                "city": "La Palizada",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de La Palizada"
-            },
-            {
-                "name": "San Isidro",
-                "latitude": -18.45,
-                "longitude": -65.5833,
-                "address": "Centro del pueblo",
-                "city": "San Isidro",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de San Isidro"
-            },
-            {
-                "name": "Tambo",
-                "latitude": -18.4833,
-                "longitude": -65.7167,
-                "address": "Plaza Central",
-                "city": "Tambo",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Pueblo de Tambo"
-            },
-            # Terminal destino Comarapa
-            {
-                "name": "Comarapa",
-                "latitude": -17.916667,
-                "longitude": -64.533333,
-                "address": "Terminal de Buses",
-                "city": "Comarapa",
-                "state": "Santa Cruz",
-                "country": "Bolivia",
-                "description": "Terminal de Comarapa"
-            }
+        now = datetime.now()
+        ts_base = int(now.timestamp())
+        six_months_ago = now - timedelta(days=SEED_DAYS)
+        date_range = [
+            six_months_ago + timedelta(days=x)
+            for x in range((now - six_months_ago).days + 1)
         ]
 
+        # ── Locations ──
         locations = {}
-        for location_info in location_data:
-            location = Location(**location_info)
-            db.add(location)
-            db.flush()  # Flush to get IDs
-            locations[location_info["name"]] = location
+        for ld in LOCATION_DATA:
+            loc = Location(**ld)
+            db.add(loc)
+            locations[ld["name"]] = loc
+        db.flush()
 
-        # Crear oficinas principales de Trans Comarapa
-        office_data = [
-            {
-                "name": "Oficina Central Santa Cruz",
-                "phone": "78175576",
-                "email": "santacruz@transcomarapa.com",
-                "location_id": locations["Santa Cruz"].id
-            },
-            {
-                "name": "Terminal Comarapa",
-                "phone": "78175578",
-                "email": "comarapa@transcomarapa.com",
-                "location_id": locations["Comarapa"].id
-            },
-            {
-                "name": "Oficina Los Negros",
-                "phone": "78175579",
-                "email": "losnegros@transcomarapa.com",
-                "location_id": locations["Los Negros"].id
-            },
-            {
-                "name": "Oficina San Isidro",
-                "phone": "78175580",
-                "email": "sanisidro@transcomarapa.com",
-                "location_id": locations["San Isidro"].id
-            }
-        ]
-
+        # ── Offices ──
         offices = {}
-        for office_info in office_data:
-            office = Office(**office_info)
-            db.add(office)
-            db.flush()  # Flush to get IDs
-            offices[office_info["name"]] = office
+        for name, phone, email, loc_name in OFFICES_RAW:
+            off = Office(name=name, phone=phone, email=email,
+                         location_id=locations[loc_name].id)
+            db.add(off)
+            offices[name] = off
+        db.flush()
 
-        # Create real Trans Comarapa routes
-        route_data = [
-            {
-                "origin_location_id": locations["Santa Cruz"].id,
-                "destination_location_id": locations["Comarapa"].id,
-                "distance": 240.5,
-                "duration": 4.5,
-                "price": 35.0
-            },
-            {
-                "origin_location_id": locations["Comarapa"].id,
-                "destination_location_id": locations["Santa Cruz"].id,
-                "distance": 240.5,
-                "duration": 4.5,
-                "price": 35.0
-            }
-        ]
-
+        # ── Routes ──
         routes = []
-        for route_info in route_data:
-            route = Route(**route_info)
+        for rd in ROUTE_DATA:
+            route = Route(
+                origin_location_id=locations[rd["origin"]].id,
+                destination_location_id=locations[rd["destination"]].id,
+                distance=rd["distance"], duration=rd["duration"], price=rd["price"],
+            )
             db.add(route)
             routes.append(route)
+        db.flush()
 
-        db.commit()
-
-        # Crear horarios de salida para cada ruta
-        from datetime import time as dt_time
-
-        # Santa Cruz -> Comarapa: 10:30, 14:00, 18:30, 20:30
-        scz_to_com_times = [dt_time(10, 30), dt_time(14, 0), dt_time(18, 30), dt_time(20, 30)]
-        # Comarapa -> Santa Cruz: 08:30, 14:00, 20:30, 23:30
-        com_to_scz_times = [dt_time(8, 30), dt_time(14, 0), dt_time(20, 30), dt_time(23, 30)]
-
-        for route in routes:
-            if route.origin_location.name == "Santa Cruz":
-                schedule_times = scz_to_com_times
-            else:
-                schedule_times = com_to_scz_times
-
-            for t in schedule_times:
-                schedule = RouteSchedule(route_id=route.id, departure_time=t, is_active=True)
-                db.add(schedule)
-
-        db.commit()
-        print(f"Route schedules created for {len(routes)} routes")
-
-        # Crear usuarios para clientes primero - Base de datos actualizada 2025
-        client_user_data = []
-        num_clients_to_create = 50 # Incrementado para mayor diversidad
-        for i in range(num_clients_to_create):
-            full_name = fake.name()
-            name_parts = full_name.split()
-            firstname = name_parts[0]
-            if len(name_parts) > 1:
-                lastname = " ".join(name_parts[1:])
-            elif len(name_parts) == 1:
-                lastname = name_parts[0]
-            else:
-                lastname = "ApellidoPorDefecto"
-
-            timestamp = int(datetime.now().timestamp()) + i
-            client_user = {
-                "username": f"cliente{i+1}_{timestamp}",
-                "email": f"cliente{i+1}_{timestamp}@transcomarapa.com",
-                "firstname": firstname,
-                "lastname": lastname,
-                "role": "client",
-                "hashed_password": User.get_password_hash(f"cliente{i+1}"),
-                "is_active": True,
-                "is_admin": False
+        # Pre-build route metadata (avoids lazy loads)
+        route_info = {}
+        for route, rd in zip(routes, ROUTE_DATA):
+            route_info[route.id] = {
+                "origin": rd["origin"], "destination": rd["destination"],
+                "origin_loc_id": locations[rd["origin"]].id,
+                "dest_loc_id": locations[rd["destination"]].id,
+                "price": rd["price"], "duration": rd["duration"],
             }
-            client_user_data.append(client_user)
 
-        client_users = []
-        for user_info in client_user_data:
-            user = User(**user_info)
-            db.add(user)
-            client_users.append(user)
-
-        # Commit para obtener IDs de usuarios
+        # ── Route Schedules ──
+        schedules = []
+        for route, rd in zip(routes, ROUTE_DATA):
+            times = SCZ_TO_COM_TIMES if rd["origin"] == "Santa Cruz" else COM_TO_SCZ_TIMES
+            for t in times:
+                schedules.append(RouteSchedule(route_id=route.id, departure_time=t, is_active=True))
+        db.add_all(schedules)
         db.commit()
+        print("Created locations, offices, routes, schedules")
 
-        # Crear clientes con datos realistas bolivianos - Nuevo enfoque con Person
-        clients = []
-        bolivian_cities = ["Santa Cruz de la Sierra", "La Paz", "Cochabamba", "Sucre", "Tarija", "Oruro", "Potosí", "Trinidad", "Cobija", "Montero", "Warnes", "Vallegrande"]
-        bolivian_states = ["Santa Cruz", "La Paz", "Cochabamba", "Chuquisaca", "Tarija", "Oruro", "Potosí", "Beni", "Pando"]
-
-        # Generar nombres completos para los clientes
-        client_full_names = [fake.name() for _ in range(len(client_users))]
-
-        for i, user in enumerate(client_users):
-            # Dividir el nombre completo en nombre y apellido
-            name_parts = client_full_names[i].split()
-            firstname = name_parts[0]
-            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-            # Generar CI boliviano realista (7-10 dígitos)
-            ci_length = random.choice([7, 8, 9, 10])
-            document_id = str(random.randint(10**(ci_length-1), 10**ci_length - 1))
-
-            # Crear el Cliente que hereda de Person
-            client = Client(
-                user_id=user.id,
-                firstname=firstname,
-                lastname=lastname,
-                phone=f"7{random.randint(1000000, 9999999)}",
+        # ── Clients ──
+        def client_factory(i, user, fn, ln):
+            ci_len = random.choice([7, 8, 9, 10])
+            return Client(
+                user_id=user.id, firstname=fn, lastname=ln, phone=_phone(),
                 birth_date=fake.date_of_birth(minimum_age=18, maximum_age=70),
-                # Campos específicos de Client
-                document_id=document_id,
+                document_id=str(random.randint(10 ** (ci_len - 1), 10 ** ci_len - 1)),
                 address=fake.street_address(),
-                city=random.choice(bolivian_cities),
-                state=random.choice(bolivian_states)
+                city=random.choice(BOLIVIAN_CITIES),
+                state=random.choice(BOLIVIAN_STATES),
             )
-            db.add(client)
-            clients.append(client)
 
-        # Crear usuarios para conductores primero - Equipo 2025
-        driver_user_data = []
-        num_drivers_to_create = 12 # Equipo ampliado para 2025
-        for i in range(num_drivers_to_create):
-            full_name = fake.name()
-            name_parts = full_name.split()
-            firstname = name_parts[0]
-            if len(name_parts) > 1:
-                lastname = " ".join(name_parts[1:])
-            elif len(name_parts) == 1:
-                lastname = name_parts[0]
-            else:
-                lastname = "ApellidoPorDefecto"
+        client_users, clients = _create_users_and_entities(
+            db, fake, "client", "cliente", NUM_CLIENTS, client_factory, ts_base,
+        )
 
-            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2) # Adjust timestamp offset
-            driver_user = {
-                "username": f"conductor{i+1}_{timestamp}",
-                "email": f"conductor{i+1}_{timestamp}@transcomarapa.com",
-                "firstname": firstname,
-                "lastname": lastname,
-                "role": "driver",
-                "hashed_password": User.get_password_hash(f"conductor{i+1}"),
-                "is_active": True,
-                "is_admin": False
-            }
-            driver_user_data.append(driver_user)
-
-        driver_users = []
-        for user_info in driver_user_data:
-            user = User(**user_info)
-            db.add(user)
-            driver_users.append(user)
-
-        # Commit para obtener IDs de usuarios
-        db.commit()
-
-        # Crear conductores con datos realistas bolivianos - Nuevo enfoque con Person
-        drivers = []
+        # ── Drivers ──
         license_types = ["A", "B", "C", "P"]
-        status_options = ["active", "on_leave", "suspended", "inactive"]
+        driver_statuses = ["active", "on_leave", "suspended", "inactive"]
 
-        # Generar nombres completos para los conductores
-        driver_full_names = [fake.name() for _ in range(len(driver_users))]
-
-        for i, user in enumerate(driver_users):
-            # Fecha de vencimiento de licencia entre 1 y 5 años en el futuro (2026-2030)
-            expiry_years = random.randint(1, 5)
-            license_expiry = date.today().replace(year=date.today().year + expiry_years)
-
-            # Dividir el nombre completo en nombre y apellido
-            name_parts = driver_full_names[i].split()
-            firstname = name_parts[0]
-            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-            # Crear el Conductor que hereda de Person
-            driver = Driver(
-                user_id=user.id,
-                firstname=firstname,
-                lastname=lastname,
-                phone=f"7{random.randint(1000000, 9999999)}",
+        def driver_factory(i, user, fn, ln):
+            return Driver(
+                user_id=user.id, firstname=fn, lastname=ln, phone=_phone(),
                 birth_date=fake.date_of_birth(minimum_age=25, maximum_age=60),
-                # Campos específicos de Driver
                 license_number=f"LC{random.randint(100000, 999999)}",
                 license_type=random.choice(license_types),
-                license_expiry=license_expiry,
-                status=random.choice(status_options)
+                license_expiry=date.today().replace(year=date.today().year + random.randint(1, 5)),
+                status=random.choice(driver_statuses),
             )
-            db.add(driver)
-            drivers.append(driver)
 
-        # Create sample buses with realistic 2025 models and Trans Comarapa fleet
-        bus_models = ["O-500RS", "9900", "K450", "O-400RSD", "B450R", "Marcopolo Paradiso", "Irizar Century"]
-        bus_brands = ["Mercedes Benz", "Volvo", "Scania", "Mercedes Benz", "Volvo", "Marcopolo", "Irizar"]
-        bus_colors = ["Azul Trans Comarapa", "Blanco", "Rojo", "Verde", "Amarillo", "Azul Marino", "Plata"]
-        bus_capacities = [45, 50, 42, 48, 46, 52, 44]
-        bus_floors = [1, 2, 1, 2, 1, 2, 1]  # Pisos por bus (1 o 2)
-        bus_data = []
+        driver_users, drivers = _create_users_and_entities(
+            db, fake, "driver", "conductor", NUM_DRIVERS, driver_factory, ts_base + 200,
+        )
 
-        for i in range(7):  # Incrementado a 7 buses
-            # Generar placas únicas con timestamp
-            timestamp = str(int(datetime.now().timestamp()) + i)[-4:]
-            license_plate = f"{timestamp}ABC{i}"
+        # ── Secretaries ──
+        office_names = list(offices.keys())
 
-            bus_info = {
-                "license_plate": license_plate,
-                "capacity": bus_capacities[i],
-                "model": bus_models[i],
-                "brand": bus_brands[i],
-                "color": bus_colors[i],
-                "floors": bus_floors[i]
-            }
-            bus_data.append(bus_info)
+        def secretary_factory(i, user, fn, ln):
+            return Secretary(
+                user_id=user.id, firstname=fn, lastname=ln, phone=_phone(),
+                birth_date=fake.date_of_birth(minimum_age=22, maximum_age=55),
+                office_id=offices[random.choice(office_names)].id,
+            )
 
-        buses = []
-        for bus_info in bus_data:
-            bus = Bus(**bus_info)
-            db.add(bus)
-            buses.append(bus)
+        secretary_users, secretaries = _create_users_and_entities(
+            db, fake, "secretary", "secretario", NUM_SECRETARIES, secretary_factory, ts_base + 400,
+        )
 
-        # Crear dueños/socios de buses
-        owner_names = [
-            ("Ricardo", "Mendoza Quiroga"),
-            ("Fernando", "Vargas Soliz"),
-            ("Miguel", "Torrez Arce"),
-            ("Patricia", "Rojas de Mendoza"),
-            ("Jorge", "Gutiérrez Flores"),
-        ]
+        # ── Assistants ──
+        def assistant_factory(i, user, fn, ln):
+            return Assistant(
+                user_id=user.id, firstname=fn, lastname=ln, phone=_phone(),
+                birth_date=fake.date_of_birth(minimum_age=20, maximum_age=50),
+            )
 
+        assistant_users, assistants = _create_users_and_entities(
+            db, fake, "assistant", "asistente", NUM_ASSISTANTS, assistant_factory, ts_base + 600,
+        )
+
+        # ── Admin ──
+        admin_user = User(
+            username=f"admin_{ts_base}", email=f"admin_{ts_base}@transcomarapa.com",
+            firstname="Administrador", lastname="Sistema", role="admin",
+            hashed_password=User.get_password_hash("admin123"),
+            is_active=True, is_admin=True,
+        )
+        db.add(admin_user)
+        db.flush()
+        db.add(Administrator(
+            user_id=admin_user.id, firstname="Administrador", lastname="Sistema",
+            phone="77000000", birth_date=date(1975, 3, 15),
+        ))
+        db.flush()
+
+        # ── Owners ──
         owner_users = []
-        for i, (fn, ln) in enumerate(owner_names):
-            timestamp = int(datetime.now().timestamp()) + i + 5000
-            owner_user = User(
-                username=f"socio{i+1}_{timestamp}",
-                email=f"socio{i+1}_{timestamp}@transcomarapa.com",
-                firstname=fn,
-                lastname=ln,
-                role="owner",
+        for i, (fn, ln) in enumerate(OWNER_NAMES):
+            owner_users.append(User(
+                username=f"socio{i+1}_{ts_base + 800 + i}",
+                email=f"socio{i+1}_{ts_base + 800 + i}@transcomarapa.com",
+                firstname=fn, lastname=ln, role="owner",
                 hashed_password=User.get_password_hash("socio123"),
-                is_active=True,
-                is_admin=False
-            )
-            db.add(owner_user)
-            owner_users.append(owner_user)
-
-        db.commit()
+                is_active=True, is_admin=False,
+            ))
+        db.add_all(owner_users)
+        db.flush()
 
         owners = []
         for i, user in enumerate(owner_users):
-            fn, ln = owner_names[i]
-            owner = Owner(
-                user_id=user.id,
-                firstname=fn,
-                lastname=ln,
-                phone=f"7{random.randint(1000000, 9999999)}",
-                birth_date=fake.date_of_birth(minimum_age=35, maximum_age=65)
-            )
-            db.add(owner)
-            owners.append(owner)
+            fn, ln = OWNER_NAMES[i]
+            owners.append(Owner(
+                user_id=user.id, firstname=fn, lastname=ln, phone=_phone(),
+                birth_date=fake.date_of_birth(minimum_age=35, maximum_age=65),
+            ))
+        db.add_all(owners)
+        db.flush()
 
-        db.commit()
+        # ── Buses ──
+        buses = []
+        for i, (model, brand, color, cap, floors) in enumerate(BUS_FLEET):
+            suffix = str(ts_base + i)[-4:]
+            buses.append(Bus(
+                license_plate=f"{suffix}ABC{i}", capacity=cap,
+                model=model, brand=brand, color=color, floors=floors,
+            ))
+        db.add_all(buses)
+        db.flush()
 
-        # Asignar dueños a buses (cada dueño tiene 1-2 buses)
         for i, bus in enumerate(buses):
             bus.owner_id = owners[i % len(owners)].id
 
-        db.commit()
-        print(f"{len(owners)} owners created and assigned to {len(buses)} buses")
-
-        # Crear usuario administrador
-        admin_full_name = fake.name() # Usar fake para consistencia, aunque luego se sobreescriba en AdministratorModel
-        admin_name_parts = admin_full_name.split()
-        admin_firstname = admin_name_parts[0]
-        if len(admin_name_parts) > 1:
-            admin_lastname = " ".join(admin_name_parts[1:])
-        elif len(admin_name_parts) == 1:
-            admin_lastname = admin_name_parts[0]
-        else:
-            admin_lastname = "AdminLastNameDefault"
-
-        timestamp = int(datetime.now().timestamp())
-        admin_user = User(
-            username=f"admin_{timestamp}",
-            email=f"admin_{timestamp}@transcomarapa.com",
-            firstname=admin_firstname,
-            lastname=admin_lastname,
-            role="admin",
-            hashed_password=User.get_password_hash("admin123"),
-            is_active=True,
-            is_admin=True
-        )
-        db.add(admin_user)
-        db.commit()
-
-        # Crear administrador asociado al usuario admin - Nuevo enfoque con Person
-        administrator = Administrator(
-            user_id=admin_user.id,
-            firstname="Administrador",
-            lastname="Sistema",
-            phone="77000000",
-            birth_date=date(1975, 3, 15)
-        )
-        db.add(administrator)
-        db.commit()
-
-        # Crear usuarios para secretarios - Personal administrativo 2025
-        secretary_user_data = []
-        num_secretaries_to_create = 8 # Personal ampliado para mayor cobertura
-        for i in range(num_secretaries_to_create):
-            full_name = fake.name()
-            name_parts = full_name.split()
-            firstname = name_parts[0]
-            if len(name_parts) > 1:
-                lastname = " ".join(name_parts[1:])
-            elif len(name_parts) == 1:
-                lastname = name_parts[0]
-            else:
-                lastname = "ApellidoPorDefecto"
-
-            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2) # Adjust timestamp offset
-            secretary_user = {
-                "username": f"secretario{i+1}_{timestamp}",
-                "email": f"secretario{i+1}_{timestamp}@transcomarapa.com",
-                "firstname": firstname,
-                "lastname": lastname,
-                "role": "secretary",
-                "hashed_password": User.get_password_hash(f"secretario{i+1}"),
-                "is_active": True,
-                "is_admin": False
-            }
-            secretary_user_data.append(secretary_user)
-
-        secretary_users = []
-        for user_info in secretary_user_data:
-            user = User(**user_info)
-            db.add(user)
-            secretary_users.append(user)
-
-        # Commit para obtener IDs de usuarios
-        db.commit()
-
-        # Crear secretarios con datos realistas bolivianos - Nuevo enfoque con Person
-        secretaries = []
-        office_names = list(offices.keys())
-
-        # Generar nombres completos para los secretarios
-        secretary_full_names = [fake.name() for _ in range(len(secretary_users))]
-
-        for i, user in enumerate(secretary_users):
-            # Asignar una oficina aleatoria a cada secretario
-            office_name = random.choice(office_names)
-
-            # Dividir el nombre completo en nombre y apellido
-            name_parts = secretary_full_names[i].split()
-            firstname = name_parts[0]
-            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-            # Crear el Secretario que hereda de Person
-            secretary = Secretary(
-                user_id=user.id,
-                firstname=firstname,
-                lastname=lastname,
-                phone=f"7{random.randint(1000000, 9999999)}",
-                birth_date=fake.date_of_birth(minimum_age=22, maximum_age=55),
-                # Campo específico de Secretary
-                office_id=offices[office_name].id
-            )
-            db.add(secretary)
-            secretaries.append(secretary)
-
-        # Crear usuarios para asistentes primero - Equipo de apoyo 2025
-        assistant_user_data = []
-        num_assistants_to_create = 12 # Equipo de asistentes ampliado
-        for i in range(num_assistants_to_create):
-            full_name = fake.name()
-            name_parts = full_name.split()
-            firstname = name_parts[0]
-            if len(name_parts) > 1:
-                lastname = " ".join(name_parts[1:])
-            elif len(name_parts) == 1:
-                lastname = name_parts[0]
-            else:
-                lastname = "ApellidoPorDefecto"
-
-            timestamp = int(datetime.now().timestamp()) + i + (num_clients_to_create * 2 + num_drivers_to_create * 2 + num_secretaries_to_create * 2) # Adjust timestamp offset
-            assistant_user = {
-                "username": f"asistente{i+1}_{timestamp}",
-                "email": f"asistente{i+1}_{timestamp}@transcomarapa.com",
-                "firstname": firstname,
-                "lastname": lastname,
-                "role": "assistant",
-                "hashed_password": User.get_password_hash(f"asistente{i+1}"),
-                "is_active": True,
-                "is_admin": False
-            }
-            assistant_user_data.append(assistant_user)
-
-        assistant_users = []
-        for user_info in assistant_user_data:
-            user = User(**user_info)
-            db.add(user)
-            assistant_users.append(user)
-
-        # Commit para obtener IDs de usuarios
-        db.commit()
-
-        # Crear asistentes con datos realistas bolivianos - Nuevo enfoque con Person
-        assistants = []
-
-        # Generar nombres completos para los asistentes
-        assistant_full_names = [fake.name() for _ in range(len(assistant_users))]
-
-        for i, user in enumerate(assistant_users):
-            # Dividir el nombre completo en nombre y apellido
-            name_parts = assistant_full_names[i].split()
-            firstname = name_parts[0]
-            lastname = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-            # Crear el Asistente que hereda de Person  
-            assistant = Assistant(
-                user_id=user.id,
-                firstname=firstname,
-                lastname=lastname,
-                phone=f"7{random.randint(1000000, 9999999)}",
-                birth_date=fake.date_of_birth(minimum_age=20, maximum_age=50)
-            )
-            db.add(assistant)
-            assistants.append(assistant)
-
-        # Commit first batch to get IDs
-        db.commit()
-
-        # Crear viajes con fechas y horas reales de Trans Comarapa
-        trips = []
-
-        # Horarios reales de Trans Comarapa
-        # Comarapa -> Santa Cruz: 08:30 AM, 02:00 PM, 08:30 PM, 11:30 PM
-        comarapa_to_santa_cruz_times = [
-            (8, 30),   # 8:30 AM
-            (14, 0),   # 2:00 PM
-            (20, 30),  # 8:30 PM
-            (23, 30)   # 11:30 PM
-        ]
-        
-        # Santa Cruz -> Comarapa: 10:30 AM, 02:00 PM, 06:30 PM, 08:30 PM
-        santa_cruz_to_comarapa_times = [
-            (10, 30),  # 10:30 AM
-            (14, 0),   # 2:00 PM
-            (18, 30),  # 6:30 PM
-            (20, 30)   # 8:30 PM
-        ]
-
-        # Posibles estados para los viajes
-        # Weighted towards 'scheduled' for future dates, others for variety
-        possible_trip_statuses = ['scheduled', 'scheduled', 'scheduled', 'scheduled', 'in_progress', 'completed', 'cancelled']
-
-        # Crear viajes realistas para operaciones Trans Comarapa 2025
-        # Incrementado a 80 viajes para mayor variedad
-        num_trips_to_create = 80
-        
-        # Define the 6-month date range for trips, tickets, and packages (September 2024 to March 2025)
-        now = datetime.now()
-        six_months_ago = now - timedelta(days=6*30) # Approximate
-        date_range_for_creation = [six_months_ago + timedelta(days=x) for x in range((now - six_months_ago).days + 1)]
-
-        for _ in range(num_trips_to_create):
-            # Seleccionar fecha aleatoria dentro del rango de 6 meses
-            base_trip_date = random.choice(date_range_for_creation).date()
-            
-            # Seleccionar ruta aleatoria (Santa Cruz <-> Comarapa)
-            selected_route = random.choice(routes)
-            
-            # Determinar horarios según la ruta
-            if selected_route.origin_location.name == "Santa Cruz":
-                # Santa Cruz -> Comarapa
-                hour, minute = random.choice(santa_cruz_to_comarapa_times)
-            else:
-                # Comarapa -> Santa Cruz
-                hour, minute = random.choice(comarapa_to_santa_cruz_times)
-            
-            trip_datetime_val = datetime.combine(base_trip_date, datetime.min.time()).replace(hour=hour, minute=minute, second=0, microsecond=0)
-
-            selected_status = random.choice(possible_trip_statuses)
-
-            # Adjust DATE based on status for realism, but keep the TIME intact
-            if selected_status == 'completed' or selected_status == 'cancelled':
-                # Ensure completed/cancelled trips are in the past portion of the 6 months
-                if trip_datetime_val.date() > (now - timedelta(days=7)).date():
-                    # Shift date back but keep the time
-                    new_date = (now - timedelta(days=random.randint(8,180))).date()
-                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
-            elif selected_status == 'in_progress':
-                # Ensure in_progress trips are very recent or today, but keep time
-                new_date = (now - timedelta(hours=random.randint(0, 24))).date()
-                trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
-            elif selected_status == 'scheduled':
-                # Ensure scheduled trips are in the future, but keep the time
-                if trip_datetime_val <= now:
-                    new_date = (now + timedelta(days=random.randint(1, 30))).date()
-                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
-                elif trip_datetime_val.date() > (now + timedelta(days=60)).date():
-                    new_date = (now + timedelta(days=random.randint(1,60))).date()
-                    trip_datetime_val = datetime.combine(new_date, trip_datetime_val.time())
-
-            # Seleccionar conductor, asistente, bus y secretario aleatorios
-            driver = random.choice(drivers)
-            assistant = random.choice(assistants)
-            bus = random.choice(buses)
-            secretary = random.choice(secretaries)
-            # La ruta ya fue seleccionada arriba para determinar los horarios
-
-            trip = Trip(
-                trip_datetime=trip_datetime_val,
-                status=selected_status, # Added status
-                driver_id=driver.id,
-                assistant_id=assistant.id,
-                bus_id=bus.id,
-                route_id=selected_route.id,
-                secretary_id=secretary.id
-            )
-            db.add(trip)
-            trips.append(trip)
-
-        db.commit()
-
-        # Create seats for each bus with row/column positions
-        # Layout: 2+2 (4 seats per row with center aisle)
+        # ── Seats ──
+        all_seats = []
         for bus in buses:
-            capacity = bus.capacity
-            floors = bus.floors or 1
-
-            if floors == 2:
-                # Two-floor bus: split seats between FIRST and SECOND deck
-                half = capacity // 2
-                seat_number = 1
-
-                # First floor seats
-                for i in range(1, half + 1):
-                    row = ((i - 1) // 4) + 1
-                    column = ((i - 1) % 4) + 1
-                    seat = Seat(
-                        bus_id=bus.id,
-                        seat_number=seat_number,
-                        deck="FIRST",
-                        row=row,
-                        column=column
-                    )
-                    db.add(seat)
-                    seat_number += 1
-
-                # Second floor seats
-                for i in range(1, capacity - half + 1):
-                    row = ((i - 1) // 4) + 1
-                    column = ((i - 1) % 4) + 1
-                    seat = Seat(
-                        bus_id=bus.id,
-                        seat_number=seat_number,
-                        deck="SECOND",
-                        row=row,
-                        column=column
-                    )
-                    db.add(seat)
-                    seat_number += 1
+            cap = bus.capacity
+            fl = bus.floors or 1
+            if fl == 2:
+                half = cap // 2
+                num = 1
+                for deck, count in [("FIRST", half), ("SECOND", cap - half)]:
+                    for j in range(1, count + 1):
+                        all_seats.append(Seat(
+                            bus_id=bus.id, seat_number=num, deck=deck,
+                            row=((j - 1) // 4) + 1, column=((j - 1) % 4) + 1,
+                        ))
+                        num += 1
             else:
-                # Single floor bus: all seats on FIRST deck
-                for i in range(1, capacity + 1):
-                    row = ((i - 1) // 4) + 1
-                    column = ((i - 1) % 4) + 1
-                    seat = Seat(
-                        bus_id=bus.id,
-                        seat_number=i,
-                        deck="FIRST",
-                        row=row,
-                        column=column
-                    )
-                    db.add(seat)
-
+                for j in range(1, cap + 1):
+                    all_seats.append(Seat(
+                        bus_id=bus.id, seat_number=j, deck="FIRST",
+                        row=((j - 1) // 4) + 1, column=((j - 1) % 4) + 1,
+                    ))
+        db.add_all(all_seats)
         db.commit()
+        print(
+            f"Created {len(clients)} clients, {len(drivers)} drivers, "
+            f"{len(secretaries)} secretaries, {len(assistants)} assistants, "
+            f"{len(owners)} owners, {len(buses)} buses, {len(all_seats)} seats"
+        )
 
-        # Get all seats for reference
-        all_seats = db.query(Seat).all()
-        seats_by_bus = {}
-        for seat in all_seats:
-            if seat.bus_id not in seats_by_bus:
-                seats_by_bus[seat.bus_id] = []
-            seats_by_bus[seat.bus_id].append(seat)
+        # ── Trips ──
+        trips = []
+        for _ in range(NUM_TRIPS):
+            trip_date = random.choice(date_range).date()
+            route = random.choice(routes)
+            ri = route_info[route.id]
+            hm = SCZ_TO_COM_HM if ri["origin"] == "Santa Cruz" else COM_TO_SCZ_HM
+            hour, minute = random.choice(hm)
+            trip_dt = datetime.combine(trip_date, datetime.min.time()).replace(
+                hour=hour, minute=minute,
+            )
+            status = random.choice(TRIP_STATUSES_WEIGHTED)
 
-        # Crear tickets para algunos viajes
-        # Estados válidos según el schema TicketBase
-        ticket_states = ["pending", "confirmed", "cancelled", "completed"]
-        payment_methods = ["cash", "credit_card", "qr_payment", "bank_transfer"]
-
-        all_tickets = [] # To store all created tickets for later simulation
-        now = datetime.now()
-        six_months_ago = now - timedelta(days=6*30)
-
-        for trip_item in trips:
-            num_tickets = random.randint(10, 20)
-            bus_seats = seats_by_bus.get(trip_item.bus_id, [])
-            trip_route_obj = db.query(Route).filter(Route.id == trip_item.route_id).first() # Renamed trip_route
-            ticket_price = trip_route_obj.price if trip_route_obj and trip_route_obj.price is not None else 30.0
-
-            if bus_seats:
-                num_to_select = min(num_tickets, len(bus_seats))
-                if num_to_select > 0:
-                    selected_seats = random.sample(bus_seats, num_to_select)
-                    for seat_item in selected_seats:
-                        client_instance = random.choice(clients)
-                        secretary_for_ticket = random.choice(secretaries)
-                        
-                        ticket_created_at = trip_item.trip_datetime - timedelta(days=random.randint(1, 30), hours=random.randint(0,23))
-                        if ticket_created_at < six_months_ago: ticket_created_at = six_months_ago + timedelta(days=random.randint(0,5))
-                        if ticket_created_at > now: ticket_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
-
-                        current_initial_ticket_state = "pending"
-                        if trip_item.trip_datetime < now - timedelta(days=2) and ticket_created_at < trip_item.trip_datetime :
-                            current_initial_ticket_state = random.choice(["completed", "confirmed"])
-                        elif trip_item.status == 'cancelled':
-                            current_initial_ticket_state = "cancelled"
-
-                        # Asignar destino específico usando nombres simples
-                        # Lista de destinos posibles para Trans Comarapa
-                        possible_destinations = [
-                            "Comarapa", "Santa Cruz", "Samaipata", "Mairana", "Los Negros", 
-                            "San Isidro", "Tambo", "La Angostura", "Cuevas", "Achiras"
-                        ]
-                        
-                        # 70% de probabilidad de usar el destino de la ruta, 30% destino alternativo
-                        if random.random() < 0.7:
-                            destination_name = trip_route_obj.destination_location.name
-                        else:
-                            # Elegir un destino alternativo
-                            alternative_destinations = [d for d in possible_destinations if d != trip_route_obj.destination_location.name]
-                            if alternative_destinations:
-                                destination_name = random.choice(alternative_destinations)
-                                # Ajustar precio para destinos intermedios (generalmente menor)
-                                if destination_name in ["Samaipata", "Mairana"]:
-                                    ticket_price = ticket_price * 0.6  # 60% del precio completo
-                                elif destination_name in ["Los Negros", "San Isidro"]:
-                                    ticket_price = ticket_price * 0.8  # 80% del precio completo
-                            else:
-                                destination_name = trip_route_obj.destination_location.name
-                        
-                        ticket = Ticket(
-                            seat_id=seat_item.id, client_id=client_instance.id, trip_id=trip_item.id,
-                            destination=destination_name,
-                            state=current_initial_ticket_state, secretary_id=secretary_for_ticket.id,
-                            price=ticket_price, payment_method=random.choice(payment_methods),
-                            created_at=ticket_created_at, updated_at=ticket_created_at # Init updated_at
-                        )
-                        db.add(ticket)
-                        db.flush()
-                        all_tickets.append(ticket)
-
-                        initial_history_entry = TicketStateHistory(
-                            ticket_id=ticket.id, old_state=None, new_state=ticket.state,
-                            changed_at=ticket.created_at, changed_by_user_id=secretary_for_ticket.user_id
-                        )
-                        db.add(initial_history_entry)
-        
-        db.commit() # Commit all tickets and their initial history entries
-
-        # --- Simulate Further Ticket State Changes (Simplified) ---
-        print("Simulating further ticket state changes (simplified)...")
-        num_tickets_to_simulate_changes_for = len(all_tickets) // 3
-        tickets_for_simulation = random.sample(all_tickets, num_tickets_to_simulate_changes_for)
-
-        for ticket_to_simulate in tickets_for_simulation:
-            # Directly use related objects; ensure your session/instance allows this or fetch if needed.
-            # For seeding, direct access to ticket_to_simulate.trip should work if relationships are okay.
-            ticket_trip = ticket_to_simulate.trip
-            if not ticket_trip : continue # Should not happen if data is consistent
-            trip_route_for_sim = ticket_trip.route
-            if not trip_route_for_sim : continue
-
-            last_changed_at = ticket_to_simulate.updated_at 
-            current_sim_state = ticket_to_simulate.state
-            simulating_secretary = random.choice(secretaries)
-            change_made = False
-
-            # Path 1: Pending -> Confirmed
-            if current_sim_state == "pending" and ticket_trip.trip_datetime > now:
-                old_state_sim = current_sim_state
-                new_state_sim = "confirmed"
-                # Confirm a bit after creation, well before trip, and before now.
-                changed_at_sim = max(last_changed_at + timedelta(hours=1), ticket_to_simulate.created_at + timedelta(hours=1))
-                changed_at_sim = min(changed_at_sim, ticket_trip.trip_datetime - timedelta(hours=2), now - timedelta(minutes=10))
-
-                if changed_at_sim > last_changed_at and changed_at_sim < ticket_trip.trip_datetime:
-                    ticket_to_simulate.state = new_state_sim
-                    ticket_to_simulate.updated_at = changed_at_sim
-                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
-                    db.add(ticket_to_simulate) 
-                    current_sim_state = new_state_sim
-                    last_changed_at = changed_at_sim
-                    change_made = True
-
-            # Path 2: Confirmed -> Completed (for past trips)
-            elif current_sim_state == "confirmed" and ticket_trip.trip_datetime < now:
-                old_state_sim = current_sim_state
-                new_state_sim = "completed"
-                route_duration_hours = float(trip_route_for_sim.duration if trip_route_for_sim else 3.0)
-                # Complete after trip ends, before now.
-                changed_at_sim = max(last_changed_at + timedelta(minutes=10), ticket_trip.trip_datetime + timedelta(hours=route_duration_hours + 0.5))
-                changed_at_sim = min(changed_at_sim, now - timedelta(minutes=5))
-                
-                if changed_at_sim > last_changed_at:
-                    ticket_to_simulate.state = new_state_sim
-                    ticket_to_simulate.updated_at = changed_at_sim
-                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
-                    db.add(ticket_to_simulate)
-                    current_sim_state = new_state_sim
-                    last_changed_at = changed_at_sim
-                    change_made = True
-            
-            # Path 3: Pending or Confirmed -> Cancelled (small chance, for future trips)
-            if not change_made and random.random() < 0.05 and current_sim_state in ["pending", "confirmed"] and ticket_trip.trip_datetime > now:
-                old_state_sim = current_sim_state
-                new_state_sim = "cancelled"
-                # Cancel a bit after creation/confirmation, well before trip, and before now.
-                changed_at_sim = max(last_changed_at + timedelta(minutes=15), ticket_to_simulate.created_at + timedelta(minutes=15))
-                changed_at_sim = min(changed_at_sim, ticket_trip.trip_datetime - timedelta(hours=1), now - timedelta(minutes=5))
-
-                if changed_at_sim > last_changed_at and changed_at_sim < ticket_trip.trip_datetime:
-                    ticket_to_simulate.state = new_state_sim
-                    ticket_to_simulate.updated_at = changed_at_sim
-                    db.add(TicketStateHistory(ticket_id=ticket_to_simulate.id, old_state=old_state_sim, new_state=new_state_sim, changed_at=changed_at_sim, changed_by_user_id=simulating_secretary.user_id))
-                    db.add(ticket_to_simulate)
-                    # No further changes for cancelled tickets
-        
-        db.commit()
-
-        # Crear mapa de location_id -> office_id para asignación de encomiendas
-        location_to_office = {office.location_id: office.id for office in offices.values()}
-
-        # --- Package Seeding and Initial State History ---
-        # Nuevos estados: registered_at_office, assigned_to_trip, in_transit, arrived_at_destination, delivered
-        all_packages = [] 
-        item_descriptions = [
-            "Documentos importantes", "Ropa de temporada 2025", "Equipos electrónicos nuevos", "Productos alimenticios locales",
-            "Medicamentos esenciales", "Libros y material educativo", "Herramientas de trabajo especializadas", "Artículos de hogar modernos",
-            "Productos de belleza y cuidado personal", "Juguetes educativos", "Artículos deportivos premium", "Electrodomésticos pequeños inteligentes",
-            "Repuestos automotrices", "Instrumentos musicales", "Material de construcción", "Productos artesanales bolivianos"
-        ]
-        package_counter = 1
-
-        # Helper para crear items de un paquete
-        def create_package_items(db, package_id, item_descriptions):
-            num_items = random.randint(1, 4)
-            for _ in range(num_items):
-                quantity = random.randint(1, 5)
-                description = random.choice(item_descriptions)
-                unit_price = round(random.uniform(10.0, 100.0), 2)
-                total_price = quantity * unit_price
-                package_item = PackageItem(
-                    quantity=quantity, description=description, unit_price=unit_price,
-                    total_price=total_price, package_id=package_id
+            if status in ("completed", "cancelled") and trip_dt > now - timedelta(days=7):
+                trip_dt = datetime.combine(
+                    (now - timedelta(days=random.randint(8, SEED_DAYS))).date(),
+                    trip_dt.time(),
                 )
-                db.add(package_item)
+            elif status == "in_progress":
+                trip_dt = datetime.combine(
+                    (now - timedelta(hours=random.randint(0, 24))).date(),
+                    trip_dt.time(),
+                )
+            elif status == "scheduled":
+                if trip_dt <= now:
+                    trip_dt = datetime.combine(
+                        (now + timedelta(days=random.randint(1, 30))).date(),
+                        trip_dt.time(),
+                    )
+                elif trip_dt > now + timedelta(days=60):
+                    trip_dt = datetime.combine(
+                        (now + timedelta(days=random.randint(1, 60))).date(),
+                        trip_dt.time(),
+                    )
 
-        # 1) Paquetes asignados a viajes (como antes, pero con nuevos estados)
-        for trip_item in trips:
-            num_packages = random.randint(3, 8)
-            for _ in range(num_packages):
+            trips.append(Trip(
+                trip_datetime=trip_dt, status=status,
+                driver_id=random.choice(drivers).id,
+                assistant_id=random.choice(assistants).id,
+                bus_id=random.choice(buses).id,
+                route_id=route.id,
+                secretary_id=random.choice(secretaries).id,
+            ))
+        db.add_all(trips)
+        db.commit()
+        print(f"{len(trips)} trips created")
+
+        # Seats lookup by bus
+        seats_by_bus = defaultdict(list)
+        for s in all_seats:
+            seats_by_bus[s.bus_id].append(s)
+
+        # ── Tickets + History ──
+        tickets_batch = []
+        ticket_hist_meta = []
+
+        for trip in trips:
+            bus_seats = seats_by_bus.get(trip.bus_id, [])
+            if not bus_seats:
+                continue
+            ri = route_info[trip.route_id]
+            base_price = ri["price"] or 30.0
+            num = min(random.randint(*TICKETS_PER_TRIP), len(bus_seats))
+
+            for seat in random.sample(bus_seats, num):
+                created_at = trip.trip_datetime - timedelta(
+                    days=random.randint(1, 30), hours=random.randint(0, 23),
+                )
+                created_at = max(created_at, six_months_ago)
+                created_at = min(created_at, now)
+
+                state = _ticket_state_for_trip(trip.status)
+                sec = random.choice(secretaries)
+
+                if random.random() < 0.7:
+                    dest = ri["destination"]
+                    price = base_price
+                else:
+                    alt = [d for d in DESTINATION_NAMES if d != ri["destination"]]
+                    dest = random.choice(alt) if alt else ri["destination"]
+                    price = base_price * INTERMEDIATE_PRICES.get(dest, 1.0)
+
+                idx = len(tickets_batch)
+                tickets_batch.append(Ticket(
+                    seat_id=seat.id, client_id=random.choice(clients).id,
+                    trip_id=trip.id, destination=dest, state=state,
+                    secretary_id=sec.id, price=price,
+                    payment_method=random.choice(TICKET_PAYMENT_METHODS),
+                    created_at=created_at, updated_at=created_at,
+                ))
+                for entry in _ticket_history_meta(
+                    state, created_at, trip.trip_datetime,
+                    ri["duration"] or 4.5, sec.user_id,
+                ):
+                    ticket_hist_meta.append((idx, *entry))
+
+        db.add_all(tickets_batch)
+        db.flush()
+
+        hist_entries = []
+        for idx, old_st, new_st, changed_at, uid in ticket_hist_meta:
+            hist_entries.append(TicketStateHistory(
+                ticket_id=tickets_batch[idx].id,
+                old_state=old_st, new_state=new_st,
+                changed_at=changed_at, changed_by_user_id=uid,
+            ))
+        db.add_all(hist_entries)
+        db.commit()
+        print(f"{len(tickets_batch)} tickets created with history")
+
+        # ── Packages + History + Items ──
+        location_to_office = {off.location_id: off.id for off in offices.values()}
+        office_ids = [off.id for off in offices.values()]
+        packages_batch = []
+        pkg_hist_meta = []
+        counter = 0
+
+        for trip in trips:
+            ri = route_info[trip.route_id]
+            for _ in range(random.randint(*PACKAGES_PER_TRIP)):
                 sender = random.choice(clients)
                 recipient = random.choice([c for c in clients if c.id != sender.id])
-                tracking_number = f"PKG{package_counter:06d}"
-                package_counter += 1
+                created_at = trip.trip_datetime - timedelta(
+                    days=random.randint(1, 15), hours=random.randint(0, 23),
+                )
+                created_at = max(created_at, six_months_ago)
+                created_at = min(created_at, now)
+                state = _package_state_for_trip(trip.status)
+                sec = random.choice(secretaries)
+                counter += 1
+                pkg_idx = len(packages_batch)
 
-                package_created_at = trip_item.trip_datetime - timedelta(days=random.randint(1, 15), hours=random.randint(0,23))
-                if package_created_at < six_months_ago: package_created_at = six_months_ago + timedelta(days=random.randint(0,5))
-                if package_created_at > now: package_created_at = now - timedelta(days=random.randint(0, (now - six_months_ago).days))
-
-                # Estado inicial según contexto del viaje
-                current_initial_package_state = "assigned_to_trip"
-                if trip_item.trip_datetime < now - timedelta(days=2) and package_created_at < trip_item.trip_datetime:
-                    current_initial_package_state = random.choice(["delivered", "in_transit", "arrived_at_destination"])
-                elif trip_item.status == 'in_progress':
-                    current_initial_package_state = "in_transit"
-
-                selected_secretary = random.choice(secretaries)
-
-                package = Package(
-                    tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
+                packages_batch.append(Package(
+                    tracking_number=f"PKG{counter:06d}",
+                    total_weight=round(random.uniform(0.5, 20.0), 2),
                     total_declared_value=round(random.uniform(50.0, 500.0), 2),
-                    notes=f"Envío 2025: Paquete de {sender.firstname} {sender.lastname} para {recipient.firstname} {recipient.lastname} - Servicio premium",
-                    status=current_initial_package_state, sender_id=sender.id, recipient_id=recipient.id,
-                    trip_id=trip_item.id, secretary_id=selected_secretary.id, created_at=package_created_at,
-                    updated_at=package_created_at,
-                    origin_office_id=location_to_office.get(trip_item.route.origin_location_id),
-                    destination_office_id=location_to_office.get(trip_item.route.destination_location_id)
-                )
-                db.add(package)
-                db.flush()
-                all_packages.append(package)
+                    notes=f"Envío 2025: {sender.firstname} {sender.lastname} -> "
+                          f"{recipient.firstname} {recipient.lastname}",
+                    status=state, sender_id=sender.id, recipient_id=recipient.id,
+                    trip_id=trip.id, secretary_id=sec.id,
+                    created_at=created_at, updated_at=created_at,
+                    origin_office_id=location_to_office.get(ri["origin_loc_id"]),
+                    destination_office_id=location_to_office.get(ri["dest_loc_id"]),
+                ))
+                for entry in _package_history_meta(
+                    state, created_at, trip.trip_datetime,
+                    ri["duration"] or 4.5, sec.user_id,
+                ):
+                    pkg_hist_meta.append((pkg_idx, *entry))
 
-                initial_pkg_history_entry = PackageStateHistory(
-                    package_id=package.id, old_state=None, new_state="registered_at_office",
-                    changed_at=package.created_at, changed_by_user_id=selected_secretary.user_id
-                )
-                db.add(initial_pkg_history_entry)
-
-                # Si tiene viaje, agregar historial de asignación
-                if current_initial_package_state != "registered_at_office":
-                    assign_history = PackageStateHistory(
-                        package_id=package.id, old_state="registered_at_office", new_state="assigned_to_trip",
-                        changed_at=package.created_at + timedelta(hours=random.randint(1, 12)),
-                        changed_by_user_id=selected_secretary.user_id
-                    )
-                    db.add(assign_history)
-
-                create_package_items(db, package.id, item_descriptions)
-
-        # 2) Paquetes SIN viaje asignado (registered_at_office)
-        num_unassigned_packages = 15
-        print(f"Creating {num_unassigned_packages} unassigned packages (registered_at_office)...")
-        for _ in range(num_unassigned_packages):
+        for _ in range(NUM_UNASSIGNED_PACKAGES):
             sender = random.choice(clients)
             recipient = random.choice([c for c in clients if c.id != sender.id])
-            tracking_number = f"PKG{package_counter:06d}"
-            package_counter += 1
+            created_at = now - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23))
+            sec = random.choice(secretaries)
+            origin_office = sec.office_id
+            dest_office = random.choice([oid for oid in office_ids if oid != origin_office])
+            counter += 1
+            pkg_idx = len(packages_batch)
 
-            package_created_at = now - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23))
-            selected_secretary = random.choice(secretaries)
-
-            # Para paquetes no asignados, usamos la oficina del secretario como origen 
-            # y una oficina aleatoria como destino
-            pkg_origin_office_id = selected_secretary.office_id
-            pkg_dest_office_id = random.choice([off.id for off in offices.values() if off.id != pkg_origin_office_id])
-
-            package = Package(
-                tracking_number=tracking_number, total_weight=round(random.uniform(0.5, 20.0), 2),
+            packages_batch.append(Package(
+                tracking_number=f"PKG{counter:06d}",
+                total_weight=round(random.uniform(0.5, 20.0), 2),
                 total_declared_value=round(random.uniform(50.0, 500.0), 2),
-                notes=f"Encomienda pendiente de asignación - {sender.firstname} {sender.lastname} for {recipient.firstname} {recipient.lastname}",
-                status="registered_at_office", sender_id=sender.id, recipient_id=recipient.id,
-                trip_id=None, secretary_id=selected_secretary.id, created_at=package_created_at,
-                updated_at=package_created_at,
-                origin_office_id=pkg_origin_office_id,
-                destination_office_id=pkg_dest_office_id
-            )
-            db.add(package)
-            db.flush()
-            all_packages.append(package)
+                notes=f"Encomienda pendiente - {sender.firstname} {sender.lastname}",
+                status="registered_at_office",
+                sender_id=sender.id, recipient_id=recipient.id,
+                trip_id=None, secretary_id=sec.id,
+                created_at=created_at, updated_at=created_at,
+                origin_office_id=origin_office,
+                destination_office_id=dest_office,
+            ))
+            pkg_hist_meta.append((pkg_idx, None, "registered_at_office", created_at, sec.user_id))
 
-            initial_pkg_history_entry = PackageStateHistory(
-                package_id=package.id, old_state=None, new_state="registered_at_office",
-                changed_at=package.created_at, changed_by_user_id=selected_secretary.user_id
-            )
-            db.add(initial_pkg_history_entry)
-            create_package_items(db, package.id, item_descriptions)
+        db.add_all(packages_batch)
+        db.flush()
 
-        db.commit() # Commit all packages and their initial history
+        pkg_hist_entries = []
+        for idx, old_st, new_st, changed_at, uid in pkg_hist_meta:
+            pkg_hist_entries.append(PackageStateHistory(
+                package_id=packages_batch[idx].id,
+                old_state=old_st, new_state=new_st,
+                changed_at=changed_at, changed_by_user_id=uid,
+            ))
+        db.add_all(pkg_hist_entries)
 
-        # --- Simulate Further Package State Changes (New Status System) ---
-        print("Simulating further package state changes (new status system)...")
-        # Only simulate packages that have a trip assigned
-        assigned_packages = [p for p in all_packages if p.trip_id is not None]
-        num_packages_to_simulate = len(assigned_packages) // 2
-        packages_for_simulation = random.sample(assigned_packages, num_packages_to_simulate)
+        all_items = []
+        for pkg in packages_batch:
+            for _ in range(random.randint(1, 4)):
+                qty = random.randint(1, 5)
+                unit_price = round(random.uniform(10.0, 100.0), 2)
+                all_items.append(PackageItem(
+                    quantity=qty,
+                    description=random.choice(PACKAGE_ITEM_DESCRIPTIONS),
+                    unit_price=unit_price, total_price=qty * unit_price,
+                    package_id=pkg.id,
+                ))
+        db.add_all(all_items)
+        db.commit()
+        print(
+            f"{len(packages_batch)} packages, {len(pkg_hist_entries)} history, "
+            f"{len(all_items)} items created"
+        )
 
-        for package_to_simulate in packages_for_simulation:
-            package_trip = package_to_simulate.trip
-            if not package_trip: continue
-            package_route = package_trip.route
-            if not package_route: continue
-
-            last_changed_at_pkg = package_to_simulate.updated_at
-            current_sim_state_pkg = package_to_simulate.status
-            simulating_secretary_pkg = random.choice(secretaries)
-
-            # Path 1: assigned_to_trip -> in_transit (trip has departed)
-            if current_sim_state_pkg == "assigned_to_trip" and package_trip.trip_datetime < now:
-                old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "in_transit"
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime)
-                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=10))
-
-                if changed_at_pkg_sim > last_changed_at_pkg:
-                    package_to_simulate.status = new_state_pkg_sim
-                    package_to_simulate.updated_at = changed_at_pkg_sim
-                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
-                    db.add(package_to_simulate)
-                    current_sim_state_pkg = new_state_pkg_sim
-                    last_changed_at_pkg = changed_at_pkg_sim
-
-            # Path 2: in_transit -> arrived_at_destination
-            if current_sim_state_pkg == "in_transit" and package_trip.trip_datetime < now - timedelta(hours=3):
-                old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "arrived_at_destination"
-                route_duration_hours_pkg = float(package_route.duration if package_route else 3.0)
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), package_trip.trip_datetime + timedelta(hours=route_duration_hours_pkg))
-                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=5))
-
-                if changed_at_pkg_sim > last_changed_at_pkg:
-                    package_to_simulate.status = new_state_pkg_sim
-                    package_to_simulate.updated_at = changed_at_pkg_sim
-                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
-                    db.add(package_to_simulate)
-                    current_sim_state_pkg = new_state_pkg_sim
-                    last_changed_at_pkg = changed_at_pkg_sim
-
-            # Path 3: arrived_at_destination -> delivered (60% chance)
-            if current_sim_state_pkg == "arrived_at_destination" and random.random() < 0.6:
-                old_state_pkg_sim = current_sim_state_pkg
-                new_state_pkg_sim = "delivered"
-                changed_at_pkg_sim = max(last_changed_at_pkg + timedelta(hours=1), last_changed_at_pkg + timedelta(hours=random.randint(1, 48)))
-                changed_at_pkg_sim = min(changed_at_pkg_sim, now - timedelta(minutes=5))
-
-                if changed_at_pkg_sim > last_changed_at_pkg:
-                    package_to_simulate.status = new_state_pkg_sim
-                    package_to_simulate.updated_at = changed_at_pkg_sim
-                    db.add(PackageStateHistory(package_id=package_to_simulate.id, old_state=old_state_pkg_sim, new_state=new_state_pkg_sim, changed_at=changed_at_pkg_sim, changed_by_user_id=simulating_secretary_pkg.user_id))
-                    db.add(package_to_simulate)
-
-        db.commit() # Commit simulated package state changes
-
-        # --- Seed Cash Registers and Transactions ---
-        print("Seeding cash registers and transactions for owner financials...")
-
-        all_offices = db.query(Office).all()
-        all_secretary_users = db.query(User).filter(User.role == UserRole.SECRETARY).all()
-
-        if all_offices and all_secretary_users:
-            # Crear cajas para los últimos 30 días (cerradas) + 1 abierta hoy por oficina
+        # ── Cash Registers + Transactions ──
+        all_offices_list = list(offices.values())
+        if all_offices_list and secretary_users:
             cash_registers = []
-            for office in all_offices:
-                opener = random.choice(all_secretary_users)
-
-                # Cajas cerradas de días anteriores
+            for office in all_offices_list:
+                opener = random.choice(secretary_users)
                 for days_ago in range(30, 0, -1):
                     reg_date = date.today() - timedelta(days=days_ago)
-                    opened_at = datetime.combine(reg_date, datetime.min.time().replace(hour=6, minute=0))
-                    closed_at = datetime.combine(reg_date, datetime.min.time().replace(hour=20, minute=0))
-
-                    register = CashRegister(
-                        office_id=office.id,
-                        date=reg_date,
-                        opened_by_id=opener.id,
-                        closed_by_id=opener.id,
-                        initial_balance=500.0,
-                        final_balance=0.0,  # Se actualizará después
+                    cash_registers.append(CashRegister(
+                        office_id=office.id, date=reg_date,
+                        opened_by_id=opener.id, closed_by_id=opener.id,
+                        initial_balance=500.0, final_balance=0.0,
                         status=CashRegisterStatus.CLOSED,
-                        opened_at=opened_at,
-                        closed_at=closed_at
-                    )
-                    db.add(register)
-                    cash_registers.append(register)
-
-                # Caja abierta de hoy
-                today_opened_at = datetime.combine(date.today(), datetime.min.time().replace(hour=6, minute=0))
-                today_register = CashRegister(
-                    office_id=office.id,
-                    date=date.today(),
-                    opened_by_id=opener.id,
-                    initial_balance=500.0,
+                        opened_at=datetime.combine(reg_date, dt_time(6, 0)),
+                        closed_at=datetime.combine(reg_date, dt_time(20, 0)),
+                    ))
+                cash_registers.append(CashRegister(
+                    office_id=office.id, date=date.today(),
+                    opened_by_id=opener.id, initial_balance=500.0,
                     status=CashRegisterStatus.OPEN,
-                    opened_at=today_opened_at
-                )
-                db.add(today_register)
-                cash_registers.append(today_register)
-
+                    opened_at=datetime.combine(date.today(), dt_time(6, 0)),
+                ))
+            db.add_all(cash_registers)
             db.commit()
             print(f"{len(cash_registers)} cash registers created")
 
-            # Crear transacciones de venta de boletos para tickets confirmados/completados
-            # Agrupar tickets por viaje para encontrar el cash register correcto
-            paid_tickets = [t for t in all_tickets if t.state in ['confirmed', 'completed']]
-            tx_count = 0
+            # Pre-build lookups (eliminates N+1 queries)
+            secretary_office_map = {s.id: s.office_id for s in secretaries}
+            register_map = {}
+            office_reg_sorted = defaultdict(list)
+            date_registers = defaultdict(list)
+            for reg in cash_registers:
+                register_map[(reg.office_id, reg.date)] = reg
+                office_reg_sorted[reg.office_id].append(reg)
+                date_registers[reg.date].append(reg)
+            for oid in office_reg_sorted:
+                office_reg_sorted[oid].sort(key=lambda r: r.date, reverse=True)
 
+            # Pre-compute package totals from items
+            pkg_totals = defaultdict(float)
+            for item in all_items:
+                pkg_totals[item.package_id] += item.total_price
+
+            # Ticket transactions
+            paid_tickets = [t for t in tickets_batch if t.state in ("confirmed", "completed")]
+            tx_batch = []
             for ticket in paid_tickets:
-                trip = ticket.trip
-                if not trip:
+                office_id = secretary_office_map.get(ticket.secretary_id)
+                if not office_id:
                     continue
-
-                # Encontrar un register de la fecha del ticket (o cercana)
                 ticket_date = ticket.created_at.date() if ticket.created_at else date.today()
-
-                # Buscar register de la oficina del secretario del ticket
-                secretary_obj = db.query(Secretary).filter(Secretary.id == ticket.secretary_id).first()
-                if not secretary_obj or not secretary_obj.office_id:
-                    continue
-
-                matching_register = db.query(CashRegister).filter(
-                    CashRegister.office_id == secretary_obj.office_id,
-                    CashRegister.date == ticket_date
-                ).first()
-
-                if not matching_register:
-                    # Usar el register más cercano
-                    matching_register = db.query(CashRegister).filter(
-                        CashRegister.office_id == secretary_obj.office_id
-                    ).order_by(CashRegister.date.desc()).first()
-
-                if matching_register:
-                    tx = CashTransaction(
-                        cash_register_id=matching_register.id,
+                reg = register_map.get((office_id, ticket_date))
+                if not reg:
+                    regs = office_reg_sorted.get(office_id, [])
+                    reg = regs[0] if regs else None
+                if reg:
+                    tx_batch.append(CashTransaction(
+                        cash_register_id=reg.id,
                         type=CashTransactionType.TICKET_SALE,
                         amount=float(ticket.price),
                         payment_method=PaymentMethod.CASH,
-                        reference_id=ticket.id,
-                        reference_type="ticket",
-                        description=f"Venta boleto #{ticket.id} - Viaje #{trip.id}",
-                        created_at=ticket.created_at or datetime.now()
-                    )
-                    db.add(tx)
-                    tx_count += 1
+                        reference_id=ticket.id, reference_type="ticket",
+                        description=f"Venta boleto #{ticket.id}",
+                        created_at=ticket.created_at or now,
+                    ))
 
-            # Crear transacciones para paquetes pagados
-            paid_packages = [p for p in all_packages if p.status in ['delivered', 'arrived_at_destination', 'in_transit']]
-            for package in paid_packages:
-                if not package.trip_id:
+            # Package transactions
+            paid_statuses = ("delivered", "arrived_at_destination", "in_transit")
+            for pkg in packages_batch:
+                if pkg.status not in paid_statuses or not pkg.trip_id:
                     continue
-
-                pkg_date = package.created_at.date() if package.created_at else date.today()
-
-                # Usar primera oficina como fallback
-                pkg_register = db.query(CashRegister).filter(
-                    CashRegister.date == pkg_date
-                ).first()
-
-                if not pkg_register:
-                    pkg_register = db.query(CashRegister).order_by(CashRegister.date.desc()).first()
-
-                if pkg_register and hasattr(package, 'total_price') and package.total_price:
-                    tx = CashTransaction(
-                        cash_register_id=pkg_register.id,
+                total = pkg_totals.get(pkg.id, 0)
+                if total <= 0:
+                    continue
+                pkg_date = pkg.created_at.date() if pkg.created_at else date.today()
+                regs = date_registers.get(pkg_date, [])
+                reg = regs[0] if regs else None
+                if not reg:
+                    for oid in office_reg_sorted:
+                        if office_reg_sorted[oid]:
+                            reg = office_reg_sorted[oid][0]
+                            break
+                if reg:
+                    tx_batch.append(CashTransaction(
+                        cash_register_id=reg.id,
                         type=CashTransactionType.PACKAGE_PAYMENT,
-                        amount=float(package.total_price),
+                        amount=total,
                         payment_method=PaymentMethod.CASH,
-                        reference_id=package.id,
-                        reference_type="package",
-                        description=f"Pago encomienda #{package.tracking_number}",
-                        created_at=package.created_at or datetime.now()
-                    )
-                    db.add(tx)
-                    tx_count += 1
+                        reference_id=pkg.id, reference_type="package",
+                        description=f"Pago encomienda #{pkg.tracking_number}",
+                        created_at=pkg.created_at or now,
+                    ))
 
+            db.add_all(tx_batch)
             db.commit()
 
-            # Actualizar final_balance de cajas cerradas
+            # Update final balances
             for reg in cash_registers:
                 if reg.status == CashRegisterStatus.CLOSED:
                     total_in = db.query(func.sum(CashTransaction.amount)).filter(
@@ -1415,103 +796,123 @@ def seed_db():
                         CashTransaction.type.in_([
                             CashTransactionType.TICKET_SALE,
                             CashTransactionType.PACKAGE_PAYMENT,
-                            CashTransactionType.POR_COBRAR_COLLECTION
-                        ])
+                            CashTransactionType.POR_COBRAR_COLLECTION,
+                        ]),
                     ).scalar() or 0.0
-
                     total_out = db.query(func.sum(CashTransaction.amount)).filter(
                         CashTransaction.cash_register_id == reg.id,
-                        CashTransaction.type == CashTransactionType.WITHDRAWAL
+                        CashTransaction.type == CashTransactionType.WITHDRAWAL,
                     ).scalar() or 0.0
-
                     reg.final_balance = reg.initial_balance + total_in - total_out
-
             db.commit()
-            print(f"{tx_count} cash transactions created")
+            print(f"{len(tx_batch)} cash transactions created")
         else:
             print("No offices or secretaries found, skipping cash register seeding")
 
-        # --- Seed Activities ---
-        print("Seeding activities...")
-        activities_to_seed = []
-
-        # Obtener algunos usuarios para asociar actividades
-        admin_user_for_activity = db.query(User).filter(User.role == UserRole.ADMIN).first()
-        secretary_user_for_activity = db.query(User).filter(User.role == UserRole.SECRETARY).first()
-        client_user_for_activity = db.query(User).filter(User.role == UserRole.CLIENT).first()
-
-        # Actividades del sistema
-        activities_to_seed.append(ActivityModel(activity_type="Sistema Reiniciado", details="El sistema de seeding completó la carga inicial de datos de 2025."))
-        activities_to_seed.append(ActivityModel(activity_type="Mantenimiento Programado", details="Próximo mantenimiento el 2025-10-15 03:00 AM"))
-
-        # Actividades asociadas a usuarios (si existen)
-        if admin_user_for_activity:
-            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Login Exitoso", details=f"Admin {admin_user_for_activity.username} inició sesión desde terminal principal - Septiembre 2025"))
-            activities_to_seed.append(ActivityModel(user_id=admin_user_for_activity.id, activity_type="Configuración Actualizada", details="Sistema de seguridad actualizado para temporada alta 2025 - Nuevas políticas implementadas."))
-        
-        if secretary_user_for_activity:
-            # Buscar un ticket y paquete para los detalles
-            first_ticket = db.query(Ticket).first()
-            first_package = db.query(Package).first()
-
-            if first_ticket:
-                activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Nueva Reserva Creada", details=f"Ticket ID: {first_ticket.id} para el viaje ID: {first_ticket.trip_id}"))
-            activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Venta Confirmada", details="Venta de mostrador procesada correctamente - Sistema POS actualizado 2025."))
-            if first_package:
-                 activities_to_seed.append(ActivityModel(user_id=secretary_user_for_activity.id, activity_type="Paquete Registrado", details=f"Paquete con tracking: {first_package.tracking_number}"))
-
-        if client_user_for_activity:
-            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Perfil Actualizado", details="Cliente actualizó información de contacto vía aplicación móvil - Septiembre 2025."))
-            activities_to_seed.append(ActivityModel(user_id=client_user_for_activity.id, activity_type="Consulta de Viaje", details="Cliente consultó viajes disponibles para la ruta Santa Cruz - Comarapa."))
-
-        # Crear algunas actividades más genéricas con fechas variadas para 2025
-        activity_types_general = ["Actualización de Ruta", "Nuevo Conductor Contratado", "Mantenimiento de Bus", "Promoción Lanzada", "Reporte Generado"]
-        sample_details = [
-            "Ruta SCZ-Comarapa actualizada con nuevo precio para 2025.",
-            "Nuevo conductor certificado se unió al equipo.",
-            "Bus completó mantenimiento preventivo de inicio de año.",
-            "Promoción de temporada alta implementada para enero-marzo 2025.",
-            "Reporte de ventas de septiembre 2025 generado exitosamente."
+        # ── Activities ──
+        activities = [
+            ActivityModel(
+                activity_type="Sistema Reiniciado",
+                details="El sistema de seeding completó la carga inicial de datos 2025.",
+            ),
+            ActivityModel(
+                activity_type="Mantenimiento Programado",
+                details="Próximo mantenimiento el 2025-10-15 03:00 AM",
+            ),
         ]
 
-        all_user_ids = [u.id for u in db.query(User.id).all()] # Obtener todos los user_ids para variedad
+        if admin_user:
+            activities.extend([
+                ActivityModel(
+                    user_id=admin_user.id, activity_type="Login Exitoso",
+                    details=f"Admin {admin_user.username} inició sesión",
+                ),
+                ActivityModel(
+                    user_id=admin_user.id, activity_type="Configuración Actualizada",
+                    details="Sistema de seguridad actualizado 2025",
+                ),
+            ])
 
-        for i in range(10): # Crear 10 actividades genéricas adicionales
-            user_id_for_activity = random.choice(all_user_ids) if all_user_ids and random.choice([True, False]) else None
-            activity_type_selected = random.choice(activity_types_general)
-            detail_selected = random.choice(sample_details) # Podrías hacer esto más específico al tipo
-            # Simular fechas pasadas para las actividades (marzo 2025 - septiembre 2025)
-            past_date = datetime.now() - timedelta(days=random.randint(0, 180), hours=random.randint(0,23), minutes=random.randint(0,59))
-            
-            activities_to_seed.append(ActivityModel(
-                user_id=user_id_for_activity,
-                activity_type=activity_type_selected,
-                details=f"{detail_selected} - Registro del sistema Trans Comarapa {i+1}",
-                created_at=past_date
+        sec_user = secretary_users[0] if secretary_users else None
+        if sec_user:
+            activities.append(ActivityModel(
+                user_id=sec_user.id, activity_type="Venta Confirmada",
+                details="Venta de mostrador procesada",
+            ))
+            first_ticket = db.query(Ticket).first()
+            first_pkg = db.query(Package).first()
+            if first_ticket:
+                activities.append(ActivityModel(
+                    user_id=sec_user.id, activity_type="Nueva Reserva",
+                    details=f"Ticket ID: {first_ticket.id}",
+                ))
+            if first_pkg:
+                activities.append(ActivityModel(
+                    user_id=sec_user.id, activity_type="Paquete Registrado",
+                    details=f"Tracking: {first_pkg.tracking_number}",
+                ))
+
+        client_user = client_users[0] if client_users else None
+        if client_user:
+            activities.extend([
+                ActivityModel(
+                    user_id=client_user.id, activity_type="Perfil Actualizado",
+                    details="Cliente actualizó información de contacto",
+                ),
+                ActivityModel(
+                    user_id=client_user.id, activity_type="Consulta de Viaje",
+                    details="Consulta viajes Santa Cruz - Comarapa",
+                ),
+            ])
+
+        all_user_ids = [
+            u.id for u in (
+                client_users + driver_users + secretary_users
+                + assistant_users + owner_users + [admin_user]
+            )
+        ]
+        act_types = [
+            "Actualización de Ruta", "Nuevo Conductor", "Mantenimiento de Bus",
+            "Promoción Lanzada", "Reporte Generado",
+        ]
+        act_details = [
+            "Ruta SCZ-Comarapa actualizada con nuevo precio 2025.",
+            "Nuevo conductor certificado se unió al equipo.",
+            "Bus completó mantenimiento preventivo.",
+            "Promoción de temporada alta implementada.",
+            "Reporte de ventas generado exitosamente.",
+        ]
+        for i in range(10):
+            uid = random.choice(all_user_ids) if random.choice([True, False]) else None
+            activities.append(ActivityModel(
+                user_id=uid,
+                activity_type=random.choice(act_types),
+                details=f"{random.choice(act_details)} - Registro {i+1}",
+                created_at=now - timedelta(
+                    days=random.randint(0, SEED_DAYS),
+                    hours=random.randint(0, 23),
+                    minutes=random.randint(0, 59),
+                ),
             ))
 
-        db.add_all(activities_to_seed)
-        print(f"{len(activities_to_seed)} activities seeded.")
-
-        # Final commit
+        db.add_all(activities)
         db.commit()
+        print(f"{len(activities)} activities seeded")
         print("Database seeded successfully!")
 
     except Exception as e:
         db.rollback()
         print(f"Error seeding database: {e}")
+        raise
     finally:
         db.close()
 
+
+# ── create_test_users ────────────────────────────────────────────────────────
+
 def create_test_users():
-    """
-    Crea usuarios de prueba con credenciales fijas para facilitar el testing.
-    """
     db = SessionLocal()
     try:
-        # Limpiar datos existentes para evitar conflictos
-        print("Limpiando datos de usuarios de prueba existentes...")
-        # Obtener IDs de usuarios de prueba
         test_emails = [
             "admin1@transcomarapa.com",
             "secretary1@transcomarapa.com",
@@ -1523,302 +924,174 @@ def create_test_users():
             "client2@transcomarapa.com",
             "client3@transcomarapa.com",
             "client4@transcomarapa.com",
-            "client5@transcomarapa.com"
+            "client5@transcomarapa.com",
         ]
 
-        # Disable foreign key checks temporarily for MySQL
+        print("Limpiando datos de usuarios de prueba existentes...")
         db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
-        
         for email in test_emails:
             user = db.query(User).filter(User.email == email).first()
             if user:
-                # Eliminar entidades asociadas (estas ahora heredan de Person)
-                if user.role == "admin" or user.role == "ADMIN":
-                    db.query(Administrator).filter(Administrator.user_id == user.id).delete()
-                elif user.role == "secretary" or user.role == "SECRETARY":
-                    db.query(Secretary).filter(Secretary.user_id == user.id).delete()
-                elif user.role == "driver" or user.role == "DRIVER":
-                    db.query(Driver).filter(Driver.user_id == user.id).delete()
-                elif user.role == "assistant" or user.role == "ASSISTANT":
-                    db.query(Assistant).filter(Assistant.user_id == user.id).delete()
-                elif user.role == "client" or user.role == "CLIENT":
-                    db.query(Client).filter(Client.user_id == user.id).delete()
-
-                # También eliminar instancias de Person que pudieran existir
+                entity_model = ROLE_ENTITY_MAP.get(user.role)
+                if entity_model:
+                    db.query(entity_model).filter(entity_model.user_id == user.id).delete()
                 db.query(Person).filter(Person.user_id == user.id).delete()
-
-                # Eliminar usuario
                 db.delete(user)
-        
-        # Re-enable foreign key checks
         db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
-
         db.commit()
         print("Datos de usuarios de prueba limpiados correctamente")
 
-        # Verificar si hay oficinas, si no hay, crear una
-        office_count = db.query(Office).count()
-        if office_count == 0:
-            print("No hay oficinas en la base de datos. Creando una oficina predeterminada...")
-            # Crear una ubicación primero
+        office = db.query(Office).first()
+        if not office:
             location = Location(
                 name="Terminal Predeterminada",
-                latitude=-17.783333,
-                longitude=-63.182222,
-                address="Av. Principal",
-                city="Santa Cruz de la Sierra",
-                state="Santa Cruz",
-                country="Bolivia",
-                description="Terminal predeterminada para pruebas"
+                latitude=-17.783333, longitude=-63.182222,
+                address="Av. Principal", city="Santa Cruz de la Sierra",
+                state="Santa Cruz", country="Bolivia",
+                description="Terminal predeterminada para pruebas",
             )
             db.add(location)
-            db.flush()  # Para obtener el ID
-
-            # Crear una oficina
+            db.flush()
             office = Office(
                 name="Oficina Central Santa Cruz",
-                phone="78175576",
-                email="santacruz@transcomarapa.com",
-                location_id=location.id
+                phone="78175576", email="santacruz@transcomarapa.com",
+                location_id=location.id,
             )
             db.add(office)
             db.commit()
             print(f"Oficina predeterminada creada con ID: {office.id}")
 
-        # Obtener la primera oficina para asignarla a los secretarios
-        office = db.query(Office).first()
-        # Lista de usuarios de prueba con credenciales fijas
         test_users = [
             {
-                "username": "admin1",
-                "email": "admin1@transcomarapa.com",
-                "role": "admin",
-                "password": "123456",
-                "firstname": "Admin",
-                "lastname": "Principal",
-                "phone": "77123456",
-                "birth_date": date(1980, 5, 15)
+                "username": "admin1", "email": "admin1@transcomarapa.com",
+                "role": "admin", "password": "123456",
+                "firstname": "Admin", "lastname": "Principal",
+                "phone": "77123456", "birth_date": date(1980, 5, 15),
             },
             {
-                "username": "secretary1",
-                "email": "secretary1@transcomarapa.com",
-                "role": "secretary",
-                "password": "123456",
-                "firstname": "Secretaria",
-                "lastname": "Principal",
-                "phone": "77234567",
-                "birth_date": date(1990, 8, 20),
-                "office_id": office.id  # Usar la oficina obtenida anteriormente
+                "username": "secretary1", "email": "secretary1@transcomarapa.com",
+                "role": "secretary", "password": "123456",
+                "firstname": "Secretaria", "lastname": "Principal",
+                "phone": "77234567", "birth_date": date(1990, 8, 20),
+                "office_id": office.id,
             },
             {
-                "username": "secretary2",
-                "email": "secretary2@transcomarapa.com",
-                "role": "secretary",
-                "password": "123456",
-                "firstname": "Ana",
-                "lastname": "García",
-                "phone": "77234568",
-                "birth_date": date(1988, 6, 12),
-                "office_id": office.id
+                "username": "secretary2", "email": "secretary2@transcomarapa.com",
+                "role": "secretary", "password": "123456",
+                "firstname": "Ana", "lastname": "García",
+                "phone": "77234568", "birth_date": date(1988, 6, 12),
+                "office_id": office.id,
             },
             {
-                "username": "secretary3",
-                "email": "secretary3@transcomarapa.com",
-                "role": "secretary",
-                "password": "123456",
-                "firstname": "Carlos",
-                "lastname": "López",
-                "phone": "77234569",
-                "birth_date": date(1992, 9, 8),
-                "office_id": office.id
+                "username": "secretary3", "email": "secretary3@transcomarapa.com",
+                "role": "secretary", "password": "123456",
+                "firstname": "Carlos", "lastname": "López",
+                "phone": "77234569", "birth_date": date(1992, 9, 8),
+                "office_id": office.id,
             },
             {
-                "username": "driver1",
-                "email": "driver1@transcomarapa.com",
-                "role": "driver",
-                "password": "123456",
-                "firstname": "Conductor",
-                "lastname": "Principal",
-                "phone": "77345678",
-                "birth_date": date(1982, 3, 10),
-                "license_number": "LC123456",
-                "license_type": "A",
-                "license_expiry": date(2026, 12, 31),
-                "status": "active"
+                "username": "driver1", "email": "driver1@transcomarapa.com",
+                "role": "driver", "password": "123456",
+                "firstname": "Conductor", "lastname": "Principal",
+                "phone": "77345678", "birth_date": date(1982, 3, 10),
+                "license_number": "LC123456", "license_type": "A",
+                "license_expiry": date(2026, 12, 31), "status": "active",
             },
             {
-                "username": "assistant1",
-                "email": "assistant1@transcomarapa.com",
-                "role": "assistant",
-                "password": "123456",
-                "firstname": "Asistente",
-                "lastname": "Principal",
-                "phone": "77456789",
-                "birth_date": date(1995, 7, 5)
+                "username": "assistant1", "email": "assistant1@transcomarapa.com",
+                "role": "assistant", "password": "123456",
+                "firstname": "Asistente", "lastname": "Principal",
+                "phone": "77456789", "birth_date": date(1995, 7, 5),
             },
             {
-                "username": "client1",
-                "email": "client1@transcomarapa.com",
-                "role": "client",
-                "password": "123456",
-                "firstname": "Cliente",
-                "lastname": "Principal",
-                "phone": "77567890",
-                "birth_date": date(1988, 11, 25),
-                "document_id": "12693562",  # CI de prueba
-                "address": "Av. Principal 123",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz"
+                "username": "client1", "email": "client1@transcomarapa.com",
+                "role": "client", "password": "123456",
+                "firstname": "Cliente", "lastname": "Principal",
+                "phone": "77567890", "birth_date": date(1988, 11, 25),
+                "document_id": "12693562", "address": "Av. Principal 123",
+                "city": "Santa Cruz de la Sierra", "state": "Santa Cruz",
             },
             {
-                "username": "client2",
-                "email": "client2@transcomarapa.com",
-                "role": "client",
-                "password": "123456",
-                "firstname": "María",
-                "lastname": "González",
-                "phone": "77678901",
-                "birth_date": date(1992, 3, 15),
-                "document_id": "9876543",  # CI de prueba para búsqueda
-                "address": "Calle Falsa 456",
-                "city": "Cochabamba",
-                "state": "Cochabamba"
+                "username": "client2", "email": "client2@transcomarapa.com",
+                "role": "client", "password": "123456",
+                "firstname": "María", "lastname": "González",
+                "phone": "77678901", "birth_date": date(1992, 3, 15),
+                "document_id": "9876543", "address": "Calle Falsa 456",
+                "city": "Cochabamba", "state": "Cochabamba",
             },
             {
-                "username": "client3",
-                "email": "client3@transcomarapa.com",
-                "role": "client",
-                "password": "123456",
-                "firstname": "Pedro",
-                "lastname": "Rojas",
-                "phone": "77789012",
-                "birth_date": date(1985, 8, 20),
-                "document_id": "5432109",  # CI de prueba para búsqueda
-                "address": "Av. Libertad 789",
-                "city": "La Paz",
-                "state": "La Paz"
+                "username": "client3", "email": "client3@transcomarapa.com",
+                "role": "client", "password": "123456",
+                "firstname": "Pedro", "lastname": "Rojas",
+                "phone": "77789012", "birth_date": date(1985, 8, 20),
+                "document_id": "5432109", "address": "Av. Libertad 789",
+                "city": "La Paz", "state": "La Paz",
             },
             {
-                "username": "client4",
-                "email": "client4@transcomarapa.com",
-                "role": "client",
-                "password": "123456",
-                "firstname": "Luisa",
-                "lastname": "Morales",
-                "phone": "77890123",
-                "birth_date": date(1990, 12, 3),
-                "document_id": "151985270",  # CI que apareció en los logs de error
-                "address": "Calle Nueva 321",
-                "city": "Santa Cruz de la Sierra",
-                "state": "Santa Cruz"
+                "username": "client4", "email": "client4@transcomarapa.com",
+                "role": "client", "password": "123456",
+                "firstname": "Luisa", "lastname": "Morales",
+                "phone": "77890123", "birth_date": date(1990, 12, 3),
+                "document_id": "151985270", "address": "Calle Nueva 321",
+                "city": "Santa Cruz de la Sierra", "state": "Santa Cruz",
             },
             {
-                "username": "client5",
-                "email": "client5@transcomarapa.com",
-                "role": "client",
-                "password": "123456",
-                "firstname": "Roberto",
-                "lastname": "Silva",
-                "phone": "77901234",
-                "birth_date": date(1987, 4, 17),
-                "document_id": "9753228",  # CI que apareció en los logs de error
-                "address": "Av. Central 654",
-                "city": "Cochabamba",
-                "state": "Cochabamba"
-            }
+                "username": "client5", "email": "client5@transcomarapa.com",
+                "role": "client", "password": "123456",
+                "firstname": "Roberto", "lastname": "Silva",
+                "phone": "77901234", "birth_date": date(1987, 4, 17),
+                "document_id": "9753228", "address": "Av. Central 654",
+                "city": "Cochabamba", "state": "Cochabamba",
+            },
         ]
 
-        # Crear los usuarios de prueba
-        for user_data in test_users:
-            # Crear nuevo usuario
-            new_user = User(
-                username=user_data["username"],
-                email=user_data["email"],
-                role=user_data["role"],
-                hashed_password=User.get_password_hash(user_data["password"]),
-                is_active=True,
-                is_admin=user_data["role"] == "admin",
-                firstname=user_data["firstname"],
-                lastname=user_data["lastname"]
+        for ud in test_users:
+            user = User(
+                username=ud["username"], email=ud["email"],
+                role=ud["role"],
+                hashed_password=User.get_password_hash(ud["password"]),
+                is_active=True, is_admin=(ud["role"] == "admin"),
+                firstname=ud["firstname"], lastname=ud["lastname"],
             )
-            db.add(new_user)
-            db.flush()  # Para obtener el ID del usuario
-            # Crear la entidad asociada según el rol - Nuevo enfoque con Person
-            if user_data["role"] == "admin":
-                entity = Administrator(
-                    user_id=new_user.id,
-                    firstname=user_data["firstname"],
-                    lastname=user_data["lastname"],
-                    phone=user_data["phone"],
-                    birth_date=user_data["birth_date"]
-                )
-                db.add(entity)
-                db.flush()
-            elif user_data["role"] == "secretary":
-                entity = Secretary(
-                    user_id=new_user.id,
-                    firstname=user_data["firstname"],
-                    lastname=user_data["lastname"],
-                    phone=user_data["phone"],
-                    birth_date=user_data["birth_date"],
-                    office_id=user_data["office_id"]
-                )
-                db.add(entity)
-                db.flush()
-            elif user_data["role"] == "driver":
-                entity = Driver(
-                    user_id=new_user.id,
-                    firstname=user_data["firstname"],
-                    lastname=user_data["lastname"],
-                    phone=user_data["phone"],
-                    birth_date=user_data["birth_date"],
-                    license_number=user_data["license_number"],
-                    license_type=user_data["license_type"],
-                    license_expiry=user_data["license_expiry"],
-                    status=user_data["status"]
-                )
-                db.add(entity)
-                db.flush()
-            elif user_data["role"] == "assistant":
-                entity = Assistant(
-                    user_id=new_user.id,
-                    firstname=user_data["firstname"],
-                    lastname=user_data["lastname"],
-                    phone=user_data["phone"],
-                    birth_date=user_data["birth_date"]
-                )
-                db.add(entity)
-                db.flush()
-            elif user_data["role"] == "client":
-                entity = Client(
-                    user_id=new_user.id,
-                    firstname=user_data["firstname"],
-                    lastname=user_data["lastname"],
-                    phone=user_data["phone"],
-                    birth_date=user_data["birth_date"],
-                    # Campos específicos de Client
-                    document_id=user_data.get("document_id"),
-                    address=user_data["address"],
-                    city=user_data["city"],
-                    state=user_data["state"]
-                )
-                db.add(entity)
-                db.flush()
+            db.add(user)
+            db.flush()
 
-        # Commit final
+            common = dict(
+                user_id=user.id, firstname=ud["firstname"], lastname=ud["lastname"],
+                phone=ud["phone"], birth_date=ud["birth_date"],
+            )
+            role = ud["role"]
+            if role == "admin":
+                db.add(Administrator(**common))
+            elif role == "secretary":
+                db.add(Secretary(**common, office_id=ud["office_id"]))
+            elif role == "driver":
+                db.add(Driver(
+                    **common, license_number=ud["license_number"],
+                    license_type=ud["license_type"],
+                    license_expiry=ud["license_expiry"], status=ud["status"],
+                ))
+            elif role == "assistant":
+                db.add(Assistant(**common))
+            elif role == "client":
+                db.add(Client(
+                    **common, document_id=ud.get("document_id"),
+                    address=ud["address"], city=ud["city"], state=ud["state"],
+                ))
+            db.flush()
+
         db.commit()
         print("Usuarios de prueba creados/actualizados exitosamente!")
 
-        # Imprimir lista de usuarios para pruebas
         print("\nLista de usuarios para pruebas:")
         print("================================")
-        for user_data in test_users:
-            print(f"Rol: {user_data['role']}")
-            print(f"Email: {user_data['email']}")
-            print(f"Contraseña: {user_data['password']}")
-            print(f"Nombre: {user_data['firstname']} {user_data['lastname']}")
-            if user_data['role'] == 'client' and 'document_id' in user_data:
-                print(f"CI: {user_data['document_id']}")
+        for ud in test_users:
+            print(f"Rol: {ud['role']}")
+            print(f"Email: {ud['email']}")
+            print(f"Contraseña: {ud['password']}")
+            print(f"Nombre: {ud['firstname']} {ud['lastname']}")
+            if ud["role"] == "client" and "document_id" in ud:
+                print(f"CI: {ud['document_id']}")
             print("--------------------------------")
 
         print("\nClientes de prueba para búsqueda:")
@@ -1843,11 +1116,12 @@ def create_test_users():
     finally:
         db.close()
 
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     print("WARNING: The database will be cleared before seeding if clear_db() is called.")
-    # Uncomment the next line to clear the database before seeding.
-    # Be careful if you have important data!
-    clear_db() 
+    clear_db()
     print("Seeding database with a large set of diverse data...")
     seed_db()
     print("Creating/updating specific test users...")
