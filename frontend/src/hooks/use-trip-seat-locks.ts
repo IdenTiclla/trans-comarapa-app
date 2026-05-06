@@ -3,6 +3,8 @@ import { useAppSelector } from '@/store'
 import { selectUser } from '@/store/auth.slice'
 import { seatService, type LockedSeatInfo } from '@/services/seat.service'
 import { API_BASE_URL } from '@/lib/constants'
+import { TIMING } from '@/lib/timing'
+import { apiFetch } from '@/lib/api'
 
 export function useTripSeatLocks(tripId: number) {
     const currentUser = useAppSelector(selectUser)
@@ -27,7 +29,7 @@ export function useTripSeatLocks(tripId: number) {
 
         function startPolling() {
             if (pollRef.current || cancelled) return
-            pollRef.current = setInterval(() => fetchLockedSeats(tripId), 3000)
+            pollRef.current = setInterval(() => fetchLockedSeats(tripId), TIMING.SEAT_LOCK_POLL)
         }
 
         function stopPolling() {
@@ -37,11 +39,22 @@ export function useTripSeatLocks(tripId: number) {
             }
         }
 
-        function connect() {
+        async function connect() {
             if (cancelled) return
 
+            let wsToken: string | null = null
+            try {
+                const res = await apiFetch<{ token: string }>('/seats/ws-token')
+                wsToken = res.token
+            } catch {
+                startPolling()
+                return
+            }
+
+            if (cancelled || !wsToken) return
+
             const wsBase = API_BASE_URL.replace(/^http/, 'ws')
-            const wsUrl = `${wsBase}/seats/ws/${tripId}?user_id=${currentUser!.id}`
+            const wsUrl = `${wsBase}/seats/ws/${tripId}?token=${wsToken}`
 
             let ws: WebSocket
             try {
@@ -73,7 +86,7 @@ export function useTripSeatLocks(tripId: number) {
                     if (!wsConnected) {
                         startPolling()
                     } else {
-                        wsReconnectRef.current = setTimeout(connect, 3000)
+                        wsReconnectRef.current = setTimeout(connect, TIMING.WS_RECONNECT_DELAY)
                     }
                 }
             }
@@ -82,7 +95,7 @@ export function useTripSeatLocks(tripId: number) {
 
             const pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) ws.send('ping')
-            }, 30000)
+            }, TIMING.WS_PING_INTERVAL)
 
             ws.addEventListener('close', () => clearInterval(pingInterval))
         }

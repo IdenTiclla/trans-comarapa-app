@@ -3,13 +3,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2, Filter } from 'lucide-react'
 import FormDatePicker from '@/components/forms/FormDatePicker'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatCurrency(value: number): string {
-  return `Bs. ${value.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
+  return `Bs. ${value.toLocaleString(LOCALE, { minimumFractionDigits: 2 })}`
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-BO', {
+  return new Date(dateStr).toLocaleDateString(LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -17,7 +18,7 @@ function formatDate(dateStr: string): string {
 }
 
 function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-BO', {
+  return new Date(dateStr).toLocaleString(LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
 import { errMsg } from '@/lib/error-utils'
+import { LOCALE } from '@/lib/locale-config'
 import type { MyTrip } from '@/components/dashboards/assistant/types'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -79,11 +80,11 @@ export function useDriverDashboard() {
   const nextScheduled = todayTrips.find((t) => t.status === 'scheduled')
 
   function formatTime(datetime: string) {
-    return new Date(datetime).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+    return new Date(datetime).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
   }
 
   function formatDate(datetime: string) {
-    return new Date(datetime).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' })
+    return new Date(datetime).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' })
   }
 
   return {

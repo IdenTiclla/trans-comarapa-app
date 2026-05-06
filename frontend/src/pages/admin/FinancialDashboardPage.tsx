@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import FormDatePicker from '@/components/forms/FormDatePicker'
 import { DollarSign, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatCurrency(value: number): string {
-  return `Bs. ${value.toLocaleString('es-BO', { minimumFractionDigits: 2 })}`
+  return `Bs. ${value.toLocaleString(LOCALE, { minimumFractionDigits: 2 })}`
 }
 
 function StatusBadge({ status }: { status: string }) {

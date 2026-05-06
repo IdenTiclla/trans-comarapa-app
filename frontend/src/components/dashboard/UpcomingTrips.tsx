@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router'
 import { useUpcomingTrips } from './use-upcoming-trips'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatDateTime(dateStr: string) {
-  return new Intl.DateTimeFormat('es-ES', {
+  return new Intl.DateTimeFormat(LOCALE, {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',

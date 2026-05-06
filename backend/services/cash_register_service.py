@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from core.exceptions import NotFoundException, ValidationException, ConflictException
 from core.enums import CashRegisterStatus, CashTransactionType, PaymentMethod
+from core.config import settings
 from schemas.cash_register import (
     CashRegisterCreate,
     CashTransactionCreate,
@@ -168,7 +169,7 @@ class CashRegisterService:
         date_to: Optional[date] = None,
     ) -> CashRegisterHistoryResponse:
         if not date_from:
-            date_from = date.today() - timedelta(days=7)
+            date_from = date.today() - timedelta(days=settings.CASH_REGISTER_HISTORY_DAYS)
         if not date_to:
             date_to = date.today()
 

@@ -1,15 +1,25 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from schemas.driver import DriverCreate, DriverPatch, Driver as DriverSchema
 from models.driver import Driver
 from db.session import get_db
+from auth.jwt import get_current_user
+from models.user import User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     tags=['Drivers']
 )
 
 @router.post('', tags=["Drivers"])
-def create_driver(driver: DriverCreate, db: Session = Depends(get_db)) -> DriverSchema:
+def create_driver(
+    driver: DriverCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DriverSchema:
     existing_driver = db.query(Driver).filter(Driver.license_number == driver.license_number).first()
     if existing_driver:
         raise HTTPException(
@@ -29,6 +39,7 @@ def create_driver(driver: DriverCreate, db: Session = Depends(get_db)) -> Driver
         db.commit()
     except Exception as e:
         db.rollback()
+        logger.error("Error creating driver: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while creating the driver."
@@ -37,12 +48,19 @@ def create_driver(driver: DriverCreate, db: Session = Depends(get_db)) -> Driver
     return new_driver
 
 @router.get('', tags=["Drivers"])
-def get_all_drivers(db: Session = Depends(get_db)) -> list[DriverSchema]:
+def get_all_drivers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[DriverSchema]:
     drivers = db.query(Driver).all()
     return drivers
 
 @router.get('/{driver_id}', tags=["Drivers"])
-def get_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> DriverSchema:
+def get_specific_driver(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DriverSchema:
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
     if not driver:
         raise HTTPException(
@@ -52,7 +70,12 @@ def get_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> Driver
     return driver
 
 @router.patch('/{driver_id}', tags=["Drivers"])
-def patch_specific_driver(driver: DriverPatch, driver_id: int, db: Session = Depends(get_db)) -> DriverSchema:
+def patch_specific_driver(
+    driver: DriverPatch,
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DriverSchema:
     driver_db = db.query(Driver).filter(Driver.id == driver_id).first()
     driver_with_license = db.query(Driver).filter(Driver.license_number == driver.license_number).first()
     if driver_with_license and driver_db != driver_with_license:
@@ -78,7 +101,11 @@ def patch_specific_driver(driver: DriverPatch, driver_id: int, db: Session = Dep
     return driver_db
 
 @router.delete('/{driver_id}', tags=["Drivers"])
-def delete_specific_driver(driver_id: int, db: Session = Depends(get_db)) -> DriverSchema:
+def delete_specific_driver(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DriverSchema:
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
     if not driver:
         raise HTTPException(

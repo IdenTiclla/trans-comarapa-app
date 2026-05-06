@@ -1,7 +1,6 @@
 from datetime import timedelta
-import os
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
@@ -12,12 +11,12 @@ from slowapi.util import get_remote_address
 from db.session import get_db
 from auth.jwt import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_current_admin_user, get_token, get_current_user_with_token_data, get_user_from_refresh_token
 from auth.blacklist import token_blacklist
-from auth.utils import create_user
 from schemas.auth import TokenWithRoleInfo
 from schemas.user import User as UserSchema, UserCreate
 from schemas.secretary import Secretary as SecretarySchema
 from models.user import User as UserModel
 from services.auth_service import AuthService
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ def get_service(db: Session = Depends(get_db)) -> AuthService:
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     """Configurar cookies con las mejores prácticas de seguridad"""
-    is_production = os.getenv("DEBUG", "true").lower() != "true"
+    is_production = not settings.DEBUG
     cookie_settings = {
         "httponly": True,
         "secure": is_production,
@@ -51,7 +50,7 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     response.set_cookie(
         key="refresh_token", 
         value=refresh_token,
-        max_age=7 * 24 * 60 * 60,
+        max_age=settings.refresh_token_expire_seconds,
         path="/api/v1/auth/refresh",
         **cookie_settings
     )
@@ -84,7 +83,7 @@ def login_for_access_token(
     
     refresh_token = create_access_token(
         data=refresh_token_data,
-        expires_delta=timedelta(days=7)
+        expires_delta=timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     _set_auth_cookies(response, access_token, refresh_token)
@@ -100,7 +99,7 @@ def logout(response: Response, user_data: tuple = Depends(get_current_user_with_
         token_blacklist.add_token_to_blacklist(token_data.jti)
         logger.info(f"User {current_user.email} logged out, token JTI {token_data.jti} blacklisted")
     
-    is_production = os.getenv("DEBUG", "true").lower() != "true"
+    is_production = not settings.DEBUG
     response.delete_cookie(key="access_token", httponly=True, secure=is_production, samesite="strict")
     response.delete_cookie(key="refresh_token", path="/api/v1/auth/refresh", httponly=True, secure=is_production, samesite="strict")
     
@@ -108,7 +107,7 @@ def logout(response: Response, user_data: tuple = Depends(get_current_user_with_
     return {"message": "Logout successful"}
 
 @router.post("/refresh", response_model=TokenWithRoleInfo)
-@limiter.limit("100/minute" if os.getenv("TESTING", "false").lower() == "true" else "10/minute")
+@limiter.limit(settings.RATE_LIMIT_DEFAULT if settings.TESTING else settings.RATE_LIMIT_AUTH_REFRESH)
 def refresh_token(
     request: Request, 
     response: Response, 
@@ -125,7 +124,7 @@ def refresh_token(
     
     refresh_token = create_access_token(
         data=refresh_token_data,
-        expires_delta=timedelta(days=7)
+        expires_delta=timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     _set_auth_cookies(response, access_token, refresh_token)
@@ -135,7 +134,7 @@ def refresh_token(
 
 
 @router.post("/register", response_model=UserSchema)
-@limiter.limit("100/minute" if os.getenv("TESTING", "false").lower() == "true" else "3/minute")
+@limiter.limit(settings.RATE_LIMIT_DEFAULT if settings.TESTING else settings.RATE_LIMIT_AUTH_REGISTER)
 def register_user(
     request: Request, 
     user: UserCreate, 

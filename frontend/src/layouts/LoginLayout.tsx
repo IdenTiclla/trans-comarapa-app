@@ -1,13 +1,10 @@
 import { Outlet } from 'react-router'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { COMPANY } from '@/lib/company-config'
+import { TIMING } from '@/lib/timing'
 
-const heroImages = [
-  '/images/buses_challa.jpeg',
-  '/images/flota_blanca_rene.png',
-  '/images/doble_piso_verde.png',
-  '/images/flota roja.jpeg',
-]
+const heroImages = COMPANY.heroImages
 
 export default function LoginLayout() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -15,7 +12,7 @@ export default function LoginLayout() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length)
-    }, 5000)
+    }, TIMING.CAROUSEL_INTERVAL)
     return () => clearInterval(interval)
   }, [])
 
@@ -48,7 +45,7 @@ export default function LoginLayout() {
               </div>
             </div>
 
-            <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 lg:mb-4">Trans Comarapa</h1>
+            <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 lg:mb-4">{COMPANY.name}</h1>
             <p className="text-lg lg:text-xl text-white/90 mb-6 lg:mb-8">Sistema de Gestión de Transporte</p>
 
             <div className="grid grid-cols-3 gap-4 lg:gap-6 mt-6 lg:mt-8">
@@ -59,7 +56,7 @@ export default function LoginLayout() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <div className="text-xl lg:text-2xl font-bold">23</div>
+                <div className="text-xl lg:text-2xl font-bold">{COMPANY.stats.locations}</div>
                 <div className="text-xs lg:text-sm text-white/80">Localidades</div>
               </div>
               <div className="text-center">
@@ -68,7 +65,7 @@ export default function LoginLayout() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                   </svg>
                 </div>
-                <div className="text-xl lg:text-2xl font-bold">10+</div>
+                <div className="text-xl lg:text-2xl font-bold">{COMPANY.stats.years}+</div>
                 <div className="text-xs lg:text-sm text-white/80">Años</div>
               </div>
               <div className="text-center">
@@ -77,13 +74,13 @@ export default function LoginLayout() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                   </svg>
                 </div>
-                <div className="text-xl lg:text-2xl font-bold">4</div>
+                <div className="text-xl lg:text-2xl font-bold">{COMPANY.stats.offices}</div>
                 <div className="text-xs lg:text-sm text-white/80">Oficinas</div>
               </div>
             </div>
 
             <div className="mt-8 lg:mt-12">
-              <p className="text-white/80 italic text-base lg:text-lg">&quot;Conectando el corazón de Bolivia con seguridad y confianza&quot;</p>
+              <p className="text-white/80 italic text-base lg:text-lg">&quot;{COMPANY.slogan}&quot;</p>
             </div>
           </div>
         </div>

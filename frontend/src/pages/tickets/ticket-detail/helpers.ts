@@ -1,10 +1,12 @@
+import { LOCALE, CURRENCY } from '@/lib/locale-config'
+
 export const formatCurrency = (amount: number | undefined | null) =>
-  new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount ?? 0)
+  new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY }).format(amount ?? 0)
 
 export const formatDateTime = (value: string | undefined | null) => {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleString('es-BO', {
+    return new Date(value).toLocaleString(LOCALE, {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     })
   } catch {
@@ -15,7 +17,7 @@ export const formatDateTime = (value: string | undefined | null) => {
 export const formatDate = (value: string | undefined | null) => {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleDateString('es-BO', { year: 'numeric', month: 'short', day: 'numeric' })
+    return new Date(value).toLocaleDateString(LOCALE, { year: 'numeric', month: 'short', day: 'numeric' })
   } catch {
     return value
   }
@@ -24,7 +26,7 @@ export const formatDate = (value: string | undefined | null) => {
 export const formatTime = (value: string | undefined | null) => {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+    return new Date(value).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
   } catch {
     return value
   }

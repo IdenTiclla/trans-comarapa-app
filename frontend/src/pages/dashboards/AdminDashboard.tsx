@@ -6,6 +6,7 @@ import UpcomingTrips from '@/components/dashboard/UpcomingTrips'
 import RecentSales from '@/components/dashboard/RecentSales'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { LOCALE } from '@/lib/locale-config'
 
 export function Component() {
   const navigate = useNavigate()
@@ -55,7 +56,7 @@ export function Component() {
             />
             <DashboardStatCard
               title="Ingresos"
-              value={`Bs. ${(salesSummary.totalAmount ?? 0).toLocaleString()}`}
+              value={`Bs. ${(salesSummary.totalAmount ?? 0).toLocaleString(LOCALE)}`}
               trend={salesSummary.trend}
               borderColor="border-green-600"
               iconBgColor="bg-green-100"
@@ -112,7 +113,7 @@ export function Component() {
                     <div>
                       <p className="text-sm text-gray-500">Ingresos Hoy</p>
                       <p className="text-xl font-bold text-green-600">
-                        Bs. {(cashSummary.total_income_today ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        Bs. {(cashSummary.total_income_today ?? 0).toLocaleString(LOCALE, { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="bg-green-100 p-3 rounded-xl">
@@ -132,7 +133,7 @@ export function Component() {
                     <div>
                       <p className="text-sm text-gray-500">Retiros Hoy</p>
                       <p className="text-xl font-bold text-red-600">
-                        Bs. {(cashSummary.total_withdrawals_today ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        Bs. {(cashSummary.total_withdrawals_today ?? 0).toLocaleString(LOCALE, { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="bg-red-100 p-3 rounded-xl">
@@ -167,7 +168,7 @@ export function Component() {
                     <div>
                       <p className="text-sm text-gray-500">Disponible Total</p>
                       <p className="text-xl font-bold text-emerald-600">
-                        Bs. {(cashSummary.total_available ?? 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        Bs. {(cashSummary.total_available ?? 0).toLocaleString(LOCALE, { minimumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="bg-emerald-100 p-3 rounded-xl">

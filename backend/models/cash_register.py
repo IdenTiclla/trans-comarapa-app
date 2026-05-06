@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from db.base import Base
 from core.enums import CashRegisterStatus
@@ -17,10 +17,10 @@ class CashRegister(Base):
     final_balance = Column(Float, nullable=True)
     status = Column(SQLEnum(CashRegisterStatus), nullable=False, default=CashRegisterStatus.OPEN)
     
-    opened_at = Column(DateTime, default=datetime.now)
+    opened_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     closed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     office = relationship("Office", backref="cash_registers")

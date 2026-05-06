@@ -27,14 +27,6 @@ export const ticketService = {
         return apiFetch(`${RESOURCE_URL}/trip/${tripId}`)
     },
 
-    getByClientId(clientId: number) {
-        return apiFetch(`${RESOURCE_URL}/client/${clientId}`)
-    },
-
-    getBySeatId(seatId: number) {
-        return apiFetch(`${RESOURCE_URL}/seat/${seatId}`)
-    },
-
     search(term: string, limit: number = 20) {
         return apiFetch(`${RESOURCE_URL}/search`, { params: { term, limit } })
     },

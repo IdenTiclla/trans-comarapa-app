@@ -39,9 +39,6 @@ export function getPackageStatusText(status: string): string {
     return colors[status] || 'text-gray-800'
 }
 
-/** Alias — used for timeline icons */
-export const getTimelineIconBg = getPackageStatusBg
-
 // ── Payment status labels ─────────────────────────────────────────────────────
 
 export function getPaymentStatusLabel(status: string): string {
@@ -61,21 +58,6 @@ export function getPaymentStatusTextClass(status: string): string {
     if (status === 'collect_on_delivery') return 'text-orange-800'
     return 'text-gray-800'
 }
-
-// ── Status constants (centralizing what was duplicated between service and hook) ─
-
-export const PACKAGE_STATUS_VALUES = {
-    REGISTERED_AT_OFFICE: 'registered_at_office',
-    ASSIGNED_TO_TRIP: 'assigned_to_trip',
-    IN_TRANSIT: 'in_transit',
-    ARRIVED_AT_DESTINATION: 'arrived_at_destination',
-    DELIVERED: 'delivered',
-} as const
-
-export const PACKAGE_PAYMENT_STATUS_VALUES = {
-    PAID_ON_SEND: 'paid_on_send',
-    COLLECT_ON_DELIVERY: 'collect_on_delivery',
-} as const
 
 // ── Origin & Destination resolution ───────────────────────────────────────────
 

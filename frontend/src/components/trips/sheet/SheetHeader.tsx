@@ -1,4 +1,5 @@
 import { formatDate, formatTime } from './helpers'
+import { COMPANY, OFFICES, ROUTE_BANNER } from '@/lib/company-config'
 
 interface TripSheet {
   id: number
@@ -18,18 +19,18 @@ export function SheetHeader({ trip }: { trip: TripSheet }) {
         <div className="doc-logo-trans">TRANS</div>
         <div className="doc-logo-comarapa">COMARAPA</div>
         <div className="doc-sindicato">
-          SINDICATO MIXTO DE TRANSPORTISTAS<br />
+          {COMPANY.legalName.split('"')[0].trim()}<br />
           "MANUEL MARIA CABALLERO"
         </div>
         <div className="doc-phones">
-          OF. STA. CRUZ: 78175576<br />
-          OF. COMARAPA: 781-75578
+          OF. STA. CRUZ: {OFFICES.santa_cruz.phone}<br />
+          OF. COMARAPA: {OFFICES.comarapa.phoneFormatted}
         </div>
       </div>
 
       <div className="doc-center">
         <div className="doc-route-banner">
-          MAIRANA · YERBA BUENA · AGUA CLARA · LOS NEGROS · MATARAL · QUINE · PALIZADA · SAN ISIDRO · COMARAPA
+          {ROUTE_BANNER}
         </div>
         <div className="doc-fields">
           <div className="doc-field">

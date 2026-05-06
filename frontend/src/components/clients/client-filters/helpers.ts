@@ -1,9 +1,10 @@
 import type { Filters } from './types'
+import { LOCALE } from '@/lib/locale-config'
 
 export const formatDate = (dateStr?: string) => {
   if (!dateStr) return ''
   try {
-    return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    return new Intl.DateTimeFormat(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' })
       .format(new Date(dateStr))
   } catch { return '' }
 }

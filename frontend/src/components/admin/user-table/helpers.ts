@@ -1,4 +1,5 @@
 import type { UserRecord } from './types'
+import { LOCALE } from '@/lib/locale-config'
 
 export const getEffectiveName = (user: UserRecord) => {
   if (user.firstname && user.lastname) return `${user.firstname} ${user.lastname}`
@@ -16,7 +17,7 @@ export const getInitials = (user: UserRecord) => {
 export const formatDate = (dateString?: string) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat(LOCALE, { year: 'numeric', month: 'short', day: 'numeric' }).format(date)
 }
 
 export const getRoleLabel = (role?: string) => {

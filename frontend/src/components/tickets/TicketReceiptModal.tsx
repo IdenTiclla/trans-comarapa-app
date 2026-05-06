@@ -3,6 +3,8 @@ import type { Trip } from '@/types'
 import TicketDisplay from './TicketDisplay'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import { COMPANY } from '@/lib/company-config'
+import { TIMING } from '@/lib/timing'
 
 interface TicketReceiptModalProps {
     show: boolean
@@ -26,7 +28,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Boleto - Trans Comarapa</title>
+                <title>Boleto - ${COMPANY.name}</title>
                 <meta charset="UTF-8">
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,7 +53,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
         setTimeout(() => {
             printWindow.print()
             printWindow.close()
-        }, 300)
+        }, TIMING.PRINT_DELAY)
     }
 
     useEffect(() => {
@@ -61,7 +63,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
         }
         if (autoPrint && !autoPrintedRef.current && tickets.length > 0) {
             autoPrintedRef.current = true
-            const timer = setTimeout(() => printReceipt(), 200)
+            const timer = setTimeout(() => printReceipt(), TIMING.PRINT_OPEN_DELAY)
             return () => clearTimeout(timer)
         }
     }, [show, autoPrint, tickets.length])

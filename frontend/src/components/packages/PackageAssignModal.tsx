@@ -5,6 +5,7 @@ import { getPackageDestination } from '@/lib/package-status'
 import { Button } from '@/components/ui/button'
 import { Plus, X, Loader2, Package } from 'lucide-react'
 import { usePackageAssignModal } from './use-package-assign'
+import { LOCALE } from '@/lib/locale-config'
 
 interface PackageAssignModalProps {
     show: boolean
@@ -16,7 +17,7 @@ interface PackageAssignModalProps {
 
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+    return new Date(dateString).toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' })
 }
 
 export default function PackageAssignModal({

@@ -26,24 +26,4 @@ export const routeService = {
     getWithSchedules() {
         return apiFetch(`${RESOURCE_URL}/with-schedules`)
     },
-
-    getSchedules(routeId: number) {
-        return apiFetch(`${RESOURCE_URL}/${routeId}/schedules`)
-    },
-
-    createSchedule(routeId: number, data: Record<string, unknown>) {
-        return apiFetch(`${RESOURCE_URL}/${routeId}/schedules`, { method: 'POST', body: data })
-    },
-
-    updateSchedule(routeId: number, scheduleId: number, data: Record<string, unknown>) {
-        return apiFetch(`${RESOURCE_URL}/${routeId}/schedules/${scheduleId}`, { method: 'PATCH', body: data })
-    },
-
-    deleteSchedule(routeId: number, scheduleId: number) {
-        return apiFetch(`${RESOURCE_URL}/${routeId}/schedules/${scheduleId}`, { method: 'DELETE' })
-    },
-
-    search(origin: string, destination: string) {
-        return apiFetch(`${RESOURCE_URL}/search`, { params: { origin, destination } })
-    },
 }

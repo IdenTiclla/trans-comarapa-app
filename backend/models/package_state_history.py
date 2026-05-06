@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func # For server_default=func.now() if needed, or use datetime
-from datetime import datetime
+from datetime import datetime, timezone
 from db.base import Base # Assuming your Base is in db.base
 # Assuming User model for changed_by_user_id, adjust path if necessary
 # from models.user import User # This will be resolved by SQLAlchemy's registry
@@ -13,7 +13,7 @@ class PackageStateHistory(Base):
     package_id = Column(Integer, ForeignKey("packages.id"), nullable=False, index=True)
     old_state = Column(String(50), nullable=True)
     new_state = Column(String(50), nullable=False)
-    changed_at = Column(DateTime, default=datetime.now, nullable=False)
+    changed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     changed_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Or make it not nullable if a user must always be associated
 
     package = relationship("Package", back_populates="state_history")

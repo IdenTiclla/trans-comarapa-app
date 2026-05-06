@@ -1,6 +1,7 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { LOCALE } from '@/lib/locale-config'
 
 const DAYS_OF_WEEK = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa']
 const MONTH_NAMES = [
@@ -160,5 +161,5 @@ export function CalendarView({ value, onChange, disabled }: CalendarViewProps) {
 }
 
 function displayShortDate(date: Date) {
-  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(date)
+  return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' }).format(date)
 }

@@ -6,6 +6,8 @@ export interface Activity {
   created_at: string
 }
 
+import { LOCALE } from '@/lib/locale-config'
+
 export function getRelativeTime(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
@@ -18,7 +20,7 @@ export function getRelativeTime(dateString: string): string {
   if (diffMins < 60) return `Hace ${diffMins} minutos`
   if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`
   if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`
-  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+  return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' })
 }
 
 export function getActivityColors(type: string): { bg: string; dot: string } {

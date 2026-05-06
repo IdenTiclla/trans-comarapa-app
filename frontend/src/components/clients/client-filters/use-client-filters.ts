@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { cleanFilters } from './helpers'
+import { TIMING } from '@/lib/timing'
 import type { Filters } from './types'
 
 interface Args {
@@ -29,7 +30,7 @@ export function useClientFilters({ initialFilters, onFilterChange, onSortChange 
       return
     }
     if (!autoApply) return
-    const timer = setTimeout(() => onFilterChange(cleanFilters(filters)), 300)
+    const timer = setTimeout(() => onFilterChange(cleanFilters(filters)), TIMING.SEARCH_DEBOUNCE)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search])
@@ -39,7 +40,7 @@ export function useClientFilters({ initialFilters, onFilterChange, onSortChange 
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setFilters((prev) => {
       const updated = { ...prev, [key]: value }
-      if (autoApply) setTimeout(() => onFilterChange(cleanFilters(updated)), 0)
+      if (autoApply) setTimeout(() => onFilterChange(cleanFilters(updated)), TIMING.FILTER_FLUSH_DELAY)
       return updated
     })
   }
@@ -57,7 +58,7 @@ export function useClientFilters({ initialFilters, onFilterChange, onSortChange 
   const clearDateFilters = () => {
     setFilters((prev) => {
       const updated = { ...prev, dateFrom: '', dateTo: '' }
-      if (autoApply) setTimeout(() => onFilterChange(cleanFilters(updated)), 0)
+      if (autoApply) setTimeout(() => onFilterChange(cleanFilters(updated)), TIMING.FILTER_FLUSH_DELAY)
       return updated
     })
   }

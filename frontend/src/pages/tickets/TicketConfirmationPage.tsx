@@ -4,12 +4,13 @@ import { selectUser } from '@/store/auth.slice'
 import { useTicketConfirmation } from '@/hooks/use-ticket-confirmation'
 import { Button } from '@/components/ui/button'
 import { Printer } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatDate(dateStringOrDate?: string | Date) {
   if (!dateStringOrDate) return 'Fecha no disponible'
   const date = new Date(dateStringOrDate)
   if (isNaN(date.getTime())) return 'Fecha inválida'
-  return new Intl.DateTimeFormat('es-ES', {
+  return new Intl.DateTimeFormat(LOCALE, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

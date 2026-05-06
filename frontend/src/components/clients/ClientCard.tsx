@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 interface Client {
     id: number
@@ -43,7 +44,7 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return 'Fecha no disponible'
         try {
-            return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateStr))
+            return new Intl.DateTimeFormat(LOCALE, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateStr))
         } catch { return 'Fecha inválida' }
     }
 

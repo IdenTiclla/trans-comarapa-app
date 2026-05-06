@@ -7,10 +7,6 @@ export const locationService = {
         return apiFetch(RESOURCE_URL, { params })
     },
 
-    getById(id: number) {
-        return apiFetch(`${RESOURCE_URL}/${id}`)
-    },
-
     create(data: Record<string, unknown>) {
         return apiFetch(RESOURCE_URL, { method: 'POST', body: data })
     },

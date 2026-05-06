@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Optional
 from core.redis import redis_client
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,7 @@ class TokenBlacklist:
             if expires_delta:
                 expire_seconds = int(expires_delta.total_seconds())
             else:
-                # Por defecto, los tokens expirarán en 24 horas
-                expire_seconds = 24 * 60 * 60
+                expire_seconds = settings.JWT_BLACKLIST_EXPIRE_SECONDS
             
             redis_key = f"{self.redis_key_prefix}{token}"
             redis_client.client.setex(redis_key, expire_seconds, "blacklisted")
@@ -97,30 +97,6 @@ class TokenBlacklist:
         self.fallback_blacklist.clear()
         logger.info("Cleared fallback blacklist")
     
-    def get_blacklist_stats(self) -> dict:
-        """
-        Obtiene estadísticas de la blacklist para monitoreo.
-        
-        Returns:
-            Diccionario con estadísticas de la blacklist
-        """
-        stats = {
-            "fallback_tokens_count": len(self.fallback_blacklist),
-            "redis_connected": False,
-            "redis_tokens_count": 0
-        }
-        
-        try:
-            if redis_client.is_connected():
-                stats["redis_connected"] = True
-                # Contar tokens en Redis (aproximado)
-                pattern = f"{self.redis_key_prefix}*"
-                keys = redis_client.client.keys(pattern)
-                stats["redis_tokens_count"] = len(keys)
-        except Exception as e:
-            logger.error(f"Failed to get Redis stats: {e}")
-        
-        return stats
 
 # Instancia global de la lista negra de tokens
 token_blacklist = TokenBlacklist()

@@ -6,11 +6,9 @@ from typing import List, Optional
 
 from db.session import get_db
 from models.activity import Activity as ActivityModel
-from models.user import User as UserModel # Para la dependencia de usuario
+from models.user import User as UserModel
 from schemas.activity import Activity as ActivitySchema, ActivityCreate, ActivityListResponse
-# Asumiendo que tienes un esquema para User si quieres popular la info del usuario
-# from schemas.user import User as UserSchema 
-from auth.jwt import get_current_admin_user # Importar la dependencia correcta
+from auth.jwt import get_current_admin_user
 
 router = APIRouter(
     prefix="/activities",
@@ -46,19 +44,8 @@ async def get_recent_activities(
     try:
         query = db.query(ActivityModel).order_by(desc(ActivityModel.created_at)).limit(limit)
         activities = query.all()
-        total_activities_in_query = len(activities) # O podrías hacer un count separado si "limit" es muy grande
+        total_activities_in_query = len(activities)
         
-        # Aquí podrías querer popular la información del usuario si es necesario
-        # Por ejemplo, si tu esquema ActivitySchema incluye un campo `user: Optional[UserSchema]`
-        # y tu modelo ActivityModel tiene una relación `user`.
-        # activities_response = []
-        # for act in activities:
-        #     activity_dict = act.__dict__ # o usa el esquema para convertir
-        #     if act.user:
-        #         activity_dict['user'] = UserSchema.model_validate(act.user)
-        #     activities_response.append(ActivitySchema.model_validate(act))
-        # activities = activities_response
-
         return ActivityListResponse(activities=[ActivitySchema.model_validate(act) for act in activities], total=total_activities_in_query)
     except Exception as e:
         # Log el error e

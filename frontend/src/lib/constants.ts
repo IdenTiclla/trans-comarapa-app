@@ -16,6 +16,4 @@ export const DASHBOARD_PATHS: Record<Role, string> = {
   [ROLES.CLIENT]: '/dashboards/dashboard-client',
 }
 
-export const PUBLIC_ROUTES = ['/login']
-
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'

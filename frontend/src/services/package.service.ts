@@ -3,7 +3,6 @@ import { apiFetch } from '@/lib/api'
 const BASE_PATH = '/packages'
 
 export const packageService = {
-    // Core CRUD
     getAll(params: Record<string, unknown> = {}) {
         return apiFetch(BASE_PATH, { params })
     },
@@ -14,10 +13,6 @@ export const packageService = {
 
     getById(id: number) {
         return apiFetch(`${BASE_PATH}/${id}`)
-    },
-
-    getByTrackingNumber(trackingNumber: string) {
-        return apiFetch(`${BASE_PATH}/tracking/${trackingNumber}`)
     },
 
     create(data: Record<string, unknown>) {
@@ -32,16 +27,11 @@ export const packageService = {
         return apiFetch(`${BASE_PATH}/${id}`, { method: 'DELETE' })
     },
 
-    // Trip assignment
     assignToTrip(packageId: number, tripId: number) {
         return apiFetch(`${BASE_PATH}/${packageId}/assign-trip`, {
             method: 'PUT',
             body: { trip_id: tripId },
         })
-    },
-
-    unassignFromTrip(packageId: number) {
-        return apiFetch(`${BASE_PATH}/${packageId}/unassign-trip`, { method: 'PUT' })
     },
 
     unassign(packageId: number) {
@@ -66,32 +56,6 @@ export const packageService = {
         return apiFetch(`${BASE_PATH}/pending-collections`, {
             params: { office_id: officeId, ...params },
         })
-    },
-
-    // Items management
-    getItems(packageId: number) {
-        return apiFetch(`${BASE_PATH}/${packageId}/items`)
-    },
-
-    addItem(packageId: number, data: Record<string, unknown>) {
-        return apiFetch(`${BASE_PATH}/${packageId}/items`, { method: 'POST', body: data })
-    },
-
-    updateItem(itemId: number, data: Record<string, unknown>) {
-        return apiFetch(`${BASE_PATH}/items/${itemId}`, { method: 'PUT', body: data })
-    },
-
-    deleteItem(itemId: number) {
-        return apiFetch(`${BASE_PATH}/items/${itemId}`, { method: 'DELETE' })
-    },
-
-    // Filtering
-    getBySender(clientId: number) {
-        return apiFetch(`${BASE_PATH}/by-sender/${clientId}`)
-    },
-
-    getByRecipient(clientId: number) {
-        return apiFetch(`${BASE_PATH}/by-recipient/${clientId}`)
     },
 
     getByTrip(tripId: number) {

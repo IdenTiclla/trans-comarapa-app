@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './constants'
+import { TIMING } from './timing'
 
 export class SessionExpiredError extends Error {
   constructor(message = 'Session expired') {
@@ -57,7 +58,7 @@ export async function apiFetch<T = unknown>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const { body, params, timeout = 15000, ...init } = options
+  const { body, params, timeout = TIMING.API_TIMEOUT, ...init } = options
 
   let url = `${API_BASE_URL}${endpoint}`
 

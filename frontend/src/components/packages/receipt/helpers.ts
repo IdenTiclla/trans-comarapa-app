@@ -1,6 +1,8 @@
 import { getEffectiveName } from '@/lib/person-utils'
 import type { PackageItem } from '@/types'
 import { receiptPrintStyles } from './print-styles'
+import { COMPANY } from '@/lib/company-config'
+import { TIMING } from '@/lib/timing'
 
 export function computeTotalAmount(packageData: Record<string, unknown>): number {
   if (packageData?.total_amount !== undefined) return packageData.total_amount as number
@@ -44,7 +46,7 @@ export function printReceipt() {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Recibo de Encomienda - Trans Comarapa</title>
+        <title>Recibo de Encomienda - ${COMPANY.name}</title>
         <meta charset="UTF-8">
         <style>${receiptPrintStyles}</style>
       </head>
@@ -57,5 +59,5 @@ export function printReceipt() {
   setTimeout(() => {
     printWindow.print()
     printWindow.close()
-  }, 300)
+  }, TIMING.PRINT_DELAY)
 }

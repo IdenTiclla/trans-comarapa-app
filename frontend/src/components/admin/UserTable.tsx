@@ -4,6 +4,7 @@ import { UserTableFilters } from './user-table/UserTableFilters'
 import { UserTableBody } from './user-table/UserTableBody'
 import { UserTablePagination } from './user-table/UserTablePagination'
 import type { UserTableProps } from './user-table/types'
+import { TIMING } from '@/lib/timing'
 
 export default function UserTable({
   users = [],
@@ -28,7 +29,7 @@ export default function UserTable({
   const [selectedStatus, setSelectedStatus] = useState('')
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => onSearch(searchTerm), 500)
+    const timeoutId = setTimeout(() => onSearch(searchTerm), TIMING.USER_SEARCH_DEBOUNCE)
     return () => clearTimeout(timeoutId)
   }, [searchTerm, onSearch])
 

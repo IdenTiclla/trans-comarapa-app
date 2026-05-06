@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from db.base import Base
 
 class Seat(Base):
@@ -13,8 +13,8 @@ class Seat(Base):
     deck = Column(String(255), nullable=False)
     row = Column(Integer, nullable=False)      # fila (1, 2, 3...)
     column = Column(Integer, nullable=False)   # columna (1, 2, 3, 4)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     tickets = relationship('Ticket', back_populates='seat')
 

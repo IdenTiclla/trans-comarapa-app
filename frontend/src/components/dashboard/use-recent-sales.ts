@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { salesService } from '@/services/sales.service'
+import { TIMING } from '@/lib/timing'
 
 interface Sale {
     id: number
@@ -31,7 +32,7 @@ export function useRecentSales(limit = 5) {
 
     useEffect(() => {
         fetchSales()
-        intervalRef.current = setInterval(fetchSales, 60000)
+        intervalRef.current = setInterval(fetchSales, TIMING.RECENT_SALES_REFRESH)
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current)
         }

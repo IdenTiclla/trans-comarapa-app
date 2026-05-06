@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from db.base import Base
 
 class Office(Base):
@@ -12,8 +12,8 @@ class Office(Base):
     phone = Column(String(255), nullable=True)
     email = Column(String(255), nullable=True)
     manager_name = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relaciones
     location = relationship("Location", back_populates="offices")

@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '@/store'
+import { COMPANY } from '@/lib/company-config'
 
 interface Notification {
     id: number
@@ -14,7 +15,7 @@ interface AppState {
 }
 
 const initialState: AppState = {
-    appName: 'Trans Comarapa',
+    appName: COMPANY.name,
     isLoading: false,
     notifications: [],
 }

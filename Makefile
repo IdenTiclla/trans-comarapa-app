@@ -144,7 +144,7 @@ status:
 
 # Actualizar dependencias
 update-deps:
-	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend pip install --upgrade -r requirements.txt
+	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend uv sync
 	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend npm update
 
 # Database operations

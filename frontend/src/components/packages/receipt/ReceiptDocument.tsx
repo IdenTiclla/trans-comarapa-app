@@ -1,5 +1,6 @@
 import { ReceiptHeader } from './ReceiptHeader'
 import { ReceiptItemsTable } from './ReceiptItemsTable'
+import { OFFICES } from '@/lib/company-config'
 
 interface Props {
   packageData: Record<string, unknown>
@@ -39,10 +40,10 @@ export function ReceiptDocument({
         </div>
 
         <div className="text-xs text-blue-700 mb-6 font-medium leading-relaxed">
-          <p>📍 <strong>Of. Santa Cruz:</strong> Av. Doble Vía La Guardia 4to. Anillo • <strong>Cel.:</strong> 68921188</p>
-          <p>📍 <strong>Of. Comarapa:</strong> Av. Comarapa • <strong>Cel.:</strong> 68921154</p>
-          <p>📍 <strong>Of. San Isidro:</strong> <strong>Cel.:</strong> 71641780</p>
-          <p>📍 <strong>Of. Los Negros:</strong> <strong>Cel.:</strong> 71641781</p>
+          <p>📍 <strong>Of. {OFFICES.santa_cruz.name}:</strong> {OFFICES.santa_cruz.address} • <strong>Cel.:</strong> {OFFICES.santa_cruz.phone}</p>
+          <p>📍 <strong>Of. {OFFICES.comarapa.name}:</strong> {OFFICES.comarapa.address} • <strong>Cel.:</strong> {OFFICES.comarapa.phone}</p>
+          <p>📍 <strong>Of. {OFFICES.san_isidro.name}:</strong> <strong>Cel.:</strong> {OFFICES.san_isidro.phone}</p>
+          <p>📍 <strong>Of. {OFFICES.los_negros.name}:</strong> <strong>Cel.:</strong> {OFFICES.los_negros.phone}</p>
         </div>
 
         <div className="space-y-1 mb-4 text-sm">

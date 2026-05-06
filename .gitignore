@@ -6,9 +6,7 @@
 # Node modules
 node_modules
 
-# Nuxt files
-.nuxt
-.output
+# Build output
 dist
 
 # System files

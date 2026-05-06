@@ -10,8 +10,6 @@ from models.ticket import Ticket as TicketModel
 from models.package import Package as PackageModel
 from models.trip import Trip as TripModel
 from models.client import Client as ClientModel
-from models.route import Route as RouteModel
-from models.bus import Bus as BusModel
 from models.package_item import PackageItem as PackageItemModel
 from services.financial_summary_service import FinancialSummaryService
 from models.ticket_state_history import TicketStateHistory as TicketStateHistoryModel

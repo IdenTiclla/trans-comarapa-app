@@ -5,6 +5,7 @@ import { SearchTrigger } from './quick-search/SearchTrigger'
 import { CategoryPicker } from './quick-search/CategoryPicker'
 import { SearchResultsView } from './quick-search/SearchResultsView'
 import { useQuickSearch } from './quick-search/use-quick-search'
+import { COMPANY } from '@/lib/company-config'
 
 export default function QuickSearch() {
   const {
@@ -58,7 +59,7 @@ export default function QuickSearch() {
                 cerrar
               </span>
             </div>
-            <span className="text-gray-400">Trans Comarapa</span>
+            <span className="text-gray-400">{COMPANY.name}</span>
           </div>
         </DialogContent>
       </Dialog>

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, AlertCircle, RefreshCw, Printer, ChevronDown } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { CalendarView } from '@/components/ui/calendar-view'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -66,7 +67,7 @@ export function Component() {
     try {
       const [y, m, d] = selectedDate.split('-')
       const date = new Date(Number(y), Number(m) - 1, Number(d))
-      const f = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+      const f = new Intl.DateTimeFormat(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date)
       return f.charAt(0).toUpperCase() + f.slice(1)
     } catch { return selectedDate }
   }, [selectedDate])
@@ -245,7 +246,7 @@ export function Component() {
             </div>
             <div>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ingresos Estimados</p>
-              <p className="text-xl font-bold text-primary">Bs. {boardStats.estimatedRevenue.toLocaleString('es-BO')}</p>
+              <p className="text-xl font-bold text-primary">Bs. {boardStats.estimatedRevenue.toLocaleString(LOCALE)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

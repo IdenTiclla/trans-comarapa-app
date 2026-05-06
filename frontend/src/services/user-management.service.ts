@@ -5,10 +5,6 @@ export const userManagementService = {
         return apiFetch('/users', { params: params as Record<string, unknown> })
     },
 
-    getById(userId: number) {
-        return apiFetch(`/users/${userId}`)
-    },
-
     create(data: Record<string, unknown>) {
         return apiFetch('/users', { method: 'POST', body: data })
     },
@@ -27,9 +23,5 @@ export const userManagementService = {
 
     deactivate(userId: number) {
         return apiFetch(`/users/${userId}/deactivate`, { method: 'PATCH' })
-    },
-
-    getRoles() {
-        return apiFetch('/roles')
     },
 }

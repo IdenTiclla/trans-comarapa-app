@@ -18,6 +18,7 @@ import { useSidebarOffice } from '@/hooks/use-sidebar-office'
 import { NAV_GROUPS, ROLE_LABELS } from '@/lib/navigation'
 import type { Role } from '@/lib/constants'
 import { LogOut, Settings, Bus, MapPin } from 'lucide-react'
+import { COMPANY } from '@/lib/company-config'
 
 export default function AppSidebar() {
   const { user, userRole, logout } = useAuth()
@@ -34,7 +35,7 @@ export default function AppSidebar() {
             <Bus className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-sidebar-foreground">Trans Comarapa</span>
+            <span className="text-sm font-bold text-sidebar-foreground">{COMPANY.name}</span>
             <span className="text-xs text-sidebar-foreground/60">{roleLabel}</span>
             {officeName && (
               <span className="text-[10px] text-sidebar-foreground/50 flex items-center mt-0.5">

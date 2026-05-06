@@ -1,4 +1,5 @@
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
+import { LOCALE } from '@/lib/locale-config'
 
 interface Props {
   ticketStats: { count: number; trend?: number }
@@ -24,7 +25,7 @@ export function StatCards({ ticketStats, packageStats, tripStats, salesSummary }
       />
       <DashboardStatCard
         title="Ingresos del Día"
-        value={`Bs. ${(salesSummary.totalAmount ?? 0).toLocaleString()}`}
+        value={`Bs. ${(salesSummary.totalAmount ?? 0).toLocaleString(LOCALE)}`}
         trend={salesSummary.trend}
         borderColor="border-green-600"
         iconBgColor="bg-green-100"

@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { X, Loader2, MapPin, Clock } from 'lucide-react'
 import FormSelect from '@/components/forms/FormSelect'
+import { LOCALE } from '@/lib/locale-config'
 
 interface CreateTripModalProps {
   open: boolean
@@ -136,7 +137,7 @@ export default function CreateTripModal({
             </div>
             <div className="flex items-center gap-2 mt-1 text-muted-foreground">
               <Clock className="h-4 w-4" />
-              {new Date(date + 'T00:00:00').toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' })} - {time}
+              {new Date(date + 'T00:00:00').toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })} - {time}
             </div>
           </div>
         </div>

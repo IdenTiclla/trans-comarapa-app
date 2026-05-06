@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -6,15 +8,22 @@ from db.session import get_db
 from models.location import Location as LocationModel
 from models.route import Route as RouteModel
 from schemas.location import LocationCreate, Location as LocationSchema, LocationUpdate
+from auth.jwt import get_current_user
+from models.user import User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     tags=["Locations"]
 )
 
 @router.post("", response_model=LocationSchema, status_code=status.HTTP_201_CREATED)
-def create_location(location: LocationCreate, db: Session = Depends(get_db)):
+def create_location(
+    location: LocationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Create a new location"""
-    # Check if location with same name exists
     existing_location = db.query(LocationModel).filter(
         LocationModel.name == location.name
     ).first()
@@ -32,9 +41,10 @@ def create_location(location: LocationCreate, db: Session = Depends(get_db)):
         return db_location
     except Exception as e:
         db.rollback()
+        logger.error("Error creating location: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail="An error occurred while creating the location."
         )
 
 @router.get("", response_model=List[LocationSchema])
@@ -44,7 +54,8 @@ def get_locations(
     search: Optional[str] = None,
     city: Optional[str] = None,
     state: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get all locations with optional filtering
@@ -74,22 +85,19 @@ def get_locations(
 def search_destinations(
     search: str = Query(..., description="Search term for destination names"),
     origin_location_id: Optional[int] = Query(None, description="Filter by origin location ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Search for destination locations, optionally filtered by origin location"""
     query = db.query(LocationModel)
     
-    # If origin_location_id is provided, filter to only show destinations 
-    # that are reachable from that origin via existing routes
     if origin_location_id:
-        # Get all destination location IDs from routes that start from the origin
         route_destinations = db.query(RouteModel.destination_location_id).filter(
             RouteModel.origin_location_id == origin_location_id
         ).subquery()
         
         query = query.filter(LocationModel.id.in_(route_destinations))
     
-    # Apply search filter
     if search.strip():
         query = query.filter(
             or_(
@@ -98,11 +106,14 @@ def search_destinations(
             )
         )
     
-    # Limit results to prevent too many results
     return query.limit(20).all()
 
 @router.get("/{location_id}", response_model=LocationSchema)
-def get_location(location_id: int, db: Session = Depends(get_db)):
+def get_location(
+    location_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Get a specific location by ID"""
     location = db.query(LocationModel).filter(LocationModel.id == location_id).first()
     if not location:
@@ -116,7 +127,8 @@ def get_location(location_id: int, db: Session = Depends(get_db)):
 def update_location(
     location_id: int,
     location_update: LocationUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Update a location"""
     db_location = db.query(LocationModel).filter(LocationModel.id == location_id).first()
@@ -126,7 +138,6 @@ def update_location(
             detail="Location not found"
         )
 
-    # Check if name is being updated and if it already exists
     if location_update.name and location_update.name != db_location.name:
         existing_location = db.query(LocationModel).filter(
             LocationModel.name == location_update.name
@@ -147,13 +158,18 @@ def update_location(
         return db_location
     except Exception as e:
         db.rollback()
+        logger.error("Error updating location: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail="An error occurred while updating the location."
         )
 
 @router.delete("/{location_id}", response_model=LocationSchema)
-def delete_location(location_id: int, db: Session = Depends(get_db)):
+def delete_location(
+    location_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Delete a location"""
     location = db.query(LocationModel).filter(LocationModel.id == location_id).first()
     if not location:
@@ -168,6 +184,7 @@ def delete_location(location_id: int, db: Session = Depends(get_db)):
         return location
     except Exception as e:
         db.rollback()
+        logger.error("Error deleting location: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Cannot delete location as it is being referenced by other records"

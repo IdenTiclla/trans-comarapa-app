@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from db.base import Base
 from core.enums import CashTransactionType, PaymentMethod
@@ -19,8 +19,8 @@ class CashTransaction(Base):
     reference_type = Column(String(50), nullable=True) # e.g. "ticket", "package"
     
     description = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     cash_register = relationship("CashRegister", back_populates="transactions")

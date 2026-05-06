@@ -1,3 +1,5 @@
+import { LOCALE, CURRENCY } from '@/lib/locale-config'
+
 export interface Ticket {
   id: number
   client_id: number
@@ -34,10 +36,10 @@ export interface Seat {
 }
 
 export const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(amount || 0)
+  new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY }).format(amount || 0)
 
 export const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleString('es-BO', {
+  new Date(dateString).toLocaleString(LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

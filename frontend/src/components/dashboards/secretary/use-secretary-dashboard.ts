@@ -5,6 +5,7 @@ import { activityService } from '@/services/activity.service'
 import { cashRegisterService } from '@/services/cash-register.service'
 import type { CashRegister, DailySummary } from '@/types/cash-register'
 import type { Activity } from './activity-helpers'
+import { TIMING } from '@/lib/timing'
 
 export function useSecretaryDashboard(officeId: number | undefined) {
   const dispatch = useAppDispatch()
@@ -17,7 +18,7 @@ export function useSecretaryDashboard(officeId: number | undefined) {
 
   useEffect(() => {
     dispatch(fetchDashboardStats('today'))
-    intervalRef.current = setInterval(() => dispatch(fetchDashboardStats('today')), 5 * 60 * 1000)
+    intervalRef.current = setInterval(() => dispatch(fetchDashboardStats('today')), TIMING.DASHBOARD_REFRESH)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }

@@ -4,6 +4,7 @@ import PackageDeliveryModal from './PackageDeliveryModal'
 import { usePendingCollections } from './use-pending-collections'
 import { Package, Clock, MapPin, User, ArrowRight, DollarSign, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LOCALE } from '@/lib/locale-config'
 
 interface PendingCollectionsProps {
     officeId: number
@@ -16,7 +17,7 @@ interface PendingCollectionsProps {
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString(LOCALE, {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',

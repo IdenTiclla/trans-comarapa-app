@@ -9,10 +9,9 @@ import logging
 from typing import Optional
 
 from core.redis import redis_client
+from core.config import settings
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_LOCK_TTL = 300  # 5 minutes
 
 
 class SeatLockService:
@@ -31,7 +30,7 @@ class SeatLockService:
             return False
 
     def lock_seat(
-        self, trip_id: int, seat_id: int, user_id: int, ttl: int = DEFAULT_LOCK_TTL
+        self, trip_id: int, seat_id: int, user_id: int, ttl: int = settings.SEAT_LOCK_TTL_SECONDS
     ) -> dict:
         """
         Attempt to lock a seat for a user.

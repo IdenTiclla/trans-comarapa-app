@@ -1,3 +1,5 @@
+import { LOCALE } from '@/lib/locale-config'
+
 export const formatDateTime = (dateStr: string | null | undefined, includeTime = true) => {
   if (!dateStr) return '---'
   const date = new Date(dateStr)
@@ -6,7 +8,7 @@ export const formatDateTime = (dateStr: string | null | undefined, includeTime =
     day: 'numeric',
     ...(includeTime && { hour: '2-digit', minute: '2-digit', hour12: false }),
   }
-  return date.toLocaleString('en-US', options)
+  return date.toLocaleString(LOCALE, options)
 }
 
 export const getStatusNumber = (status: string | undefined) => {

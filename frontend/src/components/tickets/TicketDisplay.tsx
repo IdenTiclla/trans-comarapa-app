@@ -1,3 +1,6 @@
+import { COMPANY, OFFICES, SCHEDULES, LEGAL_RESOLUTION } from '@/lib/company-config'
+import { LOCALE } from '@/lib/locale-config'
+
 interface Seat { seat_number?: number | string }
 interface TicketLike {
     client?: { firstname?: string; lastname?: string }
@@ -51,13 +54,13 @@ export default function TicketDisplay({
     }
 
     const getCurrentTime = () => {
-        return getOfficeTimeObj().toLocaleTimeString('es-BO', {
+        return getOfficeTimeObj().toLocaleTimeString(LOCALE, {
             hour: '2-digit', minute: '2-digit', hour12: false
         })
     }
 
     const getDepartureTime = () => {
-        return getDateObj().toLocaleTimeString('es-BO', {
+        return getDateObj().toLocaleTimeString(LOCALE, {
             hour: '2-digit', minute: '2-digit', hour12: false
         })
     }
@@ -104,15 +107,15 @@ export default function TicketDisplay({
                         </div>
                         <div>
                             <div className="flex items-baseline">
-                                <h1 className={`font-extrabold tracking-wide ${p ? 'text-2xl mr-1' : 'text-2xl mr-1.5'}`}>Trans Comarapa</h1>
+                                <h1 className={`font-extrabold tracking-wide ${p ? 'text-2xl mr-1' : 'text-2xl mr-1.5'}`}>{COMPANY.name}</h1>
                             </div>
                             <div className={`leading-tight text-white/80 ${p ? 'text-xs' : 'text-xs'}`}>
-                                <p className="font-medium">SINDICATO MIXTO DE TRANSPORTISTAS DE LARGA Y CORTA DISTANCIA "MANUEL MARIA CABALLERO"</p>
+                                <p className="font-medium">{COMPANY.legalName}</p>
                             </div>
                         </div>
                     </div>
                     <div className={`text-right ${p ? '' : ''}`}>
-                        <p className={`font-bold text-white/70 ${p ? 'text-xs' : 'text-xs'}`}>Resolución Suprema 17996</p>
+                        <p className={`font-bold text-white/70 ${p ? 'text-xs' : 'text-xs'}`}>{LEGAL_RESOLUTION}</p>
                     </div>
                 </div>
                 <div className="flex justify-center">
@@ -120,33 +123,33 @@ export default function TicketDisplay({
                         <div className="space-y-1.5">
                             <div className="flex flex-col leading-none">
                                 <div className="flex justify-start whitespace-nowrap">
-                                    <span className="font-semibold text-white">Of. Santa Cruz:</span>
-                                    <span className="ml-1.5 font-bold">781-75576</span>
+                                    <span className="font-semibold text-white">Of. {OFFICES.santa_cruz.name}:</span>
+                                    <span className="ml-1.5 font-bold">{OFFICES.santa_cruz.phoneFormatted}</span>
                                 </div>
-                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>Doble Vía La Guardia 4to anillo</span>
+                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>{OFFICES.santa_cruz.addressShort}</span>
                             </div>
                             <div className="flex flex-col leading-none">
                                 <div className="flex justify-start whitespace-nowrap">
-                                    <span className="font-semibold text-white">Of. Comarapa:</span>
-                                    <span className="ml-1.5 font-bold">781-75578</span>
+                                    <span className="font-semibold text-white">Of. {OFFICES.comarapa.name}:</span>
+                                    <span className="ml-1.5 font-bold">{OFFICES.comarapa.phoneFormatted}</span>
                                 </div>
-                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>Av. Comarapa (Mercado Campesino)</span>
+                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>{OFFICES.comarapa.addressShort}</span>
                             </div>
                         </div>
                         <div className="space-y-1.5 pt-0.5">
                             <div className="flex flex-col leading-none">
                                 <div className="flex justify-start whitespace-nowrap">
-                                    <span className="font-semibold text-white">Of. San Isidro:</span>
-                                    <span className="ml-1.5 font-bold">785-15650</span>
+                                    <span className="font-semibold text-white">Of. {OFFICES.san_isidro.name}:</span>
+                                    <span className="ml-1.5 font-bold">{OFFICES.san_isidro.phoneFormatted}</span>
                                 </div>
-                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>Av. San Isidro</span>
+                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>{OFFICES.san_isidro.addressShort}</span>
                             </div>
                             <div className="flex flex-col leading-none">
                                 <div className="flex justify-start whitespace-nowrap">
-                                    <span className="font-semibold text-white">Of. Los Negros:</span>
-                                    <span className="ml-1.5 font-bold">690-29690</span>
+                                    <span className="font-semibold text-white">Of. {OFFICES.los_negros.name}:</span>
+                                    <span className="ml-1.5 font-bold">{OFFICES.los_negros.phoneFormatted}</span>
                                 </div>
-                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>Av. Los Negros</span>
+                                <span className={`text-white/60 italic whitespace-nowrap ${p ? 'text-[11px]' : 'text-[12px]'}`}>{OFFICES.los_negros.addressShort}</span>
                             </div>
                         </div>
                     </div>
@@ -234,10 +237,10 @@ export default function TicketDisplay({
                     <div className={`${p ? 'w-2/3' : 'w-2/3'}`}>
                         <div className={`bg-blue-800/40 rounded ${p ? 'px-2 py-1' : 'px-2 py-1.5'}`}>
                             <p className={`text-center font-bold ${p ? 'text-[11px] mb-0.5' : 'text-[11px] mb-0.5'}`}>
-                                HORARIOS STZ - COMARAPA: L-J 10:30, 14:00, 18:30, 20:30 | V-S-D +22:00
+                                {SCHEDULES.santa_cruz_to_comarapa}
                             </p>
                             <p className={`text-center font-bold ${p ? 'text-[11px]' : 'text-[11px]'}`}>
-                                HORARIOS COMARAPA - STZ: L-S 08:00, 14:00, 20:30, 23:30 | DOM 08:30, 12:00, 14:00, 20:30, 23:30
+                                {SCHEDULES.comarapa_to_santa_cruz}
                             </p>
                         </div>
                     </div>

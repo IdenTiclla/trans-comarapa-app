@@ -20,7 +20,6 @@ from schemas.secretary_with_user import SecretaryWithUser, SecretaryWithUserResp
 from schemas.auth import User as UserSchema
 from auth.jwt import get_current_admin_user, get_current_user
 from services.person_service import PersonService
-from core.exceptions import ValidationException
 
 router = APIRouter(tags=["Secretaries"])
 

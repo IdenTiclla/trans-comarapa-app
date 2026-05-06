@@ -1,17 +1,13 @@
-version: '3.8'
-
 services:
-  # Base de datos MySQL
   db:
     image: mysql:8.0
     restart: unless-stopped
-    ports:
-      - "3308:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=trans_comarapa
       - MYSQL_CHARACTER_SET_SERVER=utf8mb4
       - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+      - TZ=America/La_Paz
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/scripts/db:/docker-entrypoint-initdb.d
@@ -24,7 +20,20 @@ services:
       - trans-comarapa-network
     command: --default-authentication-plugin=mysql_native_password
 
-  # Backend API (FastAPI)
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - trans-comarapa-network
+
   backend:
     build:
       context: ./backend
@@ -35,11 +44,15 @@ services:
     environment:
       - DATABASE_URL=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/trans_comarapa
       - SECRET_KEY=${SECRET_KEY}
-      - ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REDIS_URL=redis://redis:6379
       - DEBUG=false
+      - TZ=America/La_Paz
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - trans-comarapa-network
@@ -50,17 +63,15 @@ services:
         reservations:
           memory: 256M
 
-  # Frontend (React/Vite)
   frontend:
     build:
       context: ./frontend
       target: production
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
     restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
-      - NODE_ENV=production
+      - "3000:80"
     depends_on:
       - backend
     networks:
@@ -72,7 +83,6 @@ services:
         reservations:
           memory: 256M
 
-  # Nginx como proxy reverso (opcional para producción)
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -94,4 +104,6 @@ networks:
 
 volumes:
   mysql_data:
-    driver: local 
+    driver: local
+  redis_data:
+    driver: local

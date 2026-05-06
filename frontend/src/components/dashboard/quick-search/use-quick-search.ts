@@ -6,6 +6,7 @@ import { tripService } from '@/services/trip.service'
 import { errMsg } from '@/lib/error-utils'
 import { packageService } from '@/services/package.service'
 import { PACKAGE_STATUS_LABELS } from '@/lib/package-constants'
+import { TIMING } from '@/lib/timing'
 import type { CategoryId, SearchResult, ViewMode } from './types'
 
 export function useQuickSearch() {
@@ -40,7 +41,7 @@ export function useQuickSearch() {
         setSelectedCategory(null)
         setResults([])
         setError(null)
-      }, 200)
+      }, TIMING.SEARCH_RESET_DELAY)
       return () => clearTimeout(timer)
     }
   }, [open, showDetailModal])
@@ -121,7 +122,7 @@ export function useQuickSearch() {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
         performSearch(selectedCategory, query)
-      }, 300)
+      }, TIMING.SEARCH_DEBOUNCE)
       return () => {
         if (debounceRef.current) clearTimeout(debounceRef.current)
       }

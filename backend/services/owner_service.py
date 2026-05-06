@@ -6,6 +6,7 @@ from repositories.owner_repository import OwnerRepository
 from repositories.user_repository import UserRepository
 from schemas.owner import OwnerCreate, OwnerUpdate
 from core.exceptions import NotFoundException, ConflictException
+from core.config import settings
 import time
 
 
@@ -27,12 +28,12 @@ class OwnerService:
     def create_owner(self, owner_in: OwnerCreate) -> Owner:
         timestamp = int(time.time())
         username = f"socio_{timestamp}_{owner_in.firstname.lower()}" if owner_in.firstname else f"socio_{timestamp}"
-        email = f"{username}@transcomarapa.com"
-        
+        email = f"{username}@{settings.EMAIL_DOMAIN}"
+            
         if self.user_repo.get_by_email(email):
             email = f"2_{email}"
             
-        hashed_password = User.get_password_hash("socio123")
+        hashed_password = User.get_password_hash(settings.DEFAULT_OWNER_PASSWORD)
         
         db_user = User(
             username=username,

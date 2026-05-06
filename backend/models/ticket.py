@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from db.base import Base
 
 class Ticket(Base):
@@ -19,8 +19,8 @@ class Ticket(Base):
     secretary = relationship('Secretary', back_populates='tickets')
     price = Column(Numeric(10, 2), nullable=False)
     payment_method = Column(String(50), nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationship to TicketStateHistory
     state_history = relationship("TicketStateHistory", back_populates="ticket", order_by="desc(TicketStateHistory.changed_at)")    

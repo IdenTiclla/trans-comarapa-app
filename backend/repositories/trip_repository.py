@@ -16,6 +16,7 @@ from models.secretary import Secretary
 from models.package import Package
 from models.person import Person
 from repositories.base import BaseRepository
+from core.config import settings
 
 
 class TripRepository(BaseRepository[Trip]):
@@ -24,11 +25,12 @@ class TripRepository(BaseRepository[Trip]):
         super().__init__(Trip, db)
 
     def find_driver_conflict(
-        self, driver_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int = 2
+        self, driver_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int | None = None
     ) -> Optional[Trip]:
         from datetime import timedelta
-        start = trip_datetime - timedelta(hours=buffer_hours)
-        end = trip_datetime + timedelta(hours=buffer_hours)
+        buffer = buffer_hours if buffer_hours is not None else settings.TRIP_CONFLICT_BUFFER_HOURS
+        start = trip_datetime - timedelta(hours=buffer)
+        end = trip_datetime + timedelta(hours=buffer)
         query = self.db.query(Trip).filter(
             Trip.driver_id == driver_id,
             Trip.trip_datetime.between(start, end),
@@ -38,11 +40,12 @@ class TripRepository(BaseRepository[Trip]):
         return query.first()
 
     def find_bus_conflict(
-        self, bus_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int = 2
+        self, bus_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int | None = None
     ) -> Optional[Trip]:
         from datetime import timedelta
-        start = trip_datetime - timedelta(hours=buffer_hours)
-        end = trip_datetime + timedelta(hours=buffer_hours)
+        buffer = buffer_hours if buffer_hours is not None else settings.TRIP_CONFLICT_BUFFER_HOURS
+        start = trip_datetime - timedelta(hours=buffer)
+        end = trip_datetime + timedelta(hours=buffer)
         query = self.db.query(Trip).filter(
             Trip.bus_id == bus_id,
             Trip.trip_datetime.between(start, end),
@@ -52,11 +55,12 @@ class TripRepository(BaseRepository[Trip]):
         return query.first()
 
     def find_assistant_conflict(
-        self, assistant_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int = 2
+        self, assistant_id: int, trip_datetime, exclude_trip_id: int | None = None, buffer_hours: int | None = None
     ) -> Optional[Trip]:
         from datetime import timedelta
-        start = trip_datetime - timedelta(hours=buffer_hours)
-        end = trip_datetime + timedelta(hours=buffer_hours)
+        buffer = buffer_hours if buffer_hours is not None else settings.TRIP_CONFLICT_BUFFER_HOURS
+        start = trip_datetime - timedelta(hours=buffer)
+        end = trip_datetime + timedelta(hours=buffer)
         query = self.db.query(Trip).filter(
             Trip.assistant_id == assistant_id,
             Trip.trip_datetime.between(start, end),

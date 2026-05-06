@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { clientService } from '@/services/client.service'
+import { TIMING } from '@/lib/timing'
 
 export interface ClientRecord {
     id?: number
@@ -51,7 +52,7 @@ export function useClientSearch() {
             } finally {
                 setSearchingClients(false)
             }
-        }, 350)
+        }, TIMING.CLIENT_SEARCH_DEBOUNCE)
     }, [])
 
     const selectExistingClient = useCallback((client: ClientRecord) => {

@@ -104,14 +104,6 @@ export const tripService = {
         return apiFetch(`${RESOURCE_URL}/${id}/finish`, { method: 'POST' })
     },
 
-    cancel(id: number) {
-        return apiFetch(`${RESOURCE_URL}/${id}/cancel`, { method: 'POST' })
-    },
-
-    getSeats(tripId: number) {
-        return apiFetch(`${RESOURCE_URL}/${tripId}/seats`)
-    },
-
     getMyTrips(params?: { status?: string }) {
         const query = params?.status ? `?status=${params.status}` : ''
         return apiFetch(`${RESOURCE_URL}/my-trips${query}`)

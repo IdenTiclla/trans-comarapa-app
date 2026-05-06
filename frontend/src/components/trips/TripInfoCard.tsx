@@ -1,6 +1,7 @@
 import { TripStaffEditor } from './TripStaffEditor'
 
 import { MapPin, Clock, Bus, Banknote, Layers, Hash, CalendarDays } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 const STATUS_MAP: Record<string, string> = {
     scheduled: 'Programado',
@@ -42,7 +43,7 @@ function formatFullDate(dateString?: string) {
     const [y, m, d] = datePart.split('-').map(Number)
     const date = new Date(y, m - 1, d)
     if (isNaN(date.getTime())) return ''
-    const weekday = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date)
+    const weekday = new Intl.DateTimeFormat(LOCALE, { weekday: 'long' }).format(date)
     const day = String(d).padStart(2, '0')
     const month = String(m).padStart(2, '0')
     const year = String(y).slice(2)

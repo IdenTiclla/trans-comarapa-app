@@ -7,19 +7,14 @@ from db.session import get_db
 from models.user import User
 from schemas.auth import TokenData
 from auth.blacklist import token_blacklist
-import os
+from core.config import settings
 import uuid
-from dotenv import load_dotenv
 
-# Cargar variables de entorno
-load_dotenv()
-
-# Configuración de JWT
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = settings.JWT_SECRET_KEY
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is required and must not be empty")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+ALGORITHM = settings.JWT_ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 
 # 🔒 FASE 3: Eliminadas configuraciones OAuth2 y HTTPBearer - solo cookies httpOnly
 

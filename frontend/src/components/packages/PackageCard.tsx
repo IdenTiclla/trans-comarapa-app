@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Package, Clock, Receipt, CheckCircle, ArrowRight, Pencil, Trash2, Eye } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 interface PackageItem { id?: number; description?: string; quantity?: number; [k: string]: unknown }
 interface PackageLike {
@@ -30,7 +31,7 @@ interface PackageCardProps {
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString(LOCALE, {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',

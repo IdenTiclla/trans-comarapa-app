@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { ticketService } from '@/services/ticket.service'
 import type { SoldTicket } from '@/types'
+import { LOCALE } from '@/lib/locale-config'
 
 export function useTripDetails() {
     const [soldTickets, setSoldTickets] = useState<SoldTicket[]>([])
@@ -35,7 +36,7 @@ export function useTripDetails() {
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A'
         try {
-            return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateString))
+            return new Intl.DateTimeFormat(LOCALE, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateString))
         } catch { return dateString }
     }
 
@@ -45,7 +46,7 @@ export function useTripDetails() {
             const parts = timeString.split(':')
             const date = new Date()
             date.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0)
-            return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true })
+            return date.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: true })
         } catch { return timeString }
     }
 

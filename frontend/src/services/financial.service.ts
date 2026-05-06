@@ -64,19 +64,6 @@ export const financialService = {
     return apiFetch('/financial/withdrawals', { params })
   },
 
-  getWithdrawalsCsvUrl: (
-    officeId?: number,
-    dateFrom?: string,
-    dateTo?: string
-  ): string => {
-    const params = new URLSearchParams()
-    if (officeId) params.append('office_id', String(officeId))
-    if (dateFrom) params.append('date_from', dateFrom)
-    if (dateTo) params.append('date_to', dateTo)
-    const qs = params.toString()
-    return `/api/v1/financial/withdrawals/csv${qs ? `?${qs}` : ''}`
-  },
-
   getCashSummary: (): Promise<CashSummaryResponse> => {
     return apiFetch('/stats/cash-summary')
   },

@@ -1,3 +1,5 @@
+import { LOCALE } from '@/lib/locale-config'
+
 export const STATUS_LABELS: Record<string, string> = {
   scheduled: 'Programado',
   boarding: 'Abordando',
@@ -29,9 +31,9 @@ export const PKG_STATUS_LABELS: Record<string, string> = {
 }
 
 export function formatTime(datetime: string) {
-  return new Date(datetime).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+  return new Date(datetime).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
 }
 
 export function formatDate(datetime: string) {
-  return new Date(datetime).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' })
+  return new Date(datetime).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' })
 }

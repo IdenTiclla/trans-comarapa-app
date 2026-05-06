@@ -1,19 +1,14 @@
-import os
 import sys
 from pathlib import Path
 
-# Asegurarse de que las importaciones funcionen correctamente
-# independientemente de desde dónde se ejecute
 BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-# Configure logging before anything else
 from core.logging_config import setup_logging
 setup_logging()
 
 from fastapi import FastAPI, Request
-from fastapi.openapi.models import SecurityScheme
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -21,13 +16,10 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from db.base import Base
 from db.session import engine
-from dotenv import load_dotenv
 from api.v1.api import api_router as api_router_v1
 from core.exception_handlers import register_exception_handlers
+from core.config import settings
 
-# Import all models to ensure they are registered with SQLAlchemy
-# Estas importaciones son necesarias para que SQLAlchemy cree las tablas
-# aunque no se usen directamente en este archivo
 # pylint: disable=unused-import
 from models.driver import Driver
 from models.bus import Bus
@@ -50,15 +42,9 @@ from models.owner import Owner
 from models.owner_withdrawal import OwnerWithdrawal
 # pylint: enable=unused-import
 
-load_dotenv()
-DEBUG = os.getenv("DEBUG", "True")
 
-# Rate limiter configuration - deshabilitar en testing
 def get_rate_limiter():
-    """Configura el rate limiter según el ambiente"""
-    is_testing = os.getenv("TESTING", "false").lower() == "true"
-    if is_testing:
-        # Rate limiter deshabilitado para testing
+    if settings.TESTING:
         def disabled_limiter(*args, **kwargs):
             return lambda func: func
         return type('DisabledLimiter', (), {
@@ -70,52 +56,32 @@ def get_rate_limiter():
 
 limiter = get_rate_limiter()
 
-# Table creation is now handled by Alembic migrations.
-# Run: alembic upgrade head (or make db-upgrade)
-
 app = FastAPI(
-    title="Trans Comarapa API",
+    title=settings.APP_NAME,
     description="API para la gestión de boletos, paquetes y viajes de Trans Comarapa.",
-    version="1.0.0",
+    version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    debug=DEBUG
+    debug=settings.DEBUG
 )
 
-# Add rate limiter to the app (solo en producción)
-is_testing = os.getenv("TESTING", "false").lower() == "true"
-if not is_testing:
+if not settings.TESTING:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Register domain exception handlers
 register_exception_handlers(app)
 
-# Configurar CORS - Configuración permisiva para desarrollo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Frontend development server
-        "http://127.0.0.1:3000",  # Alternative localhost
-        "http://localhost:3001",  # React development server alternative port
-        "http://127.0.0.1:3001",  # React alternative localhost
-        "http://localhost:5173",  # Vite default port
-        "http://127.0.0.1:5173",  # Vite default localhost
-        "http://frontend:3000",   # Docker container name
-        "http://0.0.0.0:3000",    # Docker internal network
-    ],
-    allow_credentials=True,  # Allow credentials (cookies, authorization headers)
-    allow_methods=["*"],     # Allow all HTTP methods
-    allow_headers=["*"],     # Allow all headers
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # Incluir el router de la versión 1 con el prefijo /api/v1
 app.include_router(api_router_v1, prefix="/api/v1")
-
-# También podemos incluir otras versiones en el futuro, por ejemplo:
-# from api.v2.api import api_router as api_router_v2
-# app.include_router(api_router_v2, prefix="/api/v2")
 
 # Personalizar el esquema OpenAPI para incluir múltiples esquemas de autenticación
 def custom_openapi():
@@ -155,8 +121,8 @@ app.openapi = custom_openapi
 @app.get('/')
 def index():
     return {
-        "app_name": "Trans Comarapa API",
-        "version": "1.0.0",
+        "app_name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
         "description": "API para la gestión de boletos, paquetes y viajes",
         "api_versions": {
             "v1": "/api/v1"
@@ -175,13 +141,15 @@ def health_check():
     from db.session import SessionLocal
     try:
         db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        db_status = "healthy"
+        try:
+            db.execute(text("SELECT 1"))
+            db_status = "healthy"
+        finally:
+            db.close()
     except Exception:
         db_status = "unhealthy"
     return {
         "status": "ok",
         "database": db_status,
-        "version": "1.0.0"
+        "version": settings.APP_VERSION
     }

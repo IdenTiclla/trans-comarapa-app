@@ -1,12 +1,13 @@
 import { Box } from 'lucide-react'
 import type { Package, PackageItem } from '@/types'
+import { LOCALE } from '@/lib/locale-config'
 
 interface Props {
   pkg: Package
 }
 
 export function PaymentSummary({ pkg }: Props) {
-  const amount = (pkg.total_amount || 0).toLocaleString('en-US', {
+  const amount = (pkg.total_amount || 0).toLocaleString(LOCALE, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })

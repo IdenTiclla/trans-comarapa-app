@@ -22,6 +22,7 @@ RUN apt-get update \
     libffi-dev \
     libssl-dev \
     netcat-traditional \
+    default-mysql-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -47,9 +48,18 @@ COPY . .
 # Exponer puerto
 EXPOSE 8000
 
-# Crear script de entrada simple
+# Crear script de entrada con health check
 RUN echo '#!/bin/bash\n\
-    sleep 10\n\
+    set -e\n\
+    echo "Waiting for database..."\n\
+    for i in $(seq 1 30); do\n\
+        if mysqladmin ping -h db -u root -p"$(echo $DATABASE_URL | sed -n "s|.*://[^:]*:\([^@]*\)@[^/]*.*|\1|p")" --silent 2>/dev/null; then\n\
+            echo "Database is ready!"\n\
+            break\n\
+        fi\n\
+        echo "Attempt $i/30 - database not ready yet..."\n\
+        sleep 2\n\
+    done\n\
     alembic upgrade head\n\
     exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload\n\
     ' > /entrypoint.sh && chmod +x /entrypoint.sh
@@ -71,9 +81,18 @@ COPY . .
 # Exponer puerto
 EXPOSE 8000
 
-# Crear script de entrada para producción (sin reload)
+# Crear script de entrada para produccion (sin reload)
 RUN echo '#!/bin/bash\n\
-    sleep 10\n\
+    set -e\n\
+    echo "Waiting for database..."\n\
+    for i in $(seq 1 30); do\n\
+        if mysqladmin ping -h db -u root -p"$(echo $DATABASE_URL | sed -n "s|.*://[^:]*:\([^@]*\)@[^/]*.*|\1|p")" --silent 2>/dev/null; then\n\
+            echo "Database is ready!"\n\
+            break\n\
+        fi\n\
+        echo "Attempt $i/30 - database not ready yet..."\n\
+        sleep 2\n\
+    done\n\
     alembic upgrade head\n\
     exec uvicorn main:app --host 0.0.0.0 --port 8000\n\
     ' > /entrypoint.sh && chmod +x /entrypoint.sh

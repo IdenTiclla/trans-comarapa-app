@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Check, Eye, Pencil, Trash2, Package, ArrowRight } from 'lucide-react'
 import type { Package as Pkg } from '@/types'
+import { LOCALE } from '@/lib/locale-config'
 
 interface PackageCardListProps {
     packages: Pkg[]
@@ -21,7 +22,7 @@ interface PackageCardListProps {
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString(LOCALE, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

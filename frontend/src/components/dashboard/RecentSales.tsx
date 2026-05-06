@@ -1,8 +1,9 @@
 import { useRecentSales } from './use-recent-sales'
 import { Button } from '@/components/ui/button'
+import { LOCALE } from '@/lib/locale-config'
 
 function formatDate(dateString: string) {
-  return new Intl.DateTimeFormat('es-ES', {
+  return new Intl.DateTimeFormat(LOCALE, {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',

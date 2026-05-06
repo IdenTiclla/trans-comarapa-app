@@ -6,48 +6,6 @@ from repositories.report_repository import ReportRepository
 from core.enums import CashRegisterStatus
 
 
-class OfficeFinancialSummary:
-    def __init__(
-        self,
-        office_id: int,
-        office_name: str,
-        status: str,
-        initial_balance: float,
-        total_in: float,
-        total_out: float,
-        available_cash: float,
-    ):
-        self.office_id = office_id
-        self.office_name = office_name
-        self.status = status
-        self.initial_balance = initial_balance
-        self.total_in = total_in
-        self.total_out = total_out
-        self.available_cash = available_cash
-
-
-class WithdrawalRecord:
-    def __init__(
-        self,
-        id: int,
-        date: date,
-        office_id: int,
-        office_name: str,
-        amount: float,
-        description: str,
-        registered_by: str,
-        created_at: datetime,
-    ):
-        self.id = id
-        self.date = date
-        self.office_id = office_id
-        self.office_name = office_name
-        self.amount = amount
-        self.description = description
-        self.registered_by = registered_by
-        self.created_at = created_at
-
-
 class FinancialSummaryService:
     def __init__(self, db: Session):
         self.db = db

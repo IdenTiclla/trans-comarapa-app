@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { X, Pencil } from 'lucide-react'
 import type { Client } from '@/types'
+import { LOCALE } from '@/lib/locale-config'
 
 interface ClientViewModalProps {
     show: boolean
@@ -39,7 +40,7 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
         if (!dateString) return 'No registrada'
         try {
             const date = new Date(dateString)
-            return date.toLocaleDateString('es-BO', {
+            return date.toLocaleDateString(LOCALE, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'

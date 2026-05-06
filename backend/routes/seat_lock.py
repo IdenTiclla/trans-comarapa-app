@@ -8,12 +8,15 @@ broadcast in real-time via WebSocket to all clients viewing the same trip.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status, Query
 from pydantic import BaseModel
-from auth.jwt import get_current_user
+from jose import JWTError, jwt
+from auth.jwt import get_current_user, verify_token
 from models.user import User
 from services.seat_lock_service import SeatLockService
 from core.ws_manager import seat_lock_ws
+from core.config import settings
+from db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,11 @@ seat_lock_service = SeatLockService()
 class SeatLockRequest(BaseModel):
     trip_id: int
     seat_id: int
+
+
+class WsTokenResponse(BaseModel):
+    token: str
+    expires_in: int
 
 
 class SeatLockResponse(BaseModel):
@@ -55,6 +63,18 @@ async def _broadcast_locks(trip_id: int):
         "trip_id": trip_id,
         "locks": locks,
     })
+
+
+@router.get("/ws-token", response_model=WsTokenResponse)
+async def get_ws_token(current_user: User = Depends(get_current_user)):
+    """Generate a short-lived token for WebSocket authentication."""
+    from datetime import timedelta
+    from auth.jwt import create_access_token
+    token = create_access_token(
+        data={"sub": current_user.email, "role": current_user.role, "ws": True},
+        expires_delta=timedelta(minutes=5),
+    )
+    return WsTokenResponse(token=token, expires_in=300)
 
 
 @router.post("/lock", response_model=SeatLockResponse)
@@ -119,13 +139,32 @@ async def seat_lock_websocket(ws: WebSocket, trip_id: int):
     """
     WebSocket endpoint for real-time seat lock updates.
 
-    Clients connect to /seats/ws/{trip_id}?user_id=N and receive JSON messages
+    Clients connect to /seats/ws/{trip_id}?token=<jwt> and receive JSON messages
     whenever locks change for that trip. On disconnect, all locks held by that
     user for this trip are automatically released.
     """
-    # Get user_id from query params (WS can't use cookie auth easily)
-    user_id_str = ws.query_params.get("user_id")
-    user_id = int(user_id_str) if user_id_str else 0
+    token = ws.query_params.get("token")
+    user_id = 0
+    if token:
+        try:
+            credentials_exception = HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+            token_data = verify_token(token, credentials_exception)
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.email == token_data.email).first()
+                if user and user.is_active:
+                    user_id = user.id
+            finally:
+                db.close()
+        except Exception:
+            await ws.close(code=4001, reason="Authentication failed")
+            return
+    else:
+        await ws.close(code=4001, reason="Authentication required")
+        return
 
     conn = await seat_lock_ws.connect(trip_id, ws, user_id)
     try:

@@ -11,10 +11,6 @@ from core.exceptions import (
     ValidationException,
 )
 from models.trip import Trip
-from models.seat import Seat
-from models.ticket import Ticket
-from models.package import Package
-from models.person import Person
 from models.user import User
 from schemas.driver import Driver as DriverSchema
 from schemas.assistant import Assistant as AssistantSchema
@@ -24,6 +20,7 @@ from repositories.ticket_repository import TicketRepository
 from schemas.trip import TripCreate, TripUpdate
 from core.state_machines import validate_transition, TRIP_TRANSITIONS, TICKET_TRANSITIONS
 from core.enums import TripStatus, PackageStatus, TicketState
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -292,13 +289,13 @@ class TripService:
         }
 
     def create_trip(self, data: TripCreate) -> Trip:
-        min_departure = datetime.now() + timedelta(minutes=30)
+        min_departure = datetime.now() + timedelta(minutes=settings.TRIP_MIN_DEPARTURE_BUFFER_MINUTES)
         if data.trip_datetime.tzinfo is None:
             min_departure = min_departure.replace(tzinfo=None)
 
         if data.trip_datetime.replace(tzinfo=None) < min_departure:
             raise ValidationException(
-                f"Trip datetime must be at least 30 minutes in the future. Current minimum: {min_departure}"
+                f"Trip datetime must be at least {settings.TRIP_MIN_DEPARTURE_BUFFER_MINUTES} minutes in the future. Current minimum: {min_departure}"
             )
 
         if (

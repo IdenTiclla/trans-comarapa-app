@@ -15,12 +15,14 @@ export interface TripPackage {
   total_amount?: string | number
 }
 
+import { LOCALE } from '@/lib/locale-config'
+
 export function formatDate(dateString: string) {
   if (!dateString) return ''
   const date = new Date(dateString)
   const offset = date.getTimezoneOffset()
   const adjusted = new Date(date.getTime() + offset * 60 * 1000)
-  return adjusted.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return adjusted.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export function formatTime(timeString: string) {
@@ -28,7 +30,7 @@ export function formatTime(timeString: string) {
   const parts = timeString.split(':')
   const date = new Date()
   date.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0)
-  return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true })
+  return date.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
 export function getDescription(pkg: TripPackage): string {

@@ -8,6 +8,7 @@ import FormSelect from '@/components/forms/FormSelect'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { LOCALE } from '@/lib/locale-config'
 
 // Note: For editing sender/recipient details, we might need to recreate the ClientSelector component logic
 // For simplicity in this edit form, we might just edit the basic fields, since sender/receiver 
@@ -69,7 +70,7 @@ export function Component() {
 
   const tripOptions = (trips || []).map(trip => ({
     value: trip.id,
-    label: `${trip.route?.origin_location?.name || trip.route?.origin} - ${trip.route?.destination_location?.name || trip.route?.destination} (${new Date(trip.departure_date || trip.trip_datetime || trip.departure_datetime).toLocaleDateString()})`
+    label: `${trip.route?.origin_location?.name || trip.route?.origin} - ${trip.route?.destination_location?.name || trip.route?.destination} (${new Date(trip.departure_date || trip.trip_datetime || trip.departure_datetime).toLocaleDateString(LOCALE)})`
   }))
 
   const handleSubmitPackage = async (e: React.FormEvent) => {

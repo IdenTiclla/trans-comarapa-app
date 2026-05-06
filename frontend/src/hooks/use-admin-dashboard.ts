@@ -11,6 +11,7 @@ import {
 } from '@/store/stats.slice'
 import { financialService } from '@/services/financial.service'
 import type { CashSummaryResponse } from '@/services/financial.service'
+import { TIMING } from '@/lib/timing'
 
 export function useAdminDashboard() {
   const dispatch = useAppDispatch()
@@ -31,7 +32,7 @@ export function useAdminDashboard() {
     dispatch(fetchDashboardStats('today'))
     intervalRef.current = setInterval(
       () => dispatch(fetchDashboardStats('today')),
-      5 * 60 * 1000,
+      TIMING.DASHBOARD_REFRESH,
     )
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)

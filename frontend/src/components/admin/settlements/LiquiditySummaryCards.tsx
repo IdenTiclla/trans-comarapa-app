@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Banknote } from 'lucide-react'
 import type { SettlementTotals } from '@/hooks/use-owner-settlements'
 import { fmt } from './settlement-utils'
+import { LOCALE } from '@/lib/locale-config'
 
 interface Props {
     totals: SettlementTotals
@@ -21,7 +22,7 @@ export function LiquiditySummaryCards({ totals, ownerName, hasAvailableFunds, on
                 <div className="flex items-baseline gap-1 mb-6">
                     <span className="text-sm text-gray-400">Bs.</span>
                     <span className="text-5xl font-extrabold text-gray-900 tracking-tight tabular-nums">
-                        {totals.totalAvailable.toLocaleString('es-BO', { minimumFractionDigits: 2 })}
+                        {totals.totalAvailable.toLocaleString(LOCALE, { minimumFractionDigits: 2 })}
                     </span>
                 </div>
 

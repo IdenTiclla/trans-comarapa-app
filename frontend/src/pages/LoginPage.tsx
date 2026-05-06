@@ -6,6 +6,7 @@ import { DASHBOARD_PATHS, type Role } from '@/lib/constants'
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { COMPANY } from '@/lib/company-config'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -98,7 +99,7 @@ export function Component() {
             <circle cx="18" cy="18" r="2" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-comarapa-dark">Trans Comarapa</h1>
+        <h1 className="text-2xl font-bold text-comarapa-dark">{COMPANY.name}</h1>
         <p className="text-comarapa-medium text-sm">Sistema de Gestión de Transporte</p>
       </div>
 
@@ -118,7 +119,7 @@ export function Component() {
             autoComplete="email"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
-            placeholder="usuario@transcomarapa.com"
+            placeholder={`usuario@${COMPANY.domain}`}
             value={email}
             onChange={(e) => handleEmailChange(e.target.value)}
             onBlur={validateEmail}
@@ -192,7 +193,7 @@ export function Component() {
         </form>
 
         <footer className="mt-8 pt-6 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Trans Comarapa. Todos los derechos reservados.</p>
+          <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} {COMPANY.name}. Todos los derechos reservados.</p>
         </footer>
       </div>
     </div>
