@@ -1,6 +1,6 @@
-# UI Conventions — Trans Comarapa (frontend-react/)
+# UI Conventions — Trans Comarapa (frontend/)
 
-Mandatory guide for all new or refactored code in `frontend-react/src/`. Key rules are automated via ESLint (`frontend-react/eslint.config.js`).
+Mandatory guide for all new or refactored code in `frontend/src/`. Key rules are automated via ESLint (`frontend/eslint.config.js`).
 
 ## 1. Allowed Components
 
@@ -25,6 +25,10 @@ Always use components from `src/components/ui/` before writing native markup:
 | Inline Feedback | `Alert` | `@/components/ui/alert` |
 | Status Badges | `Badge` | `@/components/ui/badge` |
 | Toast Notifications | `toast` from `sonner` | `sonner` |
+| Pagination | `Pagination` | `@/components/ui/pagination` |
+| Empty State | `EmptyState` | `@/components/common/EmptyState` |
+| Stat / KPI Card | `DashboardStatCard` | `@/components/dashboard/DashboardStatCard` |
+| Print Window | `openPrintWindow` | `@/lib/print` |
 
 ## 2. Forbidden Native HTML Elements
 
@@ -66,10 +70,56 @@ Minimum routine: check `useSelector` status (`idle | loading | succeeded | faile
 
 ## 6. Styles
 
-- Use tokens from `src/styles/globals.css` (Comarapa brand colors, shadcn/ui tokens).
-- Do not hardcode colors (`#123456`) or arbitrary measurements if a token exists.
-- Combine classes with `cn()` from `@/lib/utils` for Tailwind.
-- Do not introduce new global CSS outside of `globals.css` without consensus.
+### 6.1 Design tokens (mandatory)
+
+Use the design tokens from `src/styles/globals.css`. **Do not hardcode Tailwind color scales** (`text-blue-600`, `bg-indigo-50`, `from-purple-500`, etc.) and **do not use hex** (`#123456`) when a token applies.
+
+| Need | Token (preferred) | Forbidden inline |
+|---|---|---|
+| Page / surface background | `bg-background`, `bg-card` | `bg-white`, `bg-gray-50` |
+| Body text | `text-foreground` | `text-gray-900`, `text-black` |
+| Secondary / hint text | `text-muted-foreground` | `text-gray-500/600` |
+| Borders / dividers | `border` | `border-gray-200/300` |
+| Brand accent (links, active page, primary CTA) | `bg-primary`, `text-primary`, `bg-primary/10` | `bg-blue-600`, `bg-indigo-50` |
+| Destructive (delete, errors) | `text-destructive`, `bg-destructive` | `text-red-600`, `bg-red-100` |
+| Subtle row hover / muted surface | `bg-muted`, `hover:bg-muted` | `bg-gray-100` |
+
+**No gradients in app chrome** (`bg-gradient-to-*`, `bg-clip-text`). The look is intentionally serious. Gradients are allowed only for **physical print artifacts** (ticket header, receipt header) where they have semantic meaning.
+
+Combine classes with `cn()` from `@/lib/utils`. Do not introduce new global CSS outside of `globals.css` without consensus.
+
+### 6.2 Buttons
+
+Use a **single `Button` component** (`@/components/ui/button`). Do not pass arbitrary `bg-*` / `hover:bg-*` to recolor a button — pick the right `variant`:
+
+- `default` → primary action (submit, save, vender boleto). One per view in the foreground.
+- `outline` → secondary actions (cancelar, exportar, filtros).
+- `ghost` → tertiary / icon-only actions inside cards/toolbars.
+- `destructive` → delete / cancel-with-side-effects. Always paired with a confirm dialog.
+- `link` → "Ver todos", inline navigation.
+
+Do **not** use `<Button className="bg-indigo-600 hover:bg-indigo-700">`. If the variant doesn't exist, propose a new one in this guide instead of inlining colors.
+
+### 6.3 Pagination
+
+There is **one** `Pagination` component (`@/components/ui/pagination`). Two variants:
+
+- `variant="compact"` (default) → cards/lists. `Anterior · Página X de Y · Siguiente`.
+- `variant="full"` → tables with many rows. Numbered with ellipsis + "Mostrando X a Y de Z resultados".
+
+Never re-implement Anterior/Siguiente buttons inline. If you need a different shape, extend `Pagination`.
+
+### 6.4 Empty / loading / error states
+
+- **Empty:** use `EmptyState` from `@/components/common/EmptyState`. Do not write `<div className="text-center py-12">No hay X</div>` inline.
+- **Loading:** use `Skeleton` from `@/components/ui/skeleton`. Spinner divs are forbidden.
+- **Error:** use `Alert` from `@/components/ui/alert` + `toast.error` for transient feedback. Never render a raw `Error` object.
+
+### 6.5 Print
+
+Use `openPrintWindow(html, title)` from `@/lib/print` for any "Imprimir X" action. It clones the current document's stylesheets into the print window so the printed output matches the on-screen design (Tailwind classes resolve, colors apply via `print-color-adjust: exact`).
+
+Do **not** open `window.open('', '_blank')` and write a hand-rolled style block — that path always rots. Where a `@media print` rule is needed for layout, add it to `globals.css`.
 
 ## 7. TypeScript — Zero `any`
 
@@ -144,8 +194,27 @@ If a hook exposes types, export the interface (`export interface ClientRecord`) 
 3. If interactive: support keyboard, focus ring, `disabled`/`aria-*` states.
 4. Document in this guide (section 1 table) and add to `index` if it exists.
 
-## 10. References
+## 10. DRY — When to extract a component
+
+Three concrete rules. If you hit any of them, **stop and extract**:
+
+1. **Rule of three.** If the same JSX block (≥ ~5 lines) appears in 3 different files, extract a component. Two occurrences may still be coincidence; three is a pattern.
+2. **Same intent, different markup.** If two screens render the same conceptual element (a "stat card", a "pagination bar", an "empty list message") with cosmetically different markup, that is a bug — converge them on the existing primitive listed in section 1. Do not preserve the divergent style "because it looks different here".
+3. **Inline color or layout overrides on a primitive.** If you find yourself writing `<Button className="bg-indigo-600 ...">`, `<Card className="bg-gradient-to-r ...">`, or duplicating an entire toolbar/pagination/empty-state block, the abstraction is wrong. Either the primitive needs a new variant (propose it here) or you are reinventing a component that already exists.
+
+**Where to put extractions:**
+
+- Used by ≥ 2 features, generic shape → `src/components/ui/<name>.tsx` (no business logic).
+- Used by 1 feature, multiple files within it → `src/components/<feature>/<name>.tsx`.
+- Pure logic (no JSX) → `src/lib/<name>.ts` or co-located `<name>-helpers.ts`.
+
+**Before adding a new component, search first.** Run a grep for similar names (`StatCard`, `Empty*`, `Pagination*`, `*Header*`). If something exists, extend or reuse it; do not create a parallel implementation.
+
+**Before deleting a "duplicate" file**, verify with grep across the whole `src/` tree (basename without extension) — lazy-loaded routes and string references can hide imports.
+
+## 11. References
 
 - Active plan: `docs/implementation-plans/ui-standardization.plan.md`
-- ESLint config: `frontend-react/eslint.config.js`
-- Tokens: `frontend-react/src/styles/globals.css`
+- ESLint config: `frontend/eslint.config.js`
+- Tokens: `frontend/src/styles/globals.css`
+- Print helper: `frontend/src/lib/print.ts`

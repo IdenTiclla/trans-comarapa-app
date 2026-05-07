@@ -1,6 +1,8 @@
 import { useTicketsIndexPage } from '@/hooks/use-tickets-index'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
+import { Pagination } from '@/components/ui/pagination'
+import EmptyState from '@/components/common/EmptyState'
 import { LayoutGrid, List } from 'lucide-react'
 import { TicketsStatsCards } from '@/components/tickets/TicketsStatsCards'
 import { TicketsFilters } from '@/components/tickets/TicketsFilters'
@@ -68,7 +70,10 @@ export function Component() {
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Cargando...</div>
       ) : filteredTickets.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border">No hay boletos</div>
+        <EmptyState
+          title="No hay boletos"
+          description="No se encontraron boletos con los filtros aplicados."
+        />
       ) : viewMode === 'table' ? (
         <TicketsTableView
           tickets={tickets}
@@ -87,17 +92,8 @@ export function Component() {
         />
       )}
 
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center bg-card border rounded-lg p-3">
-          <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</span>
-          <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-            Siguiente
-          </Button>
-        </div>
-      )}
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
 
       {(showCreateModal || showEditModal) && (
         <TicketFormModal

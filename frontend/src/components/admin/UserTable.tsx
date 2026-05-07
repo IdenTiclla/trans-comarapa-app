@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { UserTableToolbar } from './user-table/UserTableToolbar'
 import { UserTableFilters } from './user-table/UserTableFilters'
 import { UserTableBody } from './user-table/UserTableBody'
-import { UserTablePagination } from './user-table/UserTablePagination'
+import { Pagination } from '@/components/ui/pagination'
 import type { UserTableProps } from './user-table/types'
 import { TIMING } from '@/lib/timing'
 
@@ -79,7 +79,8 @@ export default function UserTable({
         onActivate={onActivate}
         onDeactivate={onDeactivate}
       />
-      <UserTablePagination
+      <Pagination
+        variant="full"
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}
