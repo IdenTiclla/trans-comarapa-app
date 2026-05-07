@@ -157,4 +157,111 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@layer components {
+  .ts-page { @apply min-h-screen bg-[#edf2f7]; font-family: Arial, Helvetica, sans-serif; }
+  .ts-toolbar { @apply flex items-center justify-between sticky top-0 z-50 bg-[#1a365d] px-6 py-2.5; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .ts-toolbar-title { @apply text-[17px] font-bold text-white tracking-wide; }
+  .ts-toolbar-sub { @apply text-[13px] mt-0.5 text-[#90cdf4]; }
+  .ts-btn-print { @apply flex items-center gap-1.5 bg-[#3182ce] text-white border-none px-5 py-2 rounded-md text-[13px] font-bold cursor-pointer transition-colors duration-150; }
+  .ts-btn-print:hover { @apply bg-[#2b6cb0]; }
+  .ts-paper-wrap { @apply px-8 py-6 pb-12; }
+  .ts-paper { @apply bg-white rounded-md px-7 py-6 pb-7; box-shadow: 0 4px 20px rgba(0,0,0,.14); }
+  .ts-loading { @apply flex flex-col items-center justify-center min-h-[320px] gap-3.5 text-[#718096]; }
+  .ts-spinner { @apply w-9 h-9 rounded-full border-[3px] border-[#bee3f8] border-t-[#3182ce]; animation: ts-spin .8s linear infinite; }
+  .ts-summary { @apply flex gap-4 flex-wrap mt-3.5 pt-2.5 border-t border-[#c8e6c9] text-[13px] text-[#4a5568]; }
+  .ts-summary strong { @apply text-[#1a202c]; }
+}
+
+@layer components {
+  .doc-header { @apply flex items-start gap-4 border-b-2 border-[#276749] pb-3 mb-3.5; }
+  .doc-logo { @apply shrink-0 w-[185px] border-r border-[#c3d9ca] pr-3.5; }
+  .doc-logo-trans { @apply text-base font-black font-[Times_New_Roman,serif] tracking-[2px] text-[#1a202c] leading-none; }
+  .doc-logo-comarapa { @apply text-4xl font-black font-[Times_New_Roman,serif] text-[#1a202c] tracking-wide leading-none mb-1; }
+  .doc-sindicato { @apply text-[11px] text-[#4a5568] leading-snug mb-1.5; }
+  .doc-phones { @apply text-[11px] text-[#4a5568] leading-relaxed; }
+  .doc-center { @apply flex-1 overflow-hidden; }
+  .doc-route-banner { @apply text-[13px] font-bold text-[#276749] text-center tracking-wide border-b border-[#c3d9ca] pb-1.5 mb-2; }
+  .doc-manifest-title { @apply text-[17px] font-black text-[#1a365d] text-center tracking-wide uppercase mb-2; }
+  .doc-fields { @apply grid grid-cols-2 gap-y-[3px] gap-x-[18px]; }
+  .doc-field { @apply flex items-end gap-[3px] min-h-[17px]; }
+  .doc-field-label { @apply text-xs font-bold text-[#1a202c] whitespace-nowrap shrink-0; }
+  .doc-field-value { @apply text-xs text-[#1a202c] border-b border-dotted border-[#a0aec0] flex-1 pb-px whitespace-nowrap overflow-hidden text-ellipsis; }
+  .doc-trip-id { @apply shrink-0 border-2 border-[#e53e3e] rounded p-1.5 px-2.5 text-center self-start bg-[#fff5f5]; }
+  .doc-trip-id-label { @apply text-[11px] text-[#e53e3e] font-bold uppercase tracking-wide; }
+  .doc-trip-id-number { @apply text-2xl font-black text-[#e53e3e] tracking-wide leading-none; }
+}
+
+@layer components {
+  .pax-grid { @apply grid grid-cols-2 gap-3.5; }
+  .pax-table { @apply w-full border-collapse text-[13px]; }
+  .pax-table thead th { @apply bg-[#276749] text-white text-xs font-bold py-[5px] px-1.5 text-left border border-[#276749]; }
+  .pax-table thead th.col-no { @apply w-7 text-center; }
+  .pax-table thead th.col-ci { @apply w-[78px]; }
+  .pax-table thead th.col-dst { @apply w-[74px]; }
+  .pax-table tbody tr { @apply h-[21px]; }
+  .pax-table tbody tr:nth-child(even) { @apply bg-[#f0fff4]; }
+  .pax-table tbody tr:nth-child(odd) { @apply bg-white; }
+  .pax-table tbody tr.pax-occupied { @apply !bg-[#c6f6d5]; }
+  .pax-table tbody td { @apply border border-[#68d391] px-[5px] py-px text-xs text-[#1a202c] align-middle; }
+  .pax-table tbody td.col-no { @apply text-center font-bold text-[#276749] border-[#276749] w-7; }
+  .pax-table tbody td.col-name { @apply max-w-0 overflow-hidden text-ellipsis whitespace-nowrap; }
+  .pax-table tbody td.col-ci { @apply w-[78px]; }
+  .pax-table tbody td.col-dst { @apply w-[74px]; }
+}
+
+@layer components {
+  .pm-page { @apply min-h-screen bg-[#edf2f7]; font-family: Arial, Helvetica, sans-serif; }
+  .pm-toolbar { @apply flex items-center justify-between sticky top-0 z-50 bg-[#1a365d] px-6 py-2.5; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .pm-toolbar-title { @apply text-[17px] font-bold text-white tracking-wide; }
+  .pm-toolbar-sub { @apply text-[13px] mt-0.5 text-[#90cdf4]; }
+  .pm-btn-print { @apply flex items-center gap-1.5 bg-[#3182ce] text-white border-none px-5 py-2 rounded-md text-[13px] font-bold cursor-pointer transition-colors duration-150; }
+  .pm-btn-print:hover { @apply bg-[#2b6cb0]; }
+  .pm-paper-wrap { @apply px-8 py-6 pb-12; }
+  .pm-paper { @apply bg-white rounded-md px-7 py-6 pb-7; box-shadow: 0 4px 20px rgba(0,0,0,.14); }
+  .pm-loading { @apply flex flex-col items-center justify-center min-h-[320px] gap-3.5 text-[#718096]; }
+  .pm-spinner { @apply w-9 h-9 rounded-full border-[3px] border-[#bee3f8] border-t-[#3182ce]; animation: ts-spin .8s linear infinite; }
+  .pm-summary { @apply flex gap-4 flex-wrap mt-3.5 pt-2.5 border-t border-[#bee3f8] text-[13px] text-[#4a5568]; }
+  .pm-summary strong { @apply text-[#1a202c]; }
+}
+
+@layer components {
+  .pkg-table { @apply w-full border-collapse text-[13px] mt-1; }
+  .pkg-table thead th { @apply bg-[#1a365d] text-white text-xs font-bold py-[5px] px-[7px] text-left border border-[#1a365d]; }
+  .pkg-table thead th.col-no { @apply w-7 text-center; }
+  .pkg-table thead th.col-id { @apply w-[45px] text-center; }
+  .pkg-table thead th.col-amt { @apply w-[62px] text-right; }
+  .pkg-table thead th.col-est { @apply w-20 text-center; }
+  .pkg-table tbody tr { @apply h-[22px]; }
+  .pkg-table tbody tr:nth-child(even) { @apply bg-[#ebf8ff]; }
+  .pkg-table tbody tr:nth-child(odd) { @apply bg-white; }
+  .pkg-table tbody td { @apply border border-[#bee3f8] px-1.5 py-[2px] text-xs text-[#1a202c] align-middle; }
+  .pkg-table tbody td.col-no { @apply text-center font-bold text-[#1a365d] border-[#1a365d] w-7; }
+  .pkg-table tbody td.col-id { @apply text-center font-semibold text-[#2b6cb0] w-[45px] py-0; }
+  .pkg-table tbody td.col-id a { @apply block w-full h-full py-[2px] text-inherit no-underline; }
+  .pkg-table tbody td.col-id a:hover { @apply underline bg-[rgba(43,108,176,0.05)]; }
+  .pkg-table tbody td.col-amt { @apply text-right font-bold w-[62px]; }
+  .pkg-table tbody td.col-est { @apply text-center w-20 px-1 py-[2px]; }
+  .pkg-table tbody td.col-desc { @apply max-w-0 overflow-hidden text-ellipsis whitespace-nowrap; }
+  .badge-paid { @apply inline-block bg-[#c6f6d5] text-[#22543d] text-[11px] font-bold rounded py-px px-1.5; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .badge-unpaid { @apply inline-block bg-[#fefcbf] text-[#744210] text-[11px] font-bold rounded py-px px-1.5; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+@keyframes ts-spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .ts-toolbar, .pm-toolbar { display: none !important; }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .ts-page, .pm-page { background: #fff !important; min-height: unset !important; }
+  .ts-paper-wrap, .pm-paper-wrap { padding: 0 !important; }
+  .ts-paper, .pm-paper { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+  .pax-table thead th { background: #276749 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pax-table tbody tr:nth-child(even) { background: #f0fff4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pax-table tbody tr.pax-occupied { background: #c6f6d5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pkg-table thead th { background: #1a365d !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pkg-table tbody tr:nth-child(even) { background: #ebf8ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .badge-paid, .badge-unpaid { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-trip-id { background: #fff5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: letter landscape; margin: 10mm 12mm; }
+}
+
 

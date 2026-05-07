@@ -24,7 +24,7 @@ export function ReceiptDocument({
 
   return (
     <div id="receipt-content" className="bg-white">
-      <div className="p-4 max-w-3xl mx-auto bg-white border-2 border-blue-800 rounded-lg" style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div className="p-4 max-w-3xl mx-auto bg-white border-2 border-blue-800 rounded-lg font-[Arial,sans-serif]">
         <ReceiptHeader
           originCode={originName.slice(0, 3).toUpperCase()}
           day={day}
@@ -96,7 +96,7 @@ export function ReceiptDocument({
           </div>
           <div className="text-center w-1/3">
             <div className="border-t border-dotted border-gray-500 w-full mb-1" />
-            <p className="text-blue-800 font-bold" style={{ fontSize: '10px' }}>RECIBÍ CONFORME</p>
+            <p className="text-blue-800 font-bold text-[10px]">RECIBÍ CONFORME</p>
           </div>
         </div>
       </div>

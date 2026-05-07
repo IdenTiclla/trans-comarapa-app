@@ -8,18 +8,14 @@ interface Props {
   trip: Record<string, unknown>
 }
 
-export function ManifestTable({ packages, trip }: Props) {
-  if (packages.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px 0', color: '#718096', fontSize: 13 }}>
-        No hay encomiendas registradas para este viaje.
-      </div>
-    )
-  }
+const MIN_ROWS = 25
 
+export function ManifestTable({ packages, trip }: Props) {
   const totalPaid = packages.filter(p => isPaid(p.payment_status)).reduce((acc, p) => acc + Number(p.total_amount || 0), 0)
   const totalUnpaid = packages.filter(p => !isPaid(p.payment_status)).reduce((acc, p) => acc + Number(p.total_amount || 0), 0)
   const totalAll = packages.reduce((acc, p) => acc + Number(p.total_amount || 0), 0)
+
+  const emptyRows = Math.max(0, MIN_ROWS - packages.length)
 
   return (
     <>
@@ -54,6 +50,18 @@ export function ManifestTable({ packages, trip }: Props) {
                   : <span className="badge-unpaid">Por Cobrar</span>}
               </td>
               <td className="col-amt">{Number(pkg.total_amount || 0).toFixed(2)}</td>
+            </tr>
+          ))}
+          {Array.from({ length: emptyRows }, (_, i) => (
+            <tr key={`empty-${i}`}>
+              <td className="col-no">{packages.length + i + 1}</td>
+              <td className="col-id" />
+              <td />
+              <td className="col-desc" />
+              <td />
+              <td />
+              <td className="col-est" />
+              <td className="col-amt" />
             </tr>
           ))}
         </tbody>

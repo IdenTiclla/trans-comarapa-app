@@ -1,6 +1,5 @@
 import { useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { manifestStyles } from '@/components/trips/manifest/styles'
 import { formatDate, formatTime } from '@/components/trips/manifest/helpers'
 import { useTripManifest } from '@/components/trips/manifest/use-trip-manifest'
 import { ManifestHeader } from '@/components/trips/manifest/ManifestHeader'
@@ -12,10 +11,7 @@ export function Component() {
   const { trip, packages, isLoading, hasError, errorMessage } = useTripManifest(tripId)
 
   return (
-    <>
-      <style>{manifestStyles}</style>
-
-      <div className="pm-page">
+    <div className="pm-page">
         <div className="pm-toolbar">
           <div>
             <div className="pm-toolbar-title">
@@ -54,13 +50,13 @@ export function Component() {
           )}
 
           {hasError && !isLoading && (
-            <div style={{ background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: 8, padding: '14px 20px', color: '#c53030', maxWidth: 480, margin: '40px auto' }}>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3.5 px-5 text-red-700 max-w-[480px] mx-auto mt-10">
               <strong>Error:</strong> {errorMessage}
             </div>
           )}
 
           {!trip && !isLoading && !hasError && (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: '#718096' }}>
+            <div className="text-center py-16 text-gray-500">
               No hay información del viaje para mostrar.
             </div>
           )}
@@ -73,6 +69,5 @@ export function Component() {
           )}
         </div>
       </div>
-    </>
   )
 }

@@ -2,7 +2,7 @@ import { Outlet } from 'react-router'
 
 export default function PrintLayout() {
   return (
-    <div style={{ margin: 0, padding: 0, backgroundColor: '#fff' }}>
+    <div className="m-0 p-0 bg-white">
       <Outlet />
     </div>
   )

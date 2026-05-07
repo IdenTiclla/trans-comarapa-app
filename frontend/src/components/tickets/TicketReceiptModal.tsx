@@ -76,8 +76,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
 
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
-                className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full border border-gray-100/50"
-                style={{ maxWidth: '42rem' }}
+                className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-[42rem] border border-gray-100/50"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b shrink-0">
