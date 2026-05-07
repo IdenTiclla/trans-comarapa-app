@@ -18,6 +18,15 @@ from models.assistant import Assistant
 from models.client import Client
 from models.office import Office
 from repositories.user_repository import UserRepository
+from repositories.person_repository import PersonRepository
+
+ROLE_TO_MODEL = {
+    UserRole.SECRETARY: Secretary,
+    UserRole.DRIVER: Driver,
+    UserRole.ASSISTANT: Assistant,
+    UserRole.ADMIN: Administrator,
+    UserRole.CLIENT: Client,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -72,17 +81,17 @@ class UserManagementService:
         self.db.refresh(user)
         logger.info("User created: %d (%s)", user.id, user.email)
 
-        if user.role == UserRole.SECRETARY:
-            secretary_data = Secretary(
+        person_model = ROLE_TO_MODEL.get(user.role)
+        if person_model:
+            person_data = person_model(
                 firstname=user.firstname,
                 lastname=user.lastname,
                 user_id=user.id,
             )
-            from repositories.person_repository import PersonRepository
             person_repo = PersonRepository(self.db)
-            person_repo.create_person(secretary_data)
+            person_repo.create_person(person_data)
             self.db.commit()
-            self.db.refresh(secretary_data)
+            self.db.refresh(person_data)
 
         return user
 

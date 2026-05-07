@@ -7,6 +7,7 @@ from db.session import get_db
 from models.secretary import Secretary as SecretaryModel
 from models.user import User as UserModel
 from schemas.secretary import Secretary as SecretarySchema
+from schemas.secretary import SecretaryUpdate
 from schemas.trip import Trip as TripSchema
 from schemas.ticket import Ticket as TicketSchema
 from schemas.secretary_with_user import SecretaryWithUser, SecretaryWithUserResponse
@@ -85,11 +86,11 @@ async def get_secretary(
 @router.patch("/{secretary_id}", response_model=SecretarySchema)
 async def update_secretary(
     secretary_id: int,
-    data: dict,
+    data: SecretaryUpdate,
     service: SecretaryService = Depends(get_secretary_service),
     _: UserModel = Depends(get_current_admin_user),
 ):
-    return service.update(secretary_id, data)
+    return service.update(secretary_id, data.model_dump(exclude_unset=True))
 
 
 @router.get("/{secretary_id}/trips", response_model=List[TripSchema])

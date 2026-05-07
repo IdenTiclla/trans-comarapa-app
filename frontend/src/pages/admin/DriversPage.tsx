@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 
 export function Component() {
   const {
-    drivers, loading, saving, editing, setEditing,
-    formData, setFormData, openEdit, handleSubmit,
+    drivers, loading, saving, showForm, setShowForm,
+    editing, formData, setFormData,
+    openCreate, openEdit, handleSubmit, handleDelete,
   } = useDriversPage()
 
   return (
@@ -19,6 +20,9 @@ export function Component() {
             Administra los choferes y su información de licencia.
           </p>
         </div>
+        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+          + Nuevo Chofer
+        </Button>
       </div>
 
       {loading ? (
@@ -27,7 +31,7 @@ export function Component() {
         </div>
       ) : drivers.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
-          No hay choferes registrados. Los choferes se agregan desde "Usuarios".
+          No hay choferes registrados. Haz clic en "Nuevo Chofer" para agregar uno.
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -82,13 +86,20 @@ export function Component() {
                       {driver.status === 'active' || driver.status === 'Activo' ? 'Activo' : driver.status || 'Inactivo'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right space-x-2">
                     <Button
                       variant="ghost"
                       onClick={() => openEdit(driver)}
                       className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
-                      Editar Licencia
+                      Editar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleDelete(driver)}
+                      className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
+                      Eliminar
                     </Button>
                   </td>
                 </tr>
@@ -98,13 +109,37 @@ export function Component() {
         </div>
       )}
 
-      {editing && (
+      {showForm && (
         <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Actualizar Información</h2>
-              <p className="text-sm text-gray-500 mb-4">Chofer: {editing.firstname} {editing.lastname}</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                {editing ? 'Editar Chofer' : 'Nuevo Chofer'}
+              </h2>
+              {editing && (
+                <p className="text-sm text-gray-500 mb-4">ID: {editing.id}</p>
+              )}
               
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Nombre"
+                    value={formData.firstname}
+                    onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                    required
+                  />
+                  <FormInput
+                    label="Apellido"
+                    value={formData.lastname}
+                    onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                    required
+                  />
+                </div>
+                <FormInput
+                  label="Teléfono"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Ej: 70000000"
+                />
                 <FormInput
                   label="Nº de Licencia"
                   value={formData.license_number}
@@ -121,7 +156,7 @@ export function Component() {
                   <FormDatePicker
                     label="Fecha de Vencimiento"
                     value={formData.license_expiry}
-                    onChange={(val) => setFormData({ ...formData, license_expiry: val })}
+                    onChange={(val) => setFormData({ ...formData, license_expiry: val ? String(val).split('T')[0] : '' })}
                   />
                 </div>
                 <FormSelect
@@ -135,11 +170,11 @@ export function Component() {
                 />
 
                 <div className="flex justify-end space-x-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                     Cancelar
                   </Button>
                   <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-                    {saving ? 'Guardando...' : 'Guardar'}
+                    {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Chofer'}
                   </Button>
                 </div>
               </form>

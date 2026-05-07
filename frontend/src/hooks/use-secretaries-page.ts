@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { secretaryService } from '@/services/secretary.service'
 import { officeService } from '@/services/office.service'
+import { toast } from 'sonner'
 import type { Office } from '@/types/office'
 
 interface SecretaryWithEmail {
@@ -14,12 +15,36 @@ interface SecretaryWithEmail {
   is_active?: boolean
 }
 
+interface SecretaryFormData {
+  firstname: string
+  lastname: string
+  phone: string
+  office_id: string
+  username: string
+  email: string
+  password: string
+  is_active: boolean
+}
+
+const INITIAL_FORM: SecretaryFormData = {
+  firstname: '',
+  lastname: '',
+  phone: '',
+  office_id: '',
+  username: '',
+  email: '',
+  password: '',
+  is_active: true,
+}
+
 export function useSecretariesPage() {
   const [secretaries, setSecretaries] = useState<SecretaryWithEmail[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [loading, setLoading] = useState(true)
-  const [savingId, setSavingId] = useState<number | null>(null)
-  const [pendingOffice, setPendingOffice] = useState<Record<number, number | null>>({})
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<SecretaryWithEmail | null>(null)
+  const [formData, setFormData] = useState<SecretaryFormData>({ ...INITIAL_FORM })
 
   const loadData = async () => {
     setLoading(true)
@@ -53,50 +78,98 @@ export function useSecretariesPage() {
     loadData()
   }, [])
 
-  const handleOfficeChange = (secId: number, value: string) => {
-    setPendingOffice((prev) => ({ ...prev, [secId]: value ? Number(value) : null }))
+  const openCreate = () => {
+    setEditing(null)
+    setFormData({ ...INITIAL_FORM })
+    setShowForm(true)
   }
 
-  const saveOffice = async (sec: SecretaryWithEmail) => {
-    const newOfficeId = pendingOffice[sec.id] !== undefined ? pendingOffice[sec.id] : sec.office_id
-    setSavingId(sec.id)
+  const openEdit = (sec: SecretaryWithEmail) => {
+    setEditing(sec)
+    setFormData({
+      firstname: sec.firstname || '',
+      lastname: sec.lastname || '',
+      phone: sec.phone || '',
+      office_id: sec.office_id ? String(sec.office_id) : '',
+      username: '',
+      email: sec.email || '',
+      password: '',
+      is_active: sec.is_active !== false,
+    })
+    setShowForm(true)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
     try {
-      await secretaryService.update(sec.id, { office_id: newOfficeId })
-      setSecretaries((prev) =>
-        prev.map((s) => (s.id === sec.id ? { ...s, office_id: newOfficeId } : s)),
-      )
-      setPendingOffice((prev) => {
-        const next = { ...prev }
-        delete next[sec.id]
-        return next
-      })
-      return true
-    } catch {
-      return false
+      if (editing) {
+        const payload: Record<string, unknown> = {
+          firstname: formData.firstname || null,
+          lastname: formData.lastname || null,
+          phone: formData.phone || null,
+          office_id: formData.office_id ? Number(formData.office_id) : null,
+        }
+        await secretaryService.update(editing.id, payload)
+        toast.success('Secretaria actualizada')
+      } else {
+        if (!formData.username || !formData.email || !formData.password) {
+          toast.error('Username, email y contraseña son requeridos')
+          setSaving(false)
+          return
+        }
+        await secretaryService.create({
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          phone: formData.phone || null,
+          office_id: formData.office_id ? Number(formData.office_id) : null,
+          user: {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            is_active: formData.is_active,
+            is_admin: false,
+          },
+        })
+        toast.success('Secretaria creada')
+      }
+      setShowForm(false)
+      loadData()
+    } catch (err) {
+      toast.error('Error: ' + (err as Error).message)
     } finally {
-      setSavingId(null)
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (sec: SecretaryWithEmail) => {
+    if (!confirm(`¿Eliminar secretaria ${sec.firstname} ${sec.lastname}?`)) return
+    try {
+      await secretaryService.delete(sec.id)
+      toast.success('Secretaria eliminada')
+      loadData()
+    } catch (err) {
+      toast.error('Error: ' + (err as Error).message)
     }
   }
 
   const getOfficeName = (officeId?: number | null) =>
     offices.find((o) => o.id === officeId)?.name ?? null
 
-  const hasPendingChange = (sec: SecretaryWithEmail) =>
-    pendingOffice[sec.id] !== undefined && pendingOffice[sec.id] !== sec.office_id
-
-  const currentOfficeValue = (sec: SecretaryWithEmail) =>
-    pendingOffice[sec.id] !== undefined ? pendingOffice[sec.id] : sec.office_id
-
   return {
     secretaries,
     offices,
     loading,
-    savingId,
-    pendingOffice,
-    handleOfficeChange,
-    saveOffice,
+    saving,
+    showForm,
+    setShowForm,
+    editing,
+    formData,
+    setFormData,
+    openCreate,
+    openEdit,
+    handleSubmit,
+    handleDelete,
     getOfficeName,
-    hasPendingChange,
-    currentOfficeValue,
   }
 }

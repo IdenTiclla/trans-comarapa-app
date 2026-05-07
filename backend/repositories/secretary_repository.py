@@ -39,7 +39,7 @@ class SecretaryRepository:
         return self.db.query(Package).filter(Package.secretary_id == secretary_id).all()
 
     def update(self, secretary: Secretary, update_data: dict) -> Secretary:
-        allowed_fields = {"firstname", "lastname", "phone", "office_id"}
+        allowed_fields = {"firstname", "lastname", "phone", "birth_date", "office_id"}
         for field, value in update_data.items():
             if field in allowed_fields and hasattr(secretary, field):
                 setattr(secretary, field, value)
