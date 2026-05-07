@@ -44,13 +44,13 @@ export function Component() {
       label: 'Vender Boletos',
       description: 'Gestionar venta de boletos',
       icon: (
-        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
         </svg>
       ),
       iconBg: 'bg-blue-100 group-hover:bg-blue-200',
       hoverBorder: 'hover:border-blue-300',
-      textHover: 'group-hover:text-blue-700',
+      textHover: 'group-hover:text-primary',
       onClick: () => navigate(ROUTES.TRIPS),
     },
     {
@@ -58,13 +58,13 @@ export function Component() {
       label: 'Nuevo Paquete',
       description: 'Registrar nuevo paquete',
       icon: (
-        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>
       ),
       iconBg: 'bg-green-100 group-hover:bg-green-200',
       hoverBorder: 'hover:border-green-300',
-      textHover: 'group-hover:text-green-700',
+      textHover: 'group-hover:text-primary',
       onClick: () => navigate(ROUTES.packageNew),
     },
     {
@@ -72,13 +72,13 @@ export function Component() {
       label: 'Buscar Cliente',
       description: 'Buscar información de clientes',
       icon: (
-        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       ),
       iconBg: 'bg-purple-100 group-hover:bg-purple-200',
       hoverBorder: 'hover:border-purple-300',
-      textHover: 'group-hover:text-purple-700',
+      textHover: 'group-hover:text-primary',
       onClick: () => navigate(ROUTES.CLIENTS),
     },
     {
@@ -86,13 +86,13 @@ export function Component() {
       label: 'Reporte Diario',
       description: 'Ver reportes del día',
       icon: (
-        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 lg:h-6 lg:w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
       iconBg: 'bg-orange-100 group-hover:bg-orange-200',
       hoverBorder: 'hover:border-orange-300',
-      textHover: 'group-hover:text-orange-700',
+      textHover: 'group-hover:text-primary',
       onClick: () => navigate(ROUTES.REPORTS),
     },
   ]

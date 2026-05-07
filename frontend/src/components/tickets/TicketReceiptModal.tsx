@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { COMPANY } from '@/lib/company-config'
 import { TIMING } from '@/lib/timing'
+import { openPrintWindow } from '@/lib/print'
 
 interface TicketReceiptModalProps {
     show: boolean
@@ -21,39 +22,19 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
         const printContent = document.getElementById('ticket-receipt-content')
         if (!printContent) return
 
-        const printWindow = window.open('', '_blank')
-        if (!printWindow) return
-
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Boleto - ${COMPANY.name}</title>
-                <meta charset="UTF-8">
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-                    .ticket-container { max-width: 800px; margin: 0 auto; }
-                    .ticket-container + .ticket-container { margin-top: 40px; page-break-before: always; }
-
-                    @media print {
-                        body { margin: 0; color: black; }
-                        .ticket-container { max-width: none; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="ticket-container">
-                    ${printContent.innerHTML}
-                </div>
-            </body>
-            </html>
-        `)
-        printWindow.document.close()
-        setTimeout(() => {
-            printWindow.print()
-            printWindow.close()
-        }, TIMING.PRINT_DELAY)
+        const body = `
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                .ticket-container { max-width: 800px; margin: 0 auto; }
+                .ticket-container + .ticket-container { margin-top: 40px; page-break-before: always; }
+                @media print {
+                    body { margin: 0; color: black; }
+                    .ticket-container { max-width: none; margin: 0; }
+                }
+            </style>
+            <div class="ticket-container">${printContent.innerHTML}</div>
+        `
+        openPrintWindow(body, `Boleto - ${COMPANY.name}`)
     }
 
     useEffect(() => {

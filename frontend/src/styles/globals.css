@@ -262,6 +262,13 @@ h1, h2, h3, h4, h5, h6 {
   .badge-paid, .badge-unpaid { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .doc-trip-id { background: #fff5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { size: letter landscape; margin: 10mm 12mm; }
+
+  /* Boletos y recibos: bordes "punteados" se renderizan como asteriscos en
+     muchas impresoras a baja resolución. Forzar línea sólida fina dentro
+     del recibo para que las líneas de "Remitente", "Destinatario", etc.,
+     impriman como subrayado real. */
+  #ticket-receipt-content .border-dotted,
+  #receipt-content .border-dotted { border-style: solid !important; }
 }
 
 

@@ -83,17 +83,29 @@ export function useTicketsIndexPage() {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const [ticketsRes, clientsRes, tripsRes, statsRes] = await Promise.all([
+      // Tickets, trips y stats en paralelo. NO cargamos `clients` aparte:
+      // cada ticket viene con `client` embebido desde el backend, así que
+      // construimos el lookup desde ahí. Los clientes solo se cargan cuando
+      // se abre el form modal (ver useEffect más abajo).
+      const [ticketsRes, tripsRes, statsRes] = await Promise.all([
         ticketService.getAll({ skip: 0, limit: 10000 }),
-        clientService.getAll({ skip: 0, limit: 10000 }),
         tripService.getAll({ upcoming: true }),
         statsService
           .getTicketsStatsComparison()
           .catch(() => null) as Promise<unknown>,
       ])
 
-      setTickets((ticketsRes as Ticket[]) || [])
-      setClients((clientsRes as Client[]) || [])
+      const ticketsList = (ticketsRes as Ticket[]) || []
+      setTickets(ticketsList)
+
+      // Lookup de clientes a partir de la data embebida en los tickets.
+      const clientMap = new Map<number, Client>()
+      for (const t of ticketsList) {
+        const c = (t as unknown as { client?: Client }).client
+        if (c && !clientMap.has(c.id)) clientMap.set(c.id, c)
+      }
+      setClients(Array.from(clientMap.values()))
+
       setAvailableTrips(
         (tripsRes as { trips?: Trip[] }).trips || [],
       )
@@ -139,6 +151,22 @@ export function useTicketsIndexPage() {
       setShowCreateModal(true)
     }
   }, [searchParams])
+
+  // Carga lazy de clientes solo cuando se abre el form modal (crear/editar).
+  // El listado principal usa el cliente embebido en cada ticket.
+  useEffect(() => {
+    if (!showCreateModal && !showEditModal) return
+    let cancelled = false
+    clientService
+      .getAll({ skip: 0, limit: 10000 })
+      .then((res) => {
+        if (!cancelled) setClients((res as Client[]) || [])
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [showCreateModal, showEditModal])
 
   useEffect(() => {
     if (ticketForm.trip_id) {

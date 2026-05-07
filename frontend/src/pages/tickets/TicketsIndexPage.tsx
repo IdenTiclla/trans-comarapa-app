@@ -31,12 +31,10 @@ export function Component() {
   } = useTicketsIndexPage()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
-      <div className="mb-8 bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Gestión de Boletos
-        </h1>
-        <p className="mt-2 text-gray-600">Administra los boletos de viaje de los pasajeros</p>
+    <div className="w-full space-y-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold text-foreground">Gestión de Boletos</h1>
+        <p className="text-sm text-muted-foreground">Administra los boletos de viaje de los pasajeros</p>
       </div>
 
       <TicketsStatsCards stats={stats} comparison={comparison} />
@@ -52,27 +50,25 @@ export function Component() {
         onClearAll={clearAllFilters}
       />
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900">Lista de Boletos ({filteredTickets.length})</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-base font-semibold text-foreground">Lista de Boletos ({filteredTickets.length})</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportData}>Exportar</Button>
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <ViewToggle
-              value={viewMode}
-              onChange={(val) => setViewMode(val as 'cards' | 'table')}
-              options={[
-                { value: 'cards', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista en tarjetas' },
-                { value: 'table', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista en tabla' },
-              ]}
-            />
-          </div>
+          <ViewToggle
+            value={viewMode}
+            onChange={(val) => setViewMode(val as 'cards' | 'table')}
+            options={[
+              { value: 'cards', icon: <LayoutGrid className="h-4 w-4" />, label: 'Tarjetas', ariaLabel: 'Vista en tarjetas' },
+              { value: 'table', icon: <List className="h-4 w-4" />, label: 'Lista', ariaLabel: 'Vista en tabla' },
+            ]}
+          />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">Cargando...</div>
+        <div className="text-center py-12 text-muted-foreground">Cargando...</div>
       ) : filteredTickets.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg">No hay boletos</div>
+        <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border">No hay boletos</div>
       ) : viewMode === 'table' ? (
         <TicketsTableView
           tickets={tickets}
@@ -92,12 +88,12 @@ export function Component() {
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
-          <Button variant="outline" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+        <div className="flex justify-between items-center bg-card border rounded-lg p-3">
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
             Anterior
           </Button>
-          <span className="text-sm text-gray-600">Página {currentPage} de {totalPages}</span>
-          <Button variant="outline" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+          <span className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</span>
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
             Siguiente
           </Button>
         </div>

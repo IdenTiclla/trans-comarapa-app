@@ -1,8 +1,7 @@
 import { getEffectiveName } from '@/lib/person-utils'
 import type { PackageItem } from '@/types'
-import { receiptPrintStyles } from './print-styles'
 import { COMPANY } from '@/lib/company-config'
-import { TIMING } from '@/lib/timing'
+import { openPrintWindow } from '@/lib/print'
 
 export function computeTotalAmount(packageData: Record<string, unknown>): number {
   if (packageData?.total_amount !== undefined) return packageData.total_amount as number
@@ -39,25 +38,18 @@ export function resolveLocations(packageData: Record<string, unknown>) {
 export function printReceipt() {
   const printContent = document.getElementById('receipt-content')
   if (!printContent) return
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
 
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Recibo de Encomienda - ${COMPANY.name}</title>
-        <meta charset="UTF-8">
-        <style>${receiptPrintStyles}</style>
-      </head>
-      <body>
-        <div class="receipt-container">${printContent.innerHTML}</div>
-      </body>
-    </html>
-  `)
-  printWindow.document.close()
-  setTimeout(() => {
-    printWindow.print()
-    printWindow.close()
-  }, TIMING.PRINT_DELAY)
+  const body = `
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+      .receipt-container { max-width: 800px; margin: 0 auto; }
+      @media print {
+        body { margin: 0; color: black; }
+        .receipt-container { max-width: none; margin: 0; }
+        @page { size: letter; margin: 10mm; }
+      }
+    </style>
+    <div class="receipt-container">${printContent.innerHTML}</div>
+  `
+  openPrintWindow(body, `Recibo de Encomienda - ${COMPANY.name}`)
 }
