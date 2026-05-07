@@ -23,8 +23,8 @@ class TestAuthenticationRegression:
             }
         )
         assert login_response.status_code == status.HTTP_200_OK
-        login_data = login_response.json()
-        token = login_data["access_token"]
+        # Tokens viajan en cookies HTTP-Only (no en body).
+        token = login_response.cookies["access_token"]
 
         # Verify token works
         me_response = client.get(
@@ -59,17 +59,17 @@ class TestAuthenticationRegression:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        # Critical fields that frontend depends on
-        critical_fields = [
-            "access_token", "refresh_token", "token_type",
-            "expires_in", "role", "user_id", "firstname", "lastname"
-        ]
-
+        # Body fields that the frontend uses to hydrate UI (sin tokens).
+        critical_fields = ["role", "user_id", "firstname", "lastname"]
         for field in critical_fields:
             assert field in data, f"Critical field '{field}' missing from login response"
 
+        # Tokens deben venir en cookies HTTP-Only.
+        assert "access_token" in response.cookies
+        assert "refresh_token" in response.cookies
+
         # Token payload structure
-        token_payload = jwt.decode(data["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
+        token_payload = jwt.decode(response.cookies["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
         critical_claims = ["sub", "role", "is_admin", "is_active", "jti", "exp"]
 
         for claim in critical_claims:

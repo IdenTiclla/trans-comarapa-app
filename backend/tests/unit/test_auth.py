@@ -18,10 +18,14 @@ def test_login_success(client, test_user):
     )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    # Tras la migración a cookies HTTP-Only, el body NO contiene tokens.
+    assert "access_token" not in data
+    assert "refresh_token" not in data
     assert "role" in data
     assert data["role"] == UserRole.USER.value
+    # Las credenciales viajan en cookies httpOnly
+    assert "access_token" in response.cookies
+    assert "refresh_token" in response.cookies
 
 
 @pytest.mark.unit

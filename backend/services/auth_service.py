@@ -29,9 +29,10 @@ class AuthService:
         self.db = db
         self.repo = UserRepository(db)
 
-    def authenticate_user(self, email: str, password: str) -> User:
+    def authenticate_user(self, email: str, password: str, client_ip: Optional[str] = None) -> User:
         user = self.repo.get_by_email(email)
         if not user or user.email != email or not verify_password(password, getattr(user, "hashed_password", "")) or not user.is_active:
+            logger.warning(f"Failed login attempt for {email} from {client_ip or 'unknown'}")
             raise UnauthorizedException("Incorrect email or password")
         return user
 
@@ -114,16 +115,11 @@ class AuthService:
             
         return data
 
-    def build_response_body(self, user: User, access_token: str, refresh_token: str) -> dict:
+    def build_response_body(self, user: User) -> dict:
         effective_firstname = user.effective_firstname or ""
         effective_lastname = user.effective_lastname or ""
-        
+
         response_data = {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            "refresh_token": refresh_token,
-            "refresh_token_expires_in": 7 * 24 * 60 * 60,
             "role": user.role,
             "user_id": user.id,
             "firstname": effective_firstname,

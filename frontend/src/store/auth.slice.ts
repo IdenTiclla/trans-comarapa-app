@@ -4,6 +4,27 @@ import { profileService } from '@/services/profile.service'
 import type { RootState } from '@/store'
 import type { AuthUser } from '@/types/auth'
 
+const USER_STORAGE_KEY = 'user_data'
+
+function readUser(): AuthUser | null {
+  const raw = localStorage.getItem(USER_STORAGE_KEY)
+  if (!raw || raw === 'undefined') return null
+  try {
+    return JSON.parse(raw) as AuthUser
+  } catch {
+    localStorage.removeItem(USER_STORAGE_KEY)
+    return null
+  }
+}
+
+function writeUser(user: AuthUser): void {
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+}
+
+export function clearUser(): void {
+  localStorage.removeItem(USER_STORAGE_KEY)
+}
+
 interface AuthState {
   user: AuthUser | null
   loading: boolean
@@ -94,7 +115,6 @@ export const loadProfile = createAsyncThunk(
         // does not return it, but it was set during login for secretaries.
         office_id: currentUser?.office_id,
       }
-      localStorage.setItem('user_data', JSON.stringify(user))
       return user
     } catch (error) {
       return rejectWithValue((error as Error).message || 'Error al cargar el perfil')
@@ -119,7 +139,6 @@ export const updateProfile = createAsyncThunk(
         person: updated.person,
         updated_at: updated.updated_at,
       }
-      localStorage.setItem('user_data', JSON.stringify(user))
       return user
     } catch (error) {
       return rejectWithValue((error as Error).message || 'Error al actualizar el perfil')
@@ -132,8 +151,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     initAuth(state) {
-      const userData = authService.getUserData()
-      state.user = userData || null
+      state.user = readUser()
     },
     clearError(state) {
       state.error = null
@@ -149,6 +167,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload
+        writeUser(action.payload)
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false
@@ -158,13 +177,18 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null
         state.error = null
+        clearUser()
       })
       // Refresh token
       .addCase(refreshToken.fulfilled, (state, action) => {
-        if (action.payload) state.user = action.payload
+        if (action.payload) {
+          state.user = action.payload
+          writeUser(action.payload)
+        }
       })
       .addCase(refreshToken.rejected, (state) => {
         state.user = null
+        clearUser()
       })
       // Load profile
       .addCase(loadProfile.pending, (state) => {
@@ -174,6 +198,7 @@ const authSlice = createSlice({
       .addCase(loadProfile.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload
+        writeUser(action.payload)
       })
       .addCase(loadProfile.rejected, (state, action) => {
         state.loading = false
@@ -187,6 +212,7 @@ const authSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload
+        writeUser(action.payload)
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false

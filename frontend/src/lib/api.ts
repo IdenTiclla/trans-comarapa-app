@@ -129,6 +129,7 @@ export async function apiFetch<T = unknown>(
           signal: new AbortController().signal,
         })
       } else {
+        localStorage.removeItem('user_data')
         window.location.href = ROUTES.LOGIN
         throw new SessionExpiredError()
       }

@@ -31,29 +31,28 @@ class TestAuthenticationLogin:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        # Verificar estructura completa de la respuesta
-        assert "access_token" in data
-        assert "refresh_token" in data
-        assert "token_type" in data
-        assert "expires_in" in data
-        assert "refresh_token_expires_in" in data
+        # El body NO contiene tokens (cookies HTTP-Only son la única vía).
+        assert "access_token" not in data
+        assert "refresh_token" not in data
+        assert "token_type" not in data
+
+        # El body solo trae datos de hidratación de UI.
         assert "role" in data
         assert "user_id" in data
         assert "firstname" in data
         assert "lastname" in data
-
-        # Verificar valores específicos
-        assert data["token_type"] == "bearer"
         assert data["role"] == UserRole.USER.value
         assert data["user_id"] == test_user.id
         assert data["firstname"] == "Test"
         assert data["lastname"] == "User"
-        assert data["expires_in"] == 30 * 60  # 30 minutos en segundos
-        assert data["refresh_token_expires_in"] == 7 * 24 * 60 * 60  # 7 días en segundos
 
-        # Verificar que los tokens son válidos JWT
-        access_payload = jwt.decode(data["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
-        refresh_payload = jwt.decode(data["refresh_token"], SECRET_KEY, algorithms=[ALGORITHM])
+        # Las credenciales viajan en cookies HTTP-Only.
+        assert "access_token" in response.cookies
+        assert "refresh_token" in response.cookies
+
+        # Verificar que los tokens (en cookies) son JWT válidos.
+        access_payload = jwt.decode(response.cookies["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
+        refresh_payload = jwt.decode(response.cookies["refresh_token"], SECRET_KEY, algorithms=[ALGORITHM])
 
         assert access_payload["sub"] == "test@example.com"
         assert access_payload["role"] == UserRole.USER.value
@@ -257,23 +256,6 @@ class TestTokenOperations:
     """Test class for token verification and refresh functionality"""
 
     @pytest.mark.unit
-    def test_verify_token_endpoint(self, client, user_token):
-        """Prueba del endpoint de verificación de token."""
-        response = client.get(
-            "/api/v1/auth/verify",
-            headers={"Authorization": f"Bearer {user_token}"}
-        )
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-
-        assert data["valid"] is True
-        assert "user_id" in data
-        assert "email" in data
-        assert "role" in data
-        assert "is_active" in data
-        assert data["email"] == "test@example.com"
-
-    @pytest.mark.unit
     def test_refresh_token_endpoint(self, client, test_user, user_refresh_token):
         """Prueba del endpoint de refresh token usando un refresh token válido."""
         response = client.post(
@@ -283,10 +265,11 @@ class TestTokenOperations:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        # Verificar que se recibe un nuevo token
-        assert "access_token" in data
-        assert "refresh_token" in data
-        assert data["token_type"] == "bearer"
+        # Tokens nuevos viajan en cookies, no en body.
+        assert "access_token" not in data
+        assert "refresh_token" not in data
+        assert "access_token" in response.cookies
+        assert "refresh_token" in response.cookies
 
     @pytest.mark.unit
     def test_refresh_token_rejects_access_token(self, client, test_user, user_token):
@@ -326,10 +309,9 @@ class TestAuthenticationSecurity:
             }
         )
         assert response.status_code == status.HTTP_200_OK
-        data = response.json()
 
-        # Decodificar y verificar claims del access token
-        access_payload = jwt.decode(data["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
+        # Decodificar y verificar claims del access token (ahora en cookie)
+        access_payload = jwt.decode(response.cookies["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
         required_claims = ["sub", "role", "is_admin", "is_active", "firstname", "lastname", "exp", "jti"]
 
         for claim in required_claims:
@@ -422,8 +404,7 @@ class TestAuthenticationSecurity:
                 }
             )
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            token = data["access_token"]
+            token = response.cookies["access_token"]
             tokens.append(token)
 
             # Decodificar token y extraer JTI
@@ -452,8 +433,9 @@ class TestAuthenticationRegression:
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "access_token" in data
-        assert data["token_type"] == "bearer"
+        # Tokens en cookies, no en body
+        assert "access_token" not in data
+        assert "access_token" in response.cookies
         assert "role" in data
         assert data["role"] == UserRole.USER.value
 

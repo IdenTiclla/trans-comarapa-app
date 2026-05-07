@@ -128,10 +128,6 @@ export const packageHandlers = [
 export const authHandlers = [
   http.post(`${API}/auth/login`, () => {
     return HttpResponse.json({
-      access_token: 'test-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'test-refresh-token',
       role: 'secretary',
       user_id: 1,
       firstname: 'Test',

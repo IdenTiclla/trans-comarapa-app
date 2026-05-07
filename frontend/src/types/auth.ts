@@ -28,8 +28,6 @@ export interface AuthUser {
 }
 
 export interface LoginResponse {
-  access_token: string
-  token_type: string
   user_id: number
   role: string
   username?: string
@@ -41,7 +39,6 @@ export interface LoginResponse {
 }
 
 export interface RefreshResponse {
-  access_token: string
   user_id?: number
   firstname?: string
   lastname?: string

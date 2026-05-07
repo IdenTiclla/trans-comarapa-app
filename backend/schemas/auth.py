@@ -16,18 +16,15 @@ class UserInfo(BaseModel):
     firstname: str
     lastname: str
 
-class TokenWithRoleInfo(Token):
-    # Campos esenciales
-    expires_in: Optional[int] = None  # Tiempo de expiración en segundos
-    refresh_token: Optional[str] = None
-    refresh_token_expires_in: Optional[int] = None
-
-    # Información del usuario
+class AuthSuccessResponse(BaseModel):
+    """Respuesta de login/refresh. Las credenciales viajan en cookies HTTP-Only;
+    el body solo trae datos para hidratar la UI."""
     role: str
     user_id: int
     firstname: Optional[str] = None
     lastname: Optional[str] = None
     office_id: Optional[int] = None  # Oficina asignada (para secretarias)
+    person: Optional[dict] = None
 
 class TokenData(BaseModel):
     email: EmailStr | None = None
