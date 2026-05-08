@@ -17,7 +17,9 @@ class WithdrawalRequest(BaseModel):
 # Cash Transaction Schemas
 class CashTransactionBase(BaseModel):
     type: CashTransactionType
-    amount: float = Field(..., gt=0)
+    # Adjustments may be negative (refunds, edit deltas). Other transaction
+    # types must be positive — enforced by validate_amount below.
+    amount: float = Field(..., description="Monto firmado para ADJUSTMENT, positivo para los demás tipos")
     payment_method: PaymentMethod
     reference_id: Optional[int] = None
     reference_type: Optional[str] = None
@@ -25,8 +27,14 @@ class CashTransactionBase(BaseModel):
 
     @field_validator('amount')
     @classmethod
-    def round_amount(cls, v: float) -> float:
-        return round(v, 2)
+    def validate_amount(cls, v: float, info) -> float:
+        rounded = round(v, 2)
+        if rounded == 0:
+            raise ValueError("amount cannot be zero")
+        tx_type = info.data.get("type")
+        if tx_type != CashTransactionType.ADJUSTMENT and rounded < 0:
+            raise ValueError("amount must be positive for non-adjustment transactions")
+        return rounded
 
 
 class CashTransactionCreate(CashTransactionBase):

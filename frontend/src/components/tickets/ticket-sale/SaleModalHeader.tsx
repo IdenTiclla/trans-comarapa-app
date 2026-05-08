@@ -7,10 +7,11 @@ interface Props {
   selectedSeats: SelectedSeat[]
   origin?: string
   destination?: string
+  isEditMode?: boolean
   onClose: () => void
 }
 
-export function SaleModalHeader({ actionType, selectedSeats, origin, destination, onClose }: Props) {
+export function SaleModalHeader({ actionType, selectedSeats, origin, destination, isEditMode = false, onClose }: Props) {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b shrink-0">
       <div className="flex items-center space-x-3">
@@ -19,7 +20,7 @@ export function SaleModalHeader({ actionType, selectedSeats, origin, destination
         </div>
         <div>
           <h3 className="text-xl font-bold text-white">
-            {actionType === 'sell' ? 'Vender Boleto' : 'Reservar Asiento'}
+            {isEditMode ? 'Editar Boleto' : actionType === 'sell' ? 'Vender Boleto' : 'Reservar Asiento'}
           </h3>
           <p className="text-blue-100 text-sm">
             Asientos {selectedSeats.map((s) => s.number).join(', ')} - {origin} → {destination}

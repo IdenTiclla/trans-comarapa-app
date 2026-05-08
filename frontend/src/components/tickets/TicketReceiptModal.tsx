@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Trip } from '@/types'
 import TicketDisplay from './TicketDisplay'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,39 @@ interface TicketReceiptModalProps {
     autoPrint?: boolean
 }
 
+/** Merge multiple tickets sold together into a single receipt object so we
+ *  render ONE boleto with all seat numbers and the combined total. All
+ *  tickets in a multi-seat sale share the same client, trip and destination,
+ *  so we take those from the first ticket. */
+function mergeTickets(tickets: Record<string, unknown>[]): Record<string, unknown> {
+    if (tickets.length === 0) return {}
+    if (tickets.length === 1) return tickets[0]
+
+    const first = tickets[0]
+    const seats = tickets
+        .map((t) => t.seat as Record<string, unknown> | undefined)
+        .filter((s): s is Record<string, unknown> => Boolean(s))
+    const totalPrice = tickets.reduce((sum, t) => sum + (Number(t.price) || 0), 0)
+    const ids = tickets.map((t) => t.id).filter(Boolean)
+
+    return {
+        ...first,
+        seats,
+        price: totalPrice,
+        id: ids.length > 1 ? `${ids[0]}-${ids[ids.length - 1]}` : ids[0],
+    }
+}
+
 export default function TicketReceiptModal({ show, tickets, trip, onClose, autoPrint = false }: TicketReceiptModalProps) {
+    const mergedTicket = useMemo(() => mergeTickets(tickets), [tickets])
+    const seatNumbers = useMemo(
+        () =>
+            tickets
+                .map((t) => (t.seat as { seat_number?: number | string } | undefined)?.seat_number)
+                .filter(Boolean)
+                .join(', '),
+        [tickets],
+    )
     const autoPrintedRef = useRef(false)
 
     const printReceipt = () => {
@@ -26,7 +58,6 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
                 .ticket-container { max-width: 800px; margin: 0 auto; }
-                .ticket-container + .ticket-container { margin-top: 40px; page-break-before: always; }
                 @media print {
                     body { margin: 0; color: black; }
                     .ticket-container { max-width: none; margin: 0; }
@@ -67,13 +98,10 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-white">
-                                Boleto{tickets.length > 1 ? 's' : ''} Registrado{tickets.length > 1 ? 's' : ''}
+                                Boleto Registrado
                             </h3>
                             <p className="text-blue-100 text-sm">
-                                Asiento{tickets.length > 1 ? 's' : ''}: {tickets.map((t) => {
-                                    const seat = t.seat as Record<string, unknown> | undefined
-                                    return seat?.seat_number
-                                }).filter(Boolean).join(', ')}
+                                Asiento{tickets.length > 1 ? 's' : ''}: {seatNumbers}
                             </p>
                         </div>
                     </div>
@@ -83,12 +111,8 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                 </div>
 
                 <div id="ticket-receipt-content" className="bg-gray-50 p-4">
-                    <div className="mx-auto space-y-6">
-                        {tickets.map((ticket, index) => (
-                            <div key={ticket.id || index}>
-                                <TicketDisplay ticket={ticket} trip={trip} previewMode={false} />
-                            </div>
-                        ))}
+                    <div className="mx-auto">
+                        <TicketDisplay ticket={mergedTicket} trip={trip} previewMode={false} />
                     </div>
                 </div>
 
@@ -99,7 +123,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                         onClick={printReceipt}
                         className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-600"
                     >
-                        Imprimir Boleto{tickets.length > 1 ? 's' : ''}
+                        Imprimir Boleto
                     </Button>
                     <Button
                         type="button"

@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { createPackage } from '@/store/package.slice'
+import { createPackage, updatePackage } from '@/store/package.slice'
 import { officeService } from '@/services/office.service'
 import { secretaryService } from '@/services/secretary.service'
+import { packageService } from '@/services/package.service'
 import { useClientSearch } from '@/hooks/use-client-search'
 import { toast } from 'sonner'
 import { ApiError } from '@/lib/api'
@@ -15,6 +16,8 @@ export interface Office {
 interface UsePackageRegistrationParams {
   show: boolean
   tripId?: number | string | null
+  mode?: 'create' | 'edit'
+  packageId?: number | null
   onClose: () => void
   onPackageRegistered?: (pkg: Record<string, unknown>) => void
 }
@@ -25,7 +28,8 @@ const generateTrackingNumber = () => {
   return `${timestamp}${random}`
 }
 
-export function usePackageRegistration({ show, tripId = null, onClose, onPackageRegistered }: UsePackageRegistrationParams) {
+export function usePackageRegistration({ show, tripId = null, mode = 'create', packageId = null, onClose, onPackageRegistered }: UsePackageRegistrationParams) {
+  const isEditMode = mode === 'edit' && !!packageId
   const dispatch = useAppDispatch()
   const authStore = useAppSelector((state) => state.auth)
 
@@ -151,7 +155,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     if (show) {
       senderSearch.setClientType('existing')
       recipientSearch.setClientType('existing')
-      if (!packageData.origin_office_id && authStore.user?.office_id) {
+      if (!isEditMode && !packageData.origin_office_id && authStore.user?.office_id) {
         setPackageData(prev => ({ ...prev, origin_office_id: authStore.user?.office_id ?? null }))
       }
     } else {
@@ -159,6 +163,52 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show])
+
+  useEffect(() => {
+    if (!show || !isEditMode || !packageId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const pkg = await packageService.getById(packageId) as Record<string, unknown>
+        if (cancelled) return
+        const items = (pkg.items as Array<Record<string, unknown>> | undefined) ?? []
+        setPackageData({
+          tracking_number: (pkg.tracking_number as string) ?? '',
+          origin_office_id: (pkg.origin_office_id as number) ?? null,
+          destination_office_id: (pkg.destination_office_id as number) ?? null,
+          total_weight: (pkg.total_weight as number) ?? 0,
+          total_declared_value: (pkg.total_declared_value as number) ?? 0,
+          notes: (pkg.notes as string) ?? '',
+          items: items.length
+            ? items.map(it => ({
+                quantity: Number(it.quantity ?? 1),
+                description: String(it.description ?? ''),
+                unit_price: Number(it.unit_price ?? 0),
+              }))
+            : [{ quantity: 1, description: '', unit_price: 0 }],
+          payment_status: (pkg.payment_status as string) ?? 'paid_on_send',
+          payment_method: (pkg.payment_method as string) ?? 'cash',
+          received_confirmation: true,
+        })
+        setPackageNumber((pkg.tracking_number as string) ?? '------')
+
+        const sender = pkg.sender as Record<string, unknown> | null
+        if (sender && sender.id) {
+          senderSearch.setClientType('existing')
+          senderSearch.selectExistingClient(sender)
+        }
+        const recipient = pkg.recipient as Record<string, unknown> | null
+        if (recipient && recipient.id) {
+          recipientSearch.setClientType('existing')
+          recipientSearch.selectExistingClient(recipient)
+        }
+      } catch (e) {
+        setFormErrorMessage(e instanceof Error ? e.message : 'No se pudo cargar la encomienda.')
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, isEditMode, packageId])
 
   useEffect(() => {
     setFieldErrors(prev => ({
@@ -215,6 +265,31 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
 
     setIsSubmitting(true)
     try {
+      if (isEditMode && packageId) {
+        const updatePayload = {
+          total_weight: packageData.total_weight || null,
+          total_declared_value: packageData.total_declared_value || null,
+          notes: packageData.notes || null,
+          origin_office_id: packageData.origin_office_id,
+          destination_office_id: packageData.destination_office_id,
+          payment_status: packageData.payment_status,
+          payment_method: packageData.payment_status === 'paid_on_send' ? packageData.payment_method : null,
+          items: packageData.items.map(item => ({
+            quantity: item.quantity,
+            description: item.description,
+            unit_price: item.unit_price,
+          })),
+        }
+        const updated = await dispatch(updatePackage({ id: packageId, data: updatePayload })).unwrap() as Record<string, unknown>
+        toast.success('¡Encomienda actualizada!', {
+          description: `Seguimiento: ${updated.tracking_number ?? packageData.tracking_number}`,
+          duration: 4000,
+        })
+        if (onPackageRegistered) onPackageRegistered(updated)
+        onClose()
+        return
+      }
+
       const senderPayload = senderSearch.clientType === 'existing' ? senderSearch.selectedExistingClient : newSenderForm
       const finalSender = await senderSearch.getOrCreateClient(senderPayload) as Record<string, unknown>
 
@@ -313,6 +388,7 @@ export function usePackageRegistration({ show, tripId = null, onClose, onPackage
   }
 
   return {
+    isEditMode,
     senderSearch, recipientSearch,
     newSenderForm, setNewSenderForm,
     newRecipientForm, setNewRecipientForm,

@@ -85,7 +85,6 @@ export const router = createBrowserRouter([
           { path: '/packages/pending-collections', lazy: () => import('@/pages/packages/PendingCollectionsPage') },
           { path: '/packages/new', lazy: () => import('@/pages/packages/PackageNewPage') },
           { path: '/packages/:id', lazy: () => import('@/pages/packages/PackageDetailPage') },
-          { path: '/packages/:id/edit', lazy: () => import('@/pages/packages/PackageEditPage') },
 
           // Tickets
           { path: '/tickets/confirmation', lazy: () => import('@/pages/tickets/TicketConfirmationPage') },

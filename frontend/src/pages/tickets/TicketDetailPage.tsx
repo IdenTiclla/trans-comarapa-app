@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { AlertCircle } from 'lucide-react'
 import { useTicketDetail } from '@/hooks/use-ticket-detail'
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ROUTES } from '@/lib/routes'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
+import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,7 @@ export function Component() {
   const ticketId = Number(id)
   const navigate = useNavigate()
   const { ticket, trip, loading, error, reload } = useTicketDetail(ticketId)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   const {
     showCancelDialog,
@@ -78,7 +81,7 @@ export function Component() {
           ticketId={ticket.id}
           state={ticket.state}
           createdAt={ticket.created_at}
-          onEdit={() => navigate(ROUTES.ticketEdit(ticket.id))}
+          onEdit={() => setShowEditModal(true)}
           onPreview={handlePreview}
           onPrint={handlePrint}
         />
@@ -110,6 +113,27 @@ export function Component() {
         onClose={handleClosePreview}
         autoPrint={autoPrintPreview}
       />
+
+      {showEditModal && (
+        <TicketSaleModal
+          show
+          mode="edit"
+          ticketId={ticket.id}
+          existingTicket={ticket as unknown as Record<string, unknown>}
+          trip={trip ?? ({ id: ticket.trip_id } as typeof trip)}
+          selectedSeats={[{
+            id: ticket.seat_id,
+            number: (ticket.seat as { seat_number?: number | string } | undefined)?.seat_number ?? '?',
+            deck: (ticket.seat as { deck?: string } | undefined)?.deck,
+          }]}
+          actionType="sell"
+          onClose={() => setShowEditModal(false)}
+          onTicketCreated={() => {
+            setShowEditModal(false)
+            reload()
+          }}
+        />
+      )}
 
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>

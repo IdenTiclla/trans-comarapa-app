@@ -168,6 +168,24 @@ class PackageRepository(BaseRepository[Package]):
             query = query.filter(CashTransaction.type == tx_type)
         return query.first()
 
+    def get_cash_balance_for_package(self, package_id: int) -> float:
+        """Sum of all cash transaction amounts tied to this package.
+
+        Includes the original PACKAGE_PAYMENT and any ADJUSTMENT created by
+        edits or cancellations (reference_type starts with 'package').
+        Returns the net effective cash currently in the registers for this
+        package — used to compute correct reversals.
+        """
+        rows = (
+            self.db.query(CashTransaction.amount)
+            .filter(
+                CashTransaction.reference_id == package_id,
+                CashTransaction.reference_type.like("package%"),
+            )
+            .all()
+        )
+        return float(sum(r[0] for r in rows) or 0.0)
+
     def search_packages(
         self, term: str, skip: int = 0, limit: int = 100
     ) -> list[Package]:

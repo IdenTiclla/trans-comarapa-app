@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
-import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import { DecimalField } from '@/components/forms/NumericField'
 import { Button } from '@/components/ui/button'
 import { type Client, type Trip, type Seat, formatDate } from './tickets-helpers'
 
@@ -83,13 +83,11 @@ export function TicketFormModal({
               ]}
             />
 
-            <FormInput
+            <DecimalField
               label="Precio"
-              type="number"
-              step="0.01"
               required
               value={form.price}
-              onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
+              onChange={(n) => setForm({ ...form, price: n })}
             />
           </div>
 

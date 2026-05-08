@@ -8,6 +8,8 @@ import { TicketsStatsCards } from '@/components/tickets/TicketsStatsCards'
 import { TicketsFilters } from '@/components/tickets/TicketsFilters'
 import { TicketsTableView, TicketsCardGridView } from '@/components/tickets/TicketsListViews'
 import { TicketFormModal } from '@/components/tickets/TicketFormModal'
+import TicketSaleModal from '@/components/tickets/TicketSaleModal'
+import type { Trip } from '@/types'
 
 export function Component() {
   const {
@@ -21,14 +23,14 @@ export function Component() {
     activeFiltersCount,
     isLoading, isSubmitting,
     viewMode, setViewMode,
-    showCreateModal, showEditModal,
-    _editingTicket, ticketForm, setTicketForm,
+    showCreateModal, showEditModal, editingTicket,
+    ticketForm, setTicketForm,
     stats, comparison,
     currentPage, setCurrentPage, totalPages,
     filteredTickets,
     getClientName, getTripInfo,
     exportData, clearAllFilters,
-    handleCloseModal, submitTicketForm,
+    handleCloseModal, submitTicketForm, refetchTickets,
     handleEditTicket, handleCancelTicket,
   } = useTicketsIndexPage()
 
@@ -95,9 +97,9 @@ export function Component() {
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
 
-      {(showCreateModal || showEditModal) && (
+      {showCreateModal && (
         <TicketFormModal
-          mode={showCreateModal ? 'create' : 'edit'}
+          mode="create"
           form={ticketForm}
           setForm={setTicketForm}
           availableTrips={availableTrips}
@@ -106,6 +108,27 @@ export function Component() {
           isSubmitting={isSubmitting}
           onSubmit={submitTicketForm}
           onClose={handleCloseModal}
+        />
+      )}
+
+      {showEditModal && editingTicket && (
+        <TicketSaleModal
+          show
+          mode="edit"
+          ticketId={editingTicket.id}
+          existingTicket={editingTicket as unknown as Record<string, unknown>}
+          trip={(editingTicket.trip as unknown as Trip) ?? ({ id: editingTicket.trip_id } as Trip)}
+          selectedSeats={[{
+            id: editingTicket.seat_id,
+            number: (editingTicket.seat as { seat_number?: number | string } | undefined)?.seat_number ?? '?',
+            deck: (editingTicket.seat as { deck?: string } | undefined)?.deck,
+          }]}
+          actionType="sell"
+          onClose={handleCloseModal}
+          onTicketCreated={() => {
+            handleCloseModal()
+            refetchTickets()
+          }}
         />
       )}
     </div>

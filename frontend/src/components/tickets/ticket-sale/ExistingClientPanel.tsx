@@ -14,20 +14,23 @@ interface Props {
   hasSelected: boolean
   onSelect: (c: Client) => void
   onClear: () => void
+  locked?: boolean
 }
 
 export function ExistingClientPanel({
   searchTerm, onSearchChange, searching, hasSearched, foundClients,
-  selectedClient, hasSelected, onSelect, onClear,
+  selectedClient, hasSelected, onSelect, onClear, locked = false,
 }: Props) {
   return (
     <div className="space-y-4">
-      <FormInput
-        label="Buscar Cliente"
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Buscar por nombre, apellido o CI..."
-      />
+      {!locked && (
+        <FormInput
+          label="Buscar Cliente"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Buscar por nombre, apellido o CI..."
+        />
+      )}
 
       {searching ? (
         <div className="flex items-center justify-center py-8">
@@ -64,16 +67,18 @@ export function ExistingClientPanel({
               <p className="text-green-700">{selectedClient.firstname} {selectedClient.lastname}</p>
               <p className="text-sm text-green-600">CI: {selectedClient.document_id}</p>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onClear}
-              aria-label="Quitar cliente seleccionado"
-              className="text-green-600 hover:text-green-800 hover:bg-green-100"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            {!locked && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onClear}
+                aria-label="Quitar cliente seleccionado"
+                className="text-green-600 hover:text-green-800 hover:bg-green-100"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         </div>
       )}

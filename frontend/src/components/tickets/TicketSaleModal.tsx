@@ -14,10 +14,17 @@ import { TicketPreviewPanel } from './ticket-sale/TicketPreviewPanel'
 import type { TicketSaleModalProps } from './ticket-sale/types'
 
 export default function TicketSaleModal({
-  show, trip, selectedSeats = [], actionType, onClose, onTicketCreated,
+  show, trip, selectedSeats = [], actionType, mode = 'create', ticketId = null, existingTicket = null, onClose, onTicketCreated,
 }: TicketSaleModalProps) {
   const { user } = useAppSelector((state) => state.auth)
-  const s = useTicketSale({ show, trip, selectedSeats, actionType, userId: user?.id })
+  const s = useTicketSale({
+    show, trip, selectedSeats, actionType, userId: user?.id,
+    mode, ticketId, existingTicket,
+    onEditSuccess: (updated) => {
+      onTicketCreated([updated])
+      onClose()
+    },
+  })
 
   const { clientSearch } = s
 
@@ -55,6 +62,7 @@ export default function TicketSaleModal({
               selectedSeats={selectedSeats}
               origin={trip?.route?.origin}
               destination={trip?.route?.destination}
+              isEditMode={s.isEditMode}
               onClose={onClose}
             />
 
@@ -67,10 +75,12 @@ export default function TicketSaleModal({
                       Información del Cliente
                     </h4>
 
-                    <ClientTypePicker
-                      value={clientSearch.clientType}
-                      onChange={clientSearch.setClientType}
-                    />
+                    {!s.isEditMode && (
+                      <ClientTypePicker
+                        value={clientSearch.clientType}
+                        onChange={clientSearch.setClientType}
+                      />
+                    )}
 
                     {clientSearch.clientType === 'existing' && (
                       <ExistingClientPanel
@@ -83,10 +93,11 @@ export default function TicketSaleModal({
                         hasSelected={clientSearch.hasSelectedExistingClient}
                         onSelect={clientSearch.selectExistingClient}
                         onClear={clientSearch.clearExistingClientSelection}
+                        locked={s.isEditMode}
                       />
                     )}
 
-                    {clientSearch.clientType === 'new' && (
+                    {!s.isEditMode && clientSearch.clientType === 'new' && (
                       <NewClientFields form={s.newClientForm} setForm={s.setNewClientForm} />
                     )}
                   </div>
@@ -120,7 +131,7 @@ export default function TicketSaleModal({
                       className="px-6 bg-blue-600 hover:bg-blue-700"
                     >
                       {s.isSubmitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
-                      {s.isSubmitting ? 'Procesando...' : actionType === 'sell' ? '🎫 Vender Boleto' : '📝 Reservar'}
+                      {s.isSubmitting ? 'Procesando...' : s.isEditMode ? '💾 Guardar Cambios' : actionType === 'sell' ? '🎫 Vender Boleto' : '📝 Reservar'}
                     </Button>
                   </div>
                 </form>

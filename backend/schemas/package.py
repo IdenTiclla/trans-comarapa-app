@@ -130,6 +130,31 @@ class PackageUpdate(BaseModel):
     status: Optional[str] = None
     payment_status: Optional[str] = None
     payment_method: Optional[str] = None
+    origin_office_id: Optional[int] = Field(None, ge=1)
+    destination_office_id: Optional[int] = Field(None, ge=1)
+    items: Optional[List[PackageItemCreate]] = Field(
+        None,
+        description="Si se provee, reemplaza la lista completa de items",
+        min_length=1,
+    )
+
+    @field_validator("payment_status")
+    @classmethod
+    def _validate_payment_status(cls, v):
+        if v is not None and v not in VALID_PAYMENT_STATUSES:
+            raise ValueError(
+                f"Estado de pago inválido. Estados válidos: {', '.join(VALID_PAYMENT_STATUSES)}"
+            )
+        return v
+
+    @field_validator("payment_method")
+    @classmethod
+    def _validate_payment_method(cls, v):
+        if v and v not in VALID_PAYMENT_METHODS:
+            raise ValueError(
+                f"Método de pago inválido. Métodos válidos: {', '.join(VALID_PAYMENT_METHODS)}"
+            )
+        return v
 
 
 class PackageAssignTrip(BaseModel):

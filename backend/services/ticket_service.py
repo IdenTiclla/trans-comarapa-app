@@ -173,12 +173,25 @@ class TicketService:
         if data.state and data.state.lower() != db_ticket.state:
             old_state = db_ticket.state
 
+        old_price = float(db_ticket.price or 0)
+
         trip = self.repo.get_trip_by_id(db_ticket.trip_id)
         DEPARTED_STATUSES = {"departed", "in_progress", "arrived"}
-        if trip and getattr(trip, "status", None) in DEPARTED_STATUSES:
+        trip_departed = trip and getattr(trip, "status", None) in DEPARTED_STATUSES
+
+        if trip_departed:
             if data.state and data.state.lower() not in ["completed", "cancelled"]:
                 raise ValidationException(
                     "Trip has already departed. Ticket state can only be updated to 'completed' or 'cancelled'"
+                )
+            edit_fields = {"price", "destination", "seat_id", "client_id", "payment_method"}
+            attempted = {
+                k for k, v in data.model_dump(exclude_unset=True).items()
+                if v is not None and k in edit_fields
+            }
+            if attempted:
+                raise ValidationException(
+                    "El viaje ya partió. No se pueden editar los datos del boleto."
                 )
 
         if data.state and data.state.lower() != db_ticket.state:
@@ -234,7 +247,70 @@ class TicketService:
         if old_state == "pending" and db_ticket.state == "confirmed" and db_ticket.price and db_ticket.price > 0:
             self._record_confirmation_transaction(db_ticket)
 
+        self._sync_cash_register_on_price_edit(db_ticket, old_price=old_price, old_state=old_state)
+
         return db_ticket
+
+    def _sync_cash_register_on_price_edit(
+        self, ticket: Ticket, *, old_price: float, old_state: Optional[str]
+    ) -> None:
+        """Record an ADJUSTMENT when an already-paid ticket's price is edited.
+
+        Skipped when the state transitioned (those flows are handled separately
+        by _record_confirmation_transaction / cancellation reversals).
+        """
+        from core.enums import CashTransactionType, PaymentMethod
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+
+        if old_state is not None:
+            return
+
+        new_price = float(ticket.price or 0)
+        diff = round(new_price - old_price, 2)
+        if abs(diff) < 0.01:
+            return
+
+        if ticket.state not in ("confirmed", "completed"):
+            return
+
+        original_tx = self.repo.get_cash_transaction_by_reference("ticket", ticket.id)
+        if not original_tx:
+            return
+
+        secretary = self.repo.get_secretary_by_id(ticket.secretary_id)
+        if not secretary or not secretary.office_id:
+            return
+
+        cash_service = CashRegisterService(self.db)
+        register = cash_service.get_current_register(secretary.office_id)
+        if not register:
+            raise ValidationException(
+                "No hay caja abierta para reflejar el cambio de precio del boleto."
+            )
+
+        payment_enum = PaymentMethod.CASH
+        if ticket.payment_method:
+            try:
+                payment_enum = PaymentMethod(ticket.payment_method.lower())
+            except ValueError:
+                pass
+
+        cash_service.record_transaction(
+            CashTransactionCreate(
+                cash_register_id=register.id,
+                type=CashTransactionType.ADJUSTMENT,
+                amount=diff,
+                payment_method=payment_enum,
+                reference_id=ticket.id,
+                reference_type="ticket_edit",
+                description=(
+                    f"Ajuste por edición de boleto #{ticket.id}: "
+                    f"{old_price:.2f} → {new_price:.2f}"
+                ),
+            )
+        )
+        self.db.commit()
 
     def _record_confirmation_transaction(self, ticket: Ticket) -> None:
         from services.cash_register_service import CashRegisterService
@@ -301,11 +377,11 @@ class TicketService:
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
 
-        original_tx = self.repo.get_cash_transaction_by_reference(
-            "ticket", ticket.id
-        )
-
-        if not original_tx:
+        # Net effective cash currently sitting in registers for this ticket
+        # (original sale + any edit adjustments). Reverse the full balance so
+        # cancelling always brings the ticket's contribution to zero.
+        current_balance = self.repo.get_cash_balance_for_ticket(ticket.id)
+        if abs(current_balance) < 0.01:
             return
 
         secretary = self.repo.get_secretary_by_id(ticket.secretary_id)
@@ -318,12 +394,19 @@ class TicketService:
         if not open_register:
             return
 
+        payment_enum = PaymentMethod.CASH
+        if ticket.payment_method:
+            try:
+                payment_enum = PaymentMethod(ticket.payment_method.lower())
+            except ValueError:
+                pass
+
         cash_service.record_transaction(
             CashTransactionCreate(
                 cash_register_id=open_register.id,
                 type=CashTransactionType.ADJUSTMENT,
-                amount=-original_tx.amount,
-                payment_method=PaymentMethod.CASH,
+                amount=-current_balance,
+                payment_method=payment_enum,
                 reference_id=ticket.id,
                 reference_type="ticket_cancellation",
                 description=f"Reversión: cancelación boleto #{ticket.id}",

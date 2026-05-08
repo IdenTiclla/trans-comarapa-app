@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useParams } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchPackageById, updatePackage } from '@/store/package.slice'
 import { AlertCircle } from 'lucide-react'
 import PackageDeliveryModal from '@/components/packages/PackageDeliveryModal'
 import PackageReceptionModal from '@/components/packages/PackageReceptionModal'
 import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
+import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import PackageStakeholders from '@/components/packages/PackageStakeholders'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getStatusNumber, resolveLocations, makeGetHistoryDate } from '@/components/packages/detail/helpers'
@@ -16,11 +17,8 @@ import { StateHistoryTable } from '@/components/packages/detail/StateHistoryTabl
 import { PaymentSummary } from '@/components/packages/detail/PaymentSummary'
 import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
 import { MapOverview } from '@/components/packages/detail/MapOverview'
-import { ROUTES } from '@/lib/routes'
-
 export function Component() {
   const { id } = useParams()
-  const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
   const { currentPackage, loading, error } = useAppSelector((state) => state.package)
@@ -28,6 +26,7 @@ export function Component() {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showReceptionModal, setShowReceptionModal] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   useEffect(() => {
     if (id) dispatch(fetchPackageById(Number(id)))
@@ -72,7 +71,7 @@ export function Component() {
       <div className="max-w-full mx-auto px-4 lg:px-12 py-8">
         <PackageHeader
           pkg={currentPackage}
-          onEdit={() => navigate(ROUTES.packageEdit(currentPackage.id))}
+          onEdit={() => setShowEditModal(true)}
           onShowReceipt={() => setShowReceiptModal(true)}
           onMarkReceived={() => setShowReceptionModal(true)}
           onDeliver={() => setShowDeliveryModal(true)}
@@ -123,6 +122,17 @@ export function Component() {
         show={showReceiptModal}
         packageData={currentPackage}
         onClose={() => setShowReceiptModal(false)}
+      />
+
+      <PackageRegistrationModal
+        show={showEditModal}
+        mode="edit"
+        packageId={currentPackage.id}
+        onClose={() => setShowEditModal(false)}
+        onPackageRegistered={() => {
+          setShowEditModal(false)
+          if (id) dispatch(fetchPackageById(Number(id)))
+        }}
       />
     </div>
   )

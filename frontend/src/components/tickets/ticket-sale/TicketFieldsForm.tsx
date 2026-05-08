@@ -1,5 +1,6 @@
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import { DecimalField } from '@/components/forms/NumericField'
 import type { TicketForm } from './types'
 
 interface Props {
@@ -30,12 +31,10 @@ export function TicketFieldsForm({ form, setForm, hasTriedSubmit }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <FormInput
+        <DecimalField
           label="Precio (Bs.) *"
-          type="number"
-          step="0.01"
           value={form.price}
-          onChange={(e) => setForm((p) => ({ ...p, price: parseFloat(e.target.value) || 0 }))}
+          onChange={(n) => setForm((p) => ({ ...p, price: n }))}
           required
           placeholder="0.00"
         />

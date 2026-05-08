@@ -35,6 +35,7 @@ export function Component() {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [selectedPackageForDelivery, setSelectedPackageForDelivery] = useState<Record<string, unknown> | null>(null)
+  const [editPackageId, setEditPackageId] = useState<number | null>(null)
 
   useEffect(() => {
     dispatch(fetchPackages({ limit: 100 }))
@@ -175,7 +176,7 @@ export function Component() {
           isLoading={loading}
           viewMode={viewMode}
           onViewPackage={(id) => navigate(ROUTES.packageDetail(id))}
-          onEditPackage={(id) => navigate(ROUTES.packageEdit(id))}
+          onEditPackage={(id) => setEditPackageId(id)}
           onDeletePackage={confirmDeletePackage}
           onDeliverPackage={handleDeliverPackage}
         />
@@ -195,6 +196,17 @@ export function Component() {
         show={showRegistrationModal}
         onClose={() => setShowRegistrationModal(false)}
         onPackageRegistered={handlePackageRegistered}
+      />
+
+      <PackageRegistrationModal
+        show={editPackageId !== null}
+        mode="edit"
+        packageId={editPackageId}
+        onClose={() => setEditPackageId(null)}
+        onPackageRegistered={() => {
+          setEditPackageId(null)
+          dispatch(fetchPackages({ limit: 100 }))
+        }}
       />
 
       <PackageDeliveryModal

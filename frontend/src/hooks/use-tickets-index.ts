@@ -428,5 +428,6 @@ export function useTicketsIndexPage() {
     submitTicketForm,
     handleEditTicket,
     handleCancelTicket,
+    refetchTickets: fetchData,
   }
 }

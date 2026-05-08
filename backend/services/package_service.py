@@ -155,14 +155,181 @@ class PackageService:
         logger.debug("Package created: %d with %d items", result.id, len(result.items))
         return result
 
+    # States in which a package can no longer be edited
+    _PACKAGE_TERMINAL_STATES = ("delivered", "cancelled")
+    # Trip states that lock packages from edits (already left or terminal)
+    _TRIP_LOCK_STATES = ("departed", "in_progress", "arrived", "cancelled")
+
     def update_package(self, package_id: int, data: PackageUpdate) -> Package:
-        pkg = self.repo.get_by_id_or_raise(package_id, "Package")
-        for field, value in data.model_dump(exclude_unset=True).items():
-            if value is not None:
-                setattr(pkg, field, value)
+        pkg = self.repo.get_by_id_eager(package_id)
+        if not pkg:
+            raise NotFoundException(f"Encomienda con id {package_id} no encontrada")
+
+        if pkg.status in self._PACKAGE_TERMINAL_STATES:
+            raise ValidationException(
+                f"No se puede editar una encomienda en estado '{pkg.status}'."
+            )
+
+        if pkg.trip and pkg.trip.status in self._TRIP_LOCK_STATES:
+            raise ValidationException(
+                f"No se puede editar la encomienda: el viaje ya está en estado '{pkg.trip.status}'."
+            )
+
+        old_total = float(sum(i.total_price for i in pkg.items))
+        old_payment_status = pkg.payment_status
+
+        update_dict = data.model_dump(exclude_unset=True, exclude={"items"})
+        for field, value in update_dict.items():
+            setattr(pkg, field, value)
+
+        new_total = old_total
+        if data.items is not None:
+            pkg.items.clear()
+            self.db.flush()
+            new_total = 0.0
+            for item_data in data.items:
+                item_dict = item_data.model_dump()
+                item_dict.pop("total_price", None)
+                item_dict["total_price"] = (
+                    item_dict["quantity"] * item_dict["unit_price"]
+                )
+                item_dict["package_id"] = pkg.id
+                new_total += item_dict["total_price"]
+                self.repo.create_item(PackageItem(**item_dict))
+
+        self._sync_cash_register_on_edit(
+            pkg, old_total=old_total, new_total=new_total,
+            old_payment_status=old_payment_status,
+        )
+
         self.db.commit()
-        self.db.refresh(pkg)
-        return pkg
+        return self.repo.get_by_id_eager(pkg.id)
+
+    def _sync_cash_register_on_edit(
+        self,
+        pkg: Package,
+        *,
+        old_total: float,
+        new_total: float,
+        old_payment_status: str,
+    ) -> None:
+        """Reflect package edits in the cash register.
+
+        Three cases:
+          1. paid_on_send → paid_on_send: record ADJUSTMENT for the diff.
+          2. paid_on_send → collect_on_delivery: refund original payment.
+          3. collect_on_delivery → paid_on_send: record new PACKAGE_PAYMENT.
+        """
+        from core.enums import CashTransactionType, PaymentMethod
+        from services.cash_register_service import CashRegisterService
+        from schemas.cash_register import CashTransactionCreate
+
+        new_payment_status = pkg.payment_status
+        original_tx = self.repo.get_cash_transaction_by_reference(
+            "package", pkg.id, CashTransactionType.PACKAGE_PAYMENT
+        )
+
+        secretary = self.repo.get_secretary_by_id(pkg.secretary_id)
+        office_id = pkg.origin_office_id or (
+            secretary.office_id if secretary else None
+        )
+
+        def _payment_enum() -> PaymentMethod:
+            if pkg.payment_method:
+                try:
+                    return PaymentMethod(pkg.payment_method.lower())
+                except ValueError:
+                    pass
+            return PaymentMethod.CASH
+
+        def _open_register():
+            if not office_id:
+                raise ValidationException(
+                    "El usuario no tiene una oficina asignada para abrir caja."
+                )
+            cash_service = CashRegisterService(self.db)
+            register = cash_service.get_current_register(office_id)
+            if not register:
+                raise ValidationException(
+                    "No hay caja abierta para reflejar el cambio en la encomienda."
+                )
+            return cash_service, register
+
+        # Case 1: stays paid_on_send — adjust the difference
+        if (
+            old_payment_status == "paid_on_send"
+            and new_payment_status == "paid_on_send"
+            and original_tx
+        ):
+            diff = round(new_total - old_total, 2)
+            if abs(diff) < 0.01:
+                return
+            cash_service, register = _open_register()
+            cash_service.record_transaction(
+                CashTransactionCreate(
+                    cash_register_id=register.id,
+                    type=CashTransactionType.ADJUSTMENT,
+                    amount=diff,
+                    payment_method=_payment_enum(),
+                    reference_id=pkg.id,
+                    reference_type="package_edit",
+                    description=(
+                        f"Ajuste por edición de encomienda {pkg.tracking_number}: "
+                        f"{old_total:.2f} → {new_total:.2f}"
+                    ),
+                )
+            )
+            return
+
+        # Case 2: was paid, now collect_on_delivery → refund the full effective
+        # amount currently sitting in the registers for this package (original
+        # payment + any prior edit adjustments), not just the original payment.
+        if (
+            old_payment_status == "paid_on_send"
+            and new_payment_status == "collect_on_delivery"
+            and original_tx
+        ):
+            current_balance = self.repo.get_cash_balance_for_package(pkg.id)
+            if abs(current_balance) < 0.01:
+                return
+            cash_service, register = _open_register()
+            cash_service.record_transaction(
+                CashTransactionCreate(
+                    cash_register_id=register.id,
+                    type=CashTransactionType.ADJUSTMENT,
+                    amount=-current_balance,
+                    payment_method=_payment_enum(),
+                    reference_id=pkg.id,
+                    reference_type="package_edit",
+                    description=(
+                        f"Reversión por cambio a por-cobrar de encomienda "
+                        f"{pkg.tracking_number}"
+                    ),
+                )
+            )
+            return
+
+        # Case 3: was collect_on_delivery, now paid_on_send → register new payment
+        if (
+            old_payment_status == "collect_on_delivery"
+            and new_payment_status == "paid_on_send"
+            and new_total > 0
+        ):
+            cash_service, register = _open_register()
+            cash_service.record_transaction(
+                CashTransactionCreate(
+                    cash_register_id=register.id,
+                    type=CashTransactionType.PACKAGE_PAYMENT,
+                    amount=new_total,
+                    payment_method=_payment_enum(),
+                    reference_id=pkg.id,
+                    reference_type="package",
+                    description=(
+                        f"Pago al editar encomienda {pkg.tracking_number}"
+                    ),
+                )
+            )
+            return
 
     def delete_package(self, package_id: int) -> str:
         pkg = self.repo.get_by_id_or_raise(package_id, "Package")
@@ -356,34 +523,43 @@ class PackageService:
 
     def _create_reversal_if_applicable(self, pkg: Package) -> None:
         from core.enums import CashTransactionType, PaymentMethod
-        from models.cash_transaction import CashTransaction
 
-        original_tx = self.repo.get_cash_transaction_by_reference(
-            "package", pkg.id, CashTransactionType.PACKAGE_PAYMENT
-        )
-
-        if not original_tx:
+        # Net effective cash currently sitting in registers for this package
+        # (original payment + any edit adjustments). Reverse the full balance
+        # so cancelling always returns the package's contribution to zero.
+        current_balance = self.repo.get_cash_balance_for_package(pkg.id)
+        if abs(current_balance) < 0.01:
             return
 
         secretary = self.repo.get_secretary_by_id(pkg.secretary_id)
-        if not secretary or not secretary.office_id:
+        office_id = pkg.origin_office_id or (
+            secretary.office_id if secretary else None
+        )
+        if not office_id:
             return
 
         from services.cash_register_service import CashRegisterService
         from schemas.cash_register import CashTransactionCreate
 
         cash_service = CashRegisterService(self.db)
-        open_register = cash_service.get_current_register(secretary.office_id)
+        open_register = cash_service.get_current_register(office_id)
 
         if not open_register:
             return
+
+        payment_enum = PaymentMethod.CASH
+        if pkg.payment_method:
+            try:
+                payment_enum = PaymentMethod(pkg.payment_method.lower())
+            except ValueError:
+                pass
 
         cash_service.record_transaction(
             CashTransactionCreate(
                 cash_register_id=open_register.id,
                 type=CashTransactionType.ADJUSTMENT,
-                amount=-original_tx.amount,
-                payment_method=PaymentMethod.CASH,
+                amount=-current_balance,
+                payment_method=payment_enum,
                 reference_id=pkg.id,
                 reference_type="package_cancellation",
                 description=f"Reversión: cancelación encomienda {pkg.tracking_number}",

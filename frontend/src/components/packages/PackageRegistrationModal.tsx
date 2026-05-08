@@ -10,6 +10,8 @@ import { ItemsSection } from './registration/ItemsSection'
 interface PackageRegistrationModalProps {
   show: boolean
   tripId?: number | string | null
+  mode?: 'create' | 'edit'
+  packageId?: number | null
   onClose: () => void
   onPackageRegistered?: (pkg: Record<string, unknown>) => void
 }
@@ -29,10 +31,12 @@ const recipientIcon = (
 export default function PackageRegistrationModal({
   show,
   tripId = null,
+  mode = 'create',
+  packageId = null,
   onClose,
   onPackageRegistered,
 }: PackageRegistrationModalProps) {
-  const r = usePackageRegistration({ show, tripId, onClose, onPackageRegistered })
+  const r = usePackageRegistration({ show, tripId, mode, packageId, onClose, onPackageRegistered })
 
   if (!show && !r.showReceiptModal) return null
 
@@ -49,7 +53,7 @@ export default function PackageRegistrationModal({
 
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
-          className="relative bg-gray-50 rounded-2xl text-left shadow-2xl transform transition-all w-full max-w-6xl flex flex-col max-h-[90vh] overflow-hidden border border-gray-100/50"
+          className="relative bg-gray-50 rounded-2xl text-left shadow-2xl transform transition-all w-full max-w-[88rem] flex flex-col max-h-[92vh] overflow-hidden border border-gray-100/50"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between border-b rounded-t-xl">
@@ -59,7 +63,9 @@ export default function PackageRegistrationModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-white leading-tight">Emisión de Encomienda</h3>
+              <h3 className="text-lg font-bold text-white leading-tight">
+                {r.isEditMode ? 'Editar Encomienda' : 'Emisión de Encomienda'}
+              </h3>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-white text-right">
@@ -101,6 +107,7 @@ export default function PackageRegistrationModal({
                     search={r.senderSearch}
                     newForm={r.newSenderForm}
                     setNewForm={r.setNewSenderForm as React.Dispatch<React.SetStateAction<{ firstname: string; lastname: string; document_id: string; phone: string }>>}
+                    locked={r.isEditMode}
                   />
 
                   <ClientSection
@@ -110,7 +117,8 @@ export default function PackageRegistrationModal({
                     search={r.recipientSearch}
                     newForm={r.newRecipientForm}
                     setNewForm={r.setNewRecipientForm as React.Dispatch<React.SetStateAction<{ firstname: string; lastname: string; document_id: string; phone: string }>>}
-                    headerExtra={showCopyButton && (
+                    locked={r.isEditMode}
+                    headerExtra={!r.isEditMode && showCopyButton && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -181,7 +189,7 @@ export default function PackageRegistrationModal({
                     disabled={r.isSubmitting || !r.isFormValid}
                     className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700"
                   >
-                    {r.isSubmitting ? 'Procesando...' : 'Confirmar Encomienda'}
+                    {r.isSubmitting ? 'Procesando...' : r.isEditMode ? 'Guardar Cambios' : 'Confirmar Encomienda'}
                   </Button>
                 </div>
               </div>

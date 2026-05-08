@@ -154,6 +154,35 @@ class TicketRepository(BaseRepository[Ticket]):
             .first()
         )
 
+    def has_ticket_cash_transaction(self, ticket_id: int) -> bool:
+        """Whether any cash transaction exists for this ticket."""
+        return (
+            self.db.query(CashTransaction.id)
+            .filter(
+                CashTransaction.reference_id == ticket_id,
+                CashTransaction.reference_type.like("ticket%"),
+            )
+            .first()
+            is not None
+        )
+
+    def get_cash_balance_for_ticket(self, ticket_id: int) -> float:
+        """Sum of all cash transaction amounts tied to this ticket.
+
+        Includes the original TICKET_SALE and any ADJUSTMENT (edit, refund,
+        cancellation). Returns the net effective cash currently in registers
+        for this ticket — used to compute correct reversals.
+        """
+        rows = (
+            self.db.query(CashTransaction.amount)
+            .filter(
+                CashTransaction.reference_id == ticket_id,
+                CashTransaction.reference_type.like("ticket%"),
+            )
+            .all()
+        )
+        return float(sum(r[0] for r in rows) or 0.0)
+
     def get_active_ticket_for_seat_change(
         self, trip_id: int, seat_id: int
     ) -> Optional[Ticket]:

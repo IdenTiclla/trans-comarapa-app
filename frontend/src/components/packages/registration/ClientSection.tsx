@@ -33,9 +33,10 @@ interface Props {
   setNewForm: (f: NewClientForm | ((p: NewClientForm) => NewClientForm)) => void
   headerExtra?: React.ReactNode
   icon: React.ReactNode
+  locked?: boolean
 }
 
-export function ClientSection({ title, color, search, newForm, setNewForm, headerExtra, icon }: Props) {
+export function ClientSection({ title, color, search, newForm, setNewForm, headerExtra, icon, locked = false }: Props) {
   const activeCls = color === 'blue' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-green-500 bg-green-50 text-green-700'
   const selectedCardCls = color === 'blue' ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-200'
   const selectedTextCls = color === 'blue' ? 'text-blue-900' : 'text-green-900'
@@ -54,30 +55,34 @@ export function ClientSection({ title, color, search, newForm, setNewForm, heade
         {headerExtra}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        <label className={cn('flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm font-medium',
-          search.clientType === 'existing' ? activeCls : 'border-gray-200 text-gray-600 hover:bg-gray-50')}>
-          {/* eslint-disable-next-line no-restricted-syntax */}
-          <input type="radio" checked={search.clientType === 'existing'} onChange={() => search.setClientType('existing')} className="sr-only" />
-          Cliente Existente
-        </label>
-        <label className={cn('flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm font-medium',
-          search.clientType === 'new' ? activeCls : 'border-gray-200 text-gray-600 hover:bg-gray-50')}>
-          {/* eslint-disable-next-line no-restricted-syntax */}
-          <input type="radio" checked={search.clientType === 'new'} onChange={() => search.setClientType('new')} className="sr-only" />
-          Cliente Nuevo
-        </label>
-      </div>
+      {!locked && (
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <label className={cn('flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm font-medium',
+            search.clientType === 'existing' ? activeCls : 'border-gray-200 text-gray-600 hover:bg-gray-50')}>
+            {/* eslint-disable-next-line no-restricted-syntax */}
+            <input type="radio" checked={search.clientType === 'existing'} onChange={() => search.setClientType('existing')} className="sr-only" />
+            Cliente Existente
+          </label>
+          <label className={cn('flex items-center justify-center py-2 px-3 border rounded-lg cursor-pointer transition-all text-sm font-medium',
+            search.clientType === 'new' ? activeCls : 'border-gray-200 text-gray-600 hover:bg-gray-50')}>
+            {/* eslint-disable-next-line no-restricted-syntax */}
+            <input type="radio" checked={search.clientType === 'new'} onChange={() => search.setClientType('new')} className="sr-only" />
+            Cliente Nuevo
+          </label>
+        </div>
+      )}
 
       {search.clientType === 'existing' ? (
         <div className="flex-1 flex flex-col relative w-full h-full min-h-[140px]">
-          <div className="mb-2">
-            <FormInput
-              value={search.clientSearchQuery}
-              onChange={(e) => search.searchClients(e.target.value)}
-              placeholder="Buscar por nombre, apellido o CI..."
-            />
-          </div>
+          {!locked && (
+            <div className="mb-2">
+              <FormInput
+                value={search.clientSearchQuery}
+                onChange={(e) => search.searchClients(e.target.value)}
+                placeholder="Buscar por nombre, apellido o CI..."
+              />
+            </div>
+          )}
 
           {search.searchingClients ? (
             <div className="flex items-center justify-center py-4">
@@ -104,16 +109,18 @@ export function ClientSection({ title, color, search, newForm, setNewForm, heade
 
           {search.hasSelectedExistingClient && search.selectedExistingClient && (
             <div className={cn('border rounded-lg p-3 mt-1 shadow-sm relative', selectedCardCls)}>
-              <Button
-                onClick={search.clearExistingClientSelection}
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Quitar cliente seleccionado"
-                className={cn('absolute top-1 right-1 h-7 w-7', closeBtnCls)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              {!locked && (
+                <Button
+                  onClick={search.clearExistingClientSelection}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Quitar cliente seleccionado"
+                  className={cn('absolute top-1 right-1 h-7 w-7', closeBtnCls)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
               <h5 className={cn('font-semibold text-sm leading-tight mb-1', selectedTextCls)}>{search.selectedExistingClient.firstname} {search.selectedExistingClient.lastname}</h5>
               <p className={cn('text-xs', selectedSubCls)}>CI: {search.selectedExistingClient.document_id} {search.selectedExistingClient.phone && <span>• Cel: {search.selectedExistingClient.phone}</span>}</p>
             </div>

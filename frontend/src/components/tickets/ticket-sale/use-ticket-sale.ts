@@ -13,9 +13,14 @@ interface Args {
   selectedSeats: SelectedSeat[]
   actionType: ActionType
   userId?: number | string
+  mode?: 'create' | 'edit'
+  ticketId?: number | null
+  existingTicket?: Record<string, unknown> | null
+  onEditSuccess?: (updated: Record<string, unknown>) => void
 }
 
-export function useTicketSale({ show, trip, selectedSeats, actionType, userId }: Args) {
+export function useTicketSale({ show, trip, selectedSeats, actionType, userId, mode = 'create', ticketId = null, existingTicket = null, onEditSuccess }: Args) {
+  const isEditMode = mode === 'edit' && !!ticketId
   const clientSearch = useClientSearch()
 
   const [newClientForm, setNewClientForm] = useState<NewClientForm>(INITIAL_NEW_CLIENT)
@@ -30,6 +35,24 @@ export function useTicketSale({ show, trip, selectedSeats, actionType, userId }:
 
   useEffect(() => {
     if (!show) return
+    if (isEditMode && existingTicket) {
+      setTicketForm({
+        price: Number(existingTicket.price ?? 0),
+        state: String(existingTicket.state ?? 'pending'),
+        payment_method: String(existingTicket.payment_method ?? ''),
+        destination: String(existingTicket.destination ?? ''),
+      })
+      setNewClientForm(INITIAL_NEW_CLIENT)
+      clientSearch.resetClientSearch()
+      const client = existingTicket.client as Record<string, unknown> | null
+      if (client && client.id) {
+        clientSearch.setClientType('existing')
+        clientSearch.selectExistingClient(client)
+      }
+      setHasTriedSubmit(false)
+      setErrorMessage('')
+      return
+    }
     setTicketForm({
       price: trip?.route?.price || 0,
       state: actionType === 'sell' ? 'confirmed' : 'pending',
@@ -40,7 +63,7 @@ export function useTicketSale({ show, trip, selectedSeats, actionType, userId }:
     clientSearch.resetClientSearch()
     setHasTriedSubmit(false)
     setErrorMessage('')
-  }, [show, trip, actionType, clientSearch.resetClientSearch]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [show, trip, actionType, isEditMode, existingTicket, clientSearch.resetClientSearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const canSubmit = useMemo(() => {
     const hasClient = clientSearch.clientType === 'existing'
@@ -100,6 +123,22 @@ export function useTicketSale({ show, trip, selectedSeats, actionType, userId }:
 
     try {
       setIsSubmitting(true)
+
+      if (isEditMode && ticketId) {
+        const updated = await ticketService.update(ticketId, {
+          destination: ticketForm.destination.trim(),
+          price: ticketForm.price,
+          payment_method: ticketForm.payment_method,
+          state: ticketForm.state,
+        }) as Record<string, unknown>
+        toast.success('Boleto actualizado', {
+          description: `Total: Bs. ${ticketForm.price.toFixed(2)}`,
+          duration: 4000,
+        })
+        if (onEditSuccess) onEditSuccess(updated)
+        return
+      }
+
       let clientId = clientSearch.selectedExistingClient?.id
       if (clientSearch.clientType === 'new') {
         const clientRes = await clientService.create(newClientForm)
@@ -163,6 +202,7 @@ export function useTicketSale({ show, trip, selectedSeats, actionType, userId }:
   }
 
   return {
+    isEditMode,
     clientSearch,
     newClientForm, setNewClientForm,
     ticketForm, setTicketForm,

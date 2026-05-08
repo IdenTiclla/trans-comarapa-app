@@ -209,15 +209,15 @@ export default function TicketDisplay({
                         <div className={`col-span-4 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
                             <div className={`bg-blue-600 text-white text-center font-bold leading-tight print:bg-blue-600 ${p ? 'py-1 text-[11px]' : 'py-1 text-xs'}`}>Hora en Oficina:</div>
                             <div className={p ? 'bg-white flex items-center justify-center space-x-1 py-1 flex-1' : 'bg-white flex items-center justify-center space-x-2 py-1'}>
-                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px]'}`}>{getOfficeTimeAmPm()}</span>
                                 <span className={`font-bold text-red-600 ${p ? 'text-sm' : 'text-sm'}`}>{getCurrentTime()}</span>
+                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px]'}`}>{getOfficeTimeAmPm()}</span>
                             </div>
                         </div>
                         <div className={`col-span-4 border-blue-600 flex flex-col ${p ? 'border-2' : 'border-2'}`}>
                             <div className={`bg-blue-600 text-white text-center font-bold leading-tight print:bg-blue-600 ${p ? 'py-1 text-[11px]' : 'py-1 text-xs'}`}>Hora de Salida:</div>
                             <div className={p ? 'bg-white flex items-center justify-center space-x-1 py-1 flex-1' : 'bg-white flex items-center justify-center space-x-2 py-1'}>
-                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px]'}`}>{getDepartureTimeAmPm()}</span>
                                 <span className={`font-bold text-red-600 ${p ? 'text-sm' : 'text-sm'}`}>{getDepartureTime()}</span>
+                                <span className={`bg-blue-100 rounded font-bold text-blue-600 ${p ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[10px]'}`}>{getDepartureTimeAmPm()}</span>
                             </div>
                         </div>
                     </div>

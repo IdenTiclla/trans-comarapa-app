@@ -35,12 +35,10 @@ export const ROUTES = {
 
   TICKETS: '/tickets',
   ticketDetail: (id: number | string) => `/tickets/${id}`,
-  ticketEdit: (id: number | string) => `/tickets?edit=${id}`,
 
   PACKAGES: '/packages',
   packageNew: '/packages/new',
   packageDetail: (id: number | string) => `/packages/${id}`,
-  packageEdit: (id: number | string) => `/packages/${id}/edit`,
   packagePendingCollections: '/packages/pending-collections',
 
   CLIENTS: '/clients',

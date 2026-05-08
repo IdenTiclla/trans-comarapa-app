@@ -32,6 +32,9 @@ export interface TicketSaleModalProps {
   trip: Trip
   selectedSeats: SelectedSeat[]
   actionType: ActionType
+  mode?: 'create' | 'edit'
+  ticketId?: number | null
+  existingTicket?: Record<string, unknown> | null
   onClose: () => void
   onTicketCreated: (tickets: Record<string, unknown>[]) => void
 }

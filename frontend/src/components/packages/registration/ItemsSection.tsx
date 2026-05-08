@@ -1,4 +1,4 @@
-import FormInput from '@/components/forms/FormInput'
+import { IntegerField, DecimalField } from '@/components/forms/NumericField'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
@@ -41,11 +41,11 @@ export function ItemsSection({ items, totalAmount, onAdd, onRemove, onUpdate }: 
               {items.map((item, index) => (
                 <TableRow key={index} className="group">
                   <TableCell className="align-top">
-                    <FormInput
-                      type="number"
+                    <IntegerField
                       value={item.quantity}
-                      onChange={(e) => onUpdate(index, 'quantity', Number(e.target.value))}
-                      min="1"
+                      onChange={(n) => onUpdate(index, 'quantity', n)}
+                      min={1}
+                      aria-label={`Cantidad ítem ${index + 1}`}
                       className="w-16 text-center py-1 text-sm h-9"
                     />
                   </TableCell>
@@ -59,12 +59,11 @@ export function ItemsSection({ items, totalAmount, onAdd, onRemove, onUpdate }: 
                     />
                   </TableCell>
                   <TableCell className="align-top">
-                    <FormInput
-                      type="number"
+                    <DecimalField
                       value={item.unit_price}
-                      onChange={(e) => onUpdate(index, 'unit_price', Number(e.target.value))}
-                      min="0" step="0.5"
-                      className="w-20 text-right text-sm h-9"
+                      onChange={(n) => onUpdate(index, 'unit_price', n)}
+                      aria-label={`Precio unitario ítem ${index + 1}`}
+                      className="w-24 text-right text-sm h-9"
                     />
                   </TableCell>
                   <TableCell className="text-right align-middle">
