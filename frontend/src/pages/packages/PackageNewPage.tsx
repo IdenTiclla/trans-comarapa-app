@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { ArrowLeft } from 'lucide-react'
 
 export function Component() {
@@ -17,18 +16,14 @@ export function Component() {
         <h1 className="text-lg font-semibold">Registrar Nueva Encomienda</h1>
       </div>
 
-      <Card>
-        <CardContent className="p-6 min-h-[500px] relative">
-          <PackageRegistrationModal
-            show={true}
-            onClose={() => navigate(-1)}
-            onPackageRegistered={() => {
-              // No navegamos aquí para permitir ver el recibo primero
-              // El onClose se encargará de la navegación cuando el usuario termine
-            }}
-          />
-        </CardContent>
-      </Card>
+      <PackageRegistrationModal
+        show={true}
+        onClose={() => navigate(-1)}
+        onPackageRegistered={() => {
+          // No navegamos aquí para permitir ver el recibo primero
+          // El onClose se encargará de la navegación cuando el usuario termine
+        }}
+      />
     </div>
   )
 }
