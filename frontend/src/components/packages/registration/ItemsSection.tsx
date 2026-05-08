@@ -1,3 +1,4 @@
+import FormInput from '@/components/forms/FormInput'
 import { IntegerField, DecimalField } from '@/components/forms/NumericField'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'

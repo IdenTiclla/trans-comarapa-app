@@ -39,9 +39,7 @@ export function useTicketsIndexPage() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [dateFromFilter, setDateFromFilter] = useState(
-    new Date().toISOString().split('T')[0],
-  )
+  const [dateFromFilter, setDateFromFilter] = useState('')
   const [dateToFilter, setDateToFilter] = useState('')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('')
 
@@ -260,7 +258,9 @@ export function useTicketsIndexPage() {
       filtered = filtered.filter(
         (t) => t.payment_method === paymentMethodFilter,
       )
-    return filtered
+    return filtered.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tickets,

@@ -1,0 +1,23 @@
+{
+  "skill_name": "ui-auditor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Acabo de crear un nuevo componente de tarjeta de paquete en frontend/src/components/packages/PackageStatusCard.tsx. Necesito que audites la accesibilidad y UI/UX del componente.",
+      "expected_output": "The auditor should read the file, check for a11y violations, UI convention compliance (design tokens, allowed components, mandatory states), and UX quality. Should produce a structured audit report.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Modifique la pagina de tickets en frontend/src/pages/tickets/TicketsIndexPage.tsx y el hook use-tickets-index.ts para mostrar tickets ordenados de mas nuevo a antiguo. Ejecuta la auditoria de UI/UX.",
+      "expected_output": "The auditor should identify the changed files, check the sorting change for accessibility implications, verify the filter removal is properly handled in the UI, check neighboring components for consistency, and produce a structured report.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Cree un nuevo formulario de registro de cliente en frontend/src/components/clients/ClientRegistrationForm.tsx con campos de nombre, email, telefono y direccion. Revisa la accesibilidad.",
+      "expected_output": "The auditor should check: form labels (htmlFor+id), keyboard navigation through form fields, required field indicators, error handling, design token usage, button variants, and whether it uses proper UI components (Input, Label, Button). Should produce a full audit report with critical issues, warnings, and improvements.",
+      "files": []
+    }
+  ]
+}
