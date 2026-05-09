@@ -302,19 +302,19 @@ export default function BusSeatMapPrint({
     return (
         <div ref={containerRef} className="bus-seat-map-print font-sans relative">
             <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm print:max-w-none print:shadow-none print:p-0" aria-labelledby="seat-map-title">
-                <div className="flex flex-col gap-3 border-b border-border bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                <div className="flex flex-col gap-3 border-b border-border bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary flex-shrink-0">
                             <Armchair className="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <div>
-                            <h2 id="seat-map-title" className="text-lg font-bold leading-tight text-foreground">Mapa de asientos</h2>
+                        <div className="min-w-0">
+                            <h2 id="seat-map-title" className="text-lg font-bold leading-tight text-foreground truncate">Mapa de asientos</h2>
                             <p className="text-xs font-medium text-muted-foreground">
                                 Seleccione uno o varios asientos para vender o reservar.
                             </p>
                         </div>
                     </div>
-                    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground">
+                    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground flex-shrink-0 self-start sm:self-auto">
                         {selectedSeatIds.length} seleccionado{selectedSeatIds.length !== 1 ? 's' : ''}
                     </div>
                 </div>

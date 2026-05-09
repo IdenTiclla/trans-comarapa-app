@@ -153,17 +153,17 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                     <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">#{trip.id}</span>
                 </div>
                 <div className="space-y-3">
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
                         <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Origen</p>
-                            <h2 className="truncate text-xl font-extrabold leading-tight text-foreground">{origin}</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground truncate">Origen</p>
+                            <h2 className="truncate text-base font-extrabold leading-tight text-foreground sm:text-lg xl:text-xl" title={origin}>{origin}</h2>
                         </div>
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground flex-shrink-0">
                             <ArrowRight className="h-4 w-4" aria-hidden="true" />
                         </div>
                         <div className="min-w-0 text-right">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Destino</p>
-                            <h2 className="truncate text-xl font-extrabold leading-tight text-foreground">{destination}</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground truncate">Destino</p>
+                            <h2 className="truncate text-base font-extrabold leading-tight text-foreground sm:text-lg xl:text-xl" title={destination}>{destination}</h2>
                         </div>
                     </div>
                     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">

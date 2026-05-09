@@ -32,20 +32,20 @@ export function PackageListView({
           to={ROUTES.packageDetail(pkg.id)}
           className="group block rounded-lg border border-border hover:border-primary/30 bg-card hover:bg-muted/20 transition-all duration-150"
         >
-          <div className="px-4 py-3.5">
-            <div className="flex items-start justify-between gap-3">
+          <div className="px-3 py-3.5 sm:px-4">
+            <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/8 text-primary group-hover:bg-primary/12 transition-colors">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/8 text-primary group-hover:bg-primary/12 transition-colors flex-shrink-0">
                       <Package className="h-3.5 w-3.5" />
                     </div>
-                    <span className="text-sm font-bold text-foreground tracking-tight">
+                    <span className="text-sm font-bold text-foreground tracking-tight truncate max-w-full">
                       #{pkg.tracking_number}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      <MapPin className="h-3 w-3" />
-                      {getPackageDestination(pkg)}
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 max-w-full min-w-0">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{getPackageDestination(pkg)}</span>
                     </span>
                   </div>
                   <span
@@ -81,30 +81,30 @@ export function PackageListView({
               />
             </div>
 
-            <div className="flex items-center gap-2 mt-2.5 ml-9">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span className="font-medium text-foreground truncate max-w-[140px]">
+            <div className="flex items-center gap-2 mt-2.5 ml-0 sm:ml-9 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0 flex-1 sm:flex-none">
+                <User className="h-3 w-3 flex-shrink-0" />
+                <span className="font-medium text-foreground truncate">
                   {pkg.sender_name || 'N/A'}
                 </span>
               </div>
               <ArrowRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0" />
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span className="font-medium text-foreground truncate max-w-[140px]">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0 flex-1 sm:flex-none">
+                <User className="h-3 w-3 flex-shrink-0" />
+                <span className="font-medium text-foreground truncate">
                   {pkg.recipient_name || 'N/A'}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 mt-1.5 ml-9 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              <span className="font-medium text-foreground">{getPackageOrigin(pkg)}</span>
+            <div className="flex items-center gap-1.5 mt-1.5 ml-0 sm:ml-9 text-xs text-muted-foreground flex-wrap">
+              <MapPin className="h-3 w-3 flex-shrink-0" />
+              <span className="font-medium text-foreground truncate min-w-0">{getPackageOrigin(pkg)}</span>
               <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/50 flex-shrink-0" />
-              <span className="font-semibold text-primary">{getPackageDestination(pkg)}</span>
+              <span className="font-semibold text-primary truncate min-w-0">{getPackageDestination(pkg)}</span>
             </div>
 
-            <div className="ml-9 mt-2.5">
+            <div className="ml-0 sm:ml-9 mt-2.5">
               <div className="bg-muted/40 rounded-md px-3 py-2 border border-border/50">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -117,8 +117,8 @@ export function PackageListView({
                 {pkg.items && pkg.items.length > 0 ? (
                   <div className="space-y-1">
                     {pkg.items.slice(0, 3).map((item) => (
-                      <div key={item.id} className="flex justify-between items-center text-xs">
-                        <span className="text-muted-foreground truncate pr-2">
+                      <div key={item.id} className="flex justify-between items-center text-xs gap-2">
+                        <span className="text-muted-foreground truncate min-w-0">
                           <span className="font-semibold text-foreground">{item.quantity}x</span>{' '}
                           {item.description}
                         </span>

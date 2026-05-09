@@ -48,18 +48,18 @@ export default function TripPackagesSection({
             {/* ── Header ── */}
             <div className="border-b border-border bg-muted/20 px-4 py-4 sm:px-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary flex-shrink-0">
                             <Package className="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <div>
-                            <h2 id="trip-packages-title" className="text-lg font-bold text-foreground tracking-tight">Encomiendas</h2>
-                            <p className="text-xs text-muted-foreground font-medium">
+                        <div className="min-w-0">
+                            <h2 id="trip-packages-title" className="text-lg font-bold text-foreground tracking-tight truncate">Encomiendas</h2>
+                            <p className="text-xs text-muted-foreground font-medium truncate">
                                 {tripPackages.length} encomienda{tripPackages.length !== 1 ? 's' : ''} cargada{tripPackages.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0">
                         {tripPackages.length > 0 && (
                             <div className="hidden sm:flex items-center">
                                 <ViewToggle

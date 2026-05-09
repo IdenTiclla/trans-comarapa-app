@@ -137,14 +137,14 @@ export function Component() {
       {seatChange.mode && seatChange.ticket && (
         <div className="sticky top-0 z-20 rounded-lg border border-status-medium/30 bg-status-medium/10 shadow-sm">
           <div className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center text-foreground">
-              <RefreshCw className="h-5 w-5 mr-3 text-status-medium" aria-hidden="true" />
-              <div>
+            <div className="flex items-start sm:items-center text-foreground min-w-0">
+              <RefreshCw className="h-5 w-5 mr-3 text-status-medium flex-shrink-0 mt-0.5 sm:mt-0" aria-hidden="true" />
+              <div className="min-w-0">
                 <p className="font-bold">Modo Cambio de Asiento</p>
-                <p className="text-sm text-muted-foreground">Seleccione el nuevo asiento para {seatChangeTicket?.client?.firstname} {seatChangeTicket?.client?.lastname} (asiento actual: {seatChangeTicket?.seat?.seat_number})</p>
+                <p className="text-sm text-muted-foreground break-words">Seleccione el nuevo asiento para {seatChangeTicket?.client?.firstname} {seatChangeTicket?.client?.lastname} (asiento actual: {seatChangeTicket?.seat?.seat_number})</p>
               </div>
             </div>
-            <Button variant="outline" onClick={seatChange.cancel} className="w-full border-border sm:w-auto">
+            <Button variant="outline" onClick={seatChange.cancel} className="w-full border-border sm:w-auto sm:flex-shrink-0">
               Cancelar Cambio
             </Button>
           </div>
@@ -167,10 +167,10 @@ export function Component() {
             </TabsList>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
-            {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on xl) */}
-            <aside className="order-first xl:order-last">
-              <div className={`xl:sticky ${seatChange.mode ? 'xl:top-[128px]' : 'xl:top-20'}`}>
+          <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
+            {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on 2xl) */}
+            <aside className="order-first 2xl:order-last">
+              <div className={`2xl:sticky ${seatChange.mode ? '2xl:top-[128px]' : '2xl:top-20'}`}>
                 <TripInfoCard
                   trip={trip}
                   ticketStats={page.ticketStats}
