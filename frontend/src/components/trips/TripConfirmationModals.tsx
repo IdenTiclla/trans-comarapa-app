@@ -2,6 +2,15 @@ import type { Trip } from '@/types'
 import type { SelectedSeat } from '@/components/tickets/ticket-sale/types'
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 import { Button } from '@/components/ui/button'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Send, Check, DollarSign, ArrowLeftRight } from 'lucide-react'
 
 interface DispatchState {
     show: boolean
@@ -55,39 +64,46 @@ interface Props {
 export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, seatChange, ticketSale }: Props) {
     return (
         <>
-            {/* Dispatch Modal */}
-            {dispatch.show && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100"><svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></div>
-                            <div><h3 className="text-lg font-medium text-gray-900">Despachar Viaje</h3><p className="text-sm text-gray-500 mt-2">¿Estás seguro? Las encomiendas asignadas pasarán a "En tránsito".</p></div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => dispatch.setShow(false)} disabled={dispatch.executing}>Cancelar</Button>
-                            <Button onClick={dispatch.execute} disabled={dispatch.executing} className="bg-blue-600 hover:bg-blue-700">{dispatch.executing ? 'Despachando...' : 'Sí, despachar'}</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Dialog open={dispatch.show} onOpenChange={(open) => { if (!open) dispatch.setShow(false) }}>
+                <DialogContent showCloseButton={false}>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
+                                <Send className="h-5 w-5" />
+                            </span>
+                            Despachar Viaje
+                        </DialogTitle>
+                        <DialogDescription>
+                            ¿Estás seguro? Las encomiendas asignadas pasarán a &quot;En tránsito&quot;.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => dispatch.setShow(false)} disabled={dispatch.executing}>Cancelar</Button>
+                        <Button onClick={dispatch.execute} disabled={dispatch.executing}>{dispatch.executing ? 'Despachando...' : 'Sí, despachar'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            {/* Finish Modal */}
-            {finish.show && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-green-100"><svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
-                            <div><h3 className="text-lg font-medium text-gray-900">Terminar Viaje</h3><p className="text-sm text-gray-500 mt-2">¿Estás seguro? Las encomiendas en tránsito pasarán a "En destino".</p></div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => finish.setShow(false)} disabled={finish.executing}>Cancelar</Button>
-                            <Button onClick={finish.execute} disabled={finish.executing} className="bg-green-600 hover:bg-green-700">{finish.executing ? 'Terminando...' : 'Sí, terminar'}</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Dialog open={finish.show} onOpenChange={(open) => { if (!open) finish.setShow(false) }}>
+                <DialogContent showCloseButton={false}>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-status-available/10 text-status-available">
+                                <Check className="h-5 w-5" />
+                            </span>
+                            Terminar Viaje
+                        </DialogTitle>
+                        <DialogDescription>
+                            ¿Estás seguro? Las encomiendas en tránsito pasarán a &quot;En destino&quot;.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => finish.setShow(false)} disabled={finish.executing}>Cancelar</Button>
+                        <Button onClick={finish.execute} disabled={finish.executing}>{finish.executing ? 'Terminando...' : 'Sí, terminar'}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            {/* Ticket Sale Modal */}
             <TicketSaleModal
                 show={ticketSale.show}
                 trip={trip}
@@ -97,53 +113,49 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                 onTicketCreated={ticketSale.onCreated}
             />
 
-            {/* Confirm Sale Modal */}
             {confirmSale.show && confirmSale.ticket && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                                <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-medium text-gray-900">Confirmar Venta</h3>
-                                <p className="text-sm text-gray-500 mt-2">¿Confirmar la venta del asiento {(confirmSale.ticket.seat as Record<string, unknown>)?.seat_number} para {((confirmSale.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((confirmSale.ticket.client as Record<string, unknown>)?.lastname) ?? ''}?</p>
-                                <p className="text-sm font-bold mt-2">Monto a cobrar: Bs. {confirmSale.ticket.price}</p>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
+                <Dialog open onOpenChange={(open) => { if (!open) confirmSale.close() }}>
+                    <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-3">
+                                <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
+                                    <DollarSign className="h-5 w-5" />
+                                </span>
+                                Confirmar Venta
+                            </DialogTitle>
+                            <DialogDescription>
+                                ¿Confirmar la venta del asiento {(confirmSale.ticket.seat as Record<string, unknown>)?.seat_number} para {((confirmSale.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((confirmSale.ticket.client as Record<string, unknown>)?.lastname) ?? ''}?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <p className="text-sm font-bold text-foreground">Monto a cobrar: Bs. {confirmSale.ticket.price}</p>
+                        <DialogFooter>
                             <Button variant="outline" onClick={confirmSale.close} disabled={confirmSale.executing}>Cancelar</Button>
-                            <Button onClick={confirmSale.execute} disabled={confirmSale.executing} className="bg-blue-600 hover:bg-blue-700">{confirmSale.executing ? 'Confirmando...' : 'Confirmar Venta'}</Button>
-                        </div>
-                    </div>
-                </div>
+                            <Button onClick={confirmSale.execute} disabled={confirmSale.executing}>{confirmSale.executing ? 'Confirmando...' : 'Confirmar Venta'}</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
 
-            {/* Confirm Seat Change Modal */}
             {seatChange.showConfirm && seatChange.ticket && seatChange.newSeat && (
-                <div className="fixed inset-0 z-50 modal-overlay-bokeh backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-orange-100">
-                                <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-medium text-gray-900">Confirmar Cambio de Asiento</h3>
-                                <p className="text-sm text-gray-500 mt-2">
-                                    ¿Mover al pasajero <strong>{((seatChange.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((seatChange.ticket.client as Record<string, unknown>)?.lastname) ?? ''}</strong> del asiento <strong>{(seatChange.ticket.seat as Record<string, unknown>)?.seat_number}</strong> al asiento <strong>{seatChange.newSeat.number}</strong>?
-                                </p>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-3">
+                <Dialog open onOpenChange={(open) => { if (!open) seatChange.cancel() }}>
+                    <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-3">
+                                <span className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-status-medium/10 text-status-medium">
+                                    <ArrowLeftRight className="h-5 w-5" />
+                                </span>
+                                Confirmar Cambio de Asiento
+                            </DialogTitle>
+                            <DialogDescription>
+                                ¿Mover al pasajero <strong className="text-foreground">{((seatChange.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((seatChange.ticket.client as Record<string, unknown>)?.lastname) ?? ''}</strong> del asiento <strong className="text-foreground">{(seatChange.ticket.seat as Record<string, unknown>)?.seat_number}</strong> al asiento <strong className="text-foreground">{seatChange.newSeat.number}</strong>?
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
                             <Button variant="outline" onClick={seatChange.cancel} disabled={seatChange.loading}>Cancelar</Button>
-                            <Button onClick={seatChange.confirm} disabled={seatChange.loading} className="bg-orange-600 hover:bg-orange-700">{seatChange.loading ? 'Cambiando...' : 'Confirmar Cambio'}</Button>
-                        </div>
-                    </div>
-                </div>
+                            <Button onClick={seatChange.confirm} disabled={seatChange.loading}>{seatChange.loading ? 'Cambiando...' : 'Confirmar Cambio'}</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
         </>
     )

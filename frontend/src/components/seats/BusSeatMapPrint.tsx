@@ -272,12 +272,12 @@ export default function BusSeatMapPrint({
 
     // Show empty state only if trip has no seats_layout at all
     if (!trip?.seats_layout) {
-        return <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 shadow-sm"><p className="text-yellow-700 text-sm">No se pudo cargar la información de los asientos desde el viaje.</p></div>
+        return <div className="bg-status-medium/10 border border-status-medium/30 rounded-lg p-3 sm:p-4 mb-4 shadow-sm"><p className="text-status-medium text-sm">No se pudo cargar la información de los asientos desde el viaje.</p></div>
     }
 
     return (
         <div ref={containerRef} className="bus-seat-map-print font-sans relative">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden print:max-w-none print:shadow-none print:p-0">
+            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden print:max-w-none print:shadow-none print:p-0">
                 {isDoubleDeck && (
                     <div className="px-4 sm:px-6 md:px-8">
                         <DeckSelector

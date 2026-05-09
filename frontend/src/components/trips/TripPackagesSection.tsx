@@ -102,7 +102,7 @@ export default function TripPackagesSection({
                         <div className="flex items-center gap-2">
                             <Banknote className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-xs text-muted-foreground font-medium">Total</span>
-                            <span className="text-sm font-bold text-foreground">Bs. {totalAmount.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-foreground">Bs. {(totalAmount ?? 0).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

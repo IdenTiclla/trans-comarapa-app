@@ -61,7 +61,6 @@ export default function BusSeatGrid({
             return 'bg-gradient-to-br from-emerald-50 to-green-100 border-emerald-300 hover:from-emerald-100 hover:to-green-200 cursor-pointer hover:shadow-xl'
         }
     }
-
     const getModernStatusClass = (seat: SeatItem) => {
         if (seat.occupied) {
             return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
@@ -144,10 +143,13 @@ export default function BusSeatGrid({
                         {seat.number}<span className="ml-1 opacity-75 sm:text-xs text-[0.6rem]">{seat.position === 'window' ? '🪟' : '🚶'}</span>
                     </div>
                 </div>
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
                     className={`seat-box relative rounded-2xl p-2 sm:p-4 flex flex-col justify-between text-center min-h-[7rem] sm:h-36 transition-all duration-300 transform group-hover:-translate-y-0.5 group-hover:scale-105 cursor-pointer shadow-sm border-2 overflow-hidden ${getModernSeatClass(seat)}`}
                     onClick={() => toggleSeatSelection(seat)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSeatSelection(seat) } }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Asiento ${seat.number} - ${getSeatStatusText(seat)}${passengerName ? ` - ${passengerName}` : ''}`}
                     onContextMenu={(e) => handleContextMenu(e, seat)}
                 >
                     {getSeatPrice(seat) && (
@@ -159,13 +161,13 @@ export default function BusSeatGrid({
                     )}
 
                     <div className="flex flex-col justify-center items-center text-center px-1 sm:px-2 pt-6 pb-2 flex-grow min-h-[4rem]">
-                        <div className={`text-[10px] sm:text-sm leading-tight font-bold text-gray-800 truncate w-full h-4 ${!isOccupiedOrReserved ? 'opacity-0' : ''}`} title={passengerName}>
+                        <div className={`text-[10px] sm:text-sm leading-tight font-bold text-foreground truncate w-full h-4 ${!isOccupiedOrReserved ? 'opacity-0' : ''}`} title={passengerName}>
                             {passengerName}
                         </div>
-                        <div className={`text-[10px] sm:text-xs text-gray-600 font-medium mt-1 h-4 ${!isOccupiedOrReserved ? 'opacity-0' : ''}`}>
+                        <div className={`text-[10px] sm:text-xs text-muted-foreground font-medium mt-1 h-4 ${!isOccupiedOrReserved ? 'opacity-0' : ''}`}>
                             {passengerPhone}
                         </div>
-                        <div className={`text-[10px] sm:text-xs text-blue-600 font-semibold mt-1 truncate w-full h-4 ${!dest ? 'opacity-0' : ''}`} title={dest || ''}>
+                        <div className={`text-[10px] sm:text-xs text-primary font-semibold mt-1 truncate w-full h-4 ${!dest ? 'opacity-0' : ''}`} title={dest || ''}>
                             {dest ? `→ ${dest}` : ''}
                         </div>
                     </div>
@@ -188,11 +190,11 @@ export default function BusSeatGrid({
                 </div>
             </div>
 
-            <div className={`relative grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6 lg:gap-8 bg-gradient-to-b from-slate-50 to-white p-4 sm:p-6 rounded-3xl shadow-inner ${seatChangeMode ? 'bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(251,146,60,0.1)_10px,rgba(251,146,60,0.1)_20px)] border-2 border-orange-300' : 'border border-gray-100'}`}>
+            <div className={`relative grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6 lg:gap-8 bg-gradient-to-b from-muted/50 to-card p-4 sm:p-6 rounded-3xl shadow-inner ${seatChangeMode ? 'bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(251,146,60,0.1)_10px,rgba(251,146,60,0.1)_20px)] border-2 border-status-medium/50' : 'border border-border'}`}>
                 <div className="left-column md:pr-4">
                     <div className="md:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
                         <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-sm"></div>
-                        <h3 className="text-sm font-bold text-gray-700">Lado Izquierdo</h3>
+                        <h3 className="text-sm font-bold text-foreground">Lado Izquierdo</h3>
                         <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-sm"></div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -212,7 +214,7 @@ export default function BusSeatGrid({
                 <div className="right-column mt-6 sm:mt-8 md:mt-0 md:pl-4">
                     <div className="md:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
                         <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-sm"></div>
-                        <h3 className="text-sm font-bold text-gray-700">Lado Derecho</h3>
+                        <h3 className="text-sm font-bold text-foreground">Lado Derecho</h3>
                         <div className="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-sm"></div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">

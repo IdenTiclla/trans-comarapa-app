@@ -14,13 +14,13 @@ const STATUS_MAP: Record<string, string> = {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
-    scheduled: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
-    boarding: { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
-    departed: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
-    in_progress: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
-    arrived: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
-    completed: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
-    cancelled: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+    scheduled: { bg: 'bg-primary/10', text: 'text-primary', dot: 'bg-primary' },
+    boarding: { bg: 'bg-chart-4/20', text: 'text-chart-4', dot: 'bg-chart-4' },
+    departed: { bg: 'bg-status-medium/15', text: 'text-status-medium', dot: 'bg-status-medium' },
+    in_progress: { bg: 'bg-status-medium/15', text: 'text-status-medium', dot: 'bg-status-medium' },
+    arrived: { bg: 'bg-status-available/15', text: 'text-status-available', dot: 'bg-status-available' },
+    completed: { bg: 'bg-status-available/15', text: 'text-status-available', dot: 'bg-status-available' },
+    cancelled: { bg: 'bg-destructive/15', text: 'text-destructive', dot: 'bg-destructive' },
 }
 
 function formatTimeAmPm(timeString: string) {
@@ -177,16 +177,16 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-red-700 leading-none">{ticketStats.sold}</span>
-                            <span className="text-[10px] text-red-700 font-semibold uppercase tracking-wider">Ocupados</span>
+                            <span className="text-lg font-extrabold text-status-full leading-none">{ticketStats.sold}</span>
+                            <span className="text-[10px] text-status-full font-semibold uppercase tracking-wider">Ocupados</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-yellow-700 leading-none">{ticketStats.reserved}</span>
-                            <span className="text-[10px] text-yellow-700 font-semibold uppercase tracking-wider">Reservados</span>
+                            <span className="text-lg font-extrabold text-status-medium leading-none">{ticketStats.reserved}</span>
+                            <span className="text-[10px] text-status-medium font-semibold uppercase tracking-wider">Reservados</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-blue-700 leading-none">{ticketStats.available}</span>
-                            <span className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Disponibles</span>
+                            <span className="text-lg font-extrabold text-primary leading-none">{ticketStats.available}</span>
+                            <span className="text-[10px] text-primary font-semibold uppercase tracking-wider">Disponibles</span>
                         </div>
                     </div>
                     <div
@@ -198,7 +198,7 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                         className="mt-3 w-full bg-muted rounded-full h-1.5"
                     >
                         <div
-                            className="h-1.5 rounded-full transition-all bg-green-500"
+                            className="h-1.5 rounded-full transition-all bg-status-available"
                             style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
                         />
                     </div>
@@ -294,16 +294,16 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                                     <span className="text-sm font-extrabold text-foreground">{ticketStats.total}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-green-700 font-medium">Vendidos</span>
-                                    <span className="text-sm font-bold text-green-800">{ticketStats.sold}</span>
+                                    <span className="text-xs text-status-available font-medium">Vendidos</span>
+                                    <span className="text-sm font-extrabold text-status-available">{ticketStats.sold}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-yellow-700 font-medium">Reservados</span>
-                                    <span className="text-sm font-bold text-yellow-800">{ticketStats.reserved}</span>
+                                    <span className="text-xs text-status-medium font-medium">Reservados</span>
+                                    <span className="text-sm font-bold text-status-medium">{ticketStats.reserved}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-blue-700 font-medium">Disponibles</span>
-                                    <span className="text-sm font-bold text-blue-800">{ticketStats.available}</span>
+                                    <span className="text-xs text-primary font-medium">Disponibles</span>
+                                    <span className="text-sm font-bold text-primary">{ticketStats.available}</span>
                                 </div>
                             </div>
                             {/* Occupancy bar */}
@@ -316,7 +316,7 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                                 className="mt-3 w-full bg-muted rounded-full h-1.5"
                             >
                                 <div
-                                    className="h-1.5 rounded-full transition-all bg-green-500"
+                                    className="h-1.5 rounded-full transition-all bg-status-available"
                                     style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
                                 />
                             </div>

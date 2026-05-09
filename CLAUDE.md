@@ -75,6 +75,7 @@ npx tsc --noEmit  # must pass
 - `006`: Use `navigate(-1)` in modal onClose callbacks instead of hardcoded routes — pages can be reached from multiple locations
 - `007`: Never put business logic in routes or models — follow Route → Service → Repository pattern; use `core/security.py` for password hashing, not the User model
 - `008`: Never compare timestamps against `datetime.now()` to check entity status — always use the `status` field and state machine `validate_transition()`
+- `009`: Radix `Dialog` renders children even when `open={false}` — always wrap with `{data && <Dialog open>}` when children access nullable data
 
 ## Key Resources
 

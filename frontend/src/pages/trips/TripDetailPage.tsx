@@ -90,12 +90,12 @@ export function Component() {
   if (error) {
     return (
       <div className="max-w-xl mx-auto py-8">
-        <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-6">
+        <div role="alert" className="bg-destructive/10 border border-destructive/30 rounded-xl p-6">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="text-sm font-medium text-red-800">{error}</p>
-              <Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-red-700 underline">Reintentar</Button>
+              <p className="text-sm font-medium text-destructive">{error}</p>
+              <Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-destructive underline">Reintentar</Button>
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function Component() {
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (
-        <div className="sticky top-0 z-20 bg-orange-700 shadow-md">
+        <div className="sticky top-0 z-20 bg-status-medium shadow-md">
           <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center text-white">
               <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
@@ -118,7 +118,7 @@ export function Component() {
               </svg>
               <div>
                 <p className="font-bold">Modo Cambio de Asiento</p>
-                <p className="text-sm text-orange-50">Seleccione el nuevo asiento para {seatChange.ticket.client?.firstname} {seatChange.ticket.client?.lastname} (Asiento actual: {seatChange.ticket.seat?.seat_number})</p>
+                <p className="text-sm text-white/80">Seleccione el nuevo asiento para {seatChange.ticket.client?.firstname} {seatChange.ticket.client?.lastname} (Asiento actual: {seatChange.ticket.seat?.seat_number})</p>
               </div>
             </div>
             <Button variant="ghost" onClick={seatChange.cancel} className="text-white hover:bg-white/20">
@@ -183,7 +183,7 @@ export function Component() {
                         <Button
                           size="sm"
                           onClick={() => page.finish.setShow(true)}
-                          className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
+                          className="gap-1.5 justify-center"
                         >
                           <Check className="h-3.5 w-3.5" aria-hidden="true" />
                           Terminar
