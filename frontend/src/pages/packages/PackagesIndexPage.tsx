@@ -13,7 +13,8 @@ import { Plus, LayoutGrid, List, AlertCircle } from 'lucide-react'
 import { StatCards } from './packages-index/StatCards'
 import { QuickActions } from './packages-index/QuickActions'
 import { PackageFilters } from './packages-index/PackageFilters'
-import { Pagination } from './packages-index/Pagination'
+import { Pagination } from '@/components/ui/pagination'
+import { usePaginatedList } from '@/hooks/use-paginated-list'
 import { filterPackages, computeStats } from './packages-index/helpers'
 import { ROUTES } from '@/lib/routes'
 
@@ -29,7 +30,6 @@ export function Component() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
@@ -48,16 +48,18 @@ export function Component() {
     [packages, searchTerm, statusFilter, dateFrom, dateTo],
   )
 
-  const paginatedPackages = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredPackages.slice(start, start + ITEMS_PER_PAGE)
-  }, [filteredPackages, currentPage])
-
-  const totalPages = Math.ceil(filteredPackages.length / ITEMS_PER_PAGE)
+  const {
+    paginatedItems: paginatedPackages,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    startItem,
+    endItem,
+  } = usePaginatedList(filteredPackages, ITEMS_PER_PAGE)
 
   const debouncedResetPage = useMemo(
     () => debounce(() => setCurrentPage(1), 500),
-    [],
+    [setCurrentPage],
   )
 
   const handleSearchChange = (val: string) => {
@@ -184,11 +186,14 @@ export function Component() {
 
       {!loading && filteredPackages.length > ITEMS_PER_PAGE && (
         <Pagination
+          variant="full"
           currentPage={currentPage}
           totalPages={totalPages}
-          itemsPerPage={ITEMS_PER_PAGE}
-          total={filteredPackages.length}
+          totalItems={filteredPackages.length}
+          startItem={startItem}
+          endItem={endItem}
           onPageChange={setCurrentPage}
+          className="rounded-lg border"
         />
       )}
 

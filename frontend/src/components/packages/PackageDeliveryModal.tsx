@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { AppModal, AppModalPrimaryHeader } from '@/components/common'
 import { usePackageDeliveryModal, type PackageData, type DeliveryItem } from './use-package-delivery'
-import { Check, X, CreditCard, CheckCircle, Banknote, QrCode, AlertTriangle, Wallet, AlertCircle, Loader2 } from 'lucide-react'
+import { Check, CreditCard, CheckCircle, Banknote, QrCode, AlertTriangle, Wallet, AlertCircle, Loader2 } from 'lucide-react'
 import { ROUTES } from '@/lib/routes'
 
 interface PackageDeliveryModalProps {
@@ -33,31 +34,47 @@ export default function PackageDeliveryModal({
 
     const handleConfirm = () => confirmDelivery(onConfirm)
 
-    if (!show || !packageData) return null
+    if (!packageData) return null
+
+    const header = (
+        <AppModalPrimaryHeader
+            icon={<Check className="h-5 w-5" />}
+            title="Entregar Encomienda"
+            onClose={onClose}
+        />
+    )
+
+    const footer = (
+        <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={onClose}>
+                Cancelar
+            </Button>
+            <Button
+                onClick={handleConfirm}
+                disabled={isSubmitting || !isReadyToDeliver}
+                className="gap-1.5"
+            >
+                {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                    <Check className="h-4 w-4" />
+                )}
+                {isSubmitting ? 'Confirmando...' : 'Confirmar Entrega'}
+            </Button>
+        </div>
+    )
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="fixed inset-0 modal-overlay-bokeh" aria-hidden="true" onClick={onClose} />
-            <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                <div
-                    className="relative z-10 w-full bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-xl"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="bg-primary px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl leading-6 font-medium text-primary-foreground flex items-center">
-                                <Check className="h-6 w-6 mr-2" />
-                                Entregar Encomienda
-                            </h3>
-                            <Button variant="ghost" size="sm" onClick={onClose} className="text-primary-foreground hover:text-primary-foreground/80">
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="bg-white px-6 py-6 border-b border-gray-200">
-                        <div className="space-y-6">
+        <AppModal
+            open={show}
+            onClose={onClose}
+            size="md"
+            ariaLabel="Entregar encomienda"
+            header={header}
+            footer={footer}
+            bodyClassName="px-6 py-6"
+        >
+            <div className="space-y-6">
                             <div className="bg-muted/50 p-4 rounded-lg border border-gray-200 shadow-sm relative overflow-hidden">
                                 <div className="absolute right-0 top-0 h-full w-2 flex flex-col justify-between">
                                     {Array.from({ length: 10 }).map((_, i) => (
@@ -204,38 +221,14 @@ export default function PackageDeliveryModal({
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </div>
+            </div>
 
-                    {errorMessage && (
-                        <div className="mx-6 mt-2 mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
-                            <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-red-700 font-medium">{errorMessage}</p>
+            {errorMessage && (
+                        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-start">
+                            <AlertCircle className="h-5 w-5 text-destructive mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-destructive font-medium">{errorMessage}</p>
                         </div>
                     )}
-
-                    <div className="bg-muted/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleConfirm}
-                            disabled={isSubmitting || !isReadyToDeliver}
-                            className="gap-1.5"
-                        >
-                            {isSubmitting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Check className="h-4 w-4" />
-                            )}
-                            {isSubmitting ? 'Confirmando...' : 'Confirmar Entrega'}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </AppModal>
     )
 }

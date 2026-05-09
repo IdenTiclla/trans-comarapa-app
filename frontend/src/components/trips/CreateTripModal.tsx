@@ -7,7 +7,8 @@ import { fetchAssistants, selectAssistants } from '@/store/assistant.slice'
 import { fetchSecretaries, selectSecretaries } from '@/store/secretary.slice'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { X, Loader2, MapPin, Clock } from 'lucide-react'
+import { AppModal, AppModalPrimaryHeader } from '@/components/common'
+import { Loader2, MapPin, Clock, Bus as BusIcon } from 'lucide-react'
 import FormSelect from '@/components/forms/FormSelect'
 import { LOCALE } from '@/lib/locale-config'
 
@@ -115,89 +116,78 @@ export default function CreateTripModal({
     }
   }, [busId, driverId, assistantId, date, time, routeId, auth, secretaries, dispatch, onCreated])
 
-  if (!open) return null
+  const header = (
+    <AppModalPrimaryHeader
+      icon={<BusIcon className="h-5 w-5" />}
+      title="Crear Viaje"
+      subtitle="Asigne bus y personal para programar la salida"
+      onClose={onClose}
+    />
+  )
+
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" onClick={onClose} disabled={submitting}>
+        Cancelar
+      </Button>
+      <Button onClick={handleSubmit} disabled={!busId || submitting} className="gap-1.5">
+        {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+        {submitting ? 'Creando...' : 'Crear Viaje'}
+      </Button>
+    </div>
+  )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">Crear Viaje</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-muted-foreground hover:text-foreground">
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="mt-3 p-3 bg-primary/5 rounded-lg text-sm border border-primary/10">
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <MapPin className="h-4 w-4 text-primary" />
-              {routeLabel}
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              {new Date(date + 'T00:00:00').toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })} - {time}
-            </div>
-          </div>
+    <AppModal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      ariaLabel="Crear viaje"
+      header={header}
+      footer={footer}
+      bodyClassName="px-6 py-5 space-y-4"
+    >
+      <div className="p-3 bg-primary/5 rounded-lg text-sm border border-primary/20">
+        <div className="flex items-center gap-2 text-foreground font-semibold">
+          <MapPin className="h-4 w-4 text-primary" />
+          {routeLabel}
         </div>
-
-        {/* Body */}
-        <div className="px-6 py-5 space-y-4">
-          {busLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              Cargando buses...
-            </div>
-          ) : (
-            <FormSelect
-              label="Bus *"
-              value={busId}
-              onChange={(val) => setBusId(val)}
-              options={busOptions}
-              placeholder="Seleccionar bus..."
-            />
-          )}
-
-          <FormSelect
-            label="Conductor"
-            value={driverId}
-            onChange={(val) => setDriverId(val)}
-            options={driverOptions}
-            placeholder="Sin asignar"
-          />
-
-          <FormSelect
-            label="Asistente"
-            value={assistantId}
-            onChange={(val) => setAssistantId(val)}
-            options={assistantOptions}
-            placeholder="Sin asignar"
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 bg-muted/50 border-t flex gap-3 justify-end">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={submitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!busId || submitting}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creando...
-              </>
-            ) : 'Crear Viaje'}
-          </Button>
+        <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          {new Date(date + 'T00:00:00').toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })} - {time}
         </div>
       </div>
-    </div>
+
+      {busLoading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          Cargando buses...
+        </div>
+      ) : (
+        <FormSelect
+          label="Bus *"
+          value={busId}
+          onChange={(val) => setBusId(val)}
+          options={busOptions}
+          placeholder="Seleccionar bus..."
+        />
+      )}
+
+      <FormSelect
+        label="Conductor"
+        value={driverId}
+        onChange={(val) => setDriverId(val)}
+        options={driverOptions}
+        placeholder="Sin asignar"
+      />
+
+      <FormSelect
+        label="Asistente"
+        value={assistantId}
+        onChange={(val) => setAssistantId(val)}
+        options={assistantOptions}
+        placeholder="Sin asignar"
+      />
+    </AppModal>
   )
 }

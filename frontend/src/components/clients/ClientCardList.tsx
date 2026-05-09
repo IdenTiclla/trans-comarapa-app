@@ -3,7 +3,8 @@ import EmptyState from '@/components/common/EmptyState'
 import ClientCard from './ClientCard'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Pagination } from '@/components/ui/pagination'
+import { RefreshCw, Plus, Eye, Pencil, Trash2 } from 'lucide-react'
 
 interface Client {
     id: number
@@ -45,44 +46,14 @@ export default function ClientCardList({
     onNewClient
 }: ClientCardListProps) {
 
-    const totalPages = useMemo(() => {
-        if (totalItems === 0 || itemsPerPage === 0) return 1
-        return Math.ceil(totalItems / itemsPerPage)
-    }, [totalItems, itemsPerPage])
-
-    const startItem = useMemo(() => {
-        if (totalItems === 0) return 0
-        return (currentPage - 1) * itemsPerPage + 1
-    }, [totalItems, currentPage, itemsPerPage])
-
-    const endItem = useMemo(() => {
-        return Math.min(currentPage * itemsPerPage, totalItems)
-    }, [currentPage, itemsPerPage, totalItems])
+    const totalPages = totalItems > 0 && itemsPerPage > 0 ? Math.ceil(totalItems / itemsPerPage) : 1
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
     const paginatedClients = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage
         return clients.slice(start, start + itemsPerPage)
     }, [clients, currentPage, itemsPerPage])
-
-    const displayedPages = useMemo(() => {
-        const pages: (number | string)[] = []
-        const maxDisplayed = 5
-        if (totalPages <= maxDisplayed + 2) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i)
-        } else {
-            pages.push(1)
-            let start = Math.max(2, currentPage - Math.floor((maxDisplayed - 2) / 2))
-            const end = Math.min(totalPages - 1, start + maxDisplayed - 3)
-            if (end === totalPages - 1 && (end - start + 1) < (maxDisplayed - 2)) {
-                start = Math.max(2, end - (maxDisplayed - 3))
-            }
-            if (start > 2) pages.push('...')
-            for (let i = start; i <= end; i++) pages.push(i)
-            if (end < totalPages - 1) pages.push('...')
-            if (totalPages > 1) pages.push(totalPages)
-        }
-        return pages
-    }, [totalPages, currentPage])
 
     const getInitials = (name?: string) => {
         if (!name) return 'CL'
@@ -248,37 +219,16 @@ export default function ClientCardList({
                     )}
 
                     {totalItems > itemsPerPage && (
-                        <Card className="mt-8">
-                            <CardContent className="p-6">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div className="text-sm text-muted-foreground">
-                                        <span className="font-medium text-foreground">{startItem}-{endItem}</span> de <span className="font-medium text-foreground">{totalItems}</span> clientes
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <div className="flex items-center gap-1">
-                                            {displayedPages.map((page, idx) => (
-                                                <Button
-                                                    key={idx}
-                                                    variant={page === currentPage ? 'default' : 'outline'}
-                                                    size="sm"
-                                                    onClick={() => typeof page === 'number' && page !== currentPage ? onPageChange(page) : null}
-                                                    disabled={typeof page !== 'number'}
-                                                    className="min-w-[2.5rem]"
-                                                >
-                                                    {page}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                        <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <Pagination
+                            variant="full"
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            startItem={startItem}
+                            endItem={endItem}
+                            onPageChange={onPageChange}
+                            className="mt-8 rounded-lg border"
+                        />
                     )}
                 </>
             )}
