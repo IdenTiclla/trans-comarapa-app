@@ -17,6 +17,7 @@ export interface TripPackage {
   items?: TripPackageItem[]
   origin_office_name?: string
   destination_office_name?: string
+  [key: string]: unknown
 }
 
 export interface PackageViewProps {

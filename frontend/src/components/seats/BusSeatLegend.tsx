@@ -1,27 +1,21 @@
 export default function BusSeatLegend() {
+    const items = [
+        { label: 'Disponible', className: 'border-status-available/60 bg-status-available/10' },
+        { label: 'Seleccionado', className: 'border-primary bg-primary/10' },
+        { label: 'Reservado', className: 'border-status-medium/60 bg-status-medium/10' },
+        { label: 'Ocupado', className: 'border-status-full/60 bg-status-full/10' },
+        { label: 'Bloqueado', className: 'border-border bg-muted' },
+    ]
+
     return (
-        <div className="px-4 sm:px-6 md:px-8 py-4 border-b border-border print:hidden">
-            <div className="flex items-center justify-center flex-wrap gap-3 sm:gap-5">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-emerald-50 to-green-100 border-2 border-emerald-300 shadow-sm" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-muted-foreground">Disponible</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-blue-100 to-indigo-200 border-2 border-blue-400 shadow-sm" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-muted-foreground">Seleccionado</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-amber-100 to-orange-200 border-2 border-orange-300 shadow-sm" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-muted-foreground">Reservado</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-red-100 to-red-200 border-2 border-red-300 shadow-sm" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-muted-foreground">Ocupado</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-purple-100 to-violet-200 border-2 border-purple-300 shadow-sm opacity-75" aria-hidden="true" />
-                    <span className="text-xs font-semibold text-muted-foreground">Bloqueado</span>
-                </div>
+        <div className="border-b border-border px-4 py-3 print:hidden sm:px-6 md:px-8">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2" role="list" aria-label="Estados de asientos">
+                {items.map((item) => (
+                    <div key={item.label} className="flex items-center gap-1.5" role="listitem">
+                        <span className={`h-4 w-4 rounded-sm border-2 ${item.className}`} aria-hidden="true" />
+                        <span className="text-xs font-semibold text-muted-foreground">{item.label}</span>
+                    </div>
+                ))}
             </div>
         </div>
     )

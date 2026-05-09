@@ -15,7 +15,7 @@ import { errMsg } from '@/lib/error-utils'
 
 interface Seat {
     id: number
-    number?: number | string
+    number: number | string
     [key: string]: unknown
 }
 

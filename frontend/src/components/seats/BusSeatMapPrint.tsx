@@ -3,7 +3,8 @@ import DeckSelector from './DeckSelector'
 import BusSeatGrid from './BusSeatGrid'
 import BusSeatLegend from './BusSeatLegend'
 import SeatContextMenu from './SeatContextMenu'
-import { getEffectiveName } from '@/lib/person-utils'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Armchair, Info } from 'lucide-react'
 
 interface LockedSeatInfo {
     seat_id: number
@@ -31,6 +32,7 @@ interface SeatItem {
     deck: string
     passenger: { name: string; phone: string } | null
     seat_id?: number
+    [key: string]: unknown
 }
 
 interface TripLike {
@@ -41,7 +43,14 @@ interface TripLike {
 
 interface TicketLike {
     seat?: { id?: number; seat_number?: number | string }
-    client?: { phone?: string; [k: string]: unknown }
+    client?: {
+        firstname?: string
+        lastname?: string
+        username?: string
+        phone?: string
+        person?: { firstname?: string; lastname?: string }
+        [k: string]: unknown
+    }
     [k: string]: unknown
 }
 
@@ -69,6 +78,13 @@ interface BusSeatMapPrintProps {
     onPreviewTicket?: (seat: SeatItem) => void
     seatChangeMode?: boolean
     controlledSelectedIds?: number[]
+}
+
+function getPassengerName(client: TicketLike['client']) {
+    if (!client) return ''
+    const firstName = client.person?.firstname || client.firstname || ''
+    const lastName = client.person?.lastname || client.lastname || ''
+    return `${firstName} ${lastName}`.trim() || client.username || 'Pasajero'
 }
 
 export default function BusSeatMapPrint({
@@ -166,7 +182,7 @@ export default function BusSeatMapPrint({
             let passenger = null
             if (ticket && ticket.client) {
                 passenger = {
-                    name: getEffectiveName(ticket.client),
+                    name: getPassengerName(ticket.client),
                     phone: ticket.client?.phone || ''
                 }
             }
@@ -213,7 +229,9 @@ export default function BusSeatMapPrint({
     // Sync initialSelectedSeats
     useEffect(() => {
         if (initialSelectedSeats && initialSelectedSeats.length > 0) {
-            const newIds = initialSelectedSeats.map(s => s.id || s.seat_id)
+            const newIds = initialSelectedSeats
+                .map(s => s.id ?? s.seat_id)
+                .filter((id): id is number => typeof id === 'number')
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedSeatIds(prev => {
                 if (prev.length === newIds.length && prev.every((v, i) => v === newIds[i])) return prev
@@ -238,7 +256,7 @@ export default function BusSeatMapPrint({
         }
     }
 
-    const handleContextMenu = (event: React.MouseEvent, seat: SeatItem) => {
+    const handleContextMenu = (event: React.MouseEvent<HTMLButtonElement>, seat: SeatItem) => {
         if (!enableContextMenu || !containerRef.current) return
         event.preventDefault()
         
@@ -272,12 +290,34 @@ export default function BusSeatMapPrint({
 
     // Show empty state only if trip has no seats_layout at all
     if (!trip?.seats_layout) {
-        return <div className="bg-status-medium/10 border border-status-medium/30 rounded-lg p-3 sm:p-4 mb-4 shadow-sm"><p className="text-status-medium text-sm">No se pudo cargar la información de los asientos desde el viaje.</p></div>
+        return (
+            <Alert className="mb-4 border-status-medium/30 bg-status-medium/10">
+                <Info className="h-4 w-4 text-status-medium" aria-hidden="true" />
+                <AlertTitle>Mapa no disponible</AlertTitle>
+                <AlertDescription>No se pudo cargar la información de los asientos desde el viaje.</AlertDescription>
+            </Alert>
+        )
     }
 
     return (
         <div ref={containerRef} className="bus-seat-map-print font-sans relative">
-            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden print:max-w-none print:shadow-none print:p-0">
+            <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm print:max-w-none print:shadow-none print:p-0" aria-labelledby="seat-map-title">
+                <div className="flex flex-col gap-3 border-b border-border bg-muted/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                            <Armchair className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div>
+                            <h2 id="seat-map-title" className="text-lg font-bold leading-tight text-foreground">Mapa de asientos</h2>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Seleccione uno o varios asientos para vender o reservar.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground">
+                        {selectedSeatIds.length} seleccionado{selectedSeatIds.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
                 {isDoubleDeck && (
                     <div className="px-4 sm:px-6 md:px-8">
                         <DeckSelector
@@ -302,7 +342,7 @@ export default function BusSeatMapPrint({
                     onSeatDeselected={handleSeatDeselected}
                     onContextMenu={handleContextMenu}
                 />
-            </div>
+            </section>
 
             <SeatContextMenu
                 visible={showContextMenu}
@@ -337,4 +377,3 @@ export default function BusSeatMapPrint({
         </div>
     )
 }
-

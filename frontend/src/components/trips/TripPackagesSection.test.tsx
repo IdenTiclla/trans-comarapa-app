@@ -26,19 +26,20 @@ describe('TripPackagesSection', () => {
         // Title should be present
         expect(screen.getByText('Encomiendas')).toBeDefined()
         
-        // Find toggle buttons
-        const listBtn = document.querySelector('#btn-view-list') as HTMLButtonElement
-        const cardsBtn = document.querySelector('#btn-view-cards') as HTMLButtonElement
+        // Find toggle buttons by accessible name. The section renders desktop
+        // and mobile toggles, so either matching control can drive the view.
+        const listButtons = screen.getAllByRole('button', { name: 'Vista de lista' })
+        const cardButtons = screen.getAllByRole('button', { name: 'Vista de tarjetas' })
 
-        expect(listBtn).toBeDefined()
-        expect(cardsBtn).toBeDefined()
+        expect(listButtons.length).toBeGreaterThan(0)
+        expect(cardButtons.length).toBeGreaterThan(0)
 
         // By default, list view should be active
         // The list view is the default, and it should show the tracking number
         expect(screen.getAllByText('#PKG-123').length).toBeGreaterThan(0)
 
         // Switch to cards view
-        fireEvent.click(cardsBtn)
+        fireEvent.click(cardButtons[0])
 
         expect(screen.getAllByText('#PKG-123').length).toBeGreaterThan(0)
     })
@@ -50,6 +51,6 @@ describe('TripPackagesSection', () => {
             </MemoryRouter>
         )
         
-        expect(screen.getByText('No hay encomiendas cargadas en este viaje')).toBeDefined()
+        expect(screen.getByText('No hay encomiendas cargadas en este viaje.')).toBeDefined()
     })
 })

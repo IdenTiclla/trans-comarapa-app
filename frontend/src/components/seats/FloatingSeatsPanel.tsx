@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { X, ChevronUp, Ticket, CalendarCheck, Trash2 } from 'lucide-react'
 
 interface PanelSeat {
-    id: number | string
+    id: number
     number: number | string
     position?: 'window' | 'aisle' | string
     deck?: string
@@ -62,9 +62,9 @@ export default function FloatingSeatsPanel({
     return (
         <aside
             aria-label="Asientos seleccionados"
-            className="fixed bottom-6 right-6 z-40 font-sans print:hidden animate-[slideUp_0.3s_ease-out]"
+            className="fixed inset-x-3 bottom-3 z-40 font-sans print:hidden sm:inset-x-auto sm:right-6 sm:bottom-6"
         >
-            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border transition-all duration-300 ease-in-out w-[340px] sm:w-[480px]">
+            <div className="w-full max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-card/95 shadow-lg backdrop-blur-md transition-all duration-300 ease-in-out sm:w-[480px]">
 
                 {/* Header / collapsed state */}
                 <div
@@ -125,7 +125,6 @@ export default function FloatingSeatsPanel({
                         aria-expanded={isExpanded}
                         aria-controls="floating-seats-panel-content"
                         aria-label={isExpanded ? 'Colapsar panel de asientos seleccionados' : 'Expandir panel de asientos seleccionados'}
-                        tabIndex={-1}
                         className="self-center mr-2 h-8 w-8 flex-shrink-0"
                     >
                         <ChevronUp
@@ -147,15 +146,15 @@ export default function FloatingSeatsPanel({
                             </span>
                             <div className="flex gap-3 text-xs text-muted-foreground font-medium">
                                 <span title="Asientos en ventana" aria-label={`${windowSeatsCount} en ventana`}>
-                                    🪟 {windowSeatsCount}
+                                    Ventana {windowSeatsCount}
                                 </span>
                                 <span title="Asientos en pasillo" aria-label={`${aisleSeatsCount} en pasillo`}>
-                                    🚶 {aisleSeatsCount}
+                                    Pasillo {aisleSeatsCount}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-2 max-h-52 overflow-y-auto p-2 custom-scrollbar">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-2 max-h-52 overflow-y-auto p-2">
                             {selectedSeats.map((seat) => (
                                 <div
                                     key={seat.id}
@@ -178,7 +177,7 @@ export default function FloatingSeatsPanel({
                                             onRemoveSeat(seat)
                                         }}
                                         aria-label={`Quitar asiento ${seat.number}`}
-                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md border-2 border-card z-10 hover:scale-110 active:scale-95 transition-transform"
+                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full shadow-md border-2 border-card z-10"
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>
@@ -232,15 +231,6 @@ export default function FloatingSeatsPanel({
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: hsl(var(--border));
-                    border-radius: 20px;
-                }
-            `}</style>
         </aside>
     )
 }

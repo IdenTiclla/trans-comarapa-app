@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export interface ViewOption<T extends string> {
@@ -20,11 +21,14 @@ export function ViewToggle<T extends string>({ value, options, onChange }: ViewT
       {options.map((option) => {
         const isActive = value === option.value
         return (
-          <button
+          <Button
+            type="button"
             key={option.value}
+            variant="ghost"
+            size="sm"
             onClick={() => onChange(option.value)}
             className={cn(
-              'flex items-center justify-center rounded-md transition-all px-2.5 py-1 text-sm font-medium',
+              'h-7 rounded-md px-2.5 text-sm',
               isActive
                 ? 'bg-background shadow-sm text-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -33,12 +37,12 @@ export function ViewToggle<T extends string>({ value, options, onChange }: ViewT
             title={option.ariaLabel}
           >
             {option.icon && (
-                <span className={cn('flex items-center justify-center', option.label && 'mr-1.5')}>
-                    {option.icon}
-                </span>
+              <span className="flex items-center justify-center">
+                {option.icon}
+              </span>
             )}
             {option.label && <span>{option.label}</span>}
-          </button>
+          </Button>
         )
       })}
     </div>

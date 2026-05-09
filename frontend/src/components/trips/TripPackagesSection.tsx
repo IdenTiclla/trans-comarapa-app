@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { Package, Plus, List, LayoutGrid, ArrowRight, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
+import { Skeleton } from '@/components/ui/skeleton'
+import EmptyState from '@/components/common/EmptyState'
 import { PackageListView, PackageCardsView } from './TripPackageViews'
 import type { TripPackage } from './TripPackageViews'
 
@@ -42,16 +44,16 @@ export default function TripPackagesSection({
     const canAssign = tripStatus !== 'arrived' && tripStatus !== 'cancelled' && tripStatus !== 'departed'
 
     return (
-        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm" aria-labelledby="trip-packages-title">
             {/* ── Header ── */}
-            <div className="px-5 pt-5 pb-3 border-b border-border/60">
+            <div className="border-b border-border bg-muted/20 px-4 py-4 sm:px-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
-                            <Package className="h-4.5 w-4.5" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                            <Package className="h-5 w-5" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-foreground tracking-tight">Encomiendas</h2>
+                            <h2 id="trip-packages-title" className="text-lg font-bold text-foreground tracking-tight">Encomiendas</h2>
                             <p className="text-xs text-muted-foreground font-medium">
                                 {tripPackages.length} encomienda{tripPackages.length !== 1 ? 's' : ''} cargada{tripPackages.length !== 1 ? 's' : ''}
                             </p>
@@ -88,7 +90,7 @@ export default function TripPackagesSection({
             {/* ── Summary stats bar ── */}
             {tripPackages.length > 0 && (
                 <div className="px-5 py-3 border-b border-border/60 bg-muted/20">
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                         <div className="flex items-center gap-2">
                             <Package className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-xs text-muted-foreground font-medium">Paquetes</span>
@@ -111,31 +113,29 @@ export default function TripPackagesSection({
             {/* ── Body ── */}
             <div className="p-4 sm:p-5">
                 {isLoading ? (
-                    <div role="status" aria-live="polite" className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" aria-hidden="true" />
+                    <div role="status" aria-live="polite" className="space-y-3">
                         <span className="sr-only">Cargando encomiendas…</span>
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
                     </div>
                 ) : tripPackages.length === 0 ? (
-                    <div className="text-center py-10 px-4">
-                        <div className="flex items-center justify-center w-16 h-16 bg-muted/50 rounded-2xl mx-auto mb-4 text-muted-foreground">
-                            <Package className="h-8 w-8" />
-                        </div>
-                        <p className="text-sm font-semibold text-foreground mb-1">Sin encomiendas</p>
-                        <p className="text-xs text-muted-foreground">
-                            No hay encomiendas cargadas en este viaje
-                        </p>
-                        {canAssign && (
+                    <EmptyState
+                        title="Sin encomiendas"
+                        description="No hay encomiendas cargadas en este viaje."
+                        icon={<Package className="h-8 w-8" aria-hidden="true" />}
+                        action={canAssign ? (
                             <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={onOpenAssignModal}
-                                className="mt-4 gap-1.5"
+                                className="gap-1.5 border-border"
                             >
                                 <Plus className="h-3.5 w-3.5" />
                                 Cargar Encomienda
                             </Button>
-                        )}
-                    </div>
+                        ) : undefined}
+                    />
                 ) : (
                     <div className="space-y-3">
                         {/* Mobile view toggle */}
@@ -174,6 +174,6 @@ export default function TripPackagesSection({
                     </div>
                 )}
             </div>
-        </div>
+        </section>
     )
 }

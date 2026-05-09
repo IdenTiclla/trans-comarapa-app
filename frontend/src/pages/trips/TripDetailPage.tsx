@@ -17,11 +17,27 @@ import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Send, Check, FileText, Package, Armchair, AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Send, Check, FileText, Package, Armchair, AlertCircle, RefreshCw } from 'lucide-react'
 import { ROUTES } from '@/lib/routes'
+import type { Trip as AppTrip } from '@/types/trip'
+import type { TripPackage } from '@/components/trips/package-views/types'
 
 const VALID_TABS = ['seats', 'packages'] as const
 type TabValue = typeof VALID_TABS[number]
+
+interface DetailTrip {
+  id: number
+  status?: string
+  bus?: { floors?: number }
+  [key: string]: unknown
+}
+
+interface SeatChangeTicket {
+  client?: { firstname?: string; lastname?: string }
+  seat?: { seat_number?: number | string }
+}
 
 export function Component() {
   const { id } = useParams()
@@ -31,6 +47,9 @@ export function Component() {
   const currentUser = useAppSelector(selectUser)
   const page = useTripDetailPage(tripId)
   const { trip, loading, error, refreshTrip, seatMap, seatChange, floatPanel } = page
+  const detailTrip = trip as DetailTrip | null
+  const tripStatus = typeof detailTrip?.status === 'string' ? detailTrip.status : ''
+  const seatChangeTicket = seatChange.ticket as SeatChangeTicket | null
 
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') as TabValue | null
@@ -42,7 +61,7 @@ export function Component() {
     setSearchParams(next, { replace: true })
   }
 
-  const isDoubleDeck = (trip?.bus?.floors || 1) >= 2
+  const isDoubleDeck = (detailTrip?.bus?.floors ?? 1) >= 2
 
   const [seatsPanelExpanded, setSeatsPanelExpanded] = useState(false)
 
@@ -80,25 +99,31 @@ export function Component() {
 
   if (loading) {
     return (
-      <div role="status" aria-live="polite" className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" aria-hidden="true" />
+      <div role="status" aria-live="polite" className="mx-auto max-w-[1500px] space-y-5 py-2">
         <span className="sr-only">Cargando viaje…</span>
+        <Skeleton className="h-12 w-full max-w-sm" />
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5">
+          <Skeleton className="h-[560px] w-full" />
+          <Skeleton className="h-[520px] w-full" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto py-8">
-        <div role="alert" className="bg-destructive/10 border border-destructive/30 rounded-xl p-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-medium text-destructive">{error}</p>
-              <Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-destructive underline">Reintentar</Button>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-2xl mx-auto py-8">
+        <Alert variant="destructive" className="items-start">
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertTitle>No se pudo cargar el viaje</AlertTitle>
+          <AlertDescription>
+            <p>{error}</p>
+            <Button variant="outline" size="sm" onClick={refreshTrip} className="mt-3 gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              Reintentar
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     )
   }
@@ -106,22 +131,20 @@ export function Component() {
   if (!trip) return null
 
   return (
-    <div className="w-full">
+    <div className="mx-auto w-full max-w-[1500px]">
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (
-        <div className="sticky top-0 z-20 bg-status-medium shadow-md">
-          <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center text-white">
-              <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
+        <div className="sticky top-0 z-20 rounded-lg border border-status-medium/30 bg-status-medium/10 shadow-sm">
+          <div className="px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center text-foreground">
+              <RefreshCw className="h-5 w-5 mr-3 text-status-medium" aria-hidden="true" />
               <div>
                 <p className="font-bold">Modo Cambio de Asiento</p>
-                <p className="text-sm text-white/80">Seleccione el nuevo asiento para {seatChange.ticket.client?.firstname} {seatChange.ticket.client?.lastname} (Asiento actual: {seatChange.ticket.seat?.seat_number})</p>
+                <p className="text-sm text-muted-foreground">Seleccione el nuevo asiento para {seatChangeTicket?.client?.firstname} {seatChangeTicket?.client?.lastname} (asiento actual: {seatChangeTicket?.seat?.seat_number})</p>
               </div>
             </div>
-            <Button variant="ghost" onClick={seatChange.cancel} className="text-white hover:bg-white/20">
+            <Button variant="outline" onClick={seatChange.cancel} className="w-full border-border sm:w-auto">
               Cancelar Cambio
             </Button>
           </div>
@@ -129,10 +152,10 @@ export function Component() {
       )}
 
       {/* Main Content */}
-      <div className="pt-3 pb-8 px-3 sm:px-4 lg:px-6">
+      <div className="pb-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className={`sticky ${seatChange.mode ? 'top-[64px]' : 'top-0'} z-10 -mx-3 sm:-mx-4 lg:-mx-0 px-3 sm:px-4 lg:px-0 pt-1 pb-4 bg-background/85 backdrop-blur-md`}>
-            <TabsList className="w-full sm:w-auto">
+          <div className={`sticky ${seatChange.mode ? 'top-[72px]' : 'top-0'} z-10 -mx-4 px-4 pt-1 pb-4 bg-background/95 backdrop-blur-md sm:mx-0 sm:px-0`}>
+            <TabsList className="w-full rounded-lg border border-border bg-card shadow-sm sm:w-auto">
               <TabsTrigger value="seats" className="gap-1.5">
                 <Armchair className="h-4 w-4" />
                 Asientos & Venta
@@ -144,30 +167,28 @@ export function Component() {
             </TabsList>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-2">
-            {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on lg) */}
-            <aside className="lg:col-span-1 lg:col-start-4 lg:row-start-1">
-              <div className={`lg:sticky ${seatChange.mode ? 'lg:top-[120px]' : 'lg:top-20'}`}>
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
+            {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on xl) */}
+            <aside className="order-first xl:order-last">
+              <div className={`xl:sticky ${seatChange.mode ? 'xl:top-[128px]' : 'xl:top-20'}`}>
                 <TripInfoCard
-                  variant="sidebar"
                   trip={trip}
                   ticketStats={page.ticketStats}
-                  formatDate={page.formatDate}
                   drivers={page.drivers}
                   assistants={page.assistants}
                   staff={page.staff}
                   actions={
                     <>
-                      {(trip.status === 'scheduled' || trip.status === 'boarding' || trip.status === 'delayed') && (
+                      {(tripStatus === 'scheduled' || tripStatus === 'boarding' || tripStatus === 'delayed') && (
                         <>
                           <Button
                             size="sm"
                             variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
-                            aria-disabled={!page.dispatch.canDispatch}
+                            disabled={!page.dispatch.canDispatch}
                             aria-describedby={!page.dispatch.canDispatch ? 'dispatch-help' : undefined}
                             onClick={() => { if (page.dispatch.canDispatch) page.dispatch.setShow(true) }}
                             title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
-                            className={`gap-1.5 justify-center ${!page.dispatch.canDispatch ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            className="w-full gap-1.5 justify-center"
                           >
                             <Send className="h-3.5 w-3.5" aria-hidden="true" />
                             Despachar
@@ -179,30 +200,30 @@ export function Component() {
                           )}
                         </>
                       )}
-                      {(trip.status === 'departed' || trip.status === 'in_progress') && (
+                      {(tripStatus === 'departed' || tripStatus === 'in_progress') && (
                         <Button
                           size="sm"
                           onClick={() => page.finish.setShow(true)}
-                          className="gap-1.5 justify-center"
+                          className="w-full gap-1.5 justify-center"
                         >
                           <Check className="h-3.5 w-3.5" aria-hidden="true" />
                           Terminar
                         </Button>
                       )}
-                      <Link to={ROUTES.tripPassengersManifest(tripId)} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                      <Button asChild size="sm" variant="outline" className="w-full justify-start gap-1.5 whitespace-normal border-border text-left">
+                        <Link to={ROUTES.tripPassengersManifest(tripId)} target="_blank" rel="noopener noreferrer">
                           <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                          Planilla de pasajeros
+                          Planilla pasajeros
                           <span className="sr-only"> (se abre en una nueva pestaña)</span>
-                        </Button>
-                      </Link>
-                      <Link to={ROUTES.tripPackagesManifest(tripId)} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="w-full justify-start gap-1.5 whitespace-normal border-border text-left">
+                        <Link to={ROUTES.tripPackagesManifest(tripId)} target="_blank" rel="noopener noreferrer">
                           <Package className="h-3.5 w-3.5" aria-hidden="true" />
-                          Manifiesto de encomiendas
+                          Manifiesto encomiendas
                           <span className="sr-only"> (se abre en una nueva pestaña)</span>
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </>
                   }
                 />
@@ -210,7 +231,7 @@ export function Component() {
             </aside>
 
             {/* Main content */}
-            <div className="lg:col-span-3 lg:col-start-1 lg:row-start-1 min-w-0">
+            <div className="min-w-0">
               <TabsContent value="seats" className="mt-0">
                 <BusSeatMapPrint
                   key={seatMap.key}
@@ -237,10 +258,10 @@ export function Component() {
 
               <TabsContent value="packages" className="mt-0">
                 <TripPackagesSection
-                  tripPackages={page.packages.items}
+                  tripPackages={page.packages.items as unknown as TripPackage[]}
                   tripId={trip.id}
                   isLoading={page.packages.loading}
-                  tripStatus={trip.status}
+                  tripStatus={tripStatus}
                   onOpenAssignModal={page.packages.openAssignModal}
                   onUnassignPackage={page.packages.unassign}
                   onDeliverPackage={page.packages.deliver}
@@ -270,7 +291,7 @@ export function Component() {
 
       {/* All Confirmation Modals */}
       <TripConfirmationModals
-        trip={trip}
+        trip={trip as unknown as AppTrip}
         dispatch={page.dispatch}
         finish={page.finish}
         confirmSale={page.confirmSale}
@@ -314,7 +335,7 @@ export function Component() {
       <TicketReceiptModal
         show={page.ticketPreview.show}
         tickets={page.ticketPreview.ticket ? [page.ticketPreview.ticket] : []}
-        trip={trip}
+        trip={trip as unknown as AppTrip}
         onClose={page.ticketPreview.close}
       />
     </div>

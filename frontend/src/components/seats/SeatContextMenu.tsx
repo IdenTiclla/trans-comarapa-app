@@ -2,10 +2,15 @@ import { Button } from '@/components/ui/button'
 import { Eye, FileText, CheckCircle2, XCircle, RefreshCw, Calendar } from 'lucide-react'
 import type { SelectedSeat } from '@/components/tickets/ticket-sale/types'
 
+interface ContextSeat extends SelectedSeat {
+    status?: string
+    occupied?: boolean
+}
+
 interface SeatContextMenuProps {
     visible: boolean
     position: { x: number, y: number }
-    selectedSeat: SelectedSeat | null
+    selectedSeat: ContextSeat | null
     enableContextMenu?: boolean
     onCancelReservation: () => void
     onConfirmSale: () => void

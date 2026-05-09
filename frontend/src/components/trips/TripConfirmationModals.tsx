@@ -28,7 +28,7 @@ interface FinishState {
 
 interface ConfirmSaleState {
     show: boolean
-    ticket: Record<string, unknown>
+    ticket: Record<string, unknown> | null
     executing: boolean
     execute: () => void
     close: () => void
@@ -36,8 +36,8 @@ interface ConfirmSaleState {
 
 interface SeatChangeState {
     mode: boolean
-    ticket: Record<string, unknown>
-    newSeat: SelectedSeat
+    ticket: Record<string, unknown> | null
+    newSeat: SelectedSeat | null
     showConfirm: boolean
     loading: boolean
     confirm: () => void
@@ -61,7 +61,19 @@ interface Props {
     ticketSale: TicketSaleState
 }
 
+function fieldText(source: unknown, field: string) {
+    if (!source || typeof source !== 'object') return ''
+    const value = (source as Record<string, unknown>)[field]
+    if (typeof value === 'string' || typeof value === 'number') return String(value)
+    return ''
+}
+
 export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, seatChange, ticketSale }: Props) {
+    const confirmSaleSeat = confirmSale.ticket?.seat
+    const confirmSaleClient = confirmSale.ticket?.client
+    const seatChangeClient = seatChange.ticket?.client
+    const seatChangeSeat = seatChange.ticket?.seat
+
     return (
         <>
             <Dialog open={dispatch.show} onOpenChange={(open) => { if (!open) dispatch.setShow(false) }}>
@@ -124,10 +136,10 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                                 Confirmar Venta
                             </DialogTitle>
                             <DialogDescription>
-                                ¿Confirmar la venta del asiento {(confirmSale.ticket.seat as Record<string, unknown>)?.seat_number} para {((confirmSale.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((confirmSale.ticket.client as Record<string, unknown>)?.lastname) ?? ''}?
+                                ¿Confirmar la venta del asiento {fieldText(confirmSaleSeat, 'seat_number')} para {fieldText(confirmSaleClient, 'firstname')} {fieldText(confirmSaleClient, 'lastname')}?
                             </DialogDescription>
                         </DialogHeader>
-                        <p className="text-sm font-bold text-foreground">Monto a cobrar: Bs. {confirmSale.ticket.price}</p>
+                        <p className="text-sm font-bold text-foreground">Monto a cobrar: Bs. {fieldText(confirmSale.ticket, 'price')}</p>
                         <DialogFooter>
                             <Button variant="outline" onClick={confirmSale.close} disabled={confirmSale.executing}>Cancelar</Button>
                             <Button onClick={confirmSale.execute} disabled={confirmSale.executing}>{confirmSale.executing ? 'Confirmando...' : 'Confirmar Venta'}</Button>
@@ -147,7 +159,7 @@ export function TripConfirmationModals({ trip, dispatch, finish, confirmSale, se
                                 Confirmar Cambio de Asiento
                             </DialogTitle>
                             <DialogDescription>
-                                ¿Mover al pasajero <strong className="text-foreground">{((seatChange.ticket.client as Record<string, unknown>)?.firstname) ?? ''} {((seatChange.ticket.client as Record<string, unknown>)?.lastname) ?? ''}</strong> del asiento <strong className="text-foreground">{(seatChange.ticket.seat as Record<string, unknown>)?.seat_number}</strong> al asiento <strong className="text-foreground">{seatChange.newSeat.number}</strong>?
+                                ¿Mover al pasajero <strong className="text-foreground">{fieldText(seatChangeClient, 'firstname')} {fieldText(seatChangeClient, 'lastname')}</strong> del asiento <strong className="text-foreground">{fieldText(seatChangeSeat, 'seat_number')}</strong> al asiento <strong className="text-foreground">{seatChange.newSeat.number}</strong>?
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
