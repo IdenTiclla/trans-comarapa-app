@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router'
 import { useAppSelector } from '@/store'
 import { selectUser } from '@/store/auth.slice'
@@ -17,7 +17,7 @@ import PackageReceiptModal from '@/components/packages/PackageReceiptModal'
 import TicketReceiptModal from '@/components/tickets/TicketReceiptModal'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Send, Check, FileText, Package, Armchair } from 'lucide-react'
+import { Send, Check, FileText, Package, Armchair, AlertCircle } from 'lucide-react'
 import { ROUTES } from '@/lib/routes'
 
 const VALID_TABS = ['seats', 'packages'] as const
@@ -44,6 +44,8 @@ export function Component() {
 
   const isDoubleDeck = (trip?.bus?.floors || 1) >= 2
 
+  const [seatsPanelExpanded, setSeatsPanelExpanded] = useState(false)
+
   const shortcuts = useMemo(() => ({
     'escape': () => {
       page.ticketSale.close()
@@ -51,6 +53,11 @@ export function Component() {
     },
     'enter': () => {
       if (seatChange.showConfirm) seatChange.confirm()
+    },
+    ' ': () => {
+      if (!page.ticketSale.show && seatMap.selectedSeats.length > 0 && !seatChange.mode) {
+        setSeatsPanelExpanded((v) => !v)
+      }
     },
     'v': () => {
       if (!page.ticketSale.show && seatMap.selectedSeats.length > 0) {
@@ -73,8 +80,9 @@ export function Component() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+      <div role="status" aria-live="polite" className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" aria-hidden="true" />
+        <span className="sr-only">Cargando viaje…</span>
       </div>
     )
   }
@@ -82,10 +90,13 @@ export function Component() {
   if (error) {
     return (
       <div className="max-w-xl mx-auto py-8">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-6">
           <div className="flex items-start gap-3">
-            <div className="h-5 w-5 text-red-400 mt-0.5">!</div>
-            <div><p className="text-sm font-medium text-red-800">{error}</p><Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-red-600 underline">Reintentar</Button></div>
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium text-red-800">{error}</p>
+              <Button variant="link" onClick={refreshTrip} className="mt-2 h-auto p-0 text-sm text-red-700 underline">Reintentar</Button>
+            </div>
           </div>
         </div>
       </div>
@@ -99,10 +110,10 @@ export function Component() {
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (
-        <div className="sticky top-0 z-20 bg-orange-500 shadow-md">
+        <div className="sticky top-0 z-20 bg-orange-700 shadow-md">
           <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center text-white">
-              <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
               <div>
@@ -134,8 +145,72 @@ export function Component() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-2">
-            {/* Left: Tabs Content (main) */}
-            <div className="lg:col-span-3 min-w-0 order-2 lg:order-1">
+            {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on lg) */}
+            <aside className="lg:col-span-1 lg:col-start-4 lg:row-start-1">
+              <div className={`lg:sticky ${seatChange.mode ? 'lg:top-[120px]' : 'lg:top-20'}`}>
+                <TripInfoCard
+                  variant="sidebar"
+                  trip={trip}
+                  ticketStats={page.ticketStats}
+                  formatDate={page.formatDate}
+                  drivers={page.drivers}
+                  assistants={page.assistants}
+                  staff={page.staff}
+                  actions={
+                    <>
+                      {(trip.status === 'scheduled' || trip.status === 'boarding' || trip.status === 'delayed') && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
+                            aria-disabled={!page.dispatch.canDispatch}
+                            aria-describedby={!page.dispatch.canDispatch ? 'dispatch-help' : undefined}
+                            onClick={() => { if (page.dispatch.canDispatch) page.dispatch.setShow(true) }}
+                            title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
+                            className={`gap-1.5 justify-center ${!page.dispatch.canDispatch ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          >
+                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                            Despachar
+                          </Button>
+                          {!page.dispatch.canDispatch && (
+                            <p id="dispatch-help" className="sr-only">
+                              Aún no es la hora de salida del viaje
+                            </p>
+                          )}
+                        </>
+                      )}
+                      {(trip.status === 'departed' || trip.status === 'in_progress') && (
+                        <Button
+                          size="sm"
+                          onClick={() => page.finish.setShow(true)}
+                          className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
+                        >
+                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                          Terminar
+                        </Button>
+                      )}
+                      <Link to={ROUTES.tripPassengersManifest(tripId)} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                          Planilla de pasajeros
+                          <span className="sr-only"> (se abre en una nueva pestaña)</span>
+                        </Button>
+                      </Link>
+                      <Link to={ROUTES.tripPackagesManifest(tripId)} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
+                          <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                          Manifiesto de encomiendas
+                          <span className="sr-only"> (se abre en una nueva pestaña)</span>
+                        </Button>
+                      </Link>
+                    </>
+                  }
+                />
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <div className="lg:col-span-3 lg:col-start-1 lg:row-start-1 min-w-0">
               <TabsContent value="seats" className="mt-0">
                 <BusSeatMapPrint
                   key={seatMap.key}
@@ -175,59 +250,6 @@ export function Component() {
               </TabsContent>
             </div>
 
-            {/* Right: Sidebar */}
-            <aside className="lg:col-span-1 order-1 lg:order-2">
-              <div className={`lg:sticky ${seatChange.mode ? 'lg:top-[120px]' : 'lg:top-20'}`}>
-                <TripInfoCard
-                  variant="sidebar"
-                  trip={trip}
-                  ticketStats={page.ticketStats}
-                  formatDate={page.formatDate}
-                  drivers={page.drivers}
-                  assistants={page.assistants}
-                  staff={page.staff}
-                  actions={
-                    <>
-                      {(trip.status === 'scheduled' || trip.status === 'boarding' || trip.status === 'delayed') && (
-                        <Button
-                          size="sm"
-                          variant={page.dispatch.canDispatch ? 'default' : 'ghost'}
-                          disabled={!page.dispatch.canDispatch}
-                          onClick={() => page.dispatch.canDispatch ? page.dispatch.setShow(true) : null}
-                          title={!page.dispatch.canDispatch ? 'Aún no es la hora de salida' : 'Despachar Viaje'}
-                          className="gap-1.5 justify-center"
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          Despachar
-                        </Button>
-                      )}
-                      {(trip.status === 'departed' || trip.status === 'in_progress') && (
-                        <Button
-                          size="sm"
-                          onClick={() => page.finish.setShow(true)}
-                          className="gap-1.5 bg-green-600 hover:bg-green-700 text-white justify-center"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          Terminar
-                        </Button>
-                      )}
-                      <Link to={ROUTES.tripPassengersManifest(tripId)} target="_blank">
-                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
-                          <FileText className="h-3.5 w-3.5" />
-                          Planilla de pasajeros
-                        </Button>
-                      </Link>
-                      <Link to={ROUTES.tripPackagesManifest(tripId)} target="_blank">
-                        <Button size="sm" variant="outline" className="gap-1.5 justify-center w-full">
-                          <Package className="h-3.5 w-3.5" />
-                          Manifiesto de encomiendas
-                        </Button>
-                      </Link>
-                    </>
-                  }
-                />
-              </div>
-            </aside>
           </div>
         </Tabs>
       </div>
@@ -238,6 +260,8 @@ export function Component() {
         selectionEnabled={!seatChange.mode}
         seatChangeMode={seatChange.mode}
         isDoubleDeck={isDoubleDeck}
+        expanded={seatsPanelExpanded}
+        onExpandedChange={setSeatsPanelExpanded}
         onSellTicket={floatPanel.onSellTicket}
         onReserveSeat={floatPanel.onReserveSeat}
         onClearSelection={floatPanel.onClearSelection}

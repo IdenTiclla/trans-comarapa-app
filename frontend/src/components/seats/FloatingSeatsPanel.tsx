@@ -15,6 +15,8 @@ interface FloatingSeatsPanelProps {
     selectionEnabled?: boolean
     seatChangeMode?: boolean
     isDoubleDeck?: boolean
+    expanded?: boolean
+    onExpandedChange?: (v: boolean) => void
     onSellTicket: () => void
     onReserveSeat: () => void
     onClearSelection: () => void
@@ -26,15 +28,25 @@ export default function FloatingSeatsPanel({
     selectionEnabled = true,
     seatChangeMode = false,
     isDoubleDeck = false,
+    expanded,
+    onExpandedChange,
     onSellTicket,
     onReserveSeat,
     onClearSelection,
     onRemoveSeat,
 }: FloatingSeatsPanelProps) {
-    const [userExpanded, setUserExpanded] = useState(false)
+    const [internalExpanded, setInternalExpanded] = useState(false)
+    const isControlled = expanded !== undefined
+    const userExpanded = isControlled ? expanded : internalExpanded
+    const setUserExpanded = (next: boolean | ((prev: boolean) => boolean)) => {
+        const value = typeof next === 'function' ? (next as (p: boolean) => boolean)(userExpanded) : next
+        if (isControlled) onExpandedChange?.(value)
+        else setInternalExpanded(value)
+    }
 
     const isVisible = selectionEnabled && selectedSeats.length > 0 && !seatChangeMode
     const isExpanded = userExpanded && isVisible
+    const toggle = () => setUserExpanded((v) => !v)
 
     const windowSeatsCount = useMemo(
         () => selectedSeats.filter((seat) => seat.position === 'window').length,
@@ -48,71 +60,80 @@ export default function FloatingSeatsPanel({
     if (!isVisible) return null
 
     return (
-        <div
-            role="dialog"
+        <aside
             aria-label="Asientos seleccionados"
             className="fixed bottom-6 right-6 z-40 font-sans print:hidden animate-[slideUp_0.3s_ease-out]"
         >
-            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border transition-all duration-300 ease-in-out w-[340px] sm:w-[420px]">
+            <div className="bg-card/90 backdrop-blur-md rounded-xl shadow-xl border border-border transition-all duration-300 ease-in-out w-[340px] sm:w-[480px]">
 
                 {/* Header / collapsed state */}
-                <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setUserExpanded((v) => !v)}
-                    aria-expanded={isExpanded}
-                    aria-controls="floating-seats-panel-content"
-                    title={isExpanded ? 'Colapsar panel' : 'Expandir panel'}
-                    className={`flex items-center justify-between w-full h-auto p-4 text-left hover:bg-muted/50 overflow-hidden ${isExpanded ? 'border-b border-border bg-muted/40 rounded-t-xl rounded-b-none' : 'rounded-xl'}`}
+                <div
+                    className={`flex items-stretch w-full overflow-hidden ${isExpanded ? 'border-b border-border bg-muted/40 rounded-t-xl' : 'rounded-xl'}`}
                 >
-                    <div className="flex items-center space-x-3">
-                        <div className="bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md">
+                    {/* Primary toggle (counter + label) */}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={toggle}
+                        aria-expanded={isExpanded}
+                        aria-controls="floating-seats-panel-content"
+                        aria-label={isExpanded ? 'Colapsar panel de asientos seleccionados' : 'Expandir panel de asientos seleccionados'}
+                        className="flex flex-1 min-w-0 items-center justify-start gap-3 h-auto p-4 rounded-none hover:bg-muted/50 text-left"
+                    >
+                        <span className="bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-md flex-shrink-0" aria-hidden="true">
                             {selectedSeats.length}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-foreground text-sm sm:text-base whitespace-nowrap">
-                                Asientos Seleccionados
+                        </span>
+                        <span className="flex flex-col min-w-0 flex-1">
+                            <span className="font-bold text-foreground text-sm sm:text-base truncate">
+                                {selectedSeats.length} seleccionado{selectedSeats.length !== 1 ? 's' : ''}
                             </span>
                             {!isExpanded && (
-                                <span className="text-xs text-muted-foreground font-medium truncate w-[100px] sm:w-[150px] inline-block">
+                                <span className="text-xs text-muted-foreground font-medium truncate">
                                     {selectedSeats.map((s) => s.number).join(', ')}
                                 </span>
                             )}
-                        </div>
-                    </div>
+                        </span>
+                    </Button>
 
-                    <div className="flex items-center gap-2 ml-4">
-                        {!isExpanded && (
-                            <div className="hidden sm:flex items-center gap-2 mr-1">
-                                <Button
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onSellTicket()
-                                    }}
-                                    className="h-8 text-xs font-semibold"
-                                >
-                                    Vender
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onReserveSeat()
-                                    }}
-                                    className="h-8 text-xs font-semibold"
-                                >
-                                    Reservar
-                                </Button>
-                            </div>
-                        )}
+                    {/* Quick actions (collapsed only, sm+) */}
+                    {!isExpanded && (
+                        <div className="hidden sm:flex items-center gap-2 px-2 flex-shrink-0">
+                            <Button
+                                size="sm"
+                                onClick={onSellTicket}
+                                className="h-8 text-xs font-semibold"
+                            >
+                                Vender
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={onReserveSeat}
+                                className="h-8 text-xs font-semibold"
+                            >
+                                Reservar
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Corner chevron toggle */}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggle}
+                        aria-expanded={isExpanded}
+                        aria-controls="floating-seats-panel-content"
+                        aria-label={isExpanded ? 'Colapsar panel de asientos seleccionados' : 'Expandir panel de asientos seleccionados'}
+                        tabIndex={-1}
+                        className="self-center mr-2 h-8 w-8 flex-shrink-0"
+                    >
                         <ChevronUp
-                            className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`}
+                            className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                             aria-hidden="true"
                         />
-                    </div>
-                </Button>
+                    </Button>
+                </div>
 
                 {/* Expanded content */}
                 <div
@@ -220,6 +241,6 @@ export default function FloatingSeatsPanel({
                     border-radius: 20px;
                 }
             `}</style>
-        </div>
+        </aside>
     )
 }

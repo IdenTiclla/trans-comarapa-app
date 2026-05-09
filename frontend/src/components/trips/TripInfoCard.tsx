@@ -119,11 +119,11 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                         </span>
                         <span className="text-[11px] font-mono text-muted-foreground">#{trip.id}</span>
                     </div>
-                    <h1 className="text-lg font-extrabold text-foreground tracking-tight leading-tight">
+                    <h2 className="text-lg font-extrabold text-foreground tracking-tight leading-tight">
                         {trip.route?.origin ?? 'N/D'}
                         <span className="mx-1.5 text-muted-foreground font-normal">→</span>
                         {trip.route?.destination ?? 'N/D'}
-                    </h1>
+                    </h2>
                     <p className="text-xs text-muted-foreground mt-1 font-medium">
                         {formatFullDate(trip.trip_datetime)}
                         {trip.departure_time && ` · ${formatTimeAmPm(trip.departure_time)}`}
@@ -177,19 +177,26 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-red-600 leading-none">{ticketStats.sold}</span>
-                            <span className="text-[10px] text-red-500 font-semibold uppercase tracking-wider">Ocupados</span>
+                            <span className="text-lg font-extrabold text-red-700 leading-none">{ticketStats.sold}</span>
+                            <span className="text-[10px] text-red-700 font-semibold uppercase tracking-wider">Ocupados</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-yellow-600 leading-none">{ticketStats.reserved}</span>
-                            <span className="text-[10px] text-yellow-500 font-semibold uppercase tracking-wider">Reservados</span>
+                            <span className="text-lg font-extrabold text-yellow-700 leading-none">{ticketStats.reserved}</span>
+                            <span className="text-[10px] text-yellow-700 font-semibold uppercase tracking-wider">Reservados</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-extrabold text-blue-600 leading-none">{ticketStats.available}</span>
-                            <span className="text-[10px] text-blue-500 font-semibold uppercase tracking-wider">Disponibles</span>
+                            <span className="text-lg font-extrabold text-blue-700 leading-none">{ticketStats.available}</span>
+                            <span className="text-[10px] text-blue-700 font-semibold uppercase tracking-wider">Disponibles</span>
                         </div>
                     </div>
-                    <div className="mt-3 w-full bg-muted rounded-full h-1.5">
+                    <div
+                        role="progressbar"
+                        aria-valuenow={Math.round(occupancyPercent)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Ocupación del viaje"
+                        className="mt-3 w-full bg-muted rounded-full h-1.5"
+                    >
                         <div
                             className="h-1.5 rounded-full transition-all bg-green-500"
                             style={{ width: `${Math.min(occupancyPercent, 100)}%` }}
@@ -208,11 +215,11 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
             <div className="px-5 pt-5 pb-3 border-b border-border/60">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+                        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                             {trip.route?.origin ?? 'N/D'}
                             <span className="mx-2 text-muted-foreground font-normal">→</span>
                             {trip.route?.destination ?? 'N/D'}
-                        </h1>
+                        </h2>
                         <p className="text-sm text-muted-foreground mt-0.5 font-medium">
                             {trip.departure_time ? formatTimeAmPm(trip.departure_time) : ''}
                         </p>
@@ -287,20 +294,27 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                                     <span className="text-sm font-extrabold text-foreground">{ticketStats.total}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-green-600 font-medium">Vendidos</span>
-                                    <span className="text-sm font-bold text-green-700">{ticketStats.sold}</span>
+                                    <span className="text-xs text-green-700 font-medium">Vendidos</span>
+                                    <span className="text-sm font-bold text-green-800">{ticketStats.sold}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-yellow-600 font-medium">Reservados</span>
-                                    <span className="text-sm font-bold text-yellow-700">{ticketStats.reserved}</span>
+                                    <span className="text-xs text-yellow-700 font-medium">Reservados</span>
+                                    <span className="text-sm font-bold text-yellow-800">{ticketStats.reserved}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-blue-600 font-medium">Disponibles</span>
-                                    <span className="text-sm font-bold text-blue-700">{ticketStats.available}</span>
+                                    <span className="text-xs text-blue-700 font-medium">Disponibles</span>
+                                    <span className="text-sm font-bold text-blue-800">{ticketStats.available}</span>
                                 </div>
                             </div>
                             {/* Occupancy bar */}
-                            <div className="mt-3 w-full bg-muted rounded-full h-1.5">
+                            <div
+                                role="progressbar"
+                                aria-valuenow={Math.round(occupancyPercent)}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-label="Ocupación del viaje"
+                                className="mt-3 w-full bg-muted rounded-full h-1.5"
+                            >
                                 <div
                                     className="h-1.5 rounded-full transition-all bg-green-500"
                                     style={{ width: `${Math.min(occupancyPercent, 100)}%` }}

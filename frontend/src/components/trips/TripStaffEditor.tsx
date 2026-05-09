@@ -42,12 +42,13 @@ function StaffDisplayCard({
         <Button
             variant="outline"
             onClick={onClick}
+            aria-label={`Editar ${label.toLowerCase()}: ${name}`}
             className="flex items-center gap-3 text-left w-full h-auto rounded-xl border-border/60 px-4 py-3 hover:border-primary/40 hover:bg-primary/5 justify-start"
         >
-            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div aria-hidden="true" className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {icon}
             </div>
-            <div className="min-w-0">
+            <div aria-hidden="true" className="min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
                 <p className={`text-sm font-semibold truncate ${isEmpty ? 'text-muted-foreground italic' : 'text-foreground'}`}>
                     {name}
@@ -84,13 +85,13 @@ function StaffEditCard({
                 options={(options || []).map((o) => ({ value: String(o.id), label: `${o.firstname} ${o.lastname}` }))}
             />
             <div className="flex gap-2 mt-2">
-                <Button size="sm" onClick={onSave} disabled={saving} className="flex-1 gap-1 h-7 text-xs">
+                <Button size="sm" onClick={onSave} disabled={saving} aria-busy={saving} className="flex-1 gap-1 h-7 text-xs">
                     {saving ? (
-                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" aria-hidden="true" />
                     ) : (
-                        <Check className="h-3 w-3" />
+                        <Check className="h-3 w-3" aria-hidden="true" />
                     )}
-                    Guardar
+                    {saving ? 'Guardando…' : 'Guardar'}
                 </Button>
                 <Button size="sm" variant="outline" onClick={onCancel} className="h-7 text-xs">
                     Cancelar

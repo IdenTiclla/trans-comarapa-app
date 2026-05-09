@@ -15,6 +15,9 @@ export function useKeyboardShortcuts(
         if (!enabled) return
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Skip when any modifier is held — let browser/OS shortcuts (Ctrl+R, Cmd+S, etc.) through.
+            if (e.ctrlKey || e.metaKey || e.altKey) return
+
             if (
                 document.activeElement?.tagName === 'INPUT' ||
                 document.activeElement?.tagName === 'TEXTAREA'
@@ -23,6 +26,7 @@ export function useKeyboardShortcuts(
             const key = e.key.toLowerCase()
             const handler = shortcuts[key]
             if (handler) {
+                e.preventDefault()
                 handler()
             }
         }
