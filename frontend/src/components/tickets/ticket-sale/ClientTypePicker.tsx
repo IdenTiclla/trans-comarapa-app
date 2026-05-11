@@ -17,22 +17,22 @@ function PickerOption({
       role="radio"
       aria-checked={active}
       className={cn(
-        'flex items-center justify-start p-4 border-2 rounded-lg h-auto text-left transition-all',
-        active ? 'border-blue-500 bg-blue-50 hover:bg-blue-50' : 'border-gray-200 hover:bg-gray-50',
+        'flex h-auto min-h-20 items-center justify-start rounded-lg border-2 p-4 text-left transition-all whitespace-normal',
+        active ? 'border-primary bg-primary/10 hover:bg-primary/10' : 'border-border hover:bg-muted/50',
       )}
     >
-      <div className="flex items-center space-x-3">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="flex-shrink-0">
           <div className={cn(
-            'w-4 h-4 rounded-full border-2 flex items-center justify-center',
-            active ? 'border-blue-500 bg-blue-500' : 'border-gray-300',
+            'flex h-4 w-4 items-center justify-center rounded-full border-2',
+            active ? 'border-primary bg-primary' : 'border-muted-foreground/40',
           )}>
-            {active && <div className="w-2 h-2 rounded-full bg-white" />}
+            {active && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
           </div>
         </div>
-        <div>
-          <div className="font-medium text-gray-900">{title}</div>
-          <div className="text-sm text-gray-500">{subtitle}</div>
+        <div className="min-w-0">
+          <div className="font-medium text-foreground">{title}</div>
+          <div className="text-sm text-muted-foreground">{subtitle}</div>
         </div>
       </div>
     </Button>
@@ -41,7 +41,7 @@ function PickerOption({
 
 export function ClientTypePicker({ value, onChange }: Props) {
   return (
-    <div className="grid grid-cols-2 gap-4 mb-4" role="radiogroup" aria-label="Tipo de cliente">
+    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4" role="radiogroup" aria-label="Tipo de cliente">
       <PickerOption
         active={value === 'existing'}
         title="Cliente Existente"

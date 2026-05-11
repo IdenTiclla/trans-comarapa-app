@@ -8,6 +8,8 @@ interface UnassignedPackage {
     receiver_name?: string
     recipient_name?: string
     created_at?: string
+    total_amount?: number
+    total_items_count?: number
     [k: string]: unknown
 }
 

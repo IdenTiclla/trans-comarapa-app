@@ -46,10 +46,10 @@ export default function PackageRegistrationModal({
       <Dialog open={show && !r.showReceiptModal} onOpenChange={(open) => { if (!open) onClose() }}>
         <DialogContent
           showCloseButton={false}
-          className="flex flex-col max-w-[calc(100%-2rem)] sm:max-w-[88rem] max-h-[92vh] p-0 gap-0"
+          className="flex max-h-[96dvh] max-w-[calc(100%-1rem)] flex-col gap-0 p-0 sm:max-w-[88rem] sm:max-h-[92vh]"
         >
-          <DialogHeader className="bg-primary px-4 py-3 flex flex-row items-center justify-between border-b shrink-0">
-            <div className="flex items-center space-x-3">
+          <DialogHeader className="flex shrink-0 flex-col gap-3 border-b bg-primary px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="bg-primary-foreground/10 p-1.5 rounded-lg">
                 <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -59,8 +59,8 @@ export default function PackageRegistrationModal({
                 {r.isEditMode ? 'Editar Encomienda' : 'Emisión de Encomienda'}
               </DialogTitle>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-primary-foreground text-right">
+            <div className="flex items-center justify-between gap-3 sm:justify-end sm:space-x-4">
+              <div className="text-primary-foreground sm:text-right">
                 <div className="text-[10px] font-medium text-primary-foreground/70 uppercase tracking-wider">No. Seguimiento</div>
                 <div className="text-lg font-bold tracking-wider leading-none">{r.packageNumber}</div>
               </div>

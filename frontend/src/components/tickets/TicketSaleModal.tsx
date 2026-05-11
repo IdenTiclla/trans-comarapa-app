@@ -55,8 +55,8 @@ export default function TicketSaleModal({
           className="absolute inset-0 h-full w-full rounded-none cursor-default bg-transparent hover:bg-transparent modal-overlay-bokeh"
         />
 
-        <div className="relative flex items-center justify-center min-h-screen p-4 pointer-events-none">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden pointer-events-auto flex flex-col">
+        <div className="relative flex min-h-dvh items-end justify-center p-0 pointer-events-none sm:items-center sm:p-4">
+          <div className="relative flex max-h-dvh w-full flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl pointer-events-auto sm:max-w-7xl sm:max-h-[92vh] sm:rounded-2xl">
             <SaleModalHeader
               actionType={actionType}
               selectedSeats={selectedSeats}
@@ -66,12 +66,12 @@ export default function TicketSaleModal({
               onClose={onClose}
             />
 
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-              <div className="w-full lg:w-1/2 p-4 lg:p-8 shrink-0 overflow-y-auto bg-gray-50">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-muted/30 lg:flex-row lg:overflow-hidden">
+              <div className="w-full shrink-0 p-3 sm:p-4 lg:w-1/2 lg:overflow-y-auto lg:p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <User className="w-5 h-5 text-blue-600 mr-2" />
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+                    <h4 className="mb-4 flex items-center text-base font-semibold text-foreground sm:text-lg">
+                      <User className="mr-2 h-5 w-5 text-primary" aria-hidden="true" />
                       Información del Cliente
                     </h4>
 
@@ -102,9 +102,9 @@ export default function TicketSaleModal({
                     )}
                   </div>
 
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <TicketIcon className="w-5 h-5 text-blue-600 mr-2" />
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+                    <h4 className="mb-4 flex items-center text-base font-semibold text-foreground sm:text-lg">
+                      <TicketIcon className="mr-2 h-5 w-5 text-primary" aria-hidden="true" />
                       Información del Boleto
                     </h4>
                     <TicketFieldsForm
@@ -115,23 +115,23 @@ export default function TicketSaleModal({
                   </div>
 
                   {s.errorMessage && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                      <p className="text-sm font-medium text-red-800">{s.errorMessage}</p>
+                    <div role="alert" className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+                      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
+                      <p className="text-sm font-medium text-destructive">{s.errorMessage}</p>
                     </div>
                   )}
 
-                  <div className="flex justify-end space-x-3 pt-4">
-                    <Button type="button" variant="outline" onClick={onClose} className="px-6">
+                  <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end sm:pt-4">
+                    <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto sm:px-6">
                       Cancelar
                     </Button>
                     <Button
                       type="submit"
                       disabled={s.isSubmitting || !s.canSubmit}
-                      className="px-6 bg-blue-600 hover:bg-blue-700"
+                      className="w-full sm:w-auto sm:px-6"
                     >
-                      {s.isSubmitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
-                      {s.isSubmitting ? 'Procesando...' : s.isEditMode ? '💾 Guardar Cambios' : actionType === 'sell' ? '🎫 Vender Boleto' : '📝 Reservar'}
+                      {s.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                      {s.isSubmitting ? 'Procesando...' : s.isEditMode ? 'Guardar Cambios' : actionType === 'sell' ? 'Vender Boleto' : 'Reservar'}
                     </Button>
                   </div>
                 </form>

@@ -97,9 +97,9 @@ export function AppModalPrimaryHeader({
     closeAriaLabel = 'Cerrar',
 }: AppModalPrimaryHeaderProps) {
     return (
-        <div className="bg-primary px-6 py-4 border-b border-border">
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+        <div className="border-b border-border bg-primary px-4 py-3 sm:px-6 sm:py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
                     {icon && (
                         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary-foreground/15 text-primary-foreground shrink-0">
                             {icon}
@@ -114,7 +114,7 @@ export function AppModalPrimaryHeader({
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex shrink-0 items-center justify-end gap-2">
                     {actions}
                     <Button
                         variant="ghost"

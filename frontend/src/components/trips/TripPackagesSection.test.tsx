@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import TripPackagesSection from './TripPackagesSection'
@@ -52,5 +52,23 @@ describe('TripPackagesSection', () => {
         )
         
         expect(screen.getByText('No hay encomiendas cargadas en este viaje.')).toBeDefined()
+    })
+
+    it('keeps package actions clickable without navigating the package link', () => {
+        const onUnassignPackage = vi.fn()
+
+        render(
+            <MemoryRouter>
+                <TripPackagesSection
+                    tripPackages={[{ ...mockPackages[0], status: 'assigned_to_trip' }]}
+                    tripStatus="scheduled"
+                    onUnassignPackage={onUnassignPackage}
+                />
+            </MemoryRouter>
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: /quitar del viaje/i }))
+
+        expect(onUnassignPackage).toHaveBeenCalledWith(1)
     })
 })

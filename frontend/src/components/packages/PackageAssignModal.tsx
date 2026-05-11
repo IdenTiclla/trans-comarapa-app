@@ -62,8 +62,8 @@ export default function PackageAssignModal({
     )
 
     const footer = (
-        <div className="flex justify-between items-center gap-3">
-            <div className="text-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-center sm:text-left">
                 {selectedIds.length > 0 ? (
                     <span className="font-semibold text-primary">
                         {selectedIds.length} encomienda{selectedIds.length > 1 ? 's' : ''} seleccionada{selectedIds.length > 1 ? 's' : ''}
@@ -72,16 +72,16 @@ export default function PackageAssignModal({
                     <span className="text-muted-foreground">Ninguna seleccionada</span>
                 )}
             </div>
-            <div className="flex gap-2">
-                <Button variant="outline" onClick={onClose}>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
                     Cancelar
                 </Button>
                 <Button
                     onClick={() => confirmAssignment(onPackagesAssigned, onClose)}
                     disabled={selectedIds.length === 0 || assigning}
-                    className="gap-1.5"
+                    className="w-full gap-1.5 sm:w-auto"
                 >
-                    {assigning && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {assigning && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {assigning ? 'Asignando...' : `Cargar ${selectedIds.length || ''} al Viaje`}
                 </Button>
             </div>
@@ -96,7 +96,8 @@ export default function PackageAssignModal({
             ariaLabel="Cargar encomiendas al viaje"
             header={header}
             footer={footer}
-            bodyClassName="px-6 py-4 max-h-[60vh] overflow-y-auto"
+            contentClassName="max-h-[95dvh] sm:max-h-[90vh] flex flex-col"
+            bodyClassName="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
         >
             <div className="mb-4">
                 <FormInput
@@ -142,38 +143,45 @@ export default function PackageAssignModal({
                     {filteredPackages.map(pkg => {
                         const selected = selectedIds.includes(pkg.id)
                         return (
-                            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                            <div
+                            <Button
+                                type="button"
                                 key={pkg.id}
+                                variant="outline"
+                                aria-pressed={selected}
                                 className={cn(
-                                    'flex items-center p-3 rounded-lg border cursor-pointer transition-colors',
+                                    'flex h-auto w-full items-start justify-start rounded-lg border p-3 text-left whitespace-normal shadow-none transition-colors',
                                     selected
                                         ? 'bg-primary/10 border-primary/40'
                                         : 'bg-card border-border hover:bg-muted/50'
                                 )}
                                 onClick={() => toggleSelect(pkg.id)}
                             >
-                                <FormCheckbox
-                                    checked={selected}
-                                    onChange={() => toggleSelect(pkg.id)}
-                                />
-                                <div className="ml-3 flex-1 min-w-0">
-                                    <div className="flex items-center justify-between gap-2">
+                                <span
+                                    className={cn(
+                                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border',
+                                        selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background',
+                                    )}
+                                    aria-hidden="true"
+                                >
+                                    {selected && <span className="h-2 w-2 rounded-sm bg-current" />}
+                                </span>
+                                <div className="ml-3 min-w-0 flex-1">
+                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                                         <span className="text-sm font-semibold text-foreground truncate">#{pkg.tracking_number}</span>
                                         <span className="text-sm font-bold text-primary shrink-0">Bs. {(pkg.total_amount || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="flex items-center flex-wrap text-xs text-muted-foreground mt-1 gap-x-2 gap-y-1">
-                                        <span>{`📤`} {pkg.sender_name || 'N/A'}</span>
-                                        <span className="text-border">|</span>
+                                        <span>Origen: {pkg.sender_name || 'N/A'}</span>
+                                        <span className="text-border" aria-hidden="true">|</span>
                                         <span className="text-primary font-medium">{getPackageDestination(pkg)}</span>
-                                        <span className="text-border">→</span>
-                                        <span>{`📥`} {pkg.recipient_name || 'N/A'}</span>
+                                        <span className="text-border" aria-hidden="true">→</span>
+                                        <span>Destino: {pkg.recipient_name || 'N/A'}</span>
                                     </div>
                                     <div className="text-xs text-muted-foreground/80 mt-0.5">
-                                        {pkg.total_items_count || 0} items · {formatDate(pkg.created_at)}
+                                        {pkg.total_items_count || 0} items · {formatDate(pkg.created_at ?? '')}
                                     </div>
                                 </div>
-                            </div>
+                            </Button>
                         )
                     })}
                 </div>

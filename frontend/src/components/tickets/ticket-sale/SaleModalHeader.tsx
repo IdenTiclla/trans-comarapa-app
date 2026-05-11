@@ -13,16 +13,16 @@ interface Props {
 
 export function SaleModalHeader({ actionType, selectedSeats, origin, destination, isEditMode = false, onClose }: Props) {
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b shrink-0">
-      <div className="flex items-center space-x-3">
-        <div className="bg-white p-2 rounded-lg">
-          <TicketIcon className="w-6 h-6 text-blue-600" />
+    <div className="flex shrink-0 items-start justify-between gap-3 border-b bg-primary px-4 py-3 sm:items-center sm:px-6 sm:py-4">
+      <div className="flex min-w-0 items-start gap-3 sm:items-center">
+        <div className="rounded-lg bg-primary-foreground/15 p-2 text-primary-foreground">
+          <TicketIcon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
         </div>
-        <div>
-          <h3 className="text-xl font-bold text-white">
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold leading-tight text-primary-foreground sm:text-xl">
             {isEditMode ? 'Editar Boleto' : actionType === 'sell' ? 'Vender Boleto' : 'Reservar Asiento'}
           </h3>
-          <p className="text-blue-100 text-sm">
+          <p className="mt-0.5 text-xs text-primary-foreground/80 sm:text-sm sm:truncate">
             Asientos {selectedSeats.map((s) => s.number).join(', ')} - {origin} → {destination}
           </p>
         </div>
@@ -32,9 +32,9 @@ export function SaleModalHeader({ actionType, selectedSeats, origin, destination
         size="icon"
         onClick={onClose}
         aria-label="Cerrar modal"
-        className="text-white hover:bg-white/20 hover:text-white"
+        className="text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
       >
-        <X className="w-6 h-6" />
+        <X className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
       </Button>
     </div>
   )

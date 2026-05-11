@@ -30,7 +30,7 @@ export function TicketFieldsForm({ form, setForm, hasTriedSubmit }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-x-4">
         <DecimalField
           label="Precio (Bs.) *"
           value={form.price}

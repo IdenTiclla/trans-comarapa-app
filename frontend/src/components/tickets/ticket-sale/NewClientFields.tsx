@@ -8,7 +8,7 @@ interface Props {
 
 export function NewClientFields({ form, setForm }: Props) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-x-4">
       <FormInput
         label="Nombres *"
         value={form.firstname}
