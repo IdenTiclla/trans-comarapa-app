@@ -146,6 +146,7 @@ export function Component() {
 
     return (
         <div className="w-full space-y-6">
+            <h1 className="sr-only">Gestión de Clientes</h1>
             <div className="flex items-center justify-between">
                 <div className="hidden md:flex items-center space-x-6 text-sm">
                     <div className="text-center">
@@ -161,7 +162,7 @@ export function Component() {
                         <div className="text-muted-foreground">Nuevos hoy</div>
                     </div>
                 </div>
-                <Button onClick={() => setShowCreateModal(true)}>
+                <Button onClick={() => setShowCreateModal(true)} className="min-h-[44px]">
                     <Plus className="h-4 w-4 mr-2" />
                     Nuevo Cliente
                 </Button>

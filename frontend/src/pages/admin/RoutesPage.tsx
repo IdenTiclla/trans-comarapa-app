@@ -85,7 +85,7 @@ export function Component() {
   return (
     <div className="w-full space-y-6">
       <div className="flex items-center justify-between">
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="min-h-[44px]">
           <Plus className="h-4 w-4 mr-2" />
           Nueva Ruta
         </Button>

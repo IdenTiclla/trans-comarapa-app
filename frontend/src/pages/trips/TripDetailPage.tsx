@@ -134,6 +134,7 @@ export function Component() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px]">
+      <h1 className="sr-only">Detalle de viaje</h1>
 
       {/* Seat Change Banner */}
       {seatChange.mode && seatChange.ticket && (

@@ -116,8 +116,9 @@ export function Component() {
 
   return (
     <div className="w-full space-y-6">
+      <h1 className="sr-only">Gestión de Encomiendas</h1>
       <div className="flex items-center justify-end">
-        <Button onClick={() => setShowRegistrationModal(true)} aria-label="Crear nueva encomienda">
+        <Button onClick={() => setShowRegistrationModal(true)} aria-label="Crear nueva encomienda" className="min-h-[44px]">
           <Plus className="h-4 w-4 mr-2" />
           Nueva Encomienda
         </Button>

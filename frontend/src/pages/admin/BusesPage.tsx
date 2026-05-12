@@ -18,8 +18,9 @@ export function Component() {
 
     return (
         <div className="w-full space-y-6">
+            <h1 className="sr-only">Gestión de Buses</h1>
             <div className="flex items-center justify-between">
-                <Button onClick={openCreate}>
+                <Button onClick={openCreate} className="min-h-[44px]">
                     <Plus className="h-4 w-4 mr-2" />
                     Nuevo Bus
                 </Button>
@@ -38,7 +39,7 @@ export function Component() {
                 </div>
             ) : (
                 <Card>
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 overflow-x-auto">
                         {/* eslint-disable-next-line no-restricted-syntax */}
                         <table className="min-w-full divide-y divide-gray-200">
                             <caption className="sr-only">Lista de buses</caption>

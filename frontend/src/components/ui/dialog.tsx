@@ -54,17 +54,11 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
-  const previousFocusRef = React.useRef<HTMLElement | null>(null)
-
-  React.useEffect(() => {
-    previousFocusRef.current = (document.activeElement as HTMLElement | null) ?? null
-    return () => {
-      const el = previousFocusRef.current
-      if (el && typeof el.focus === 'function' && document.contains(el)) {
-        requestAnimationFrame(() => el.focus())
-      }
-    }
-  }, [])
+  const [previousFocus] = React.useState<HTMLElement | null>(() => {
+    if (typeof document === 'undefined') return null
+    const active = document.activeElement as HTMLElement | null
+    return active && active !== document.body ? active : null
+  })
 
   return (
     <DialogPortal data-slot="dialog-portal">
@@ -75,10 +69,9 @@ function DialogContent({
         onCloseAutoFocus={(event) => {
           onCloseAutoFocus?.(event)
           if (event.defaultPrevented) return
-          const el = previousFocusRef.current
-          if (el && typeof el.focus === 'function' && document.contains(el)) {
+          if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
             event.preventDefault()
-            el.focus()
+            previousFocus.focus()
           }
         }}
         className={cn(

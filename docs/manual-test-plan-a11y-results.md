@@ -329,6 +329,25 @@
 
 ---
 
+## Correcciones aplicadas tras la 2.ª ejecución
+
+| Hallazgo | Estado | Cambio |
+|----------|--------|--------|
+| QA-001 / 3.6 / 4.7 (focus return) | ✅ Corregido | `DialogContent` ahora captura `document.activeElement` durante el render inicial mediante `useState` con lazy init — antes de que Radix mueva el foco al contenido del modal. En `onCloseAutoFocus` se restaura ese elemento (`frontend/src/components/ui/dialog.tsx`). |
+| QA-003 / QA-008 (ws-token) | ✅ Corregido | Orden de routers invertido: `seat_lock` antes que `seat` en `/seats` (`backend/api/v1/api.py`). El error CORS de la 2.ª pasada se debía a que el backend no se había reiniciado; ahora `/seats/ws-token` responde 200 con el token. |
+| QA-007 / 17.1-17.3 (sin H1) | ✅ Corregido | Añadido `<h1 className="sr-only">` a `BusesPage`, `ClientsIndexPage`, `PackagesIndexPage` y `TripDetailPage`. |
+| UI-001 (BusTable sin overflow) | ✅ Corregido | `CardContent` con `overflow-x-auto` en `BusesPage.tsx`. |
+| UI-002 (CTA <44px) | ✅ Corregido | `min-h-[44px]` en botones "Nuevo Bus", "Nuevo Cliente", "Nueva Encomienda", "Nueva Ruta", "Nueva Oficina". |
+| UI-003 (header icons <44px) | ✅ Corregido | `SidebarTrigger`: `size-11 md:size-7`. `AppHeader`: notificaciones y menú de usuario `size-11 md:size-8`. Cumple 44×44 en móvil. |
+| UI-004 (RouteTable overflow) | ✅ Corregido en código | `RouteTable.tsx` ya envuelve la tabla en `overflow-x-auto` (línea 70). El componente no está montado en producción actualmente; la página `RoutesPage` no lo usa. |
+| UI-007 (color swatch sin aria-hidden) | ✅ Verificado | `BusTable.tsx` línea 114 ya tiene `aria-hidden="true"`. El componente no se monta hoy (la página `BusesPage` usa tabla inline sin swatches de color). |
+| QA-006 (focus trap) | ⚠️ Manual | Radix gestiona el trap; pendiente prueba manual con Tab. |
+| 20.1 `tsc --noEmit` | ✅ Pasa | Sin errores. |
+| 20.2 `npm run lint` | ✅ Pasa | Sin errores. |
+| 20.3 `npm run build` | ❌ Falla pre-existente | Errores únicamente en `src/tests/**`, `src/test/test-utils.tsx` y `vite.config.ts`, no relacionados con a11y. |
+
+---
+
 ## Comparativa entre ejecuciones
 
 | QA | 1.ª Ejecución | 2.ª Ejecución | Estado |

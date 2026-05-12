@@ -111,7 +111,7 @@ export function Component() {
           <h1 className="text-2xl font-bold text-gray-900">Administración de Oficinas</h1>
           <p className="text-gray-600 mt-1">Gestiona las oficinas del sistema</p>
         </div>
-        <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">+ Nueva Oficina</Button>
+        <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700 min-h-[44px]">+ Nueva Oficina</Button>
       </div>
 
       {error && <div role="alert" className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
