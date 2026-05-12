@@ -37,7 +37,7 @@ export const fetchCurrentRegister = createAsyncThunk(
       const register = await cashRegisterService.getCurrentRegister(officeId);
       return register;
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to fetch current register";
+      const msg = error instanceof Error ? error.message : "Error al obtener la caja actual";
       return rejectWithValue(msg);
     }
   }
@@ -49,7 +49,7 @@ export const fetchTransactions = createAsyncThunk(
     try {
       return await cashRegisterService.getTransactions(registerId);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to fetch transactions";
+      const msg = error instanceof Error ? error.message : "Error al obtener las transacciones";
       return rejectWithValue(msg);
     }
   }
@@ -61,7 +61,7 @@ export const fetchDailySummary = createAsyncThunk(
     try {
       return await cashRegisterService.getDailySummary(registerId);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to fetch daily summary";
+      const msg = error instanceof Error ? error.message : "Error al obtener el resumen diario";
       return rejectWithValue(msg);
     }
   }
@@ -73,7 +73,7 @@ export const openRegister = createAsyncThunk(
     try {
       return await cashRegisterService.openRegister(data);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to open register";
+      const msg = error instanceof Error ? error.message : "Error al abrir la caja";
       return rejectWithValue(msg);
     }
   }
@@ -85,7 +85,7 @@ export const closeRegister = createAsyncThunk(
     try {
       return await cashRegisterService.closeRegister(registerId, data);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to close register";
+      const msg = error instanceof Error ? error.message : "Error al cerrar la caja";
       return rejectWithValue(msg);
     }
   }
@@ -97,7 +97,7 @@ export const recordTransaction = createAsyncThunk(
     try {
       return await cashRegisterService.recordTransaction(registerId, data);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to record transaction";
+      const msg = error instanceof Error ? error.message : "Error al registrar la transacción";
       return rejectWithValue(msg);
     }
   }
@@ -109,7 +109,7 @@ export const recordWithdrawal = createAsyncThunk(
     try {
       return await cashRegisterService.recordWithdrawal(registerId, data);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to record withdrawal";
+      const msg = error instanceof Error ? error.message : "Error al registrar el retiro";
       return rejectWithValue(msg);
     }
   }

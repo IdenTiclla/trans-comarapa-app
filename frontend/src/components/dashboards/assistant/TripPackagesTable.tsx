@@ -9,13 +9,14 @@ export function TripPackagesTable({ packages }: { packages: TripPackage[] }) {
     <div className="overflow-x-auto">
       {/* eslint-disable-next-line no-restricted-syntax */}
       <table className="w-full text-sm">
+        <caption className="sr-only">Paquetes del viaje</caption>
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-2 pr-3 font-medium text-gray-600">Tracking #</th>
-            <th className="text-left py-2 pr-3 font-medium text-gray-600">Remitente</th>
-            <th className="text-left py-2 pr-3 font-medium text-gray-600">Destinatario</th>
-            <th className="text-left py-2 pr-3 font-medium text-gray-600">Estado</th>
-            <th className="text-left py-2 font-medium text-gray-600">Pago</th>
+            <th scope="col" className="text-left py-2 pr-3 font-medium text-gray-600">Tracking #</th>
+            <th scope="col" className="text-left py-2 pr-3 font-medium text-gray-600">Remitente</th>
+            <th scope="col" className="text-left py-2 pr-3 font-medium text-gray-600">Destinatario</th>
+            <th scope="col" className="text-left py-2 pr-3 font-medium text-gray-600">Estado</th>
+            <th scope="col" className="text-left py-2 font-medium text-gray-600">Pago</th>
           </tr>
         </thead>
         <tbody>

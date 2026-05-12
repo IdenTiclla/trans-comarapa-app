@@ -12,12 +12,13 @@ export function PassengerTable({ startSeat, endSeat, getPassengerName, getPassen
   return (
     /* eslint-disable-next-line no-restricted-syntax */
     <table className="pax-table">
+      <caption className="sr-only">Lista de pasajeros</caption>
       <thead>
         <tr>
-          <th className="col-no">No.</th>
-          <th>Nombre y Apellido</th>
-          <th className="col-ci">C.I.</th>
-          <th className="col-dst">Destino</th>
+          <th scope="col" className="col-no">No.</th>
+          <th scope="col">Nombre y Apellido</th>
+          <th scope="col" className="col-ci">C.I.</th>
+          <th scope="col" className="col-dst">Destino</th>
         </tr>
       </thead>
       <tbody>

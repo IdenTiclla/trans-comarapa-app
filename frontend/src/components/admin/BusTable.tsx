@@ -64,9 +64,9 @@ export default function BusTable({
             </div>
 
             {loading ? (
-                <div className="p-8 text-center">
+                <div role="status" aria-live="polite" className="p-8 text-center">
                     <div className="inline-flex items-center">
-                        <Loader2 className="animate-spin mr-3 h-5 w-5 text-indigo-600" />
+                        <Loader2 className="animate-spin mr-3 h-5 w-5 text-indigo-600" aria-hidden="true" />
                         <span className="text-gray-600">Cargando buses...</span>
                     </div>
                 </div>
@@ -81,6 +81,7 @@ export default function BusTable({
                 <div className="overflow-x-auto">
                     {/* eslint-disable-next-line no-restricted-syntax */}
                     <table className="min-w-full divide-y divide-gray-200">
+                        <caption className="sr-only">Lista de buses</caption>
                         <thead className="bg-gray-50">
                             <tr>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -108,8 +109,9 @@ export default function BusTable({
                                         <div className="flex items-center">
                                             {bus.color && (
                                                 <span
-                                                    className="w-4 h-4 rounded-full mr-2 border border-gray-300"
+                                                    className="w-4 h-4 rounded-full mr-2 border border-gray-300 shrink-0"
                                                     style={{ backgroundColor: getColorCode(bus.color) }}
+                                                    aria-hidden="true"
                                                 />
                                             )}
                                             {bus.color || '-'}

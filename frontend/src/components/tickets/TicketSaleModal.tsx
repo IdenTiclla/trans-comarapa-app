@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useAppSelector } from '@/store'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { AlertTriangle, Loader2, Ticket as TicketIcon, User } from 'lucide-react'
 import TicketReceiptModal from './TicketReceiptModal'
 import { useTicketSale } from './ticket-sale/use-ticket-sale'
@@ -40,24 +40,14 @@ export default function TicketSaleModal({
     onClose()
   }
 
-  if (!show && !s.showReceiptModal) return null
-
   return (
     <>
-      <div className={cn(
-        'fixed inset-0 z-50 overflow-hidden font-sans transition-all duration-300 backdrop-blur-sm',
-        s.showReceiptModal ? 'hidden' : 'opacity-100',
-      )}>
-        <Button
-          variant="ghost"
-          onClick={onClose}
-          aria-label="Cerrar modal"
-          className="absolute inset-0 h-full w-full rounded-none cursor-default bg-transparent hover:bg-transparent modal-overlay-bokeh"
-        />
-
-        <div className="relative flex min-h-dvh items-end justify-center p-0 pointer-events-none sm:items-center sm:p-4">
-          <div className="relative flex max-h-dvh w-full flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl pointer-events-auto sm:max-w-7xl sm:max-h-[92vh] sm:rounded-2xl">
-            <SaleModalHeader
+      <Dialog open={show && !s.showReceiptModal} onOpenChange={(open) => { if (!open && !s.isSubmitting) onClose() }}>
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-7xl max-h-dvh sm:max-h-[92vh] p-0 gap-0 overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl"
+          aria-describedby={undefined}
+        >
+          <SaleModalHeader
               actionType={actionType}
               selectedSeats={selectedSeats}
               origin={trip?.route?.origin}
@@ -139,9 +129,8 @@ export default function TicketSaleModal({
 
               <TicketPreviewPanel previewTicket={s.previewTicket} trip={trip} />
             </div>
-          </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <TicketReceiptModal
         show={s.showReceiptModal}

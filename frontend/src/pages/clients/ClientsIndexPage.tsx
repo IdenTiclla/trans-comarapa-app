@@ -19,6 +19,8 @@ import { ClickableCard } from '@/components/ui/clickable-card'
 import { Button } from '@/components/ui/button'
 import { ViewToggle } from '@/components/ui/view-toggle'
 import { Users, Plus, Search, Download, BarChart3, LayoutGrid, List } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { useConfirm } from '@/hooks/use-confirm'
 
 interface Client {
     id: number
@@ -32,6 +34,8 @@ interface Client {
 }
 
 export function Component() {
+    useDocumentTitle('Clientes')
+    const { confirm, ConfirmDialog } = useConfirm()
     const dispatch = useAppDispatch()
     const clients = useAppSelector(selectClients)
     const isLoading = useAppSelector(selectClientLoading)
@@ -70,8 +74,7 @@ export function Component() {
                 setShowCreateModal(true)
                 break
             case 'search-client': {
-                const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement
-                if (searchInput) searchInput.focus()
+                document.getElementById('client-search')?.focus()
                 break
             }
             case 'export-clients':
@@ -108,7 +111,7 @@ export function Component() {
     }
 
     const handleDeleteClient = async (client: Client) => {
-        if (window.confirm(`¿Estás seguro de que quieres eliminar a ${client.name || client.first_name || 'este cliente'}?`)) {
+        if (await confirm({ title: 'Eliminar cliente', description: `¿Estás seguro de que quieres eliminar a ${client.name || client.first_name || 'este cliente'}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' })) {
             try {
                 await dispatch(deleteClient(client.id)).unwrap()
                 toast.success('Cliente eliminado correctamente')
@@ -245,7 +248,7 @@ export function Component() {
             />
 
             {error && (
-                <Card className="border-l-4 border-l-red-500">
+                <Card role="alert" className="border-l-4 border-l-red-500">
                     <CardContent className="p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -323,6 +326,7 @@ export function Component() {
                     onEdit={editClient}
                 />
             )}
+            {ConfirmDialog}
         </div>
     )
 }

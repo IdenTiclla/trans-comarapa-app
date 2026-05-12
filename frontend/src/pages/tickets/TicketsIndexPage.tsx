@@ -10,8 +10,10 @@ import { TicketsTableView, TicketsCardGridView } from '@/components/tickets/Tick
 import { TicketFormModal } from '@/components/tickets/TicketFormModal'
 import TicketSaleModal from '@/components/tickets/TicketSaleModal'
 import type { Trip } from '@/types'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Boletos')
   const {
     tickets, availableTrips, clients, availableSeats,
     searchQuery, setSearchQuery,
@@ -32,6 +34,7 @@ export function Component() {
     exportData, clearAllFilters,
     handleCloseModal, submitTicketForm, refetchTickets,
     handleEditTicket, handleCancelTicket,
+    confirmDialog,
   } = useTicketsIndexPage()
 
   return (
@@ -70,7 +73,7 @@ export function Component() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Cargando...</div>
+        <div role="status" aria-live="polite" className="text-center py-12 text-muted-foreground">Cargando...</div>
       ) : filteredTickets.length === 0 ? (
         <EmptyState
           title="No hay boletos"
@@ -131,6 +134,7 @@ export function Component() {
           }}
         />
       )}
+      {confirmDialog}
     </div>
   )
 }

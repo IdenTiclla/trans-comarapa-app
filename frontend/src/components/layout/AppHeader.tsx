@@ -33,6 +33,13 @@ export default function AppHeader() {
 
       <Separator orientation="vertical" className="mr-2 h-4" />
 
+      {/* Mobile: current page name only (breadcrumb hidden) — avoid duplicating page h1 */}
+      <nav aria-label="Ubicación" className="md:hidden min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground" aria-current="page">
+          {breadcrumbs[breadcrumbs.length - 1]?.label}
+        </p>
+      </nav>
+
       <Breadcrumb className="hidden md:flex">
         <BreadcrumbList>
           {breadcrumbs.map((crumb, index) => {
@@ -56,13 +63,13 @@ export default function AppHeader() {
       </Breadcrumb>
 
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="size-8">
+        <Button variant="ghost" size="icon" className="size-8" aria-label="Notificaciones">
           <Bell className="size-4" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="size-8 rounded-full">
+            <Button variant="ghost" className="size-8 rounded-full" aria-label="Menú de usuario">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
                 {userInitials}
               </div>

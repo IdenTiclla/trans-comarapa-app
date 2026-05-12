@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <RouterProvider router={router} />
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors closeButton aria-label="Cerrar notificación" duration={8000} toastOptions={{ closeButton: true }} />
     </Provider>
   </StrictMode>
 )

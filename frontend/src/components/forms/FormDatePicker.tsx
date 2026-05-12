@@ -51,6 +51,7 @@ export default function FormDatePicker({
 }: FormDatePickerProps) {
   const autoId = useId()
   const id = propId ?? autoId
+  const errorId = `${id}-error`
 
   const [isOpen, setIsOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
@@ -158,13 +159,13 @@ export default function FormDatePicker({
           error ? "text-red-500" : "text-gray-700"
         )}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
         </label>
       )}
 
       <div className="relative group">
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-        <div
+        <button
+          type="button"
           onClick={toggleCalendar}
           className={cn(
             "relative w-full rounded-xl border-2 transition-all duration-300 cursor-pointer flex items-center min-h-[48px]",
@@ -176,7 +177,7 @@ export default function FormDatePicker({
           )}
         >
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className={cn("h-5 w-5 transition-colors duration-200", error ? "text-red-400" : "text-gray-400 group-focus-within:text-blue-500")} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className={cn("h-5 w-5 transition-colors duration-200", error ? "text-red-400" : "text-gray-400 group-focus-within:text-blue-500")} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
@@ -188,8 +189,11 @@ export default function FormDatePicker({
             disabled={disabled}
             readOnly
             value={displayValue}
+            aria-invalid={!!error}
+            aria-required={required || undefined}
+            aria-describedby={error ? errorId : undefined}
             onKeyDown={(e) => e.key === 'Escape' && setIsOpen(false)}
-            className="w-full border-none py-2.5 pl-12 pr-12 text-sm text-gray-900 placeholder-gray-400 bg-transparent focus:ring-0 cursor-pointer"
+            className="w-full border-none py-2.5 pl-12 pr-12 text-sm text-gray-900 placeholder-gray-400 bg-transparent focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary cursor-pointer"
           />
 
           {value && clearable && !disabled && (
@@ -200,42 +204,50 @@ export default function FormDatePicker({
                 onClick={(e) => { e.stopPropagation(); onChange?.(null) }}
                 onMouseDown={(e) => e.preventDefault()}
               >
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
           )}
-        </div>
+        </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-2 w-72 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-4 animate-in fade-in zoom-in duration-200 origin-top">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Selector de fecha — ${MONTH_NAMES[currentMonth]} ${currentYear}`}
+            className="absolute z-50 mt-2 w-72 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-4 animate-in fade-in zoom-in duration-200 origin-top"
+          >
             <div className="flex justify-between items-center mb-4">
-              <button type="button" className="p-2 rounded-xl hover:bg-gray-100 transition-colors focus:outline-none" onClick={(e) => { e.stopPropagation(); prevMonth() }}>
-                <svg className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <button type="button" aria-label="Mes anterior" className="p-2 rounded-xl hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); prevMonth() }}>
+                <svg className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </button>
-              <div className="text-sm font-bold text-gray-900 tracking-tight">{MONTH_NAMES[currentMonth]} {currentYear}</div>
-              <button type="button" className="p-2 rounded-xl hover:bg-gray-100 transition-colors focus:outline-none" onClick={(e) => { e.stopPropagation(); nextMonth() }}>
-                <svg className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+              <div className="text-sm font-bold text-gray-900 tracking-tight" aria-live="polite">{MONTH_NAMES[currentMonth]} {currentYear}</div>
+              <button type="button" aria-label="Mes siguiente" className="p-2 rounded-xl hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" onClick={(e) => { e.stopPropagation(); nextMonth() }}>
+                <svg className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-1 mb-2" role="row">
               {DAYS_OF_WEEK.map((d) => (
-                <div key={d} className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center py-1">{d}</div>
+                <div key={d} role="columnheader" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center py-1">{d}</div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1" role="row">
               {calendarDays.map((day, i) => (
                 <button
                   key={i}
                   type="button"
+                  role="gridcell"
                   disabled={day.isDisabled}
+                  aria-label={`${day.date.getDate()} de ${MONTH_NAMES[day.date.getMonth()]} de ${day.date.getFullYear()}${day.isToday ? ' (hoy)' : ''}${day.isSelected ? ' (seleccionado)' : ''}`}
+                  aria-selected={day.isSelected}
                   onClick={(e) => { e.stopPropagation(); if (!day.isDisabled) { onChange?.(day.date); setIsOpen(false) } }}
                   className={cn(
                     "text-sm rounded-xl w-9 h-9 flex items-center justify-center transition-all duration-200",
@@ -255,7 +267,7 @@ export default function FormDatePicker({
             <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
               <button
                 type="button"
-                className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors focus:outline-none"
+                className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
                 onClick={(e) => {
                   e.stopPropagation()
                   const today = new Date()
@@ -264,9 +276,9 @@ export default function FormDatePicker({
               >
                 Hoy
               </button>
-              <button 
-                type="button" 
-                className="text-xs font-bold text-gray-500 hover:text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none" 
+              <button
+                type="button"
+                className="text-xs font-bold text-gray-500 hover:text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
                 onClick={(e) => { e.stopPropagation(); setIsOpen(false) }}
               >
                 Cerrar
@@ -277,7 +289,7 @@ export default function FormDatePicker({
       </div>
 
       {error ? (
-        <p className="mt-1.5 text-xs font-medium text-red-500 animate-in slide-in-from-top-1 duration-200">{error}</p>
+        <p id={errorId} role="alert" className="mt-1.5 text-xs font-medium text-red-500 animate-in slide-in-from-top-1 duration-200">{error}</p>
       ) : helpText ? (
         <p className="mt-1.5 text-xs text-gray-500">{helpText}</p>
       ) : null}

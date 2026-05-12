@@ -237,8 +237,8 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                         <span className="text-[10px] text-status-full font-semibold uppercase tracking-wider">Ocupados</span>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-lg font-extrabold text-status-medium leading-none">{ticketStats.reserved}</span>
-                        <span className="text-[10px] text-status-medium font-semibold uppercase tracking-wider">Reservados</span>
+                        <span className="text-lg font-extrabold text-yellow-700 leading-none">{ticketStats.reserved}</span>
+                        <span className="text-[10px] text-yellow-700 font-semibold uppercase tracking-wider">Reservados</span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-lg font-extrabold text-primary leading-none">{ticketStats.available}</span>
@@ -250,6 +250,7 @@ export function TripInfoCard({ trip, ticketStats, drivers, assistants, staff, ac
                     aria-valuenow={Math.round(occupancyPercent)}
                     aria-valuemin={0}
                     aria-valuemax={100}
+                    aria-valuetext={`${Math.round(occupancyPercent)}% ocupado`}
                     aria-label="Ocupación del viaje"
                     className="mt-3 w-full bg-muted rounded-full h-1.5"
                 >

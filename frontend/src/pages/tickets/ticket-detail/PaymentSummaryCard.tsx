@@ -11,9 +11,9 @@ export function PaymentSummaryCard({ ticket, trip }: { ticket: TicketDetail; tri
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <p className="text-[10px] font-bold uppercase tracking-widest text-gray-800 mb-4">Valor Pagado</p>
-      <h3 className="text-[40px] font-bold text-gray-900 leading-none mb-1 tracking-tight">
+      <h2 className="text-[40px] font-bold text-gray-900 leading-none mb-1 tracking-tight">
         {formatCurrency(totalPrice)}
-      </h3>
+      </h2>
       <p className="text-[11px] text-gray-500 mb-6">Monto total del servicio</p>
 
       <div className="bg-slate-50 rounded-lg p-4 space-y-3">

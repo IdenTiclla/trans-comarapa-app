@@ -60,6 +60,7 @@ export function BusFormStep2({
         </div>
       )}
 
+      <div role="tabpanel" id={`deck-panel-${activeDeck}`} aria-labelledby={`deck-tab-${activeDeck}`}>
       <SeatLayoutEditor
         value={seats}
         onChange={setSeats}
@@ -68,6 +69,7 @@ export function BusFormStep2({
         initialRows={rowsPerDeck[activeDeck]}
         onRowsChange={(r) => setRowsPerDeck({ ...rowsPerDeck, [activeDeck]: r })}
       />
+      </div>
 
       <div className="mt-4 p-4 bg-muted/50 rounded-lg">
         <div className="flex items-center justify-between">

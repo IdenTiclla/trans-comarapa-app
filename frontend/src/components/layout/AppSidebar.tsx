@@ -29,7 +29,8 @@ export default function AppSidebar() {
   const roleLabel = ROLE_LABELS[userRole as Role] ?? userRole ?? ''
 
   return (
-    <Sidebar>
+    <nav aria-label="Navegación principal">
+      <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-white">
@@ -100,6 +101,7 @@ export default function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-    </Sidebar>
+      </Sidebar>
+    </nav>
   )
 }

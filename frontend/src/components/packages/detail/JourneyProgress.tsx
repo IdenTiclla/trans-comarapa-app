@@ -29,7 +29,15 @@ export function JourneyProgress({ statusNum, getHistoryDate, createdAt, updatedA
     <div className="bg-white rounded-xl shadow-sm border-l-4 border-l-brand-blue border-y border-r border-y-gray-100 border-r-gray-100 p-8">
       <h2 className="text-sm font-bold tracking-widest text-gray-800 uppercase mb-10">Progreso del Viaje</h2>
 
-      <div className="relative flex justify-between items-start max-w-5xl mx-auto px-4">
+      <div
+        role="progressbar"
+        aria-valuenow={statusNum}
+        aria-valuemin={1}
+        aria-valuemax={STEPS.length}
+        aria-valuetext={`Paso ${statusNum} de ${STEPS.length}: ${STEPS.find(s => s.num === statusNum)?.label ?? ''}`}
+        aria-label="Progreso del envío"
+        className="relative flex justify-between items-start max-w-5xl mx-auto px-4"
+      >
         <div className="absolute top-4 left-10 right-10 h-[2px] bg-gray-200 -z-10" />
         <div
           className="absolute top-4 left-10 h-[2px] bg-brand-blue -z-10 transition-all duration-500"

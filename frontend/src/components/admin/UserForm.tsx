@@ -169,7 +169,7 @@ export default function UserForm({
                     {/* Información personal */}
                     <div className="space-y-4">
                         <h4 className="font-medium text-gray-700 mb-2 flex items-center">
-                            <svg className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                             Información Personal
@@ -183,6 +183,7 @@ export default function UserForm({
                                 onChange={(e) => handleChange('firstname', e.target.value)}
                                 type="text"
                                 error={errors.firstname}
+                                autoComplete="given-name"
                             />
                         </div>
 
@@ -194,6 +195,7 @@ export default function UserForm({
                                 onChange={(e) => handleChange('lastname', e.target.value)}
                                 type="text"
                                 error={errors.lastname}
+                                autoComplete="family-name"
                             />
                         </div>
                     </div>
@@ -201,7 +203,7 @@ export default function UserForm({
                     {/* Información de cuenta */}
                     <div className="space-y-4">
                         <h4 className="font-medium text-gray-700 mb-2 flex items-center">
-                            <svg className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                             Información de Cuenta
@@ -215,6 +217,7 @@ export default function UserForm({
                             type="text"
                             error={errors.username}
                             leftIcon={<span className="text-gray-500">@</span>}
+                            autoComplete="username"
                         />
 
                         <FormInput
@@ -225,10 +228,11 @@ export default function UserForm({
                             type="email"
                             error={errors.email}
                             leftIcon={
-                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg aria-hidden="true" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             }
+                            autoComplete="email"
                         />
 
                         <div className="space-y-1">
@@ -240,10 +244,11 @@ export default function UserForm({
                                 type="password"
                                 error={errors.password}
                                 leftIcon={
-                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg aria-hidden="true" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 }
+                                autoComplete={isEditing ? 'current-password' : 'new-password'}
                             />
                             {form.password && (
                                 <div className="mt-2">
@@ -266,7 +271,7 @@ export default function UserForm({
                 {/* Configuración de rol y estado */}
                 <div className="mt-8 space-y-4">
                     <h4 className="font-medium text-gray-700 mb-2 flex items-center">
-                        <svg className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg aria-hidden="true" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>

@@ -11,8 +11,10 @@ import { WithdrawalModal } from "@/components/cash-register/WithdrawalModal";
 import { RegisterHistoryTable } from "@/components/cash-register/RegisterHistoryTable";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Caja Registradora')
   const {
     currentRegister, dailySummary, transactions, isLoading, error,
     officeName, withdrawalModalOpen, setWithdrawalModalOpen,
@@ -40,7 +42,7 @@ export function Component() {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Caja Registradora</h2>
+          <h1 className="text-3xl font-bold tracking-tight">Caja Registradora</h1>
           {officeName && (
             <p className="text-muted-foreground">Oficina: {officeName}</p>
           )}

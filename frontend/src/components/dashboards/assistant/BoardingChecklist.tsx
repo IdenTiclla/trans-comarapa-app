@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import FormCheckbox from '@/components/forms/FormCheckbox'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import type { Passenger } from './types'
 
 interface Props {
@@ -49,12 +50,13 @@ export function BoardingChecklist({ tripId, passengers }: Props) {
         </div>
       </div>
       {passengers.map(p => (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <div
+        <Button
+          type="button"
+          variant="ghost"
           key={p.ticket_id}
           onClick={() => toggleCheck(p.ticket_id)}
           className={cn(
-            'flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-300',
+            'flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 w-full text-left h-auto justify-start',
             checked.has(p.ticket_id)
               ? 'bg-primary/5 border-primary/20 shadow-sm'
               : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200',
@@ -85,7 +87,7 @@ export function BoardingChecklist({ tripId, passengers }: Props) {
               <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in duration-300" />
             )}
           </div>
-        </div>
+        </Button>
       ))}
     </div>
   )

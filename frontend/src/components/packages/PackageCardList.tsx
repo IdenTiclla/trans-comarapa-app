@@ -56,6 +56,7 @@ export default function PackageCardList({
                 <div className="w-full overflow-x-auto">
                     {/* eslint-disable-next-line no-restricted-syntax */}
                     <table className="min-w-full divide-y divide-gray-200">
+                        <caption className="sr-only">Lista de paquetes enviados</caption>
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
@@ -110,6 +111,7 @@ export default function PackageCardList({
             <div className="w-full overflow-x-auto">
                 {/* eslint-disable-next-line no-restricted-syntax */}
                 <table className="min-w-full divide-y divide-gray-200">
+                    <caption className="sr-only">Lista de paquetes recibidos</caption>
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
@@ -171,13 +173,12 @@ export default function PackageCardList({
                                     Bs. {pkg.price || '0.00'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                                    <div className="flex items-center justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center justify-end space-x-2">
                                         {pkg.status === 'arrived_at_destination' && (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => onDeliverPackage && onDeliverPackage(pkg.id)}
+                                                onClick={(e) => { e.stopPropagation(); onDeliverPackage?.(pkg.id) }}
                                                 aria-label="Entregar encomienda"
                                                 className="h-8 w-8 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50"
                                             >
@@ -187,7 +188,7 @@ export default function PackageCardList({
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => onViewPackage && onViewPackage(pkg.id)}
+                                            onClick={(e) => { e.stopPropagation(); onViewPackage?.(pkg.id) }}
                                             aria-label="Ver detalles"
                                             className="h-8 w-8 text-green-600 hover:text-green-900 hover:bg-green-50"
                                         >
@@ -197,7 +198,7 @@ export default function PackageCardList({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => onEditPackage && onEditPackage(pkg.id)}
+                                                onClick={(e) => { e.stopPropagation(); onEditPackage?.(pkg.id) }}
                                                 aria-label="Editar encomienda"
                                                 className="h-8 w-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50"
                                             >
@@ -207,7 +208,7 @@ export default function PackageCardList({
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => onDeletePackage && onDeletePackage(pkg.id)}
+                                            onClick={(e) => { e.stopPropagation(); onDeletePackage?.(pkg.id) }}
                                             aria-label="Eliminar encomienda"
                                             className="h-8 w-8 text-red-600 hover:text-red-900 hover:bg-red-50"
                                         >

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronDown, ChevronUp, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useRegisterTransactions } from "./use-register-transactions";
 import type { CashRegisterHistoryItem } from "@/types/cash-register";
 import { TransactionList } from "./TransactionList";
@@ -39,9 +40,10 @@ export function RegisterHistoryTable({ registers, isLoading }: RegisterHistoryTa
     <div className="space-y-2">
       {registers.map((reg) => (
         <div key={reg.id} className="border rounded-lg overflow-hidden">
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-          <div
-            className="flex items-center w-full p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex items-center w-full p-4 hover:bg-muted/50 cursor-pointer transition-colors h-auto"
             onClick={() => toggleExpand(reg.id)}
           >
             <div className="flex-1 grid grid-cols-2 md:grid-cols-7 gap-4 text-sm">
@@ -94,7 +96,7 @@ export function RegisterHistoryTable({ registers, isLoading }: RegisterHistoryTa
                 )}
               </div>
             </div>
-          </div>
+          </Button>
           {expandedId === reg.id && (
             <div className="border-t p-4 bg-muted/30">
               <h4 className="text-sm font-medium mb-3">Transacciones de esta caja</h4>

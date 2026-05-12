@@ -79,11 +79,15 @@ export default function PackageAssignModal({
                 <Button
                     onClick={() => confirmAssignment(onPackagesAssigned, onClose)}
                     disabled={selectedIds.length === 0 || assigning}
+                    aria-describedby={selectedIds.length === 0 ? 'package-assign-help' : undefined}
                     className="w-full gap-1.5 sm:w-auto"
                 >
                     {assigning && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                     {assigning ? 'Asignando...' : `Cargar ${selectedIds.length || ''} al Viaje`}
                 </Button>
+                {selectedIds.length === 0 && (
+                    <span id="package-assign-help" className="sr-only">Seleccione al menos una encomienda para cargarla al viaje</span>
+                )}
             </div>
         </div>
     )
@@ -105,6 +109,7 @@ export default function PackageAssignModal({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     type="text"
                     placeholder="Buscar por tracking, remitente, destinatario..."
+                    aria-label="Buscar encomiendas"
                 />
             </div>
 

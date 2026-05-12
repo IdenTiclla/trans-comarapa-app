@@ -124,23 +124,34 @@ export default function ClientSelector({
                             value={searchTerm}
                             onChange={(e) => searchClients(e.target.value)}
                             placeholder="Nombre, CI o teléfono..."
+                            aria-expanded={results.length > 0 && !!searchTerm && !selectedClient}
+                            aria-controls={`${role}-client-listbox`}
+                            aria-autocomplete="list"
+                            role="combobox"
                         />
                     </div>
-                    {isLoading && searchTerm.length >= 2 && <div className="text-sm text-gray-500">Buscando...</div>}
+                    {isLoading && searchTerm.length >= 2 && <div className="text-sm text-gray-500" role="status">Buscando...</div>}
 
                     {results.length > 0 && searchTerm && !selectedClient && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-200 shadow-md rounded-md max-h-40 overflow-y-auto mt-1">
+                        <ul role="listbox" id={`${role}-client-listbox`} className="absolute z-10 w-full bg-white border border-gray-200 shadow-md rounded-md max-h-40 overflow-y-auto mt-1">
                             {results.map((client) => (
-                                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
                                 <li
                                     key={client.id}
-                                    onClick={() => selectClient(client)}
-                                    className="p-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-0"
+                                    role="option"
+                                    aria-selected={false}
+                                    className="p-3 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-0"
                                 >
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="w-full text-left h-auto p-0 justify-start"
+                                        onClick={() => selectClient(client)}
+                                    >
                                     <div className="font-medium text-gray-900">{client.full_name || client.name || `${client.firstname} ${client.lastname}`}</div>
                                     <div className="text-xs text-gray-500">
                                         CI: {client.document_id || client.doc_id || 'N/A'} - Tel: {client.phone || 'N/A'}
                                     </div>
+                                    </Button>
                                 </li>
                             ))}
                         </ul>
@@ -166,6 +177,7 @@ export default function ClientSelector({
                             value={newClient.name}
                             onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                             required
+                            autoComplete="given-name"
                         />
                     </div>
                     <div>
@@ -183,6 +195,7 @@ export default function ClientSelector({
                             value={newClient.phone}
                             onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
                             type="tel"
+                            autoComplete="tel"
                         />
                     </div>
                     <div>
@@ -191,13 +204,14 @@ export default function ClientSelector({
                             label="Dirección (Opcional)"
                             value={newClient.address}
                             onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
+                            autoComplete="street-address"
                         />
                     </div>
                 </div>
             )}
 
             {error && (clientType === 'existing' && searchTerm || clientType === 'new') && (
-                <div className="text-sm text-red-600 mt-1 bg-red-50 p-2 rounded">
+                <div role="alert" className="text-sm text-red-600 mt-1 bg-red-50 p-2 rounded">
                     Error: {error}
                 </div>
             )}

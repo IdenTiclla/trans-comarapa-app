@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { secretaryService } from '@/services/secretary.service'
 import { officeService } from '@/services/office.service'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { Office } from '@/types/office'
 
 interface SecretaryWithEmail {
@@ -38,6 +39,7 @@ const INITIAL_FORM: SecretaryFormData = {
 }
 
 export function useSecretariesPage() {
+  const { confirm, ConfirmDialog } = useConfirm()
   const [secretaries, setSecretaries] = useState<SecretaryWithEmail[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [loading, setLoading] = useState(true)
@@ -143,7 +145,7 @@ export function useSecretariesPage() {
   }
 
   const handleDelete = async (sec: SecretaryWithEmail) => {
-    if (!confirm(`¿Eliminar secretaria ${sec.firstname} ${sec.lastname}?`)) return
+    if (!(await confirm({ title: 'Eliminar secretaria', description: `¿Eliminar secretaria ${sec.firstname} ${sec.lastname}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try {
       await secretaryService.delete(sec.id)
       toast.success('Secretaria eliminada')
@@ -171,5 +173,6 @@ export function useSecretariesPage() {
     handleSubmit,
     handleDelete,
     getOfficeName,
+    confirmDialog: ConfirmDialog,
   }
 }

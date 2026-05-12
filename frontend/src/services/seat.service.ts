@@ -52,4 +52,8 @@ export const seatService = {
     getLockedSeats(tripId: number): Promise<LockedSeatInfo[]> {
         return apiFetch(`/seats/locks/${tripId}`)
     },
+
+    getWsToken(): Promise<{ token: string; expires_in: number }> {
+        return apiFetch('/seats/ws-token')
+    },
 }

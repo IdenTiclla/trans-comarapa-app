@@ -79,6 +79,7 @@ export function ClientSection({ title, color: _color, search, newForm, setNewFor
           {!locked && (
             <div className="mb-2">
               <FormInput
+                label="Buscar cliente"
                 value={search.clientSearchQuery}
                 onChange={(e) => search.searchClients(e.target.value)}
                 placeholder="Buscar por nombre, apellido o CI..."
@@ -143,10 +144,10 @@ export function ClientSection({ title, color: _color, search, newForm, setNewFor
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 items-start">
-          <FormInput label="Nombres *" value={newForm.firstname} onChange={e => setNewForm(p => ({ ...p, firstname: e.target.value }))} required />
-          <FormInput label="Apellidos *" value={newForm.lastname} onChange={e => setNewForm(p => ({ ...p, lastname: e.target.value }))} required />
+          <FormInput label="Nombres *" value={newForm.firstname} onChange={e => setNewForm(p => ({ ...p, firstname: e.target.value }))} required autoComplete="given-name" />
+          <FormInput label="Apellidos *" value={newForm.lastname} onChange={e => setNewForm(p => ({ ...p, lastname: e.target.value }))} required autoComplete="family-name" />
           <FormInput label="CI/Doc *" value={newForm.document_id} onChange={e => setNewForm(p => ({ ...p, document_id: e.target.value }))} required />
-          <FormInput label="Teléfono" value={newForm.phone} onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))} />
+          <FormInput label="Teléfono" value={newForm.phone} onChange={e => setNewForm(p => ({ ...p, phone: e.target.value }))} autoComplete="tel" />
         </div>
       )}
     </div>

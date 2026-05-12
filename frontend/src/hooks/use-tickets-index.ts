@@ -6,6 +6,7 @@ import { ticketService } from '@/services/ticket.service'
 import { tripService } from '@/services/trip.service'
 import { toast } from 'sonner'
 import { usePaginatedList } from '@/hooks/use-paginated-list'
+import { useConfirm } from '@/hooks/use-confirm'
 import { useTicketForm } from '@/hooks/use-ticket-form'
 import {
     type Ticket,
@@ -27,6 +28,7 @@ const PAGE_SIZE = 10
 
 export function useTicketsIndexPage() {
     const user = useAppSelector(selectUser)
+    const { confirm, ConfirmDialog } = useConfirm()
 
     const [tickets, setTickets] = useState<Ticket[]>([])
     const [derivedClients, setDerivedClients] = useState<Client[]>([])
@@ -159,6 +161,8 @@ export function useTicketsIndexPage() {
         link.href = URL.createObjectURL(blob)
         link.download = `boletos_${new Date().toISOString().split('T')[0]}.csv`
         link.click()
+        URL.revokeObjectURL(link.href)
+        toast.success('Archivo descargado', { description: `${dataToExport.length} boletos exportados.` })
     }
 
     const clearAllFilters = () => {
@@ -171,7 +175,7 @@ export function useTicketsIndexPage() {
     }
 
     const handleCancelTicket = async (id: number) => {
-        if (!window.confirm('¿Estás seguro de que quieres cancelar este boleto?')) return
+        if (!(await confirm({ title: 'Cancelar boleto', description: '¿Estás seguro de que quieres cancelar este boleto?', confirmLabel: 'Sí, cancelar', variant: 'destructive' }))) return
         try {
             await ticketService.update(id, { state: 'cancelled' })
             toast.success('Boleto cancelado')
@@ -224,5 +228,6 @@ export function useTicketsIndexPage() {
         handleEditTicket: form.handleEditTicket,
         handleCancelTicket,
         refetchTickets: fetchData,
+        confirmDialog: ConfirmDialog,
     }
 }

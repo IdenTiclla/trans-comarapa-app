@@ -70,9 +70,10 @@ export default function ClientCardList({
     return (
         <div className="w-full">
             {loading ? (
-                <div className="space-y-6">
+                <div role="status" aria-busy="true" className="space-y-6">
+                    <span className="sr-only">Cargando clientes...</span>
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" aria-hidden="true">
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <Card key={i} className="animate-pulse">
                                     <CardContent className="p-6">
@@ -96,7 +97,7 @@ export default function ClientCardList({
                             ))}
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-4" aria-hidden="true">
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <Card key={i} className="animate-pulse">
                                     <CardContent className="p-4">
@@ -151,13 +152,14 @@ export default function ClientCardList({
                             <div className="overflow-x-auto">
                                 {/* eslint-disable-next-line no-restricted-syntax */}
                                 <table className="min-w-full divide-y divide-border">
+                                    <caption className="sr-only">Lista de clientes</caption>
                                     <thead className="bg-muted/50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Cliente</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Documento</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Contacto</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ubicación</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Estado</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Cliente</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Documento</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Contacto</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ubicación</th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Estado</th>
                                             <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Acciones</th>
                                         </tr>
                                     </thead>
@@ -176,7 +178,7 @@ export default function ClientCardList({
                                                                 {client.name || client.full_name || `${client.firstname || ''} ${client.lastname || ''}`.trim()}
                                                             </div>
                                                             <div className="text-sm text-muted-foreground">
-                                                                {client.is_minor ? '👶 Menor de edad' : '👤 Adulto'}
+                                                                {client.is_minor ? <><span aria-hidden="true">👶</span> Menor de edad</> : <><span aria-hidden="true">👤</span> Adulto</>}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -199,13 +201,13 @@ export default function ClientCardList({
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex items-center justify-end space-x-1">
-                                                        <Button variant="ghost" size="sm" onClick={() => onViewClient(client)}>
+                                                        <Button variant="ghost" size="sm" onClick={() => onViewClient(client)} aria-label={`Ver cliente ${client.full_name ?? ''}`}>
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="sm" onClick={() => onEditClient(client)}>
+                                                        <Button variant="ghost" size="sm" onClick={() => onEditClient(client)} aria-label={`Editar cliente ${client.full_name ?? ''}`}>
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="sm" onClick={() => onDeleteClient(client)} className="text-destructive hover:text-destructive">
+                                                        <Button variant="ghost" size="sm" onClick={() => onDeleteClient(client)} className="text-destructive hover:text-destructive" aria-label={`Eliminar cliente ${client.full_name ?? ''}`}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </div>

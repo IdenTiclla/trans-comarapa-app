@@ -7,10 +7,15 @@ import type { Office } from '@/types/office'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { useConfirm } from '@/hooks/use-confirm'
 
 interface Location { id: number; name: string;[key: string]: unknown }
 
 export function Component() {
+  useDocumentTitle('Oficinas')
+  const { confirm, ConfirmDialog } = useConfirm()
   const dispatch = useAppDispatch()
   const offices = useAppSelector(selectOffices) as Office[]
   const loading = useAppSelector(selectOfficeLoading)
@@ -83,7 +88,7 @@ export function Component() {
   }
 
   const handleDelete = async (office: Office) => {
-    if (!confirm(`¿Eliminar oficina ${office.name}?`)) return
+    if (!(await confirm({ title: 'Eliminar oficina', description: `¿Eliminar oficina ${office.name}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try { 
         await dispatch(deleteOffice(office.id)).unwrap()
         toast.success('Oficina eliminada') 
@@ -109,22 +114,23 @@ export function Component() {
         <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">+ Nueva Oficina</Button>
       </div>
 
-      {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
+      {error && <div role="alert" className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"><p className="text-red-700">{error}</p></div>}
 
       {loading ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
+        <div role="status" aria-live="polite" className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" aria-hidden="true" /><span className="sr-only">Cargando oficinas...</span></div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
           {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
+            <caption className="sr-only">Lista de oficinas</caption>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Encargado</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -139,8 +145,8 @@ export function Component() {
                     <td className="px-6 py-4 text-sm text-gray-600">{office.email || '—'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{office.manager_name || '—'}</td>
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                      <Button variant="ghost" onClick={() => openEdit(office)} className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium">Editar</Button>
-                      <Button variant="ghost" onClick={() => handleDelete(office)} className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium">Eliminar</Button>
+                      <Button variant="ghost" onClick={() => openEdit(office)} className="h-auto py-1 px-2 text-blue-600 hover:text-blue-800 text-sm font-medium" aria-label={`Editar ${office.name}`}>Editar</Button>
+                      <Button variant="ghost" onClick={() => handleDelete(office)} className="h-auto py-1 px-2 text-red-600 hover:text-red-800 text-sm font-medium" aria-label={`Eliminar ${office.name}`}>Eliminar</Button>
                     </td>
                   </tr>
                 ))
@@ -150,61 +156,65 @@ export function Component() {
         </div>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{editing ? 'Editar Oficina' : 'Nueva Oficina'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormInput
-                label="Nombre"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                placeholder="Ej. Oficina Central"
-              />
-              
-              <FormSelect
-                label="Ubicación"
-                value={formData.location_id}
-                onChange={(val) => setFormData({ ...formData, location_id: Number(val) })}
-                required
-                options={locations.map(l => ({ label: l.name, value: l.id }))}
-                placeholder="Seleccionar ubicación"
-              />
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false) }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Oficina' : 'Nueva Oficina'}</DialogTitle>
+            <DialogDescription>
+              {editing ? 'Modifica los datos de la oficina.' : 'Completa los datos de la nueva oficina.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormInput
+              label="Nombre"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="Ej. Oficina Central"
+            />
+            
+            <FormSelect
+              label="Ubicación"
+              value={formData.location_id}
+              onChange={(val) => setFormData({ ...formData, location_id: Number(val) })}
+              required
+              options={locations.map(l => ({ label: l.name, value: l.id }))}
+              placeholder="Seleccionar ubicación"
+            />
 
-              <div className="grid grid-cols-2 gap-3">
-                <FormInput
-                  label="Teléfono"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Opcional"
-                />
-                <FormInput
-                  label="Email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Opcional"
-                />
-              </div>
-
+            <div className="grid grid-cols-2 gap-3">
               <FormInput
-                label="Encargado"
-                value={formData.manager_name}
-                onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
+                label="Teléfono"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="Opcional"
               />
+              <FormInput
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Opcional"
+              />
+            </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-                <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
-                  {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <FormInput
+              label="Encargado"
+              value={formData.manager_name}
+              onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
+              placeholder="Opcional"
+            />
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {ConfirmDialog}
     </div>
   )
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
-import { X, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface ClientForm {
     firstname: string
@@ -60,8 +61,6 @@ export default function ClientModal({ show, client, isEditing, onClose, onSave }
         }
     }, [show, client, isEditing])
 
-    if (!show) return null
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
@@ -73,19 +72,16 @@ export default function ClientModal({ show, client, isEditing, onClose, onSave }
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-
-            <div className="relative bg-white rounded-2xl w-full max-w-2xl shadow-2xl transform transition-all flex flex-col max-h-[90vh] my-8">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
-                    <h3 className="text-2xl font-bold text-gray-900">
+        <Dialog open={show} onOpenChange={(open) => { if (!open && !isSubmitting) onClose() }}>
+            <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 flex flex-col">
+                <DialogHeader className="p-6 border-b border-gray-100 shrink-0 text-left">
+                    <DialogTitle className="text-2xl font-bold text-gray-900">
                         {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
-                    </h3>
-                    <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-gray-400 hover:text-gray-500">
-                        <X className="h-6 w-6" />
-                    </Button>
-                </div>
+                    </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Formulario para {isEditing ? 'editar' : 'crear'} un cliente
+                    </DialogDescription>
+                </DialogHeader>
 
                 <div className="p-6 overflow-y-auto">
                     <form id="client-form" onSubmit={handleSubmit} className="space-y-4">
@@ -155,7 +151,7 @@ export default function ClientModal({ show, client, isEditing, onClose, onSave }
                         {isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Nuevo Cliente')}
                     </Button>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }

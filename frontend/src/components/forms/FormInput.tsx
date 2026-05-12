@@ -29,6 +29,7 @@ export default function FormInput({
 }: FormInputProps) {
   const autoId = useId()
   const id = propId ?? autoId
+  const errorId = `${id}-error`
 
   return (
     <div className="mb-4">
@@ -41,7 +42,7 @@ export default function FormInput({
           )}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
         </label>
       )}
 
@@ -57,8 +58,11 @@ export default function FormInput({
         <input
           id={id}
           required={required}
+          aria-required={required || undefined}
           disabled={disabled}
           value={value}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
           className={cn(
             'block w-full rounded-xl sm:text-sm transition-all duration-200 py-2.5',
             'border-gray-200 bg-gray-50/50 hover:border-gray-400',
@@ -75,15 +79,15 @@ export default function FormInput({
         />
 
         {clearable && value ? (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-          <div
+          <button
+            type="button"
             className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
             onClick={() => onClear?.()}
           >
-            <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+            <svg aria-hidden="true" className="h-5 w-5 text-gray-400 hover:text-gray-600" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-          </div>
+          </button>
         ) : rightIcon ? (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <span className={cn('h-5 w-5 text-gray-400', error && 'text-red-400')}>
@@ -94,7 +98,7 @@ export default function FormInput({
       </div>
 
       {error ? (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p id={errorId} role="alert" className="mt-1 text-sm text-red-600">{error}</p>
       ) : helpText ? (
         <p className="mt-1 text-sm text-gray-500">{helpText}</p>
       ) : null}

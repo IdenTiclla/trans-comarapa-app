@@ -249,12 +249,13 @@ export default function SeatLayoutEditor({
                                         {[1, 2].map(col => {
                                             const seat = getSeatAt(row, col)
                                             return (
-                                                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                                                <div
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
                                                     key={`${row}-${col}`}
                                                     onClick={() => toggleSeat(row, col)}
                                                     className={cn(
-                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none",
+                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none p-0",
                                                         seat 
                                                             ? "bg-primary text-white shadow-lg shadow-primary/30 border-b-4 border-primary-dark active:border-b-0 active:translate-y-1" 
                                                             : "bg-white border-2 border-dashed border-gray-200 hover:border-primary/40 hover:bg-primary/5 text-gray-200 hover:text-primary transition-all active:scale-95"
@@ -265,7 +266,7 @@ export default function SeatLayoutEditor({
                                                     ) : (
                                                         <Plus className="w-5 h-5 opacity-20" />
                                                     )}
-                                                </div>
+                                                </Button>
                                             )
                                         })}
                                     </div>
@@ -278,12 +279,13 @@ export default function SeatLayoutEditor({
                                         {[3, 4].map(col => {
                                             const seat = getSeatAt(row, col)
                                             return (
-                                                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                                                <div
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
                                                     key={`${row}-${col}`}
                                                     onClick={() => toggleSeat(row, col)}
                                                     className={cn(
-                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none",
+                                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer select-none p-0",
                                                         seat 
                                                             ? "bg-primary text-white shadow-lg shadow-primary/30 border-b-4 border-primary-dark active:border-b-0 active:translate-y-1" 
                                                             : "bg-white border-2 border-dashed border-gray-200 hover:border-primary/40 hover:bg-primary/5 text-gray-200 hover:text-primary transition-all active:scale-95"
@@ -294,7 +296,7 @@ export default function SeatLayoutEditor({
                                                     ) : (
                                                         <Plus className="w-5 h-5 opacity-20" />
                                                     )}
-                                                </div>
+                                                </Button>
                                             )
                                         })}
                                     </div>

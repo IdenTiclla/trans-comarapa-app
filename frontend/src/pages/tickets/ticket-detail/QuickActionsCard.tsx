@@ -43,9 +43,9 @@ interface Props {
 export function QuickActionsCard({ canCancel, onPreview, onPrint, onCancel }: Props) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 print:hidden">
-      <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 px-2 pt-1 pb-3">
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 px-2 pt-1 pb-3">
         Acciones
-      </h3>
+      </h2>
       <ActionButton
         icon={<Ticket className="h-4 w-4 text-gray-600" />}
         label="Previsualizar boleto"

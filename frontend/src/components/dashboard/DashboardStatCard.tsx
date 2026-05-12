@@ -25,6 +25,7 @@ export default function DashboardStatCard({
     return (
         <div
             className={`bg-white rounded-2xl p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-l-4 ${borderColor}`}
+            aria-live="polite"
         >
             <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">

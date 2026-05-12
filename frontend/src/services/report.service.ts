@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api'
+import { toast } from 'sonner'
 
 const BASE = '/reports'
 
@@ -32,5 +33,6 @@ export const reportService = {
   downloadCsv(type: 'tickets' | 'packages' | 'cash', params: ReportParams) {
     const url = `/api/v1${BASE}/monthly/${type}/csv?${buildQuery(params)}`
     window.open(url, '_blank')
+    toast.success('Descargando archivo', { description: 'El archivo CSV se está descargando.' })
   },
 }

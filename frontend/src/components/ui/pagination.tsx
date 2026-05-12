@@ -36,7 +36,7 @@ export function Pagination({
 
   if (variant === 'compact') {
     return (
-      <div className={cn('flex justify-between items-center bg-card border rounded-lg p-3', className)}>
+      <nav className={cn('flex justify-between items-center bg-card border rounded-lg p-3', className)} aria-label="Paginación">
         <Button
           variant="outline"
           size="sm"
@@ -45,7 +45,7 @@ export function Pagination({
         >
           Anterior
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground" role="status" aria-live="polite">
           Página {currentPage} de {totalPages}
         </span>
         <Button
@@ -56,7 +56,7 @@ export function Pagination({
         >
           Siguiente
         </Button>
-      </div>
+      </nav>
     )
   }
 
@@ -98,8 +98,10 @@ export function Pagination({
               <span
                 key={`ellipsis-${index}`}
                 className="relative inline-flex items-center px-3 py-2 border bg-card text-sm text-muted-foreground"
+                aria-hidden="true"
               >
                 ...
+                <span className="sr-only">Más páginas</span>
               </span>
             ) : (
               <Button

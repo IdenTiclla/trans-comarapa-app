@@ -40,13 +40,14 @@ export function TransactionList({ transactions }: TransactionListProps) {
     <div className="overflow-x-auto border rounded-md bg-card">
       {/* eslint-disable-next-line no-restricted-syntax */}
       <table className="w-full text-sm text-left">
+        <caption className="sr-only">Lista de transacciones</caption>
         <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
           <tr>
-            <th className="px-4 py-3">Fecha/Hora</th>
-            <th className="px-4 py-3">Tipo</th>
-            <th className="px-4 py-3">Descripción</th>
-            <th className="px-4 py-3">Método</th>
-            <th className="px-4 py-3 text-right">Monto</th>
+            <th scope="col" className="px-4 py-3">Fecha/Hora</th>
+            <th scope="col" className="px-4 py-3">Tipo</th>
+            <th scope="col" className="px-4 py-3">Descripción</th>
+            <th scope="col" className="px-4 py-3">Método</th>
+            <th scope="col" className="px-4 py-3 text-right">Monto</th>
           </tr>
         </thead>
         <tbody className="divide-y">

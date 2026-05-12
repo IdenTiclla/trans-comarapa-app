@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router'
 import PackageRegistrationModal from '@/components/packages/PackageRegistrationModal'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Nueva Encomienda')
   const navigate = useNavigate()
 
   return (

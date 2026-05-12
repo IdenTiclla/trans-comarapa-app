@@ -17,7 +17,7 @@ export interface ViewToggleProps<T extends string> {
 
 export function ViewToggle<T extends string>({ value, options, onChange }: ViewToggleProps<T>) {
   return (
-    <div className="bg-muted/50 rounded-lg p-0.5 flex items-center">
+    <div className="bg-muted/50 rounded-lg p-0.5 flex items-center" role="group" aria-label="Vista">
       {options.map((option) => {
         const isActive = value === option.value
         return (
@@ -34,6 +34,7 @@ export function ViewToggle<T extends string>({ value, options, onChange }: ViewT
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
             aria-label={option.ariaLabel}
+            aria-pressed={isActive}
             title={option.ariaLabel}
           >
             {option.icon && (

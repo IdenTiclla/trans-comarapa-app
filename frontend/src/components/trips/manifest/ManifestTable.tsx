@@ -21,16 +21,17 @@ export function ManifestTable({ packages, trip }: Props) {
     <>
       {/* eslint-disable-next-line no-restricted-syntax */}
       <table className="pkg-table">
+        <caption className="sr-only">Manifiesto de paquetes</caption>
         <thead>
           <tr>
-            <th className="col-no">Nº</th>
-            <th className="col-id">ID</th>
-            <th>Remitente</th>
-            <th>Descripción Encomienda</th>
-            <th>Destinatario</th>
-            <th>Destino</th>
-            <th className="col-est">Estado</th>
-            <th className="col-amt">Bs.</th>
+            <th scope="col" className="col-no">Nº</th>
+            <th scope="col" className="col-id">ID</th>
+            <th scope="col">Remitente</th>
+            <th scope="col">Descripción Encomienda</th>
+            <th scope="col">Destinatario</th>
+            <th scope="col">Destino</th>
+            <th scope="col" className="col-est">Estado</th>
+            <th scope="col" className="col-amt">Bs.</th>
           </tr>
         </thead>
         <tbody>

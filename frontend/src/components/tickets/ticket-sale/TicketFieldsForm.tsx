@@ -11,10 +11,10 @@ interface Props {
 
 const PAYMENT_OPTIONS = [
   { value: '', label: 'Seleccionar método' },
-  { value: 'cash', label: '💵 Efectivo' },
-  { value: 'card', label: '💳 Tarjeta' },
-  { value: 'transfer', label: '🏦 Transferencia' },
-  { value: 'qr', label: '📱 QR' },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'card', label: 'Tarjeta' },
+  { value: 'transfer', label: 'Transferencia' },
+  { value: 'qr', label: 'QR' },
 ]
 
 export function TicketFieldsForm({ form, setForm, hasTriedSubmit }: Props) {
@@ -47,7 +47,7 @@ export function TicketFieldsForm({ form, setForm, hasTriedSubmit }: Props) {
             options={PAYMENT_OPTIONS}
           />
           {!form.payment_method && hasTriedSubmit && (
-            <p className="mt-2 text-sm text-red-600">El método de pago es requerido</p>
+            <p role="alert" className="mt-2 text-sm text-red-600">El método de pago es requerido</p>
           )}
         </div>
       </div>

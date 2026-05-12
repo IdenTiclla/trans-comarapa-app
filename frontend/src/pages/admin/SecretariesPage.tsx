@@ -1,15 +1,19 @@
 import { useSecretariesPage } from '@/hooks/use-secretaries-page'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 
 export function Component() {
+  useDocumentTitle('Secretarias')
   const {
     secretaries, offices, loading, saving,
     showForm, setShowForm, editing,
     formData, setFormData,
     openCreate, openEdit, handleSubmit, handleDelete,
     getOfficeName,
+    confirmDialog,
   } = useSecretariesPage()
 
   return (
@@ -27,25 +31,27 @@ export function Component() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+        <div role="status" aria-live="polite" className="flex justify-center py-16">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" aria-hidden="true" />
+          <span className="sr-only">Cargando secretarias...</span>
         </div>
       ) : secretaries.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           No hay secretarias registradas. Haz clic en "Nueva Secretaria" para agregar una.
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
           {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
+            <caption className="sr-only">Lista de secretarias</caption>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secretaria</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secretaria</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -90,14 +96,16 @@ export function Component() {
                       <Button
                         variant="ghost"
                         onClick={() => openEdit(sec)}
-                        className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="h-auto py-1 px-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        aria-label={`Editar ${sec.firstname} ${sec.lastname}`}
                       >
                         Editar
                       </Button>
                       <Button
                         variant="ghost"
                         onClick={() => handleDelete(sec)}
-                        className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium"
+                        className="h-auto py-1 px-2 text-red-600 hover:text-red-800 text-sm font-medium"
+                        aria-label={`Eliminar ${sec.firstname} ${sec.lastname}`}
                       >
                         Eliminar
                       </Button>
@@ -110,89 +118,90 @@ export function Component() {
         </div>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">
-              {editing ? 'Editar Secretaria' : 'Nueva Secretaria'}
-            </h2>
-            {editing && (
-              <p className="text-sm text-gray-500 mb-4">ID: {editing.id} · {editing.email}</p>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormInput
-                  label="Nombre"
-                  value={formData.firstname}
-                  onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                  required
-                />
-                <FormInput
-                  label="Apellido"
-                  value={formData.lastname}
-                  onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                  required
-                />
-              </div>
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false) }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Secretaria' : 'Nueva Secretaria'}</DialogTitle>
+            <DialogDescription>
+              {editing ? 'Modifica los datos de la secretaria.' : 'Completa los datos de la nueva secretaria.'}
+            </DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <p className="text-sm text-gray-500">ID: {editing.id} · {editing.email}</p>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormInput
-                label="Teléfono"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Ej: 70000000"
+                label="Nombre"
+                value={formData.firstname}
+                onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                required
               />
-              <FormSelect
-                label="Oficina Asignada"
-                value={formData.office_id}
-                onChange={(val) => setFormData({ ...formData, office_id: val })}
-                options={[
-                  { value: '', label: '— Sin oficina —' },
-                  ...offices.map((o) => ({ value: String(o.id), label: o.name })),
-                ]}
+              <FormInput
+                label="Apellido"
+                value={formData.lastname}
+                onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                required
               />
+            </div>
+            <FormInput
+              label="Teléfono"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Ej: 70000000"
+            />
+            <FormSelect
+              label="Oficina Asignada"
+              value={formData.office_id}
+              onChange={(val) => setFormData({ ...formData, office_id: val })}
+              options={[
+                { value: '', label: '— Sin oficina —' },
+                ...offices.map((o) => ({ value: String(o.id), label: o.name })),
+              ]}
+            />
 
-              {!editing && (
-                <>
-                  <div className="border-t border-gray-200 pt-4 mt-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-3">Datos de Acceso</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormInput
-                      label="Usuario"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      required
-                    />
-                    <FormInput
-                      label="Email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
+            {!editing && (
+              <>
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Datos de Acceso</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <FormInput
-                    label="Contraseña"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    label="Usuario"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required
                   />
-                </>
-              )}
+                  <FormInput
+                    label="Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <FormInput
+                  label="Contraseña"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </>
+            )}
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
-                  {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Secretaria'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Secretaria'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {confirmDialog}
     </div>
   )
 }

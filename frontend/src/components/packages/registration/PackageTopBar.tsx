@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -31,7 +31,7 @@ interface FieldProps {
   value: string
   onChange: (val: string) => void
   placeholder?: string
-  options: { value: string; label: string }[]
+  options: { value: string; label: ReactNode }[]
   error?: string
   required?: boolean
   disabled?: boolean
@@ -111,8 +111,8 @@ export function PackageTopBar({ offices, loadingOffices, packageData, setPackage
             value={packageData.payment_method}
             onChange={(val) => setPackageData((prev) => ({ ...prev, payment_method: val }))}
             options={[
-              { value: 'cash', label: '💵 Físico' },
-              { value: 'qr', label: '📱 QR/Transf.' },
+              { value: 'cash', label: <><span aria-hidden="true">💵</span> Físico</> },
+              { value: 'qr', label: <><span aria-hidden="true">📱</span> QR/Transf.</> },
             ]}
           />
         ) : (

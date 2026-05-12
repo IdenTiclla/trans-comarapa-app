@@ -11,7 +11,7 @@ export function ReceiptHeader({ originCode, day, month, year }: Props) {
       <div className="flex items-center">
         <div className="relative mr-4">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 100 100" fill="currentColor">
+            <svg aria-hidden="true" className="w-8 h-8 text-white" viewBox="0 0 100 100" fill="currentColor">
               <rect x="10" y="35" width="80" height="30" rx="4" fill="currentColor" />
               <rect x="15" y="40" width="15" height="10" rx="2" fill="rgba(255,255,255,0.9)" />
               <rect x="35" y="40" width="15" height="10" rx="2" fill="rgba(255,255,255,0.9)" />

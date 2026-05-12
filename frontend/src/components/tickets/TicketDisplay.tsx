@@ -95,7 +95,7 @@ export default function TicketDisplay({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <div className={`flex-shrink-0 bg-white/20 rounded-lg flex items-center justify-center ${p ? 'p-1' : 'p-1'}`}>
-                            <svg className={`text-white ${p ? 'w-7 h-4' : 'w-9 h-6'}`} viewBox="0 0 100 60" fill="none" stroke="currentColor" strokeWidth="3">
+                            <svg aria-hidden="true" className={`text-white ${p ? 'w-7 h-4' : 'w-9 h-6'}`} viewBox="0 0 100 60" fill="none" stroke="currentColor" strokeWidth="3">
                                 <rect x="10" y="15" width="80" height="30" rx="4" />
                                 <circle cx="28" cy="52" r="6" />
                                 <circle cx="72" cy="52" r="6" />
@@ -107,7 +107,7 @@ export default function TicketDisplay({
                         </div>
                         <div>
                             <div className="flex items-baseline">
-                                <h1 className={`font-extrabold tracking-wide ${p ? 'text-2xl mr-1' : 'text-2xl mr-1.5'}`}>{COMPANY.name}</h1>
+                                <p className={`font-extrabold tracking-wide ${p ? 'text-2xl mr-1' : 'text-2xl mr-1.5'}`}>{COMPANY.name}</p>
                             </div>
                             <div className={`leading-tight text-white/80 ${p ? 'text-xs' : 'text-xs'}`}>
                                 <p className="font-medium">{COMPANY.legalName}</p>

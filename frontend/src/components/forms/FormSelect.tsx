@@ -40,6 +40,7 @@ export default function FormSelect({
 }: FormSelectProps) {
   const autoId = useId()
   const id = propId ?? autoId
+  const errorId = `${id}-error`
 
   const getOptionValue = (option: SelectOption | string | number): string => {
     if (typeof option === 'object' && option !== null) {
@@ -66,7 +67,7 @@ export default function FormSelect({
           )}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
         </label>
       )}
 
@@ -74,8 +75,11 @@ export default function FormSelect({
         <select
           id={id}
           required={required}
+          aria-required={required || undefined}
           disabled={disabled}
           value={value as string}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
           onChange={(e) => onChange?.(e.target.value)}
           className={cn(
             'block w-full rounded-xl py-2.5 pl-4 pr-10 text-sm focus:outline-none transition-all duration-200 appearance-none',
@@ -109,22 +113,23 @@ export default function FormSelect({
                 type="button" 
                 onClick={(e) => { e.preventDefault(); onClear?.(); }} 
                 className="absolute inset-y-0 right-8 pr-1 flex items-center text-gray-400 hover:text-gray-600 z-10"
+                aria-label="Limpiar selección"
             >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         )}
 
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 8l4 4 4-4" />
           </svg>
         </div>
       </div>
 
       {error ? (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p id={errorId} role="alert" className="mt-1 text-sm text-red-600">{error}</p>
       ) : helpText ? (
         <p className="mt-1 text-sm text-gray-500">{helpText}</p>
       ) : null}

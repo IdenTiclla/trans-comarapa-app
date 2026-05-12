@@ -24,10 +24,11 @@ export function DetailTable({ title, columns, rows }: Props) {
         <>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">Detalle de reporte</caption>
               <thead className="bg-gray-50">
                 <tr>
                   {columns.map((col) => (
-                    <th key={col} className="text-left px-4 py-2 font-medium text-gray-600 whitespace-nowrap">{col}</th>
+                    <th scope="col" key={col} className="text-left px-4 py-2 font-medium text-gray-600 whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>

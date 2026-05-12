@@ -17,10 +17,14 @@ import { Pagination } from '@/components/ui/pagination'
 import { usePaginatedList } from '@/hooks/use-paginated-list'
 import { filterPackages, computeStats } from './packages-index/helpers'
 import { ROUTES } from '@/lib/routes'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { useConfirm } from '@/hooks/use-confirm'
 
 const ITEMS_PER_PAGE = 12
 
 export function Component() {
+  useDocumentTitle('Encomiendas')
+  const { confirm, ConfirmDialog } = useConfirm()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
@@ -73,7 +77,7 @@ export function Component() {
         setShowRegistrationModal(true)
         break
       case 'track-package':
-        document.querySelector<HTMLElement>('input[placeholder*="código"]')?.focus()
+        document.getElementById('search')?.focus()
         break
       case 'pending-deliveries':
         setStatusFilter('arrived_at_destination')
@@ -90,7 +94,7 @@ export function Component() {
   }
 
   const confirmDeletePackage = async (id: number) => {
-    if (window.confirm('¿Está seguro de que desea eliminar esta encomienda?')) {
+    if (await confirm({ title: 'Eliminar encomienda', description: '¿Está seguro de que desea eliminar esta encomienda?', confirmLabel: 'Sí, eliminar', variant: 'destructive' })) {
       await dispatch(deletePackage(id)).unwrap()
       dispatch(fetchPackages({ limit: 100 }))
     }
@@ -134,7 +138,7 @@ export function Component() {
       />
 
       {error && (
-        <Card className="border-red-200">
+        <Card role="alert" className="border-red-200">
           <CardContent className="p-4 flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
             <div className="flex-1">
@@ -220,6 +224,7 @@ export function Component() {
         onClose={() => setShowDeliveryModal(false)}
         onConfirm={onDeliverPackageConfirm}
       />
+      {ConfirmDialog}
     </div>
   )
 }

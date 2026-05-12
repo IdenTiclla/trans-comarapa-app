@@ -2,10 +2,13 @@ import { useOwnersPage } from '@/hooks/use-owners-page'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Plus, Users, Pencil, Loader2 } from 'lucide-react'
 import FormInput from '@/components/forms/FormInput'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Propietarios')
   const {
     owners, loading, saving, isModalOpen, setIsModalOpen,
     editing, formData, setFormData, openCreate, openEdit, handleSubmit,
@@ -21,8 +24,9 @@ export function Component() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div role="status" aria-live="polite" className="flex justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <span className="sr-only">Cargando socios...</span>
         </div>
       ) : owners.length === 0 ? (
         <Card>
@@ -37,13 +41,14 @@ export function Component() {
           <CardContent className="p-0">
             {/* eslint-disable-next-line no-restricted-syntax */}
             <table className="min-w-full divide-y divide-gray-200">
+              <caption className="sr-only">Lista de propietarios</caption>
               <thead className="bg-muted/50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Socio</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Contacto</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Carnet</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Acciones</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Socio</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Contacto</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Carnet</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Estado</th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -71,7 +76,7 @@ export function Component() {
                       <Badge variant="default">Activo</Badge>
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(owner)}>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(owner)} aria-label={`Editar propietario ${owner.user_name ?? ''}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </td>
@@ -83,74 +88,65 @@ export function Component() {
         </Card>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-           <Card className="max-w-md w-full">
-             <CardContent className="p-0">
-               <div className="px-6 py-5 border-b border-gray-100 bg-muted/50">
-                   <h2 className="text-xl font-bold text-gray-900">
-                       {editing ? 'Editar Socio' : 'Registrar Nuevo Socio'}
-                   </h2>
-                   <p className="text-sm text-gray-500 mt-1">Completa los datos del dueño.</p>
-               </div>
-               
-               <div className="p-6">
-                 <form onSubmit={handleSubmit} className="space-y-4 text-left">
-                   <div className="grid grid-cols-2 gap-4">
-                     <FormInput
-                       label="Nombre/s *"
-                       type="text"
-                       required
-                       value={formData.firstname}
-                       onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                       placeholder="Ej: Juan"
-                     />
-                     <FormInput
-                       label="Apellidos *"
-                       type="text"
-                       required
-                       value={formData.lastname}
-                       onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                       placeholder="Ej: Perez"
-                     />
-                   </div>
-                   <FormInput
-                     label="Cédula de Identidad (CI) *"
-                     type="text"
-                     required
-                     value={formData.ci}
-                     onChange={(e) => setFormData({ ...formData, ci: e.target.value })}
-                     placeholder="Ej: 1234567"
-                   />
-                   <FormInput
-                     label="Teléfono"
-                     type="tel"
-                     value={formData.phone}
-                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                     placeholder="Ej: 77766554"
-                   />
-                   <FormInput
-                     label="Email (Opcional)"
-                     type="email"
-                     value={formData.email}
-                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                     placeholder="Ej: correo@ejemplo.com"
-                   />
+      <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) setIsModalOpen(false) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Socio' : 'Registrar Nuevo Socio'}</DialogTitle>
+            <DialogDescription>Completa los datos del dueño.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Nombre/s *"
+                type="text"
+                required
+                value={formData.firstname}
+                onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                placeholder="Ej: Juan"
+              />
+              <FormInput
+                label="Apellidos *"
+                type="text"
+                required
+                value={formData.lastname}
+                onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                placeholder="Ej: Perez"
+              />
+            </div>
+            <FormInput
+              label="Cédula de Identidad (CI) *"
+              type="text"
+              required
+              value={formData.ci}
+              onChange={(e) => setFormData({ ...formData, ci: e.target.value })}
+              placeholder="Ej: 1234567"
+            />
+            <FormInput
+              label="Teléfono"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Ej: 77766554"
+            />
+            <FormInput
+              label="Email (Opcional)"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="Ej: correo@ejemplo.com"
+            />
 
-                   <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
-                     <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                       Cancelar
-                     </Button>
-                     <Button type="submit" disabled={saving}>
-                       {saving ? 'Guardando...' : 'Guardar Socio'}
-                     </Button>
-                   </div>
-                 </form>
-               </div>
-             </CardContent>
-           </Card>
-        </div>
-      )}
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Guardando...' : 'Guardar Socio'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -19,11 +19,12 @@ export function BreakdownTable({ title, labelColumn, entries, labelFor, sort = f
         <h3 className="font-semibold text-gray-800">{title}</h3>
       </div>
       <table className="w-full text-sm">
+        <caption className="sr-only">Desglose de reportes</caption>
         <thead className="bg-gray-50">
           <tr>
-            <th className="text-left px-4 py-2 font-medium text-gray-600">{labelColumn}</th>
-            <th className="text-right px-4 py-2 font-medium text-gray-600">Cantidad</th>
-            <th className="text-right px-4 py-2 font-medium text-gray-600">Total (Bs)</th>
+            <th scope="col" className="text-left px-4 py-2 font-medium text-gray-600">{labelColumn}</th>
+            <th scope="col" className="text-right px-4 py-2 font-medium text-gray-600">Cantidad</th>
+            <th scope="col" className="text-right px-4 py-2 font-medium text-gray-600">Total (Bs)</th>
           </tr>
         </thead>
         <tbody>

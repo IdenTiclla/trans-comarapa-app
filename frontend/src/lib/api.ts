@@ -1,6 +1,7 @@
 import { API_BASE_URL } from './constants'
 import { TIMING } from './timing'
 import { ROUTES } from './routes'
+import { toast } from 'sonner'
 
 export class SessionExpiredError extends Error {
   constructor(message = 'Session expired') {
@@ -21,12 +22,38 @@ export class ApiError extends Error {
   readonly data: unknown
 
   constructor(status: number, data: unknown) {
-    const detail = (data as Record<string, string>)?.detail ?? `HTTP ${status}`
+    const detail = parseErrorDetail(data, status)
     super(detail)
     this.name = 'ApiError'
     this.status = status
     this.data = data
   }
+}
+
+function parseErrorDetail(data: unknown, status: number): string {
+  if (!data || typeof data !== 'object') return `HTTP ${status}`
+  const d = data as Record<string, unknown>
+
+  if (typeof d.detail === 'string') return d.detail
+
+  if (Array.isArray(d.detail)) {
+    const messages = d.detail
+      .map((err: unknown) => {
+        if (typeof err === 'string') return err
+        if (err && typeof err === 'object') {
+          const e = err as Record<string, unknown>
+          const field = typeof e.loc === 'object' && Array.isArray(e.loc)
+            ? (e.loc as string[]).filter(l => l !== 'body').join('.')
+            : ''
+          return field ? `${field}: ${e.msg ?? ''}` : String(e.msg ?? '')
+        }
+        return String(err)
+      })
+      .filter(Boolean)
+    return messages.length > 0 ? messages.join('; ') : `HTTP ${status}`
+  }
+
+  return d.detail ? String(d.detail) : `HTTP ${status}`
 }
 
 let isRefreshing = false
@@ -130,7 +157,10 @@ export async function apiFetch<T = unknown>(
         })
       } else {
         localStorage.removeItem('user_data')
-        window.location.href = ROUTES.LOGIN
+        toast.error('Su sesión ha expirado. Redirigiendo al inicio de sesión...')
+        setTimeout(() => {
+          window.location.href = ROUTES.LOGIN
+        }, 1500)
         throw new SessionExpiredError()
       }
     }

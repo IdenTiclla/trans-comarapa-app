@@ -3,13 +3,17 @@ import BusForm from '@/components/admin/BusForm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+    useDocumentTitle('Buses')
     const {
         buses, loading, error, showForm, setShowForm,
         editingBus, existingSeats, saving, owners,
         openCreate, openEdit, handleFormSubmit, handleDelete,
+        confirmDialog,
     } = useBusesPage()
 
     return (
@@ -22,30 +26,32 @@ export function Component() {
             </div>
 
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div role="alert" className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
                     <p className="text-red-700">{error}</p>
                 </div>
             )}
 
             {loading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div role="status" aria-live="polite" className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+                    <span className="sr-only">Cargando buses...</span>
                 </div>
             ) : (
                 <Card>
                     <CardContent className="p-0">
                         {/* eslint-disable-next-line no-restricted-syntax */}
                         <table className="min-w-full divide-y divide-gray-200">
+                            <caption className="sr-only">Lista de buses</caption>
                             <thead className="bg-muted/50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Placa</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modelo</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacidad</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pisos</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dueño</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Placa</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modelo</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Capacidad</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pisos</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dueño</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -95,8 +101,15 @@ export function Component() {
                 </Card>
             )}
 
-            {showForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false) }}>
+                <DialogContent
+                    className="p-0 bg-transparent border-0 shadow-none sm:max-w-none gap-0 overflow-visible"
+                    showCloseButton={false}
+                >
+                    <DialogTitle className="sr-only">{editingBus ? 'Editar Bus' : 'Nuevo Bus'}</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Formulario de registro de bus con datos básicos y planilla de asientos.
+                    </DialogDescription>
                     <BusForm
                         bus={editingBus}
                         isEditing={!!editingBus}
@@ -105,8 +118,9 @@ export function Component() {
                         onSubmit={handleFormSubmit}
                         onCancel={() => setShowForm(false)}
                     />
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
+            {confirmDialog}
         </div>
     )
 }

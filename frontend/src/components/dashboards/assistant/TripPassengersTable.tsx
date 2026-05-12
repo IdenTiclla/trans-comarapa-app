@@ -8,11 +8,12 @@ export function TripPassengersTable({ passengers }: { passengers: Passenger[] })
     <div className="overflow-x-auto">
       {/* eslint-disable-next-line no-restricted-syntax */}
       <table className="w-full text-sm">
+        <caption className="sr-only">Pasajeros del viaje</caption>
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-2 pr-4 font-medium text-gray-600">Asiento</th>
-            <th className="text-left py-2 pr-4 font-medium text-gray-600">Pasajero</th>
-            <th className="text-left py-2 font-medium text-gray-600">Estado</th>
+            <th scope="col" className="text-left py-2 pr-4 font-medium text-gray-600">Asiento</th>
+            <th scope="col" className="text-left py-2 pr-4 font-medium text-gray-600">Pasajero</th>
+            <th scope="col" className="text-left py-2 font-medium text-gray-600">Estado</th>
           </tr>
         </thead>
         <tbody>

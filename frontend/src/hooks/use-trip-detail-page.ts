@@ -53,7 +53,7 @@ export function useTripDetailPage(tripId: number) {
     const assistants = useAppSelector(selectAssistants) as Person[]
 
     const { soldTickets, reservedSeatNumbers, fetchSoldTickets, formatDate } = useTripDetails()
-    const { lockedSeats, fetchLockedSeats } = useTripSeatLocks(tripId)
+    const { lockedSeats, fetchLockedSeats, lockAnnouncement } = useTripSeatLocks(tripId)
     const { fetchPackages, panel: packagesPanel } = useTripPackagesPanel(tripId)
 
     // ── Global refresh ────────────────────────────────────────────────────
@@ -265,6 +265,12 @@ export function useTripDetailPage(tripId: number) {
         }
     }
 
+    const seatSelectionAnnouncement = useMemo(() => {
+        if (currentSelectedSeats.length === 0) return ''
+        const labels = currentSelectedSeats.map(s => s.number).join(', ')
+        return `Asientos seleccionados: ${labels}`
+    }, [currentSelectedSeats])
+
     // ── Derived state ─────────────────────────────────────────────────────
     const canDispatch = useMemo(() => {
         return !!trip
@@ -350,6 +356,8 @@ export function useTripDetailPage(tripId: number) {
             controlledIds: controlledSeatIds,
             lockedSeats,
             onSelectionChange: handleSelectionChange,
+            selectionAnnouncement: seatSelectionAnnouncement,
+            lockAnnouncement,
         },
 
         seatMapHandlers: {

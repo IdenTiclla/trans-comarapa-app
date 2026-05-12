@@ -24,6 +24,7 @@ export default function FormCheckbox({
 }: FormCheckboxProps) {
   const autoId = useId()
   const id = propId ?? autoId
+  const errorId = `${id}-error`
 
   return (
     <div className="mb-4">
@@ -35,6 +36,9 @@ export default function FormCheckbox({
             checked={checked}
             disabled={disabled}
             required={required}
+            aria-required={required || undefined}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
             onChange={(e) => onChange?.(e.target.checked)}
             className={cn(
               'h-5 w-5 rounded border-gray-300 text-primary transition-all duration-200 cursor-pointer',
@@ -56,10 +60,10 @@ export default function FormCheckbox({
             )}
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
           </label>
           {helpText && !error && <p className="text-gray-500">{helpText}</p>}
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p id={errorId} role="alert" className="text-red-600">{error}</p>}
         </div>
       </div>
     </div>

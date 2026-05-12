@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { driverService } from '@/services/driver.service'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { Driver } from '@/types'
 
 interface DriverFormData {
@@ -24,6 +25,7 @@ const INITIAL_FORM: DriverFormData = {
 }
 
 export function useDriversPage() {
+  const { confirm, ConfirmDialog } = useConfirm()
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -104,7 +106,7 @@ export function useDriversPage() {
   }
 
   const handleDelete = async (driver: Driver) => {
-    if (!confirm(`¿Eliminar chofer ${driver.firstname} ${driver.lastname}?`)) return
+    if (!(await confirm({ title: 'Eliminar chofer', description: `¿Eliminar chofer ${driver.firstname} ${driver.lastname}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try {
       await driverService.delete(driver.id)
       toast.success('Chofer eliminado')
@@ -127,5 +129,6 @@ export function useDriversPage() {
     openEdit,
     handleSubmit,
     handleDelete,
+    confirmDialog: ConfirmDialog,
   }
 }

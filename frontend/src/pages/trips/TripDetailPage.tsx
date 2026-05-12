@@ -23,6 +23,7 @@ import { Send, Check, FileText, Package, Armchair, AlertCircle, RefreshCw } from
 import { ROUTES } from '@/lib/routes'
 import type { Trip as AppTrip } from '@/types/trip'
 import type { TripPackage } from '@/components/trips/package-views/types'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 const VALID_TABS = ['seats', 'packages'] as const
 type TabValue = typeof VALID_TABS[number]
@@ -40,6 +41,7 @@ interface SeatChangeTicket {
 }
 
 export function Component() {
+  useDocumentTitle('Detalle de Viaje')
   const { id } = useParams()
   const tripId = Number(id)
   const navigate = useNavigate()
@@ -169,7 +171,7 @@ export function Component() {
 
           <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
             {/* Sidebar (rendered first in DOM to match mobile visual; pushed to right column on 2xl) */}
-            <aside className="order-first 2xl:order-last">
+            <aside className="order-first 2xl:order-last" aria-label="Información del viaje">
               <div className={`2xl:sticky ${seatChange.mode ? '2xl:top-[128px]' : '2xl:top-20'}`}>
                 <TripInfoCard
                   trip={trip}
@@ -338,6 +340,10 @@ export function Component() {
         trip={trip as unknown as AppTrip}
         onClose={page.ticketPreview.close}
       />
+
+      {seatMap.lockAnnouncement && (
+        <div className="sr-only" aria-live="polite">{seatMap.lockAnnouncement}</div>
+      )}
     </div>
   )
 }

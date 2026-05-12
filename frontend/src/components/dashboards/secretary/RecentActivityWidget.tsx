@@ -14,8 +14,9 @@ export function RecentActivityWidget({ loading, activities }: Props) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          <div role="status" aria-live="polite" className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" aria-hidden="true" />
+            <span className="sr-only">Cargando actividad reciente...</span>
           </div>
         ) : activities.length === 0 ? (
           <p className="text-sm text-gray-500 text-center py-4">Sin actividad reciente</p>

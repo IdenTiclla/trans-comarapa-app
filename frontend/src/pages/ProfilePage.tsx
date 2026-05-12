@@ -1,4 +1,5 @@
 import { useProfilePage } from '@/hooks/use-profile-page'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import FormInput from '@/components/forms/FormInput'
 const ROLE_LABELS: Record<string, string> = { admin: 'Administrador', secretary: 'Secretaria', driver: 'Conductor', assistant: 'Asistente', client: 'Cliente' }
 
 export function Component() {
+  useDocumentTitle('Mi Perfil')
   const {
     user, userFullName, userInitials, userRole, loading,
     formData, setFormData, saving, office, officeLoading, handleSubmit,
@@ -15,6 +17,7 @@ export function Component() {
 
   return (
     <div className="w-full space-y-6 max-w-2xl">
+      <h1 className="sr-only">Mi Perfil</h1>
       <Card className="overflow-hidden">
         <div className="bg-primary px-6 py-8">
           <div className="flex items-center space-x-4">
@@ -47,11 +50,13 @@ export function Component() {
               label="Nombre"
               value={formData.firstname}
               onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+              autoComplete="given-name"
             />
             <FormInput
               label="Apellido"
               value={formData.lastname}
               onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+              autoComplete="family-name"
             />
           </div>
           <FormInput
@@ -59,6 +64,7 @@ export function Component() {
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            autoComplete="email"
           />
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={saving || loading}>

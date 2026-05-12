@@ -1,4 +1,6 @@
 import { useDriverDashboard } from '@/hooks/use-driver-dashboard'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { useConfirm } from '@/hooks/use-confirm'
 import { Button } from '@/components/ui/button'
 
 function KpiCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
@@ -41,11 +43,12 @@ function TripCard({
   TRANSITION_CONFIG: Record<string, { action: string; label: string; color: string; confirm?: boolean }>
 }) {
   const transition = TRANSITION_CONFIG[trip.status]
+  const { confirm, ConfirmDialog } = useConfirm()
 
-  function handleTransitionClick(e: React.MouseEvent) {
+  async function handleTransitionClick(e: React.MouseEvent) {
     e.stopPropagation()
     if (!transition) return
-    if (transition.confirm && !window.confirm(`¿Confirmar "${transition.label}"?`)) return
+    if (transition.confirm && !(await confirm({ title: transition.label ?? 'Confirmar acción', description: `¿Confirmar "${transition.label}"?`, confirmLabel: 'Sí, confirmar' }))) return
     onTransition(trip.id, transition.action, transition.label)
   }
 
@@ -84,7 +87,7 @@ function TripCard({
                 <div className="text-xs text-gray-500">encomiendas</div>
               </div>
             )}
-            <svg className={`h-5 w-5 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg aria-hidden="true" className={`h-5 w-5 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -112,11 +115,12 @@ function TripCard({
             <div className="overflow-x-auto">
               {/* eslint-disable-next-line no-restricted-syntax */}
               <table className="w-full text-sm">
+                <caption className="sr-only">Viajes del conductor</caption>
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 pr-4 font-medium text-gray-600">Asiento</th>
-                    <th className="text-left py-2 pr-4 font-medium text-gray-600">Pasajero</th>
-                    <th className="text-left py-2 font-medium text-gray-600">Estado</th>
+                    <th scope="col" className="text-left py-2 pr-4 font-medium text-gray-600">Asiento</th>
+                    <th scope="col" className="text-left py-2 pr-4 font-medium text-gray-600">Pasajero</th>
+                    <th scope="col" className="text-left py-2 font-medium text-gray-600">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -137,11 +141,13 @@ function TripCard({
           )}
         </div>
       )}
+      {ConfirmDialog}
     </div>
   )
 }
 
 export function Component() {
+  useDocumentTitle('Panel de Conductor')
   const {
     loading, expandedTrip, setExpandedTrip, filter, setFilter,
     transitioning, handleTransition, todayTrips, upcomingTrips,
@@ -151,6 +157,7 @@ export function Component() {
 
   return (
     <div className="w-full">
+      <h1 className="sr-only">Panel de Conductor</h1>
       <div className="flex justify-end gap-2 px-2 sm:px-4 lg:px-6 pt-4">
         <Button
           variant="ghost"
@@ -179,12 +186,13 @@ export function Component() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+          <div role="status" aria-live="polite" className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" aria-hidden="true" />
+            <span className="sr-only">Cargando viajes...</span>
           </div>
         ) : todayTrips.length === 0 && upcomingTrips.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <svg className="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg aria-hidden="true" className="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <h2 className="text-xl font-semibold text-gray-600 mb-2">Sin viajes asignados</h2>
@@ -193,8 +201,8 @@ export function Component() {
         ) : (
           <>
             {todayTrips.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">Hoy</h2>
+              <section aria-labelledby="driver-today-heading">
+                <h2 id="driver-today-heading" className="text-lg font-semibold text-gray-800 mb-3">Hoy</h2>
                 <div className="space-y-4">
                   {todayTrips.map(trip => (
                     <TripCard
@@ -215,8 +223,8 @@ export function Component() {
             )}
 
             {upcomingTrips.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              <section aria-labelledby="driver-upcoming-heading">
+                <h2 id="driver-upcoming-heading" className="text-lg font-semibold text-gray-800 mb-3">
                   {filter === 'active' ? 'Próximos' : 'Otros viajes'}
                 </h2>
                 <div className="space-y-4">

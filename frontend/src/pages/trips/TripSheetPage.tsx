@@ -4,8 +4,10 @@ import { formatDate, formatTime } from '@/components/trips/sheet/helpers'
 import { useTripSheet } from '@/components/trips/sheet/use-trip-sheet'
 import { SheetHeader } from '@/components/trips/sheet/SheetHeader'
 import { PassengerTable } from '@/components/trips/sheet/PassengerTable'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Planilla de Pasajeros')
   const { id } = useParams()
   const tripId = Number(id)
   const s = useTripSheet(tripId)
@@ -18,7 +20,7 @@ export function Component() {
         <div className="ts-toolbar">
           <div>
             <div className="ts-toolbar-title">
-              📋 Planilla de Pasajeros
+              <span aria-hidden="true">📋</span> Planilla de Pasajeros
               {s.trip ? ` — Viaje #${String(s.trip.id).padStart(6, '0')}` : ''}
             </div>
             {s.trip && (
@@ -35,7 +37,7 @@ export function Component() {
             onClick={() => window.print()}
             className="ts-btn-print"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2" />
               <path d="M17 9V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4" />
               <rect x="9" y="13" width="6" height="8" rx="1" />
@@ -53,7 +55,7 @@ export function Component() {
           )}
 
           {s.hasError && !s.isLoading && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3.5 px-5 text-red-700 max-w-[480px] mx-auto mt-10">
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-3.5 px-5 text-red-700 max-w-[480px] mx-auto mt-10">
               <strong>Error:</strong> {s.errorMessage}
             </div>
           )}

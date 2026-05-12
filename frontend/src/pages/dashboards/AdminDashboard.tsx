@@ -8,10 +8,12 @@ import RecentSales from '@/components/dashboard/RecentSales'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LOCALE } from '@/lib/locale-config'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
   const navigate = useNavigate()
   useAuth()
+  useDocumentTitle('Panel de Administración')
   const {
     ticketStats, packageStats, tripStats, salesSummary,
     isLoading, error, cashSummary, refresh,
@@ -19,17 +21,18 @@ export function Component() {
 
   return (
     <div className="w-full space-y-6">
+      <h1 className="sr-only">Panel de Administración</h1>
       {isLoading && (
-        <div className="flex justify-center items-center py-20">
+        <div role="status" aria-live="polite" className="flex justify-center items-center py-20">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" aria-hidden="true" />
             <p className="text-gray-700 text-lg font-medium">Cargando estadísticas...</p>
           </div>
         </div>
       )}
 
       {!isLoading && error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card role="alert" className="border-red-200 bg-red-50">
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-red-800">Error al cargar datos</h3>
             <p className="text-red-700 mt-1">{error}</p>
@@ -53,7 +56,7 @@ export function Component() {
               trend={ticketStats.trend}
               borderColor="border-blue-600"
               iconBgColor="bg-blue-100"
-              icon={<svg className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>}
+              icon={<svg aria-hidden="true" className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>}
             />
             <DashboardStatCard
               title="Ingresos"
@@ -61,7 +64,7 @@ export function Component() {
               trend={salesSummary.trend}
               borderColor="border-green-600"
               iconBgColor="bg-green-100"
-              icon={<svg className="h-6 w-6 lg:h-8 lg:w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              icon={<svg aria-hidden="true" className="h-6 w-6 lg:h-8 lg:w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             />
             <DashboardStatCard
               title="Paquetes"
@@ -69,7 +72,7 @@ export function Component() {
               trend={packageStats.trend}
               borderColor="border-purple-600"
               iconBgColor="bg-purple-100"
-              icon={<svg className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>}
+              icon={<svg aria-hidden="true" className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>}
             />
             <DashboardStatCard
               title="Viajes"
@@ -77,7 +80,7 @@ export function Component() {
               trend={tripStats.trend}
               borderColor="border-orange-600"
               iconBgColor="bg-orange-100"
-              icon={<svg className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 11V6.5m0 4.5v4.5m0-4.5h8m-8 0a4 4 0 110-8h8a4 4 0 110 8m-8 0a4 4 0 100 8h8a4 4 0 100-8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>}
+              icon={<svg aria-hidden="true" className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 11V6.5m0 4.5v4.5m0-4.5h8m-8 0a4 4 0 110-8h8a4 4 0 110 8m-8 0a4 4 0 100 8h8a4 4 0 100-8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>}
             />
           </div>
 
@@ -118,7 +121,7 @@ export function Component() {
                       </p>
                     </div>
                     <div className="bg-green-100 p-3 rounded-xl">
-                      <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg aria-hidden="true" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
@@ -138,7 +141,7 @@ export function Component() {
                       </p>
                     </div>
                     <div className="bg-red-100 p-3 rounded-xl">
-                      <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg aria-hidden="true" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
@@ -153,7 +156,7 @@ export function Component() {
                       <p className="text-xl font-bold text-primary">{cashSummary.registers_open ?? 0}</p>
                     </div>
                     <div className="bg-primary/10 p-3 rounded-xl">
-                      <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg aria-hidden="true" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
@@ -173,7 +176,7 @@ export function Component() {
                       </p>
                     </div>
                     <div className="bg-emerald-100 p-3 rounded-xl">
-                      <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg aria-hidden="true" className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -187,7 +190,7 @@ export function Component() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg font-bold">Próximos Viajes</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.TRIPS)} className="text-primary">
+                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.TRIPS)} className="text-primary" aria-label="Ver todos los viajes">
                   Ver todos
                 </Button>
               </CardHeader>

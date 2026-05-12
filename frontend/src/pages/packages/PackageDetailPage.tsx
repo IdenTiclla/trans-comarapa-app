@@ -17,7 +17,9 @@ import { StateHistoryTable } from '@/components/packages/detail/StateHistoryTabl
 import { PaymentSummary } from '@/components/packages/detail/PaymentSummary'
 import { AssignedTripCard } from '@/components/packages/detail/AssignedTripCard'
 import { MapOverview } from '@/components/packages/detail/MapOverview'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 export function Component() {
+  useDocumentTitle('Detalle de Encomienda')
   const { id } = useParams()
   const dispatch = useAppDispatch()
 

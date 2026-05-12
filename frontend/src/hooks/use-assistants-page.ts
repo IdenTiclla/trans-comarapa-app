@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { assistantService } from '@/services/assistant.service'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { Assistant } from '@/types'
 
 interface AssistantFormData {
@@ -16,6 +17,7 @@ const INITIAL_FORM: AssistantFormData = {
 }
 
 export function useAssistantsPage() {
+  const { confirm, ConfirmDialog } = useConfirm()
   const [assistants, setAssistants] = useState<Assistant[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -86,7 +88,7 @@ export function useAssistantsPage() {
   }
 
   const handleDelete = async (assistant: Assistant) => {
-    if (!confirm(`¿Eliminar asistente ${assistant.firstname} ${assistant.lastname}?`)) return
+    if (!(await confirm({ title: 'Eliminar asistente', description: `¿Eliminar asistente ${assistant.firstname} ${assistant.lastname}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try {
       await assistantService.delete(assistant.id)
       toast.success('Asistente eliminado')
@@ -109,5 +111,6 @@ export function useAssistantsPage() {
     openEdit,
     handleSubmit,
     handleDelete,
+    confirmDialog: ConfirmDialog,
   }
 }

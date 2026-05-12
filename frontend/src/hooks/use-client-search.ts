@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { clientService } from '@/services/client.service'
 import { TIMING } from '@/lib/timing'
 
@@ -84,11 +84,9 @@ export function useClientSearch() {
     // Creates a new client via API or returns the existing one
     const getOrCreateClient = useCallback(async (clientData: ClientRecord): Promise<ClientRecord> => {
         if (clientType === 'existing') {
-            // clientData is the selectedExistingClient
             if (!clientData || !clientData.id) throw new Error('No se ha seleccionado un cliente existente.')
             return clientData
         } else {
-            // clientData is the new client form
             const { firstname, lastname, document_id, phone } = clientData
             if (!firstname || !lastname || !document_id) {
                 throw new Error('Los datos del cliente nuevo son incompletos.')
@@ -97,6 +95,13 @@ export function useClientSearch() {
             return created
         }
     }, [clientType])
+
+    const searchAnnouncement = useMemo(() => {
+        if (searchingClients) return 'Buscando clientes...'
+        if (!hasSearched) return ''
+        if (foundClients.length === 0) return 'No se encontraron clientes'
+        return `Se encontraron ${foundClients.length} cliente${foundClients.length === 1 ? '' : 's'}`
+    }, [searchingClients, hasSearched, foundClients.length])
 
     return {
         clientType,
@@ -112,5 +117,6 @@ export function useClientSearch() {
         clearExistingClientSelection,
         resetClientSearch,
         getOrCreateClient,
+        searchAnnouncement,
     }
 }

@@ -67,7 +67,7 @@ export default function PendingCollections({
 
     if (error) {
         return (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div role="alert" className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-800 text-sm mb-2">{error}</p>
                 <Button
                     variant="ghost"
@@ -204,27 +204,28 @@ export default function PendingCollections({
                 <div className="overflow-x-auto">
                     {/* eslint-disable-next-line no-restricted-syntax */}
                     <table className="min-w-full divide-y divide-gray-200">
+                        <caption className="sr-only">Cobros pendientes</caption>
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Tracking
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Remitente
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Destinatario
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Origen
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Items
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Monto
                                 </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Acciones
                                 </th>
                             </tr>

@@ -8,10 +8,12 @@ import FormInput from '@/components/forms/FormInput'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { COMPANY } from '@/lib/company-config'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function Component() {
+  useDocumentTitle('Iniciar Sesión')
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const loading = useAppSelector(selectAuthLoading)
@@ -94,7 +96,7 @@ export function Component() {
       {/* Mobile Header */}
       <div className="lg:hidden text-center mb-8">
         <div className="inline-flex items-center justify-center bg-gradient-to-br from-comarapa-dark to-comarapa-medium p-4 rounded-2xl shadow-lg mb-4">
-          <svg className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg aria-hidden="true" className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M8 6v6m8-6v6m-10 0h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
             <circle cx="6" cy="18" r="2" />
             <circle cx="18" cy="18" r="2" />
@@ -118,15 +120,13 @@ export function Component() {
             type="email"
             required
             autoComplete="email"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
             placeholder={`usuario@${COMPANY.domain}`}
             value={email}
             onChange={(e) => handleEmailChange(e.target.value)}
             onBlur={validateEmail}
             error={emailError}
             leftIcon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
               </svg>
             }
@@ -144,7 +144,7 @@ export function Component() {
             onBlur={validatePassword}
             error={passwordError}
             leftIcon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             }
@@ -165,7 +165,7 @@ export function Component() {
           {/* Server Error */}
           {serverError && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3" role="alert" aria-live="assertive">
-              <svg className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg aria-hidden="true" className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.865-.833-2.635 0L4.179 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <span className="text-red-700 text-sm">{serverError}</span>
@@ -181,13 +181,14 @@ export function Component() {
                 : 'bg-gray-300 cursor-not-allowed hover:bg-gray-300'
             }`}
             disabled={!isFormValid || loading}
+            aria-describedby={!isFormValid ? 'login-submit-help' : undefined}
           >
             {loading && <Loader2 className="animate-spin h-5 w-5 mr-2" />}
             <span>{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}</span>
           </Button>
 
           {!isFormValid && (
-            <p className="text-center text-sm text-gray-500">
+            <p id="login-submit-help" className="text-center text-sm text-gray-500">
               Complete todos los campos correctamente para continuar
             </p>
           )}

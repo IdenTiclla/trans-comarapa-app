@@ -26,6 +26,7 @@ export function UserTableBody({
   return (
     <div className="overflow-x-auto min-h-[300px]">
       <table className="min-w-full divide-y divide-gray-200">
+        <caption className="sr-only">Lista de usuarios</caption>
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>

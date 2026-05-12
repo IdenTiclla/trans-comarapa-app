@@ -1,3 +1,5 @@
+export type PackageStatus = 'registered' | 'in_transit' | 'at_destination' | 'delivered' | 'returned'
+
 export interface PackageItem {
   description: string
   quantity: number
@@ -8,7 +10,7 @@ export interface Package {
   id: number
   tracking_code?: string
   description?: string
-  status: string
+  status: PackageStatus
   sender_name?: string
   sender_phone?: string
   recipient_name?: string

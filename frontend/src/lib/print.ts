@@ -14,7 +14,7 @@ export function openPrintWindow(bodyHtml: string, title: string): void {
 
   printWindow.document.open()
   printWindow.document.write(
-    `<!DOCTYPE html><html><head><title>${escapeHtml(title)}</title><meta charset="UTF-8"></head><body>${bodyHtml}</body></html>`
+    `<!DOCTYPE html><html lang="es"><head><title>${escapeHtml(title)}</title><meta charset="UTF-8"></head><body>${bodyHtml}</body></html>`
   )
   printWindow.document.close()
 
@@ -61,7 +61,7 @@ export function openPrintWindow(bodyHtml: string, title: string): void {
       printWindow.print()
     } finally {
       // Algunos browsers bloquean si cerramos demasiado pronto.
-      setTimeout(() => printWindow.close(), TIMING.PRINT_DELAY)
+      setTimeout(() => { printWindow.close(); window.focus() }, TIMING.PRINT_DELAY)
     }
   }
 

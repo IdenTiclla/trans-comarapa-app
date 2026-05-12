@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { X, Pencil } from 'lucide-react'
+import { Pencil } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { Client } from '@/types'
 import { LOCALE } from '@/lib/locale-config'
 
@@ -53,43 +54,38 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
     const fullName = getEffectiveName(client)
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-
-            <div className="relative bg-white rounded-2xl w-full max-w-4xl shadow-2xl transform transition-all flex flex-col max-h-[90vh] my-8">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
-                    <div>
-                        <h3 className="text-2xl font-bold text-gray-900 border-b-0 pb-0">
-                            {fullName}
-                        </h3>
-                        <div className="flex items-center space-x-3 mt-3">
-                            {client.initials && (
-                                <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                                    {client.initials}
-                                </span>
-                            )}
-                            {client.age !== undefined && (
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getAgeColorClass(client.age_category)}`}>
-                                    {client.age} años ({getAgeLabel(client.age_category)})
-                                </span>
-                            )}
-                            {client.is_minor === false && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Mayor de edad
-                                </span>
-                            )}
-                            {client.is_minor === true && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                    Menor de edad
-                                </span>
-                            )}
-                        </div>
+        <Dialog open={show} onOpenChange={(open) => { if (!open) onClose() }}>
+            <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 flex flex-col">
+                <DialogHeader className="p-6 border-b border-gray-100 shrink-0 text-left">
+                    <DialogTitle className="text-2xl font-bold text-gray-900">
+                        {fullName}
+                    </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Detalles del cliente {fullName}
+                    </DialogDescription>
+                    <div className="flex items-center space-x-3 mt-3">
+                        {client.initials && (
+                            <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                {client.initials}
+                            </span>
+                        )}
+                        {client.age !== undefined && (
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getAgeColorClass(client.age_category)}`}>
+                                {client.age} años ({getAgeLabel(client.age_category)})
+                            </span>
+                        )}
+                        {client.is_minor === false && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Mayor de edad
+                            </span>
+                        )}
+                        {client.is_minor === true && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                Menor de edad
+                            </span>
+                        )}
                     </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-gray-400 hover:text-gray-500 self-start">
-                        <X className="h-6 w-6" />
-                    </Button>
-                </div>
+                </DialogHeader>
 
                 <div className="p-6 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,7 +166,7 @@ export default function ClientViewModal({ show, client, onClose, onEdit }: Clien
                         </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }

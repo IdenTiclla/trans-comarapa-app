@@ -37,6 +37,7 @@ export function ScheduleEditor({
             onChange={(e) => setNewScheduleTime(e.target.value)}
             placeholder="HH:MM"
             className="h-12"
+            aria-label="Nuevo horario de salida"
           />
         </div>
         <Button

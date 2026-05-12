@@ -2,6 +2,7 @@ import type { FormEvent } from 'react'
 import FormSelect from '@/components/forms/FormSelect'
 import { DecimalField } from '@/components/forms/NumericField'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type Client, type Trip, type Seat, formatDate } from './tickets-helpers'
 
 interface TicketForm {
@@ -29,13 +30,16 @@ export function TicketFormModal({
   mode, form, setForm, availableTrips, clients, availableSeats, isSubmitting, onSubmit, onClose,
 }: Props) {
   return (
-    <div className="fixed inset-0 modal-overlay-bokeh backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-xl">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-xl font-bold">
+    <Dialog open onOpenChange={(open) => { if (!open && !isSubmitting) onClose() }}>
+      <DialogContent className="max-w-xl p-0 gap-0">
+        <DialogHeader className="p-6 border-b border-gray-100 text-left">
+          <DialogTitle className="text-xl font-bold">
             {mode === 'create' ? 'Crear Nuevo Boleto' : 'Editar Boleto'}
-          </h3>
-        </div>
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Formulario para {mode === 'create' ? 'crear un nuevo' : 'editar el'} boleto
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={onSubmit} className="p-6 space-y-4">
           <FormSelect
             label="Viaje"
@@ -113,7 +117,7 @@ export function TicketFormModal({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

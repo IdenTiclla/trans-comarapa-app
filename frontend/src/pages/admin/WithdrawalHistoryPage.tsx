@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Download, Loader2, Filter } from 'lucide-react'
 import FormDatePicker from '@/components/forms/FormDatePicker'
 import { LOCALE } from '@/lib/locale-config'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 function formatCurrency(value: number): string {
   return `Bs. ${value.toLocaleString(LOCALE, { minimumFractionDigits: 2 })}`
@@ -28,6 +29,7 @@ function formatDateTime(dateStr: string): string {
 }
 
 export function Component() {
+  useDocumentTitle('Historial de Retiros')
   const {
     withdrawals, loading, dateFrom, setDateFrom, dateTo, setDateTo,
     fetchWithdrawals, handleExport, totalAmount,
@@ -35,6 +37,7 @@ export function Component() {
 
   return (
     <div className="w-full space-y-6">
+      <h1 className="sr-only">Historial de Retiros</h1>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
         <div className="flex items-end gap-3">
@@ -63,8 +66,9 @@ export function Component() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div role="status" aria-live="polite" className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <span className="sr-only">Cargando retiros...</span>
         </div>
       ) : (
         <>
@@ -85,14 +89,15 @@ export function Component() {
                 <div className="overflow-x-auto">
                   {/* eslint-disable-next-line no-restricted-syntax */}
                   <table className="min-w-full divide-y divide-gray-200">
+                    <caption className="sr-only">Historial de retiros</caption>
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motivo</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado por</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha/Hora</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+                        <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motivo</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado por</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha/Hora</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">

@@ -52,9 +52,9 @@ export default function BusSeatGrid({
 
     const getSeatClass = (seat: SeatItem) => {
         if (seat.occupied) {
-            return 'border-status-full/50 bg-status-full/10 text-foreground cursor-not-allowed'
+            return 'border-status-full/80 bg-status-full/20 text-foreground cursor-not-allowed'
         } else if (seat.status === 'reserved') {
-            return 'border-status-medium/60 bg-status-medium/10 text-foreground cursor-not-allowed'
+            return 'border-status-medium bg-status-medium/25 text-foreground cursor-not-allowed'
         } else if (seat.status === 'locked') {
             return 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-80'
         } else if (selectedSeatIds.includes(seat.id)) {
@@ -69,7 +69,8 @@ export default function BusSeatGrid({
         if (seat.occupied) {
             return 'bg-status-full text-primary-foreground'
         } else if (seat.status === 'reserved') {
-            return 'bg-status-medium text-primary-foreground'
+            // Yellow with dark text for WCAG AA (~8:1) — yellow + white would fail at 2.5:1
+            return 'bg-status-medium text-gray-900'
         } else if (seat.status === 'locked') {
             return 'border border-border bg-muted text-muted-foreground'
         } else if (selectedSeatIds.includes(seat.id)) {
@@ -171,14 +172,14 @@ export default function BusSeatGrid({
                     <div className="flex w-full min-w-0 items-center justify-between gap-1">
                         <div className="inline-flex flex-shrink-0 items-baseline gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 text-foreground shadow-sm">
                             <span className="text-[11px] font-extrabold leading-none sm:text-xs lg:text-sm">{seat.number}</span>
-                            <span className="text-[8px] font-semibold uppercase tracking-wide text-muted-foreground" title={positionLabel}>
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[11px]" title={positionLabel}>
                                 <span className="lg:hidden">{positionLabel.charAt(0)}</span>
                                 <span className="hidden lg:inline">{positionLabel}</span>
                             </span>
                         </div>
                         <div
                             aria-hidden={!getSeatPrice(seat)}
-                            className={`flex-shrink-0 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground sm:text-[10px] ${getSeatPrice(seat) ? '' : 'invisible'}`}
+                            className={`flex-shrink-0 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground sm:text-[11px] ${getSeatPrice(seat) ? '' : 'invisible'}`}
                         >
                             {getSeatPrice(seat) ? `Bs. ${formatPrice(getSeatPrice(seat))}` : 'Bs. 0.00'}
                         </div>
@@ -192,12 +193,12 @@ export default function BusSeatGrid({
                                     {passengerName}
                                 </div>
                                 {passengerPhone && (
-                                    <div className="hidden w-full truncate text-[9px] font-medium leading-tight text-muted-foreground sm:block sm:text-[10px] lg:text-xs">
+                                    <div className="hidden w-full truncate text-[10px] font-medium leading-tight text-muted-foreground sm:block sm:text-[11px] lg:text-xs">
                                         {passengerPhone}
                                     </div>
                                 )}
                                 {dest && (
-                                    <div className="w-full truncate text-[9px] font-semibold leading-tight text-primary sm:text-[10px] lg:text-xs" title={dest}>
+                                    <div className="w-full truncate text-[10px] font-semibold leading-tight text-primary sm:text-[11px] lg:text-xs" title={dest}>
                                         {dest}
                                     </div>
                                 )}
@@ -207,7 +208,7 @@ export default function BusSeatGrid({
 
                     {/* Bottom: status badge (centered, full width) */}
                     <div className="w-full min-w-0">
-                        <span className={`block truncate rounded-full px-1.5 py-0.5 text-center text-[9px] font-bold leading-tight sm:px-2 sm:py-1 sm:text-[10px] lg:text-xs ${getStatusClass(seat)}`}>
+                        <span className={`block truncate rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold leading-tight sm:px-2 sm:py-1 sm:text-[11px] lg:text-xs ${getStatusClass(seat)}`}>
                             {getSeatStatusShortText(seat)}
                         </span>
                     </div>

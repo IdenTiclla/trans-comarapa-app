@@ -97,6 +97,7 @@ export function TicketsFilters(props: Props) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1"
+            aria-label="Buscar boletos"
           />
           <Button
             variant="outline"

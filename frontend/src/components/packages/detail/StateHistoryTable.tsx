@@ -42,6 +42,7 @@ export function StateHistoryTable({ pkg, originName, destinationName }: Props) {
       <div className="p-0">
         {/* eslint-disable-next-line no-restricted-syntax */}
         <table className="w-full text-sm text-left border-collapse">
+          <caption className="sr-only">Historial de estados</caption>
           <thead className="bg-white text-[10px] uppercase font-bold text-gray-500 tracking-wider">
             <tr>
               <th className="px-6 py-4 font-bold border-b border-gray-50">Fecha y Hora</th>

@@ -20,7 +20,7 @@ export function TicketDetailHeader({ ticketId, state, createdAt, onEdit, onPrevi
   return (
     <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <nav className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">
           <Link to={ROUTES.TICKETS} className="hover:text-primary">Boletos</Link>
           <ChevronRight className="h-3 w-3" />
           <span className="text-primary">Detalles</span>

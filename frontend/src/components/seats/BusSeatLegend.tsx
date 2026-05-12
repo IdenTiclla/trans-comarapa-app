@@ -1,9 +1,9 @@
 export default function BusSeatLegend() {
     const items = [
-        { label: 'Disponible', className: 'border-status-available/60 bg-status-available/10' },
-        { label: 'Seleccionado', className: 'border-primary bg-primary/10' },
-        { label: 'Reservado', className: 'border-status-medium/60 bg-status-medium/10' },
-        { label: 'Ocupado', className: 'border-status-full/60 bg-status-full/10' },
+        { label: 'Disponible', className: 'border-status-available/80 bg-status-available/20' },
+        { label: 'Seleccionado', className: 'border-primary bg-primary/20' },
+        { label: 'Reservado', className: 'border-status-medium bg-status-medium/25' },
+        { label: 'Ocupado', className: 'border-status-full/80 bg-status-full/20' },
         { label: 'Bloqueado', className: 'border-border bg-muted' },
     ]
 

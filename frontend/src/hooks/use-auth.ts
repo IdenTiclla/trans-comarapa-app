@@ -53,6 +53,9 @@ export function useAuth() {
             if (loginThunk.fulfilled.match(result)) {
                 const role = result.payload.role as Role
                 navigate(DASHBOARD_PATHS[role] ?? ROUTES.DASHBOARDS.SECRETARY)
+                requestAnimationFrame(() => {
+                    document.getElementById('main-content')?.focus()
+                })
             }
             return result
         },
@@ -62,6 +65,9 @@ export function useAuth() {
     const logout = useCallback(async () => {
         await dispatch(logoutThunk(false))
         navigate(ROUTES.LOGIN)
+        requestAnimationFrame(() => {
+            document.getElementById('main-content')?.focus()
+        })
     }, [dispatch, navigate])
 
     const loadProfile = useCallback(() => dispatch(loadProfileThunk()), [dispatch])

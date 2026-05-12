@@ -76,6 +76,8 @@ npx tsc --noEmit  # must pass
 - `007`: Never put business logic in routes or models — follow Route → Service → Repository pattern; use `core/security.py` for password hashing, not the User model
 - `008`: Never compare timestamps against `datetime.now()` to check entity status — always use the `status` field and state machine `validate_transition()`
 - `009`: Radix `Dialog` renders children even when `open={false}` — always wrap with `{data && <Dialog open>}` when children access nullable data
+- `010`: Always use `Dialog`/`DialogContent` from `@/components/ui/dialog` for modals — never use custom `fixed inset-0` div overlays
+- `011`: Always show an accessible toast before redirecting on session expiry — never redirect silently
 
 ## Key Resources
 

@@ -2,9 +2,11 @@ import type { Client } from './client'
 import type { Trip } from './trip'
 import type { Person } from './trip'
 
+export type TicketState = 'pending' | 'confirmed' | 'cancelled' | 'sold' | 'paid' | 'expired'
+
 export interface Ticket {
   id: number
-  state: string
+  state: TicketState
   price?: number
   payment_method?: string
   seat?: {
@@ -24,7 +26,7 @@ export interface Ticket {
 
 export interface SoldTicket {
   id: number
-  state: string
+  state: TicketState
   seat?: {
     seat_number: number
     deck?: number
@@ -41,7 +43,7 @@ export interface SoldTicket {
 
 export interface TicketDetail {
   id: number
-  state: string
+  state: TicketState
   price?: number
   payment_method?: string
   seat_id?: number

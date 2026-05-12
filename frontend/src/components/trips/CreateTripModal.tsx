@@ -130,10 +130,11 @@ export default function CreateTripModal({
       <Button variant="outline" onClick={onClose} disabled={submitting}>
         Cancelar
       </Button>
-      <Button onClick={handleSubmit} disabled={!busId || submitting} className="gap-1.5">
+      <Button onClick={handleSubmit} disabled={!busId || submitting} aria-describedby={!busId ? 'create-trip-help' : undefined} className="gap-1.5">
         {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
         {submitting ? 'Creando...' : 'Crear Viaje'}
       </Button>
+      {!busId && <p id="create-trip-help" className="sr-only">Seleccione un bus para habilitar este botón</p>}
     </div>
   )
 

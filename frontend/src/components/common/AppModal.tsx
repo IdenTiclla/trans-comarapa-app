@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -34,48 +35,31 @@ export function AppModal({
     children,
     bodyClassName,
     contentClassName,
-    closeOnBackdrop = true,
     ariaLabel,
 }: AppModalProps) {
-    useEffect(() => {
-        if (!open) return
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose()
-        }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
-    }, [open, onClose])
-
-    if (!open) return null
-
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div
-                className="fixed inset-0 modal-overlay-bokeh"
-                aria-hidden="true"
-                onClick={closeOnBackdrop ? onClose : undefined}
-            />
-            <div className="flex items-center justify-center min-h-screen px-4 py-4 text-center">
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={ariaLabel}
-                    className={cn(
-                        'relative z-10 w-full bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all border border-border',
-                        SIZE_CLASS[size],
-                        contentClassName,
-                    )}
-                >
-                    {header}
-                    <div className={cn('px-6 py-4', bodyClassName)}>{children}</div>
-                    {footer && (
-                        <div className="bg-muted/50 px-6 py-4 border-t border-border">
-                            {footer}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+        <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+            <DialogContent
+                showCloseButton={false}
+                aria-label={ariaLabel}
+                className={cn(
+                    'w-full overflow-hidden p-0 gap-0',
+                    SIZE_CLASS[size],
+                    contentClassName,
+                )}
+                onInteractOutside={(e) => e.preventDefault()}
+            >
+                <DialogTitle className="sr-only">{ariaLabel ?? 'Modal'}</DialogTitle>
+                <DialogDescription className="sr-only">Diálogo de la aplicación</DialogDescription>
+                {header}
+                <div className={cn('px-6 py-4', bodyClassName)}>{children}</div>
+                {footer && (
+                    <div className="bg-muted/50 px-6 py-4 border-t border-border">
+                        {footer}
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
     )
 }
 

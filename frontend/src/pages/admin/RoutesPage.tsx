@@ -5,9 +5,12 @@ import { fetchLocations, selectLocations } from '@/store/location.slice'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { useConfirm } from '@/hooks/use-confirm'
 
 interface Location { id: number; name: string;[key: string]: unknown }
 interface RouteData {
@@ -25,6 +28,8 @@ interface RouteData {
 }
 
 export function Component() {
+  useDocumentTitle('Rutas')
+  const { confirm, ConfirmDialog } = useConfirm()
   const dispatch = useAppDispatch()
   const routes = useAppSelector(selectRoutes) as RouteData[]
   const loading = useAppSelector(selectRouteLoading)
@@ -73,7 +78,7 @@ export function Component() {
 
   const handleDelete = async (route: RouteData) => {
     const name = `${route.origin_location?.name || 'Origen'} → ${route.destination_location?.name || 'Destino'}`
-    if (!confirm(`¿Eliminar ruta ${name}?`)) return
+    if (!(await confirm({ title: 'Eliminar ruta', description: `¿Eliminar ruta ${name}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try { await dispatch(deleteRoute(route.id)).unwrap(); toast.success('Ruta eliminada') } catch (err) { toast.error(`Error: ${err}`) }
   }
 
@@ -86,23 +91,24 @@ export function Component() {
         </Button>
       </div>
 
-      {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded"><p className="text-red-700">{error}</p></div>}
+      {error && <div role="alert" className="bg-red-50 border-l-4 border-red-500 p-4 rounded"><p className="text-red-700">{error}</p></div>}
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        <div role="status" aria-live="polite" className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" /><span className="sr-only">Cargando rutas...</span></div>
       ) : (
         <Card>
           <CardContent className="p-0">
             {/* eslint-disable-next-line no-restricted-syntax */}
             <table className="min-w-full divide-y divide-gray-200">
+              <caption className="sr-only">Lista de rutas</caption>
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Origen</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destino</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Distancia</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duración</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio Base</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Origen</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destino</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Distancia</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duración</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio Base</th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -137,62 +143,64 @@ export function Component() {
         </Card>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-lg w-full">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{editing ? 'Editar Ruta' : 'Nueva Ruta'}</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <FormSelect
-                  label="Origen"
-                  value={formData.origin_location_id}
-                  onChange={(val) => setFormData({ ...formData, origin_location_id: Number(val) })}
-                  required
-                  options={locations.map(l => ({ label: l.name, value: l.id }))}
-                  placeholder="Seleccionar origen"
-                />
-                <FormSelect
-                  label="Destino"
-                  value={formData.destination_location_id}
-                  onChange={(val) => setFormData({ ...formData, destination_location_id: Number(val) })}
-                  required
-                  options={locations.map(l => ({ label: l.name, value: l.id }))}
-                  placeholder="Seleccionar destino"
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <FormInput
-                    label="Distancia (km)"
-                    type="number"
-                    step="0.1"
-                    value={formData.distance}
-                    onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })}
-                  />
-                  <FormInput
-                    label="Duración (hrs)"
-                    type="number"
-                    step="0.1"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
-                  />
-                  <FormInput
-                    label="Precio (Bs)"
-                    type="number"
-                    step="0.1"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-                  <Button type="submit" disabled={saving}>
-                    {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false) }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Ruta' : 'Nueva Ruta'}</DialogTitle>
+            <DialogDescription>
+              {editing ? 'Modifica los datos de la ruta.' : 'Completa los datos de la nueva ruta.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormSelect
+              label="Origen"
+              value={formData.origin_location_id}
+              onChange={(val) => setFormData({ ...formData, origin_location_id: Number(val) })}
+              required
+              options={locations.map(l => ({ label: l.name, value: l.id }))}
+              placeholder="Seleccionar origen"
+            />
+            <FormSelect
+              label="Destino"
+              value={formData.destination_location_id}
+              onChange={(val) => setFormData({ ...formData, destination_location_id: Number(val) })}
+              required
+              options={locations.map(l => ({ label: l.name, value: l.id }))}
+              placeholder="Seleccionar destino"
+            />
+            <div className="grid grid-cols-3 gap-3">
+              <FormInput
+                label="Distancia (km)"
+                type="number"
+                step="0.1"
+                value={formData.distance}
+                onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })}
+              />
+              <FormInput
+                label="Duración (hrs)"
+                type="number"
+                step="0.1"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
+              />
+              <FormInput
+                label="Precio (Bs)"
+                type="number"
+                step="0.1"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {ConfirmDialog}
     </div>
   )
 }

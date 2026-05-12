@@ -42,42 +42,51 @@ export function BusFormHeader({
         </Button>
       </div>
 
-      <div className="mt-6 flex items-center justify-center">
-        <div className="flex items-center w-full max-w-xs justify-between relative">
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -translate-y-1/2 z-0" />
+      <nav aria-label="Pasos del formulario" className="mt-6 flex items-center justify-center">
+        <ol className="flex items-center w-full max-w-xs justify-between relative list-none p-0 m-0">
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -translate-y-1/2 z-0" aria-hidden="true" />
 
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onGoStep1}
-            disabled={loading}
-            aria-label="Ir al paso 1: datos básicos"
-            className="relative z-10 p-0 h-auto hover:bg-transparent"
-          >
-            <div className={cn(
-              'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300',
-              currentStep >= 1 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500',
-            )}>
-              <Info className="w-5 h-5" />
-            </div>
-          </Button>
+          <li className="relative z-10">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onGoStep1}
+              disabled={loading}
+              aria-label="Ir al paso 1: datos básicos"
+              aria-current={currentStep === 1 ? 'step' : undefined}
+              className="p-0 h-auto hover:bg-transparent"
+            >
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300',
+                currentStep >= 1 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500',
+              )}>
+                <Info className="w-5 h-5" />
+              </div>
+            </Button>
+          </li>
 
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onGoStep2}
-            disabled={loading || !canGoToStep2}
-            aria-label="Ir al paso 2: planilla de asientos"
-            className="relative z-10 p-0 h-auto hover:bg-transparent"
-          >
-            <div className={cn(
-              'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300',
-              currentStep >= 2 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500',
-            )}>
-              <MapIcon className="w-5 h-5" />
-            </div>
-          </Button>
-        </div>
+          <li className="relative z-10">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onGoStep2}
+              disabled={loading || !canGoToStep2}
+              aria-label="Ir al paso 2: planilla de asientos"
+              aria-current={currentStep === 2 ? 'step' : undefined}
+              className="p-0 h-auto hover:bg-transparent"
+            >
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300',
+                currentStep >= 2 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-gray-700 text-gray-500',
+              )}>
+                <MapIcon className="w-5 h-5" />
+              </div>
+            </Button>
+          </li>
+        </ol>
+      </nav>
+      <div role="status" aria-live="polite" className="sr-only">
+        Paso {currentStep} de 2: {currentStep === 1 ? 'Datos Básicos' : 'Planilla de Asientos'}
       </div>
     </div>
   )

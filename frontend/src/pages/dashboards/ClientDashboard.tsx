@@ -1,7 +1,9 @@
 import { useAuth } from '@/hooks/use-auth'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { User, Ticket } from 'lucide-react'
 
 export function Component() {
+  useDocumentTitle('Panel de Cliente')
   const { user } = useAuth()
   return (
     <div className="w-full">

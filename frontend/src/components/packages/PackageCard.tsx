@@ -49,9 +49,10 @@ export default function PackageCard({
     return (
         <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-gray-200">
             <CardContent className="p-0">
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                <div
-                    className="p-4 border-b border-gray-100 bg-muted/50 flex justify-between items-start cursor-pointer group"
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className="p-4 border-b border-gray-100 bg-muted/50 flex justify-between items-start cursor-pointer group w-full text-left h-auto"
                     onClick={() => onViewPackage?.(pkg.id)}
                 >
                     <div className="flex items-center gap-3">
@@ -75,7 +76,7 @@ export default function PackageCard({
                     )}>
                         {getStatusLabel(pkg.status)}
                     </span>
-                </div>
+                </Button>
 
                 <div className="p-4 space-y-4">
                     <div className="flex items-center gap-2 text-sm">

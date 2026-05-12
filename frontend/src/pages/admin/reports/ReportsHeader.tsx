@@ -41,6 +41,7 @@ export function ReportsHeader({
                 value={String(month)}
                 onChange={(v) => onMonthChange(Number(v))}
                 options={MONTH_NAMES.map((name, i) => ({ value: i + 1, label: name }))}
+                aria-label="Mes"
               />
             </div>
             <div className="w-28">
@@ -49,19 +50,21 @@ export function ReportsHeader({
                 value={String(year)}
                 onChange={(v) => onYearChange(Number(v))}
                 options={years.map((y) => ({ value: y, label: String(y) }))}
+                aria-label="Año"
               />
             </div>
             {isAdmin && (
               <div className="w-52">
-                <FormSelect
-                  label=""
-                  value={officeId != null ? String(officeId) : ''}
-                  onChange={(v) => onOfficeChange(v ? Number(v) : undefined)}
-                  options={[
-                    { value: '', label: 'Todas las oficinas' },
-                    ...offices.map((o) => ({ value: o.id, label: o.name })),
-                  ]}
-                />
+                  <FormSelect
+                    label=""
+                    value={officeId != null ? String(officeId) : ''}
+                    onChange={(v) => onOfficeChange(v ? Number(v) : undefined)}
+                    options={[
+                      { value: '', label: 'Todas las oficinas' },
+                      ...offices.map((o) => ({ value: o.id, label: o.name })),
+                    ]}
+                    aria-label="Oficina"
+                  />
               </div>
             )}
             <Button

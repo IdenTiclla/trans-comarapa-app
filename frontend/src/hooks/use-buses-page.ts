@@ -14,10 +14,12 @@ import {
 import { ownerService } from '@/services/owner.service'
 import { busService } from '@/services/bus.service'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { Bus as BusType, Owner } from '@/types'
 
 export function useBusesPage() {
   const dispatch = useAppDispatch()
+  const { confirm, ConfirmDialog } = useConfirm()
   const buses = useAppSelector(selectBuses) as BusType[]
   const loading = useAppSelector(selectBusLoading)
   const error = useAppSelector(selectBusError)
@@ -87,7 +89,7 @@ export function useBusesPage() {
   }
 
   const handleDelete = async (bus: BusType) => {
-    if (!confirm(`¿Eliminar bus ${bus.plate_number || bus.license_plate}?`)) return
+    if (!(await confirm({ title: 'Eliminar bus', description: `¿Eliminar bus ${bus.plate_number || bus.license_plate}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try {
       await dispatch(deleteBus(bus.id)).unwrap()
       toast.success('Bus eliminado correctamente')
@@ -110,5 +112,6 @@ export function useBusesPage() {
     openEdit,
     handleFormSubmit,
     handleDelete,
+    confirmDialog: ConfirmDialog,
   }
 }

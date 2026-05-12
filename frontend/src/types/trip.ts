@@ -1,5 +1,7 @@
 import type { Location } from './location'
 
+export type TripStatus = 'scheduled' | 'dispatched' | 'in_transit' | 'finished' | 'cancelled'
+
 export interface Person {
   id: number
   firstname?: string
@@ -15,7 +17,7 @@ export interface Trip {
   departure_time?: string
   arrival_time?: string
   trip_datetime?: string
-  status?: string
+  status?: TripStatus
   price?: number
   route?: {
     id?: number

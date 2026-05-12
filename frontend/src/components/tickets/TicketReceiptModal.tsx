@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import type { Trip } from '@/types'
 import TicketDisplay from './TicketDisplay'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { COMPANY } from '@/lib/company-config'
 import { TIMING } from '@/lib/timing'
 import { openPrintWindow } from '@/lib/print'
@@ -76,39 +76,30 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
         if (autoPrint && !autoPrintedRef.current && tickets.length > 0) {
             autoPrintedRef.current = true
             const timer = setTimeout(() => printReceipt(), TIMING.PRINT_OPEN_DELAY)
-            return () => clearTimeout(timer)
+            return () => { clearTimeout(timer) }
         }
     }, [show, autoPrint, tickets.length])
 
     if (!show || tickets.length === 0) return null
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 modal-overlay-bokeh backdrop-blur-sm transition-all duration-300 opacity-100">
-            <div className="absolute inset-0" aria-hidden="true" onClick={onClose}></div>
-
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-            <div
-                className="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-[42rem] border border-gray-100/50"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between border-b shrink-0">
+        <Dialog open={show} onOpenChange={(open) => { if (!open) onClose() }}>
+            <DialogContent className="max-w-[42rem] p-0 gap-0 overflow-hidden bg-white border border-gray-100/50">
+                <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex flex-row items-center justify-between border-b shrink-0 space-y-0 text-left">
                     <div className="flex items-center space-x-3">
-                        <div className="bg-white p-2 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                        <div className="bg-white p-2 rounded-lg" aria-hidden="true">
+                            <svg aria-hidden="true" className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-white">
+                            <DialogTitle className="text-xl font-bold text-white">
                                 Boleto Registrado
-                            </h3>
-                            <p className="text-blue-100 text-sm">
+                            </DialogTitle>
+                            <DialogDescription className="text-blue-100 text-sm">
                                 Asiento{tickets.length > 1 ? 's' : ''}: {seatNumbers}
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="text-white hover:bg-white hover:bg-opacity-20 hover:text-white">
-                        <X className="w-6 h-6" />
-                    </Button>
-                </div>
+                </DialogHeader>
 
                 <div id="ticket-receipt-content" className="bg-gray-50 p-4">
                     <div className="mx-auto">
@@ -133,7 +124,7 @@ export default function TicketReceiptModal({ show, tickets, trip, onClose, autoP
                         Cerrar
                     </Button>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }

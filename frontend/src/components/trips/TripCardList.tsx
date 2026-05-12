@@ -110,10 +110,17 @@ function TripRow({
     const dividerClasses = trip ? "bg-border" : isPast ? "bg-muted" : "bg-blue-100"
 
     return (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
+            role="button"
+            tabIndex={0}
             className={containerClasses}
-            onClick={() => !trip && !isPast && onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time })}
+            onClick={() => { if (!trip && !isPast) onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time }) }}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    if (!trip && !isPast) onCreateTrip?.({ routeId: slot.route.id, date: selectedDate, time: slot.time })
+                }
+            }}
         >
             {/* Top row: Content Alignment */}
             <div className="flex items-center h-10">
@@ -129,7 +136,7 @@ function TripRow({
                             <p className="text-sm font-bold text-foreground leading-tight">{busInfo.plate}</p>
                         </div>
                         {floorLabel && (
-                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 font-medium whitespace-nowrap">
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-medium whitespace-nowrap">
                                 {floorLabel}
                             </Badge>
                         )}
@@ -240,7 +247,9 @@ export default function TripCardList({
 
     if (loading) {
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div role="status" aria-busy="true" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <span className="sr-only">Cargando viajes...</span>
+                <div aria-hidden="true">
                 {[1, 2].map((n) => (
                     <div key={n} className="space-y-2">
                         <div className="h-6 bg-muted rounded w-2/3 animate-pulse" />
@@ -250,6 +259,7 @@ export default function TripCardList({
                         ))}
                     </div>
                 ))}
+                </div>
             </div>
         )
     }

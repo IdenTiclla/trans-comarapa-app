@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { MyTrip, TripTab } from './types'
 import { STATUS_LABELS, STATUS_COLORS, TRANSITION_CONFIG } from './constants'
 import { TripPassengersTable } from './TripPassengersTable'
@@ -34,11 +35,12 @@ export function TripCard({
 }: Props) {
   const transition = TRANSITION_CONFIG[trip.status]
   const packages = trip.packages ?? []
+  const { confirm, ConfirmDialog } = useConfirm()
 
-  function handleTransitionClick(e: React.MouseEvent) {
+  async function handleTransitionClick(e: React.MouseEvent) {
     e.stopPropagation()
     if (!transition) return
-    if (transition.confirm && !window.confirm(`¿Confirmar "${transition.label}"?`)) return
+    if (transition.confirm && !(await confirm({ title: transition.label ?? 'Confirmar acción', description: `¿Confirmar "${transition.label}"?`, confirmLabel: 'Sí, confirmar' }))) return
     onTransition(trip.id, transition.action, transition.label)
   }
 
@@ -75,7 +77,7 @@ export function TripCard({
               <div className="text-sm font-medium text-gray-900">{trip.package_count}</div>
               <div className="text-xs text-gray-500">encomiendas</div>
             </div>
-            <svg className={`h-5 w-5 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg aria-hidden="true" className={`h-5 w-5 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -106,7 +108,7 @@ export function TripCard({
 
       {expanded && (
         <div className="border-t border-gray-100">
-          <div className="flex border-b border-gray-100" role="tablist">
+          <div className="flex border-b border-gray-100" role="tablist" aria-label={`Detalles del viaje ${trip.id}`}>
             {(['passengers', 'packages', 'checklist'] as TripTab[]).map(key => {
               const labels: Record<TripTab, string> = { passengers: 'Pasajeros', packages: 'Encomiendas', checklist: 'Verificación' }
               const active = tab === key
@@ -116,7 +118,10 @@ export function TripCard({
                   type="button"
                   variant="ghost"
                   role="tab"
+                  id={`trip-${trip.id}-tab-${key}`}
                   aria-selected={active}
+                  aria-controls={`trip-${trip.id}-panel-${key}`}
+                  tabIndex={active ? 0 : -1}
                   onClick={() => onTabChange(key)}
                   className={cn(
                     'flex-1 rounded-none px-4 py-2 text-sm font-medium transition-colors',
@@ -129,13 +134,19 @@ export function TripCard({
             })}
           </div>
 
-          <div className="px-4 py-4">
+          <div
+            role="tabpanel"
+            id={`trip-${trip.id}-panel-${tab}`}
+            aria-labelledby={`trip-${trip.id}-tab-${tab}`}
+            className="px-4 py-4"
+          >
             {tab === 'passengers' && <TripPassengersTable passengers={trip.passengers} />}
             {tab === 'packages' && <TripPackagesTable packages={packages} />}
             {tab === 'checklist' && <BoardingChecklist tripId={trip.id} passengers={trip.passengers} />}
           </div>
         </div>
       )}
+      {ConfirmDialog}
     </div>
   )
 }

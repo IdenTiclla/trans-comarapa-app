@@ -3,12 +3,16 @@ import FormInput from '@/components/forms/FormInput'
 import FormSelect from '@/components/forms/FormSelect'
 import FormDatePicker from '@/components/forms/FormDatePicker'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Conductores')
   const {
     drivers, loading, saving, showForm, setShowForm,
     editing, formData, setFormData,
     openCreate, openEdit, handleSubmit, handleDelete,
+    confirmDialog,
   } = useDriversPage()
 
   return (
@@ -26,25 +30,27 @@ export function Component() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+        <div role="status" aria-live="polite" className="flex justify-center py-16">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" aria-hidden="true" />
+          <span className="sr-only">Cargando choferes...</span>
         </div>
       ) : drivers.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           No hay choferes registrados. Haz clic en "Nuevo Chofer" para agregar uno.
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
           {/* eslint-disable-next-line no-restricted-syntax */}
           <table className="min-w-full divide-y divide-gray-200">
+            <caption className="sr-only">Lista de conductores</caption>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chofer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Licencia</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chofer</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Licencia</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -90,14 +96,16 @@ export function Component() {
                     <Button
                       variant="ghost"
                       onClick={() => openEdit(driver)}
-                      className="h-auto p-0 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="h-auto py-1 px-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      aria-label={`Editar ${driver.firstname} ${driver.lastname}`}
                     >
                       Editar
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={() => handleDelete(driver)}
-                      className="h-auto p-0 text-red-600 hover:text-red-800 text-sm font-medium"
+                      className="h-auto py-1 px-2 text-red-600 hover:text-red-800 text-sm font-medium"
+                      aria-label={`Eliminar ${driver.firstname} ${driver.lastname}`}
                     >
                       Eliminar
                     </Button>
@@ -109,78 +117,79 @@ export function Component() {
         </div>
       )}
 
-      {showForm && (
-        <div className="fixed inset-0 modal-overlay-bokeh flex items-center justify-center z-50 p-4">
-           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {editing ? 'Editar Chofer' : 'Nuevo Chofer'}
-              </h2>
-              {editing && (
-                <p className="text-sm text-gray-500 mb-4">ID: {editing.id}</p>
-              )}
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput
-                    label="Nombre"
-                    value={formData.firstname}
-                    onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                    required
-                  />
-                  <FormInput
-                    label="Apellido"
-                    value={formData.lastname}
-                    onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                    required
-                  />
-                </div>
-                <FormInput
-                  label="Teléfono"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Ej: 70000000"
-                />
-                <FormInput
-                  label="Nº de Licencia"
-                  value={formData.license_number}
-                  onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
-                  placeholder="Ej: 1234567-A"
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput
-                    label="Categoría"
-                    value={formData.license_type}
-                    onChange={(e) => setFormData({ ...formData, license_type: e.target.value })}
-                    placeholder="Ej: C"
-                  />
-                  <FormDatePicker
-                    label="Fecha de Vencimiento"
-                    value={formData.license_expiry}
-                    onChange={(val) => setFormData({ ...formData, license_expiry: val ? String(val).split('T')[0] : '' })}
-                  />
-                </div>
-                <FormSelect
-                  label="Estado"
-                  value={formData.status}
-                  onChange={(val) => setFormData({ ...formData, status: val })}
-                  options={[
-                    { label: 'Activo', value: 'active' },
-                    { label: 'Inactivo', value: 'inactive' }
-                  ]}
-                />
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) setShowForm(false) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar Chofer' : 'Nuevo Chofer'}</DialogTitle>
+            <DialogDescription>
+              {editing ? 'Modifica los datos del chofer.' : 'Completa los datos del nuevo chofer.'}
+            </DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <p className="text-sm text-gray-500">ID: {editing.id}</p>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Nombre"
+                value={formData.firstname}
+                onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                required
+              />
+              <FormInput
+                label="Apellido"
+                value={formData.lastname}
+                onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                required
+              />
+            </div>
+            <FormInput
+              label="Teléfono"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Ej: 70000000"
+            />
+            <FormInput
+              label="Nº de Licencia"
+              value={formData.license_number}
+              onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
+              placeholder="Ej: 1234567-A"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput
+                label="Categoría"
+                value={formData.license_type}
+                onChange={(e) => setFormData({ ...formData, license_type: e.target.value })}
+                placeholder="Ej: C"
+              />
+              <FormDatePicker
+                label="Fecha de Vencimiento"
+                value={formData.license_expiry}
+                onChange={(val) => setFormData({ ...formData, license_expiry: val ? String(val).split('T')[0] : '' })}
+              />
+            </div>
+            <FormSelect
+              label="Estado"
+              value={formData.status}
+              onChange={(val) => setFormData({ ...formData, status: val })}
+              options={[
+                { label: 'Activo', value: 'active' },
+                { label: 'Inactivo', value: 'inactive' }
+              ]}
+            />
 
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-                    {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Chofer'}
-                  </Button>
-                </div>
-              </form>
-           </div>
-        </div>
-      )}
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                {saving ? 'Guardando...' : editing ? 'Guardar Cambios' : 'Crear Chofer'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {confirmDialog}
     </div>
   )
 }

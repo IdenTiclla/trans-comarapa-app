@@ -21,7 +21,7 @@ export const fetchSecretaries = createAsyncThunk(
         try {
             return await secretaryService.getAll()
         } catch (error) {
-            return rejectWithValue((error as Error).message || 'Error fetching secretaries')
+            return rejectWithValue((error as Error).message || 'Error al obtener las secretarias')
         }
     }
 )

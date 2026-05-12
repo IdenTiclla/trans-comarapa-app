@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button'
 import { KpiCard } from '@/components/dashboards/assistant/KpiCard'
 import { TripCard } from '@/components/dashboards/assistant/TripCard'
 import { formatTime, formatDate } from '@/components/dashboards/assistant/constants'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Panel de Asistente')
   const {
     loading, expandedTrip, setExpandedTrip, filter, setFilter,
     tab, setTab, transitioning, handleTransition,
@@ -13,6 +15,7 @@ export function Component() {
 
   return (
     <div className="w-full">
+      <h1 className="sr-only">Panel de Asistente</h1>
       <div className="flex justify-end gap-2 px-2 sm:px-4 lg:px-6 pt-4">
         <Button
           variant={filter === 'active' ? 'default' : 'outline'}
@@ -41,12 +44,13 @@ export function Component() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+          <div role="status" aria-live="polite" className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" aria-hidden="true" />
+            <span className="sr-only">Cargando viajes...</span>
           </div>
         ) : todayTrips.length === 0 && upcomingTrips.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <svg className="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg aria-hidden="true" className="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             <h2 className="text-xl font-semibold text-gray-600 mb-2">Sin viajes asignados</h2>
@@ -55,8 +59,8 @@ export function Component() {
         ) : (
           <>
             {todayTrips.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">Hoy</h2>
+              <section aria-labelledby="assistant-today-heading">
+                <h2 id="assistant-today-heading" className="text-lg font-semibold text-gray-800 mb-3">Hoy</h2>
                 <div className="space-y-4">
                   {todayTrips.map(trip => (
                     <TripCard
@@ -76,8 +80,8 @@ export function Component() {
             )}
 
             {upcomingTrips.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              <section aria-labelledby="assistant-upcoming-heading">
+                <h2 id="assistant-upcoming-heading" className="text-lg font-semibold text-gray-800 mb-3">
                   {filter === 'active' ? 'Próximos' : 'Otros viajes'}
                 </h2>
                 <div className="space-y-4">

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import FormDatePicker from '@/components/forms/FormDatePicker'
 import { DollarSign, TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
 import { LOCALE } from '@/lib/locale-config'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 function formatCurrency(value: number): string {
   return `Bs. ${value.toLocaleString(LOCALE, { minimumFractionDigits: 2 })}`
@@ -20,10 +21,12 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function Component() {
+  useDocumentTitle('Panel Financiero')
   const { offices, totals, collections, loading, selectedDate, setSelectedDate } = useFinancialDashboard()
 
   return (
     <div className="w-full space-y-6">
+      <h1 className="sr-only">Panel Financiero</h1>
       <div className="flex items-center justify-end">
         <div className="w-64">
           <FormDatePicker
@@ -35,8 +38,9 @@ export function Component() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div role="status" aria-live="polite" className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <span className="sr-only">Cargando datos financieros...</span>
         </div>
       ) : (
         <>
@@ -77,14 +81,15 @@ export function Component() {
               <div className="overflow-x-auto">
                 {/* eslint-disable-next-line no-restricted-syntax */}
                 <table className="min-w-full divide-y divide-gray-200">
+                  <caption className="sr-only">Resumen financiero</caption>
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Bal. Inicial</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Retiros</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Disponible</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Bal. Inicial</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Retiros</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Disponible</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -118,11 +123,12 @@ export function Component() {
                 <div className="overflow-x-auto">
                   {/* eslint-disable-next-line no-restricted-syntax */}
                 <table className="min-w-full divide-y divide-gray-200">
+                    <caption className="sr-only">Desglose por ruta</caption>
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Transacciones</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cobrado</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+                        <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Transacciones</th>
+                        <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cobrado</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">

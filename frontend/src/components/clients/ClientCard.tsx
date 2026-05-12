@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { LOCALE } from '@/lib/locale-config'
@@ -54,15 +54,15 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
 
     const ageBadge = useMemo(() => {
         if (client.age_category) {
-            const map: Record<string, { cls: string, text: string }> = {
-                senior: { cls: 'bg-purple-100 text-purple-800', text: '👴 Adulto Mayor' },
-                adult: { cls: 'bg-blue-100 text-blue-800', text: '👤 Adulto' },
-                minor: { cls: 'bg-orange-100 text-orange-800', text: '👶 Menor' },
+            const map: Record<string, { cls: string, text: ReactNode }> = {
+                senior: { cls: 'bg-purple-100 text-purple-800', text: <><span aria-hidden="true">👴</span> Adulto Mayor</> },
+                adult: { cls: 'bg-blue-100 text-blue-800', text: <><span aria-hidden="true">👤</span> Adulto</> },
+                minor: { cls: 'bg-orange-100 text-orange-800', text: <><span aria-hidden="true">👶</span> Menor</> },
             }
-            return map[client.age_category] || { cls: 'bg-gray-100 text-gray-800', text: '👤 N/A' }
+            return map[client.age_category] || { cls: 'bg-gray-100 text-gray-800', text: <><span aria-hidden="true">👤</span> N/A</> }
         } else if (client.is_minor !== undefined) {
-            if (client.is_minor) return { cls: 'bg-orange-100 text-orange-800', text: '👶 Menor' }
-            return { cls: 'bg-blue-100 text-blue-800', text: '👤 Adulto' }
+            if (client.is_minor) return { cls: 'bg-orange-100 text-orange-800', text: <><span aria-hidden="true">👶</span> Menor</> }
+            return { cls: 'bg-blue-100 text-blue-800', text: <><span aria-hidden="true">👤</span> Adulto</> }
         }
         return null
     }, [client])
@@ -98,7 +98,7 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
             <div className="space-y-3 mb-6 flex-1">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg flex-shrink-0 shrink-0">
-                        <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
+                        <svg aria-hidden="true" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                     </div>
                     <div className="min-w-0">
                         <p className="text-xs text-gray-500 font-medium">Documento</p>
@@ -108,7 +108,7 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
 
                 <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg flex-shrink-0 shrink-0">
-                        <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                        <svg aria-hidden="true" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                     </div>
                     <div className="min-w-0">
                         <p className="text-xs text-gray-500 font-medium">Teléfono</p>
@@ -119,7 +119,7 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
                 {client.email && (
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg flex-shrink-0 shrink-0">
-                            <svg className="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            <svg aria-hidden="true" className="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs text-gray-500 font-medium">Email</p>
@@ -131,7 +131,7 @@ export default function ClientCard({ client, onView, onEdit, onDelete }: ClientC
                 {(client.city || client.state) && (
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-lg flex-shrink-0 shrink-0">
-                            <svg className="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <svg aria-hidden="true" className="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs text-gray-500 font-medium">Ubicación</p>

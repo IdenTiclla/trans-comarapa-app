@@ -18,14 +18,16 @@ export function CashRegisterWidget({ loading, cashRegister, dailySummary, onNavi
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          <div role="status" aria-live="polite" className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" aria-hidden="true" />
+            <span className="sr-only">Cargando caja registradora...</span>
           </div>
         ) : cashRegister?.status === 'open' ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" aria-hidden="true" />
               <span className="text-sm font-semibold text-green-700">Caja Abierta</span>
+              <span className="sr-only"> — datos actualizados en tiempo real</span>
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">

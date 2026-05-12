@@ -12,6 +12,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { CalendarView } from '@/components/ui/calendar-view'
 import { LOCALE } from '@/lib/locale-config'
 import { ROUTES } from '@/lib/routes'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 function formatDateStr(date: Date) {
   const y = date.getFullYear()
@@ -27,6 +28,7 @@ const getTomorrowStr = () => { const d = new Date(); d.setDate(d.getDate() + 1);
 const getDayAfterStr = () => { const d = new Date(); d.setDate(d.getDate() + 2); return formatDateStr(d) }
 
 export function Component() {
+  useDocumentTitle('Viajes')
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const trips = useAppSelector(selectTrips) as Record<string, unknown>[]
@@ -198,7 +200,7 @@ export function Component() {
 
       {/* Error */}
       {hasError && (
-        <Card className="border-red-200 bg-red-50">
+        <Card role="alert" className="border-red-200 bg-red-50">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />

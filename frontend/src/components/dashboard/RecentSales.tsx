@@ -23,7 +23,7 @@ export default function RecentSales({ limit = 5, onViewAll }: RecentSalesProps) 
     <>
       <div className="divide-y divide-gray-200">
         {loading && (
-          <div className="p-4 text-center">
+          <div role="status" aria-live="polite" className="p-4 text-center">
             <p className="text-gray-500">Cargando ventas...</p>
           </div>
         )}

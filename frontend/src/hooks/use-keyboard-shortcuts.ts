@@ -1,12 +1,18 @@
 import { useEffect } from 'react'
 
-/**
- * Generic keyboard shortcuts hook.
- * Only fires when `enabled` is true and the focused element is not an input/textarea.
- *
- * @param shortcuts Map of key (lowercase) → handler
- * @param enabled   When false, no shortcuts are registered
- */
+function shouldIgnoreShortcut(el: Element | null): boolean {
+    if (!el) return false
+
+    const tag = el.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+    if ((el as HTMLElement).isContentEditable) return true
+
+    const role = el.getAttribute('role')
+    if (role === 'textbox' || role === 'combobox' || role === 'searchbox') return true
+
+    return false
+}
+
 export function useKeyboardShortcuts(
     shortcuts: Record<string, () => void>,
     enabled: boolean
@@ -15,13 +21,9 @@ export function useKeyboardShortcuts(
         if (!enabled) return
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Skip when any modifier is held — let browser/OS shortcuts (Ctrl+R, Cmd+S, etc.) through.
             if (e.ctrlKey || e.metaKey || e.altKey) return
 
-            if (
-                document.activeElement?.tagName === 'INPUT' ||
-                document.activeElement?.tagName === 'TEXTAREA'
-            ) return
+            if (shouldIgnoreShortcut(document.activeElement)) return
 
             const key = e.key.toLowerCase()
             const handler = shortcuts[key]

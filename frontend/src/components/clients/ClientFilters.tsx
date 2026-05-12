@@ -26,11 +26,13 @@ export default function ClientFilters({ initialFilters = {}, onFilterChange, onS
 
       <div className="mb-1">
         <FormInput
+          id="client-search"
           value={s.filters.search}
           onChange={(e) => s.handleFilterChange('search', e.target.value)}
           placeholder="Buscar cliente por nombre, CI o teléfono..."
           className="py-3 bg-gray-50 shadow-sm transition-colors duration-200 focus:bg-white"
           leftIcon={<Search className="h-5 w-5 text-blue-500" />}
+          aria-label="Buscar cliente"
         />
       </div>
 

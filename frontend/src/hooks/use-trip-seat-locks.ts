@@ -4,7 +4,6 @@ import { selectUser } from '@/store/auth.slice'
 import { seatService, type LockedSeatInfo } from '@/services/seat.service'
 import { API_BASE_URL } from '@/lib/constants'
 import { TIMING } from '@/lib/timing'
-import { apiFetch } from '@/lib/api'
 
 export function useTripSeatLocks(tripId: number) {
     const currentUser = useAppSelector(selectUser)
@@ -44,7 +43,7 @@ export function useTripSeatLocks(tripId: number) {
 
             let wsToken: string | null = null
             try {
-                const res = await apiFetch<{ token: string }>('/seats/ws-token')
+                const res = await seatService.getWsToken()
                 wsToken = res.token
             } catch {
                 startPolling()
@@ -113,7 +112,21 @@ export function useTripSeatLocks(tripId: number) {
                 wsRef.current = null
             }
         }
-    }, [tripId, currentUser?.id, fetchLockedSeats]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [tripId, currentUser?.id, fetchLockedSeats])
 
-    return { lockedSeats, fetchLockedSeats }
+    const prevLockedSeatsRef = useRef<Set<number>>(new Set())
+    const [lockAnnouncement, setLockAnnouncement] = useState('')
+
+    useEffect(() => {
+        const currentIds = new Set(lockedSeats.map(s => s.seat_id))
+        const newLocked = lockedSeats.filter(
+            s => !prevLockedSeatsRef.current.has(s.seat_id) && s.user_id !== currentUser?.id,
+        )
+        prevLockedSeatsRef.current = currentIds
+        if (newLocked.length === 0) return
+        const seatLabels = newLocked.map(s => s.seat_id).join(', ')
+        setLockAnnouncement(`Asiento${newLocked.length > 1 ? 's' : ''} ${seatLabels} bloqueado${newLocked.length > 1 ? 's' : ''} por otro usuario`)
+    }, [lockedSeats, currentUser?.id])
+
+    return { lockedSeats, fetchLockedSeats, lockAnnouncement }
 }

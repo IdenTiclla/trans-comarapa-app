@@ -11,9 +11,9 @@ export function TripLogisticsCard({ ticket, trip }: { ticket: TicketDetail; trip
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-6">
-      <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2">
+      <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100 pb-2">
         Información del Viaje
-      </h3>
+      </h2>
 
       {trip ? (
         <>

@@ -31,18 +31,19 @@ export function WithdrawalHistoryTable({ withdrawals, ownerName }: Props) {
                     <div className="overflow-x-auto">
                         {/* eslint-disable-next-line no-restricted-syntax */}
                         <table className="w-full">
+                            <caption className="sr-only">Historial de retiros</caption>
                             <thead>
                                 <tr className="border-t border-gray-100">
-                                    <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" className="px-5 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                                         Oficina / Destino
                                     </th>
-                                    <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" className="px-5 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                                         Fecha Retiro
                                     </th>
-                                    <th className="px-5 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" className="px-5 py-2.5 text-right text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                                         Monto
                                     </th>
-                                    <th className="px-5 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    <th scope="col" className="px-5 py-2.5 text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                                         Estado
                                     </th>
                                 </tr>

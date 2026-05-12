@@ -1,4 +1,5 @@
 import { useReportsPage } from '@/hooks/use-reports-page'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { ReportsHeader } from './reports/ReportsHeader'
 import { ReportTabs } from './reports/ReportTabs'
 import { TicketReport } from './reports/TicketReport'
@@ -6,6 +7,7 @@ import { PackageReport } from './reports/PackageReport'
 import { CashReport } from './reports/CashReport'
 
 export function Component() {
+  useDocumentTitle('Reportes')
   const {
     isAdmin, year, setYear, month, setMonth,
     officeId, setOfficeId, offices, tab, setTab,
@@ -31,8 +33,9 @@ export function Component() {
         <ReportTabs tab={tab} onChange={setTab} />
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+          <div role="status" aria-live="polite" className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" aria-hidden="true" />
+            <span className="sr-only">Cargando reportes...</span>
           </div>
         ) : !data ? (
           <div className="bg-white rounded-xl shadow-sm p-8 text-center text-gray-500">
@@ -40,9 +43,9 @@ export function Component() {
           </div>
         ) : (
           <>
-            {tab === 'tickets' && <TicketReport data={data} />}
-            {tab === 'packages' && <PackageReport data={data} />}
-            {tab === 'cash' && <CashReport data={data} />}
+            {tab === 'tickets' && <div role="tabpanel" id="report-panel-tickets" aria-labelledby="report-tab-tickets"><TicketReport data={data} /></div>}
+            {tab === 'packages' && <div role="tabpanel" id="report-panel-packages" aria-labelledby="report-tab-packages"><PackageReport data={data} /></div>}
+            {tab === 'cash' && <div role="tabpanel" id="report-panel-cash" aria-labelledby="report-tab-cash"><CashReport data={data} /></div>}
           </>
         )}
       </div>

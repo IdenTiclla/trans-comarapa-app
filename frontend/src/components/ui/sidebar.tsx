@@ -188,7 +188,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -197,8 +197,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>Menú lateral</SheetTitle>
+            <SheetDescription>Muestra el menú lateral en dispositivos móviles</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
@@ -275,7 +275,7 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">Alternar menú lateral</span>
     </Button>
   )
 }
@@ -287,10 +287,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
-      aria-label="Toggle Sidebar"
+      aria-label="Alternar menú lateral"
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      title="Alternar menú lateral"
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
@@ -512,6 +512,16 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state } = useSidebar()
 
+  // When collapsed (icon-only), tooltips are not accessible on touch devices.
+  // Use the tooltip string as aria-label fallback so screen readers and touch users get the label.
+  const collapsedAriaLabel = (() => {
+    if (state !== "collapsed" || isMobile) return undefined
+    if (props['aria-label']) return undefined
+    if (typeof tooltip === "string") return tooltip
+    if (tooltip && typeof tooltip === "object" && typeof tooltip.children === "string") return tooltip.children
+    return undefined
+  })()
+
   const button = (
     <Comp
       data-slot="sidebar-menu-button"
@@ -520,6 +530,7 @@ function SidebarMenuButton({
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
+      aria-label={props['aria-label'] ?? collapsedAriaLabel}
     />
   )
 

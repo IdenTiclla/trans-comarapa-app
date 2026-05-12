@@ -35,6 +35,8 @@
 | [guides/naming-conventions.md](guides/naming-conventions.md) | Backend and frontend naming patterns |
 | [guides/adding-features.md](guides/adding-features.md) | Step-by-step for adding new entities |
 | [guides/testing.md](guides/testing.md) | Testing philosophy, patterns, and commands |
+| [manual-test-plan.md](manual-test-plan.md) | Plan de pruebas manuales — Clean Architecture |
+| [manual-test-plan-a11y.md](manual-test-plan-a11y.md) | Plan de pruebas manuales — Accesibilidad WCAG 2.2 AA |
 
 ## Lessons Learned
 

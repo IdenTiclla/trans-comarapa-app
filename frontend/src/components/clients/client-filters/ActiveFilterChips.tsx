@@ -24,7 +24,7 @@ function Chip({ label, onClear, ariaLabel }: ChipProps) {
         size="icon"
         onClick={onClear}
         aria-label={ariaLabel}
-        className="ml-1 h-4 w-4 text-blue-500 hover:text-blue-700 hover:bg-transparent p-0"
+        className="ml-1 h-6 w-6 text-blue-500 hover:text-blue-700 hover:bg-transparent p-0"
       >
         <X className="h-3 w-3" />
       </Button>

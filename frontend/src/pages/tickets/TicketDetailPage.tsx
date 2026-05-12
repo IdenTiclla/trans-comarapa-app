@@ -25,8 +25,10 @@ import { PassengerCard } from './ticket-detail/PassengerCard'
 import { TripLogisticsCard } from './ticket-detail/TripLogisticsCard'
 import { PaymentSummaryCard } from './ticket-detail/PaymentSummaryCard'
 import { QuickActionsCard } from './ticket-detail/QuickActionsCard'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Detalle de Boleto')
   const { id } = useParams()
   const ticketId = Number(id)
   const navigate = useNavigate()
@@ -87,13 +89,13 @@ export function Component() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <section className="lg:col-span-8 space-y-6">
+          <section className="lg:col-span-8 space-y-6" aria-label="Información del boleto">
             <PassengerCard ticket={ticket} />
             <TripLogisticsCard ticket={ticket} trip={trip} />
             <TicketJourneyProgress ticket={ticket} />
           </section>
 
-          <aside className="lg:col-span-4 space-y-6">
+          <aside className="lg:col-span-4 space-y-6" aria-label="Resumen de pago y acciones">
             <PaymentSummaryCard ticket={ticket} trip={trip} />
             <QuickActionsCard
               canCancel={canCancel}

@@ -25,6 +25,12 @@ export function UserTableRow({ user, onView, onEdit, onDelete, onActivate, onDea
             <div className="text-sm font-medium text-gray-900">{getEffectiveName(user)}</div>
             <div className="text-sm text-gray-500">@{user.username}</div>
             <div className="text-xs text-gray-500 sm:hidden mt-1">{user.email}</div>
+            <div className="md:hidden mt-1">
+              <span className={cn('px-2 inline-flex text-xs leading-5 font-semibold rounded-full', getRoleBadgeClass(user.role))}>
+                {getRoleLabel(user.role)}
+              </span>
+            </div>
+            <div className="lg:hidden text-xs text-gray-400 mt-1">Creado: {formatDate(user.created_at)}</div>
           </div>
         </div>
       </td>

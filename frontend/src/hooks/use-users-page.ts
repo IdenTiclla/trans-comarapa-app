@@ -3,6 +3,7 @@ import { userManagementService } from '@/services/user-management.service'
 import { secretaryService } from '@/services/secretary.service'
 import { officeService } from '@/services/office.service'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 import type { Office } from '@/types/office'
 
 interface User {
@@ -37,6 +38,7 @@ const ROLE_OPTIONS = Object.entries(ROLE_LABELS).map(([value, label]) => ({
 }))
 
 export function useUsersPage() {
+  const { confirm, ConfirmDialog } = useConfirm()
   const [users, setUsers] = useState<User[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [loading, setLoading] = useState(true)
@@ -149,7 +151,7 @@ export function useUsersPage() {
   }
 
   const handleDelete = async (user: User) => {
-    if (!confirm(`¿Eliminar usuario ${user.email}?`)) return
+    if (!(await confirm({ title: 'Eliminar usuario', description: `¿Eliminar usuario ${user.email}?`, confirmLabel: 'Sí, eliminar', variant: 'destructive' }))) return
     try {
       await userManagementService.delete(user.id)
       toast.success('Usuario eliminado')
@@ -196,5 +198,6 @@ export function useUsersPage() {
     ROLE_LABELS,
     ROLE_COLORS,
     ROLE_OPTIONS,
+    confirmDialog: ConfirmDialog,
   }
 }

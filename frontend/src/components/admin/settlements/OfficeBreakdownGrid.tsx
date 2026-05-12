@@ -43,7 +43,7 @@ function OfficeCard({ office, isCurrent }: { office: OfficeBreakdown; isCurrent:
                 <h3 className="text-sm font-bold text-gray-900">{office.office_name}</h3>
                 <div className="flex items-center gap-1">
                     {isCurrent && (
-                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 mr-1">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 mr-1">
                             Tu oficina
                         </Badge>
                     )}

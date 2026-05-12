@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { Button } from '@/components/ui/button'
 import { useUpcomingTrips } from './use-upcoming-trips'
 import { LOCALE } from '@/lib/locale-config'
 import { ROUTES } from '@/lib/routes'
@@ -18,8 +19,9 @@ export default function UpcomingTrips() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div role="status" aria-live="polite" className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" aria-hidden="true" />
+        <span className="sr-only">Cargando próximos viajes...</span>
       </div>
     )
   }
@@ -35,11 +37,12 @@ export default function UpcomingTrips() {
         const destination = trip.route?.destination || 'Destino'
 
         return (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-          <div
+          <Button
+            type="button"
+            variant="ghost"
             key={trip.id}
             onClick={() => navigate(ROUTES.tripDetail(trip.id))}
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-blue-50 cursor-pointer transition-colors border border-gray-200 hover:border-blue-200"
+            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-blue-50 transition-colors border border-gray-200 hover:border-blue-200 w-full text-left h-auto"
           >
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 truncate">
@@ -59,7 +62,7 @@ export default function UpcomingTrips() {
                 <p className="text-xs text-gray-500 mt-1">{trip.available_seats} asientos</p>
               )}
             </div>
-          </div>
+          </Button>
         )
       })}
     </div>

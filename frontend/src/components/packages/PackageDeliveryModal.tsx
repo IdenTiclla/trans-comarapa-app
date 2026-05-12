@@ -164,29 +164,31 @@ export default function PackageDeliveryModal({
                                         <div className="mt-4 border-t border-orange-200 pt-4">
                                             <span className="block text-sm font-medium text-orange-900 mb-2">Seleccione el método de pago recibido:</span>
                                             <div className="grid grid-cols-2 gap-3">
-                                                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                                                <div
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
                                                     onClick={() => setPaymentMethod('cash')}
                                                     className={cn(
-                                                        'cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center transition-all',
+                                                        'cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center transition-all h-auto',
                                                         paymentMethod === 'cash' ? 'border-orange-500 bg-orange-100 shadow-md transform scale-105' : 'border-gray-200 bg-white hover:border-orange-300'
                                                     )}
                                                 >
                                                     <Banknote className={cn("h-8 w-8 mb-2", paymentMethod === 'cash' ? 'text-orange-600' : 'text-gray-400')} />
                                                     <span className={cn("text-sm font-bold", paymentMethod === 'cash' ? 'text-orange-800' : 'text-gray-600')}>Efectivo</span>
-                                                </div>
+                                                </Button>
 
-                                                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                                                <div
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
                                                     onClick={() => setPaymentMethod('qr')}
                                                     className={cn(
-                                                        'cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center transition-all',
+                                                        'cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center transition-all h-auto',
                                                         paymentMethod === 'qr' ? 'border-orange-500 bg-orange-100 shadow-md transform scale-105' : 'border-gray-200 bg-white hover:border-orange-300'
                                                     )}
                                                 >
                                                     <QrCode className={cn("h-8 w-8 mb-2", paymentMethod === 'qr' ? 'text-orange-600' : 'text-gray-400')} />
                                                     <span className={cn("text-sm font-bold", paymentMethod === 'qr' ? 'text-orange-800' : 'text-gray-600')}>Transferencia QR</span>
-                                                </div>
+                                                </Button>
                                             </div>
                                         </div>
                                     </div>
@@ -197,7 +199,7 @@ export default function PackageDeliveryModal({
                                 )}
 
                                 {packageData.payment_status === 'collect_on_delivery' && isCashRegisterOpen === false && (
-                                    <div className="bg-red-50 rounded-lg p-4 border border-red-200 mt-4">
+                                    <div role="alert" className="bg-red-50 rounded-lg p-4 border border-red-200 mt-4">
                                         <div className="flex items-start">
                                             <div className="flex-shrink-0 mt-0.5">
                                                 <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -224,7 +226,7 @@ export default function PackageDeliveryModal({
             </div>
 
             {errorMessage && (
-                        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-start">
+                        <div role="alert" className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-start">
                             <AlertCircle className="h-5 w-5 text-destructive mr-2 mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-destructive font-medium">{errorMessage}</p>
                         </div>

@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { ROUTES } from '@/lib/routes'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Component() {
+  useDocumentTitle('Página no encontrada')
   const navigate = useNavigate()
 
   return (

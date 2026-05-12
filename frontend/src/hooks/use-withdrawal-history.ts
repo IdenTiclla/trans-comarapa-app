@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { financialService } from '@/services/financial.service'
 import type { WithdrawalRecord } from '@/services/financial.service'
 import { API_BASE_URL } from '@/lib/constants'
+import { toast } from 'sonner'
 
 export function useWithdrawalHistory() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([])
@@ -38,6 +39,7 @@ export function useWithdrawalHistory() {
       `${API_BASE_URL}/financial/withdrawals/csv${qs ? `?${qs}` : ''}`,
       '_blank',
     )
+    toast.success('Descargando archivo', { description: 'El archivo CSV se está descargando.' })
   }
 
   const totalAmount = withdrawals.reduce((sum, w) => sum + w.amount, 0)
