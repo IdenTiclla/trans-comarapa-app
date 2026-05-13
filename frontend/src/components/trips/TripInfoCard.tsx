@@ -110,11 +110,11 @@ interface Props {
 // ── Small info cell used in the data grid ────────────────────────────────────
 function InfoCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
     return (
-        <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex-shrink-0 text-muted-foreground">{icon}</div>
-            <div className="min-w-0">
+        <div className="flex items-start gap-2.5 min-w-0">
+            <div className="flex-shrink-0 text-muted-foreground mt-0.5">{icon}</div>
+            <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
-                <p className="text-sm font-bold text-foreground truncate leading-tight mt-0.5">{value}</p>
+                <p className="text-sm font-bold text-foreground break-words leading-tight mt-0.5" title={typeof value === 'string' ? value : undefined}>{value}</p>
             </div>
         </div>
     )

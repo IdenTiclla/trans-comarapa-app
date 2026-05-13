@@ -128,8 +128,10 @@ export default function BusSeatGrid({
     }
 
     const formatPrice = (price: number | string | null | undefined) => {
-        if (price === null || price === undefined) return '0.00'
-        return parseFloat(String(price)).toFixed(2)
+        if (price === null || price === undefined) return '0'
+        const n = parseFloat(String(price))
+        if (!Number.isFinite(n)) return '0'
+        return Number.isInteger(n) ? String(n) : n.toFixed(2)
     }
 
     const getSeatDestination = (seat: SeatItem) => {
@@ -158,42 +160,43 @@ export default function BusSeatGrid({
                     type="button"
                     variant="ghost"
                     className={cn(
-                        'seat-box relative flex min-h-32 w-full min-w-0 flex-1 flex-col items-stretch justify-between gap-1 overflow-hidden rounded-lg border-2 p-1.5 text-center whitespace-normal transition-all sm:gap-1.5 sm:p-2 lg:min-h-40 lg:p-3',
+                        'seat-box relative flex h-full w-full min-w-0 flex-1 flex-col items-stretch justify-between gap-1 overflow-hidden rounded-lg border-2 p-1.5 text-center whitespace-normal transition-all min-h-36 sm:min-h-40 sm:gap-1.5 sm:p-2 lg:min-h-44 lg:p-2.5',
                         !isUnavailable && 'cursor-pointer',
                         getSeatClass(seat),
                     )}
                     onClick={() => toggleSeatSelection(seat)}
                     aria-pressed={isSelected}
                     aria-disabled={isUnavailable}
-                    aria-label={`Asiento ${seat.number} - ${getSeatStatusText(seat)}${passengerName ? ` - ${passengerName}` : ''}`}
+                    aria-label={`Asiento ${seat.number} - ${getSeatStatusText(seat)}${passengerName ? ` - ${passengerName}` : ''}${getSeatPrice(seat) ? ` - Bs. ${formatPrice(getSeatPrice(seat))}` : ''}`}
                     onContextMenu={(e) => handleContextMenu(e, seat)}
                 >
-                    {/* Top row: seat number + position (left) and price (right) */}
-                    <div className="flex w-full min-w-0 items-center justify-between gap-1">
-                        <div className="inline-flex flex-shrink-0 items-baseline gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 text-foreground shadow-sm">
+                    {/* Top row: seat number + position (left) and price (right) — always on the same line */}
+                    <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-1">
+                        <div className="inline-flex min-w-0 shrink items-baseline gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 text-foreground shadow-sm">
                             <span className="text-[11px] font-extrabold leading-none sm:text-xs lg:text-sm">{seat.number}</span>
                             <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[11px]" title={positionLabel}>
-                                <span className="lg:hidden">{positionLabel.charAt(0)}</span>
-                                <span className="hidden lg:inline">{positionLabel}</span>
+                                {positionLabel.charAt(0)}
                             </span>
                         </div>
-                        <div
-                            aria-hidden={!getSeatPrice(seat)}
-                            className={`flex-shrink-0 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground sm:text-[11px] ${getSeatPrice(seat) ? '' : 'invisible'}`}
-                        >
-                            {getSeatPrice(seat) ? `Bs. ${formatPrice(getSeatPrice(seat))}` : 'Bs. 0.00'}
-                        </div>
+                        {getSeatPrice(seat) ? (
+                            <div
+                                className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground sm:text-[11px]"
+                                title={`Bs. ${formatPrice(getSeatPrice(seat))}`}
+                            >
+                                Bs. {formatPrice(getSeatPrice(seat))}
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* Center: passenger info (centered) */}
                     <div className="flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-center">
                         {isOccupiedOrReserved && (
                             <>
-                                <div className="line-clamp-3 w-full break-words text-[10px] font-bold leading-tight text-foreground sm:text-xs lg:text-sm" title={passengerName}>
+                                <div className="line-clamp-2 w-full break-words text-[10px] font-bold leading-tight text-foreground sm:text-xs lg:text-sm" title={passengerName}>
                                     {passengerName}
                                 </div>
                                 {passengerPhone && (
-                                    <div className="hidden w-full truncate text-[10px] font-medium leading-tight text-muted-foreground sm:block sm:text-[11px] lg:text-xs">
+                                    <div className="w-full truncate text-[10px] font-medium leading-tight text-muted-foreground sm:text-[11px] lg:text-xs" title={passengerPhone}>
                                         {passengerPhone}
                                     </div>
                                 )}
@@ -219,39 +222,39 @@ export default function BusSeatGrid({
 
     return (
         <div className="seat-map-container px-3 pb-5 sm:px-6 sm:pb-6 xl:px-8">
-            <div className="xl:hidden flex justify-center mb-4 print:hidden">
+            <div className="lg:hidden flex justify-center mb-4 print:hidden">
                 <div className="rounded-lg border border-border bg-muted px-4 py-2 text-sm font-bold text-foreground">
                     Pasillo central
                 </div>
             </div>
 
-            <div className={`relative grid grid-cols-1 rounded-xl border bg-muted/30 p-3 sm:p-5 xl:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] xl:gap-5 2xl:gap-6 ${seatChangeMode ? 'border-status-medium/60 ring-2 ring-status-medium/20' : 'border-border'}`}>
-                <div className="left-column min-w-0 xl:pr-4">
-                    <div className="xl:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
+            <div className={`relative grid grid-cols-1 rounded-xl border bg-muted/30 p-3 sm:p-5 lg:grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)] lg:gap-4 xl:gap-5 2xl:gap-6 ${seatChangeMode ? 'border-status-medium/60 ring-2 ring-status-medium/20' : 'border-border'}`}>
+                <div className="left-column min-w-0 lg:pr-2 xl:pr-4">
+                    <div className="lg:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
                         <div className="w-3 h-3 bg-primary rounded-sm"></div>
                         <h3 className="text-sm font-bold text-foreground">Lado Izquierdo</h3>
                         <div className="w-3 h-3 bg-primary rounded-sm"></div>
                     </div>
-                    <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:gap-3">
+                    <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:gap-3 items-stretch">
                         {leftColumnSeats.map(renderSeat)}
                     </div>
                 </div>
 
-                <div className="center-aisle hidden xl:flex flex-col justify-center items-center px-4 print:!hidden">
-                    <div className="flex h-full min-h-80 w-10 items-center justify-center rounded-full border border-border bg-card shadow-sm">
-                        <div className="rotate-90 whitespace-nowrap text-xs font-black uppercase tracking-widest text-muted-foreground">
+                <div className="center-aisle hidden lg:flex flex-col justify-center items-center px-2 print:!hidden">
+                    <div className="flex h-full min-h-80 w-8 lg:w-10 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+                        <div className="rotate-90 whitespace-nowrap text-[11px] lg:text-xs font-black uppercase tracking-widest text-muted-foreground">
                             Pasillo
                         </div>
                     </div>
                 </div>
 
-                <div className="right-column mt-6 sm:mt-8 xl:mt-0 min-w-0 xl:pl-4">
-                    <div className="xl:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
+                <div className="right-column mt-6 sm:mt-8 lg:mt-0 min-w-0 lg:pl-2 xl:pl-4">
+                    <div className="lg:hidden mb-4 flex items-center justify-center space-x-2 print:hidden">
                         <div className="w-3 h-3 bg-status-available rounded-sm"></div>
                         <h3 className="text-sm font-bold text-foreground">Lado Derecho</h3>
                         <div className="w-3 h-3 bg-status-available rounded-sm"></div>
                     </div>
-                    <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:gap-3">
+                    <div className="grid auto-rows-fr grid-cols-2 gap-2 sm:gap-3 items-stretch">
                         {rightColumnSeats.map(renderSeat)}
                     </div>
                 </div>
