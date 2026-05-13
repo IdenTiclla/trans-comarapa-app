@@ -1,6 +1,6 @@
 # Manual Test Plan — Accesibilidad WCAG 2.2 AA
 
-> Verificación manual de todos los cambios derivados de `implementation-plans/accessibility-wcag-2.2-aa.plan.md`.
+> Verificación manual de todos los cambios derivados de `../implementation-plans/archive/accessibility-wcag-2.2-aa.plan.md`.
 > Cada sección corresponde a un grupo de hallazgos (B = bloqueante, I = importante, M = menor) e indica criterios de aceptación.
 
 ## Preparación

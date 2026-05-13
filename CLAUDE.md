@@ -61,24 +61,11 @@ npx tsc --noEmit  # must pass
 - **API:** REST conventions, all endpoints `/api/v1/` prefix, React uses `apiFetch` from `lib/api.ts`
 - **UI / a11y / file-size / typing (MANDATORY for any `frontend/` work):** [docs/guides/ui-conventions.md](docs/guides/ui-conventions.md) — rules enforced by ESLint, CI blocks violations
 - **Fluid responsive design (MANDATORY for any layout work):** [docs/guides/fluid-responsive-design.md](docs/guides/fluid-responsive-design.md) — debe verse correcto en cualquier ancho 320–1920
-- **Naming conventions:** [docs/guides/naming-conventions.md](docs/guides/naming-conventions.md)
-- **Adding features:** [docs/guides/adding-features.md](docs/guides/adding-features.md)
+- **Naming & adding features:** [docs/guides/conventions.md](docs/guides/conventions.md)
 
 ## Lessons Learned
 
-**IMPORTANT:** Before writing code, review `docs/lessons/` for past mistakes. After fixing any bug, document it in `docs/lessons/NNN-short-description.md`.
-
-- `001`: Don't use Python `set` with objects containing WebSocket/network references — use `list`
-- `002`: Never call `.toFixed()`, `Object.entries()` directly on API response fields — use `?? 0` / `?? {}`
-- `003`: Unit tests must NOT require database — use mocks and dependency injection
-- `004`: Check `package.json` for routing package before importing — use `'react-router'` not `'react-router-dom'`
-- `005`: Never use `any` in React/TS — type API shapes with domain interfaces + `[key: string]: unknown` escape hatch; narrow errors with `err instanceof Error ? err.message : fallback`
-- `006`: Use `navigate(-1)` in modal onClose callbacks instead of hardcoded routes — pages can be reached from multiple locations
-- `007`: Never put business logic in routes or models — follow Route → Service → Repository pattern; use `core/security.py` for password hashing, not the User model
-- `008`: Never compare timestamps against `datetime.now()` to check entity status — always use the `status` field and state machine `validate_transition()`
-- `009`: Radix `Dialog` renders children even when `open={false}` — always wrap with `{data && <Dialog open>}` when children access nullable data
-- `010`: Always use `Dialog`/`DialogContent` from `@/components/ui/dialog` for modals — never use custom `fixed inset-0` div overlays
-- `011`: Always show an accessible toast before redirecting on session expiry — never redirect silently
+**IMPORTANT:** Before writing code, review [docs/lessons/](docs/lessons/) (indexed in [docs/INDEX.md](docs/INDEX.md#lessons-learned)) for past mistakes. After fixing any bug, document it in `docs/lessons/NNN-short-description.md`.
 
 ## Key Resources
 

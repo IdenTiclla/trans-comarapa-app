@@ -32,19 +32,33 @@
 | Document | Description |
 |----------|-------------|
 | [guides/environment-setup.md](guides/environment-setup.md) | Setup, Docker, env vars, troubleshooting |
-| [guides/naming-conventions.md](guides/naming-conventions.md) | Backend and frontend naming patterns |
-| [guides/adding-features.md](guides/adding-features.md) | Step-by-step for adding new entities |
-| [guides/fluid-responsive-design.md](guides/fluid-responsive-design.md) | Fluid & Adaptive responsive layout — reglas obligatorias |
+| [guides/conventions.md](guides/conventions.md) | Naming patterns + step-by-step to add a new entity (backend & frontend) |
+| [guides/ui-conventions.md](guides/ui-conventions.md) | UI / a11y / file-size / typing rules (enforced by ESLint) |
+| [guides/fluid-responsive-design.md](guides/fluid-responsive-design.md) | Fluid & adaptive responsive layout — reglas obligatorias |
 | [guides/testing.md](guides/testing.md) | Testing philosophy, patterns, and commands |
-| [manual-test-plan.md](manual-test-plan.md) | Plan de pruebas manuales — Clean Architecture |
-| [manual-test-plan-a11y.md](manual-test-plan-a11y.md) | Plan de pruebas manuales — Accesibilidad WCAG 2.2 AA |
+
+## Test Plans
+
+| Document | Description |
+|----------|-------------|
+| [test-plans/manual-test-plan-a11y.md](test-plans/manual-test-plan-a11y.md) | Plan de pruebas manuales — Accesibilidad WCAG 2.2 AA |
+| [test-plans/archive/](test-plans/archive/) | Resultados de ejecuciones pasadas y planes históricos (Clean Architecture, a11y results) |
 
 ## Lessons Learned
 
 | Lesson | Summary |
 |--------|---------|
-| [lessons/001](lessons/001-python-set-unhashable-websocket.md) | Python `set` + WebSocket objects = unhashable error |
-| [lessons/002](lessons/002-toFixed-on-undefined-api-fields.md) | Never call methods directly on API response fields |
+| [001](lessons/001-python-set-unhashable-websocket.md) | Python `set` + WebSocket objects = unhashable error |
+| [002](lessons/002-toFixed-on-undefined-api-fields.md) | Never call methods directly on API response fields |
+| [003](lessons/003-unit-vs-integration-tests.md) | Unit tests must not require a database |
+| [004](lessons/004-react-router-vs-react-router-dom.md) | Use `react-router`, not `react-router-dom` |
+| [005](lessons/005-no-any-in-typescript.md) | Never use `any` in React/TS |
+| [006](lessons/006-hardcoded-navigate-onClose.md) | Use `navigate(-1)` in modal onClose callbacks |
+| [007](lessons/007-business-logic-in-routes-and-models.md) | No business logic in routes or models |
+| [008](lessons/008-no-datetime-compare-for-status.md) | Don't compare timestamps to derive entity status |
+| [009](lessons/009-radix-dialog-renders-children-when-closed.md) | Wrap Radix `Dialog` with `{data && <Dialog>}` |
+| [010](lessons/010-no-custom-modal-overlays.md) | Use `Dialog`/`DialogContent`, never custom overlays |
+| [011](lessons/011-session-expiry-without-warning.md) | Show accessible toast before redirecting on session expiry |
 
 ## Implementation Plans
 
@@ -52,21 +66,11 @@
 
 | Plan | Status |
 |------|--------|
-| [srp-refactoring](implementation-plans/srp-refactoring.plan.md) | Pending |
-| [nuxt-to-react-migration](implementation-plans/nuxt-to-react-migration.plan.md) | Ongoing |
-| [react-bookings-page-redesign](implementation-plans/react-bookings-page-redesign.plan.md) | In progress |
-| [react-secretary-dashboard-redesign](implementation-plans/react-secretary-dashboard-redesign.plan.md) | In progress |
-| [package-loading-and-bokeh-overlay](implementation-plans/package-loading-and-bokeh-overlay.plan.md) | Pending |
-| [mvp-phase1](implementation-plans/mvp-phase1.plan.md) | In progress |
+| [thermal-printer-support](implementation-plans/thermal-printer-support.plan.md) | Pending |
 
 ### Archived (Completed)
 
-| Plan |
-|------|
-| [react-floating-seats-panel](implementation-plans/archive/react-floating-seats-panel.plan.md) |
-| [react-ticket-sale-reservation-flow](implementation-plans/archive/react-ticket-sale-reservation-flow.plan.md) |
-| [react-seat-map-integration](implementation-plans/archive/react-seat-map-integration.plan.md) |
-| [react-trip-creation-confirm-modal](implementation-plans/archive/react-trip-creation-confirm-modal.plan.md) |
+Located in [implementation-plans/archive/](implementation-plans/archive/). Includes: accessibility WCAG 2.2 AA, authentication improvement, auto cash register opening, codebase cleanup & hardcode audit, fix architecture leaks, frontend clean architecture, MVP phase 1, Nuxt → React migration, owner settlements redesign, package emission a11y/UI-UX, package flow office collections, package loading & bokeh overlay, packages manifest, react bookings page redesign, react bus creation with seats, react floating seats panel, react seat-map integration, react secretary dashboard redesign, react ticket details page, react ticket sale & reservation flow, react trip creation confirm modal, SRP refactoring, testing & architecture standardization, trip detail tabs optimization, UI component standardization, UI sidebar redesign, UI standardization.
 
 ## Project Configuration
 
