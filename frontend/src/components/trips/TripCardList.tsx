@@ -98,14 +98,14 @@ function TripRow({
     const floorLabel = busInfo.floors >= 2 ? '2 Pisos' : busInfo.floors === 1 ? '1 Piso' : null
 
     const containerClasses = trip
-        ? "border border-border rounded-lg px-4 py-3 hover:shadow-md transition-shadow bg-card"
+        ? "border border-border rounded-lg px-3 sm:px-4 py-3 hover:shadow-md transition-shadow bg-card"
         : isPast
-        ? "border border-dashed border-muted rounded-lg px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed"
-        : "border-2 border-dashed border-blue-200 rounded-lg px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
+        ? "border border-dashed border-muted rounded-lg px-3 sm:px-4 py-3 bg-muted/20 opacity-60 cursor-not-allowed"
+        : "border-2 border-dashed border-blue-200 rounded-lg px-3 sm:px-4 py-3 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group"
 
     const timeClasses = trip
-        ? "text-2xl font-bold text-brand-navy"
-        : "text-2xl font-bold text-muted-foreground/30"
+        ? "text-xl sm:text-2xl font-bold text-brand-navy"
+        : "text-xl sm:text-2xl font-bold text-muted-foreground/30"
 
     const dividerClasses = trip ? "bg-border" : isPast ? "bg-muted" : "bg-blue-100"
 
@@ -123,33 +123,33 @@ function TripRow({
             }}
         >
             {/* Top row: Content Alignment */}
-            <div className="flex items-center h-10">
-                <span className={`flex-shrink-0 min-w-[5rem] ${timeClasses}`}>{slot.time}</span>
-                
-                <div className={`h-8 w-px mx-3 flex-shrink-0 ${dividerClasses}`} />
-                
-                <div className="flex-1 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 min-h-10">
+                <span className={`flex-shrink-0 min-w-[3.5rem] sm:min-w-[5rem] ${timeClasses}`}>{slot.time}</span>
+
+                <div className={`hidden sm:block h-8 w-px flex-shrink-0 ${dividerClasses}`} />
+
+                <div className="flex-1 min-w-0 flex items-center justify-between gap-2 sm:gap-3">
                     {/* Bus Info */}
-                    <div className="flex items-center gap-3">
-                        <div className={!trip ? "opacity-40" : ""}>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className={`min-w-0 ${!trip ? "opacity-40" : ""}`}>
                             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bus No.</p>
-                            <p className="text-sm font-bold text-foreground leading-tight">{busInfo.plate}</p>
+                            <p className="text-sm font-bold text-foreground leading-tight truncate">{busInfo.plate}</p>
                         </div>
                         {floorLabel && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-medium whitespace-nowrap">
+                            <Badge variant="outline" className="hidden sm:inline-flex text-[10px] h-4 px-1.5 font-medium whitespace-nowrap">
                                 {floorLabel}
                             </Badge>
                         )}
                     </div>
 
                     {/* Occupancy Info */}
-                    <div className={`text-right ${!trip ? "opacity-30" : ""}`}>
+                    <div className={`text-right min-w-0 ${!trip ? "opacity-30" : ""}`}>
                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ocupación</p>
-                        <p className="text-sm font-bold leading-tight">
+                        <p className="text-sm font-bold leading-tight whitespace-nowrap">
                             {trip ? (
                                 <>
                                     <span className={occ.color}>{String(occ.occupied).padStart(2, '0')}/{occ.total}</span>
-                                    <span className={`ml-1.5 text-[10px] uppercase ${occ.color}`}>{occ.label}</span>
+                                    <span className={`ml-1.5 text-[10px] uppercase ${occ.color} hidden sm:inline`}>{occ.label}</span>
                                 </>
                             ) : (
                                 <span className="text-muted-foreground">--/--</span>
@@ -158,10 +158,10 @@ function TripRow({
                     </div>
                 </div>
 
-                <div className={`h-8 w-px mx-3 flex-shrink-0 ${dividerClasses}`} />
+                <div className={`hidden sm:block h-8 w-px flex-shrink-0 ${dividerClasses}`} />
 
                 {/* Actions */}
-                <div className="flex items-center justify-end min-w-[90px] flex-shrink-0">
+                <div className="flex items-center justify-end min-w-[72px] sm:min-w-[90px] flex-shrink-0">
                     {!trip ? (
                         isPast ? (
                             <span className="text-[10px] italic text-muted-foreground/40 leading-tight text-right">
@@ -205,27 +205,31 @@ function TripRow({
             </div>
 
             {/* Bottom row: Meta Info */}
-            <div className={`flex items-center gap-1.5 mt-2 pt-2 border-t text-xs ${
+            <div className={`flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-2 pt-2 border-t text-xs ${
                 trip ? "border-border/50 text-muted-foreground" : "border-blue-100/30 text-muted-foreground/30"
             }`}>
-                <User className="h-3 w-3 opacity-70" />
-                <span>
-                    {trip ? "Chofer: " : ""}
-                    <span className={`${trip ? "text-foreground font-medium" : "italic"}`}>
-                        {driverName}
+                <div className="flex items-center gap-1.5 min-w-0 max-w-full">
+                    <User className="h-3 w-3 opacity-70 flex-shrink-0" />
+                    <span className="truncate">
+                        {trip ? "Chofer: " : ""}
+                        <span className={`${trip ? "text-foreground font-medium" : "italic"}`}>
+                            {driverName}
+                        </span>
                     </span>
-                </span>
+                </div>
                 {trip && assistantName && (
                     <>
-                        <span className="text-border/60">|</span>
-                        <Users className="h-3 w-3 opacity-70" />
-                        <span>
-                            Asist: <span className="text-foreground font-medium">{assistantName}</span>
-                        </span>
+                        <span className="text-border/60 hidden sm:inline">|</span>
+                        <div className="flex items-center gap-1.5 min-w-0 max-w-full">
+                            <Users className="h-3 w-3 opacity-70 flex-shrink-0" />
+                            <span className="truncate">
+                                Asist: <span className="text-foreground font-medium">{assistantName}</span>
+                            </span>
+                        </div>
                     </>
                 )}
                 {trip && (
-                    <div className="flex items-center gap-1.5 opacity-50 ml-auto">
+                    <div className="flex items-center gap-1.5 opacity-50 ml-auto flex-shrink-0">
                         <CalendarClock className="h-3 w-3" />
                         <span className="text-[10px]">ID: {tripId}</span>
                     </div>
@@ -247,7 +251,7 @@ export default function TripCardList({
 
     if (loading) {
         return (
-            <div role="status" aria-busy="true" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div role="status" aria-busy="true" className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
                 <span className="sr-only">Cargando viajes...</span>
                 <div aria-hidden="true">
                 {[1, 2].map((n) => (
@@ -288,18 +292,18 @@ export default function TripCardList({
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
             {scheduleBoard.map((group) => (
                 <div key={group.route.id} className="space-y-2">
                     {/* Route Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-base font-bold text-foreground">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                            <h2 className="text-sm sm:text-base lg:text-lg font-bold text-foreground break-words">
                                 {group.route.origin} <span className="text-muted-foreground mx-1">→</span> {group.route.destination}
                             </h2>
-                            <p className="text-xs text-muted-foreground">Salidas desde {group.route.origin}</p>
+                            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Salidas desde {group.route.origin}</p>
                         </div>
-                        <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider border-brand-navy text-brand-navy">
+                        <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider border-brand-navy text-brand-navy whitespace-nowrap flex-shrink-0">
                             {group.slots.length} Horarios
                         </Badge>
                     </div>

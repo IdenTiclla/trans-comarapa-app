@@ -138,19 +138,19 @@ export function Component() {
   const isDayAfter = selectedDate === getDayAfterStr()
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full max-w-screen-2xl mx-auto space-y-4 sm:space-y-5 lg:space-y-6">
       {/* Header + Date Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Tablero de Viajes Diarios</h1>
-          
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground break-words">Tablero de Viajes Diarios</h1>
+
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 mt-0.5 h-auto p-0 text-sm text-muted-foreground hover:text-primary hover:bg-transparent cursor-pointer group">
-                <Calendar className="h-3.5 w-3.5" />
-                <span className="font-medium group-hover:underline underline-offset-4 decoration-primary/30">{formattedDate}</span>
-                <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                <span className="text-border mx-1">|</span>
+              <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 mt-0.5 h-auto p-0 text-xs sm:text-sm text-muted-foreground hover:text-primary hover:bg-transparent cursor-pointer group flex-wrap max-w-full">
+                <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="font-medium group-hover:underline underline-offset-4 decoration-primary/30 break-words text-left">{formattedDate}</span>
+                <ChevronDown className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                <span className="text-border mx-1 hidden sm:inline">|</span>
                 <span className="text-primary font-medium">{boardStats.activeRoutes} Rutas Activas</span>
               </Button>
             </PopoverTrigger>
@@ -237,33 +237,33 @@ export function Component() {
 
       {/* Footer Stats Bar */}
       {!isLoading && scheduleBoard.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t">
-          <div className="flex items-center gap-6">
-            <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Total Asientos</p>
-              <p className="text-xl font-bold text-foreground">{boardStats.totalSeats}</p>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 pt-3 border-t">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 min-w-0">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">Total Asientos</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-foreground">{boardStats.totalSeats}</p>
             </div>
-            <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Boletos Vendidos</p>
-              <p className="text-xl font-bold text-foreground">{boardStats.soldTickets}</p>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">Boletos Vendidos</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-foreground">{boardStats.soldTickets}</p>
             </div>
-            <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ingresos Estimados</p>
-              <p className="text-xl font-bold text-primary">Bs. {boardStats.estimatedRevenue.toLocaleString(LOCALE)}</p>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">Ingresos Estimados</p>
+              <p className="text-base sm:text-lg lg:text-xl font-bold text-primary break-all">Bs. {boardStats.estimatedRevenue.toLocaleString(LOCALE)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => window.print()}>
-              <Printer className="h-3.5 w-3.5" />
-              Imprimir Manifiesto
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" className="gap-1.5 h-8 flex-1 sm:flex-initial min-w-0" onClick={() => window.print()}>
+              <Printer className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">Imprimir Manifiesto</span>
             </Button>
             <Button
               size="sm"
-              className="gap-1.5 h-8 bg-orange-900 hover:bg-orange-800"
+              className="gap-1.5 h-8 bg-orange-900 hover:bg-orange-800 flex-1 sm:flex-initial min-w-0"
               onClick={() => loadData(selectedDate)}
             >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Sincronizar Datos
+              <RefreshCw className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">Sincronizar Datos</span>
             </Button>
           </div>
         </div>
