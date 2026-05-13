@@ -25,7 +25,7 @@ const StakeholderCard = ({ title, name, subtitle, icon, colorClass, bgColorClass
     .substring(0, 2)
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-300 min-w-0">
       <div className="flex items-center justify-between mb-6">
         <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full", bgColorClass, colorClass)}>
           {title}
@@ -39,21 +39,21 @@ const StakeholderCard = ({ title, name, subtitle, icon, colorClass, bgColorClass
         <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shadow-inner", bgColorClass)}>
           {initials}
         </div>
-        <div>
-          <h3 className="text-lg font-extrabold text-gray-900 leading-tight leading-none mb-1">{name}</h3>
-          {subtitle && <p className="text-xs text-gray-500 font-medium">{subtitle}</p>}
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight mb-1 break-words">{name}</h3>
+          {subtitle && <p className="text-xs text-gray-500 font-medium truncate">{subtitle}</p>}
         </div>
       </div>
 
       {details && details.length > 0 && (
         <div className="mt-auto pt-6 border-t border-gray-50 flex flex-col gap-3">
           {details.map((detail, idx) => (
-            <div key={idx} className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-400">
-                {detail.icon || <Fingerprint className="w-3.5 h-3.5" />}
-                <span className="text-[10px] uppercase font-bold tracking-wider">{detail.label}</span>
+            <div key={idx} className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-gray-400 min-w-0">
+                {detail.icon || <Fingerprint className="w-3.5 h-3.5 shrink-0" />}
+                <span className="text-[10px] uppercase font-bold tracking-wider truncate">{detail.label}</span>
               </div>
-              <span className="text-xs font-bold text-gray-700">{detail.value}</span>
+              <span className="text-xs font-bold text-gray-700 truncate text-right">{detail.value}</span>
             </div>
           ))}
         </div>
@@ -80,7 +80,7 @@ export default function PackageStakeholders({ sender, recipient, secretary, send
     : recipientName || 'Desconocido'
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6">
       <StakeholderCard
         title="Remitente"
         name={finalSenderName}

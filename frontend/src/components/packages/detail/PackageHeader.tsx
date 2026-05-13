@@ -14,10 +14,10 @@ interface Props {
 
 export function PackageHeader({ pkg, onEdit, onShowReceipt, onMarkReceived, onDeliver }: Props) {
   return (
-    <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-      <div>
-        <p className="text-xs font-bold tracking-widest text-brand-crimson uppercase mb-2">Resumen de Encomienda</p>
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-2">{pkg.tracking_number}</h1>
+    <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-4">
+      <div className="min-w-0">
+        <p className="text-[11px] sm:text-xs font-bold tracking-widest text-brand-crimson uppercase mb-1 sm:mb-2">Resumen de Encomienda</p>
+        <h1 className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-extrabold text-gray-900 mb-2 break-all">{pkg.tracking_number}</h1>
         <p className="text-gray-600 text-lg flex items-center gap-2">
           <span className={cn(
             'px-2 py-0.5 rounded text-xs font-bold uppercase',

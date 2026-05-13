@@ -60,6 +60,7 @@ npx tsc --noEmit  # must pass
 - **React:** TypeScript strict (no `any`), functional components, Redux Toolkit, Tailwind + shadcn/ui, sonner for toasts
 - **API:** REST conventions, all endpoints `/api/v1/` prefix, React uses `apiFetch` from `lib/api.ts`
 - **UI / a11y / file-size / typing (MANDATORY for any `frontend/` work):** [docs/guides/ui-conventions.md](docs/guides/ui-conventions.md) — rules enforced by ESLint, CI blocks violations
+- **Fluid responsive design (MANDATORY for any layout work):** [docs/guides/fluid-responsive-design.md](docs/guides/fluid-responsive-design.md) — debe verse correcto en cualquier ancho 320–1920
 - **Naming conventions:** [docs/guides/naming-conventions.md](docs/guides/naming-conventions.md)
 - **Adding features:** [docs/guides/adding-features.md](docs/guides/adding-features.md)
 

@@ -218,3 +218,4 @@ Three concrete rules. If you hit any of them, **stop and extract**:
 - ESLint config: `frontend/eslint.config.js`
 - Tokens: `frontend/src/styles/globals.css`
 - Print helper: `frontend/src/lib/print.ts`
+- **Fluid responsive design:** [`fluid-responsive-design.md`](./fluid-responsive-design.md) — obligatorio para cualquier layout/página

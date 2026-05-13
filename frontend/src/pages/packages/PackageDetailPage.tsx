@@ -48,7 +48,7 @@ export function Component() {
 
   if (loading && !currentPackage) {
     return (
-      <div className="max-w-screen-xl mx-auto px-4 lg:px-8 py-8 space-y-8">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-4 sm:py-6 lg:py-8 space-y-6 sm:space-y-8">
         <Skeleton className="h-[200px] w-full" />
         <Skeleton className="h-[500px] w-full" />
       </div>
@@ -70,7 +70,7 @@ export function Component() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-full mx-auto px-4 lg:px-12 py-8">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 py-4 sm:py-6 lg:py-8">
         <PackageHeader
           pkg={currentPackage}
           onEdit={() => setShowEditModal(true)}
@@ -79,8 +79,8 @@ export function Component() {
           onDeliver={() => setShowDeliveryModal(true)}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 flex flex-col gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+          <div className="xl:col-span-8 flex flex-col gap-4 sm:gap-6 min-w-0">
             <RouteDetails originName={originName} destinationName={destinationName} />
             <PackageStakeholders
               sender={currentPackage.sender}
@@ -99,7 +99,7 @@ export function Component() {
             <StateHistoryTable pkg={currentPackage} originName={originName} destinationName={destinationName} />
           </div>
 
-          <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="xl:col-span-4 flex flex-col gap-4 sm:gap-6 min-w-0">
             <PaymentSummary pkg={currentPackage} />
             <AssignedTripCard pkg={currentPackage} />
           </div>

@@ -25,18 +25,18 @@ export function MapOverview({ pkg }: Props) {
     : null
   return (
     <div
-      className="relative rounded-xl overflow-hidden shadow-sm h-[400px] bg-gray-900 bg-cover bg-center"
+      className="relative rounded-xl overflow-hidden shadow-sm h-[180px] sm:h-[240px] md:h-[300px] lg:h-[400px] bg-gray-900 bg-cover bg-center"
       style={{ backgroundImage: 'url(/dark_city_map.png)' }}
     >
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent" />
-      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-extrabold border border-white/20 text-brand-blue shadow-sm flex items-center gap-2 uppercase tracking-wide">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] font-extrabold border border-white/20 text-brand-blue shadow-sm flex items-center gap-2 uppercase tracking-wide">
         Rastreo Activo
       </div>
-      <div className="absolute bottom-6 left-6 text-white z-10 w-full">
+      <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 text-white z-10">
         <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Estado actual</p>
-        <p className="text-xl font-medium">{text}</p>
+        <p className="text-base sm:text-lg lg:text-xl font-medium break-words">{text}</p>
         {receptionDate && (
-          <p className="text-xs text-gray-300 mt-1">Recibido: {formatDateTime(receptionDate)}</p>
+          <p className="text-xs text-gray-300 mt-1 break-words">Recibido: {formatDateTime(receptionDate)}</p>
         )}
       </div>
     </div>
