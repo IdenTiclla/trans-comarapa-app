@@ -62,6 +62,14 @@ export const packageService = {
         return apiFetch(`${BASE_PATH}/by-trip/${tripId}`)
     },
 
+    getBySender(clientId: number) {
+        return apiFetch(`${BASE_PATH}/by-sender/${clientId}`)
+    },
+
+    getByRecipient(clientId: number) {
+        return apiFetch(`${BASE_PATH}/by-recipient/${clientId}`)
+    },
+
     search(term: string) {
         return apiFetch(`${BASE_PATH}/search`, { params: { q: term } })
     },

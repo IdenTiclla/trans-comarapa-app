@@ -44,6 +44,9 @@ export const ROUTES = {
   CLIENTS: '/clients',
   clientEdit: (id: number | string) => `/clients/${id}/edit`,
 
+  MY_TICKETS: '/my-tickets',
+  MY_PACKAGES: '/my-packages',
+
   REPORTS: '/reports',
   REPORT_PACKAGES: '/reports/packages',
   SALES: '/sales',
