@@ -27,6 +27,10 @@ export const ticketService = {
         return apiFetch(`${RESOURCE_URL}/trip/${tripId}`)
     },
 
+    getByClient(clientId: number) {
+        return apiFetch(`${RESOURCE_URL}/client/${clientId}`)
+    },
+
     search(term: string, limit: number = 20) {
         return apiFetch(`${RESOURCE_URL}/search`, { params: { term, limit } })
     },

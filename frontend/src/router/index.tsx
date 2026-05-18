@@ -75,24 +75,37 @@ export const router = createBrowserRouter([
             ],
           },
 
-          // Trips
-          { path: '/trips', lazy: () => import('@/pages/trips/TripsIndexPage') },
-{ path: '/trips/:id', lazy: () => import('@/pages/trips/TripDetailPage') },
-          { path: '/trips/:id/edit', lazy: () => import('@/pages/trips/TripEditPage') },
+          // Operaciones — solo staff (no clientes)
+          {
+            element: <RoleGuardOutlet roles={['admin', 'secretary', 'driver', 'assistant']} />,
+            children: [
+              { path: '/trips', lazy: () => import('@/pages/trips/TripsIndexPage') },
+              { path: '/trips/:id', lazy: () => import('@/pages/trips/TripDetailPage') },
+              { path: '/trips/:id/edit', lazy: () => import('@/pages/trips/TripEditPage') },
 
-          // Packages
-          { path: '/packages', lazy: () => import('@/pages/packages/PackagesIndexPage') },
-          { path: '/packages/pending-collections', lazy: () => import('@/pages/packages/PendingCollectionsPage') },
-          { path: '/packages/new', lazy: () => import('@/pages/packages/PackageNewPage') },
+              { path: '/packages', lazy: () => import('@/pages/packages/PackagesIndexPage') },
+              { path: '/packages/pending-collections', lazy: () => import('@/pages/packages/PendingCollectionsPage') },
+              { path: '/packages/new', lazy: () => import('@/pages/packages/PackageNewPage') },
+
+              { path: '/tickets', lazy: () => import('@/pages/tickets/TicketsIndexPage') },
+              { path: '/tickets/confirmation', lazy: () => import('@/pages/tickets/TicketConfirmationPage') },
+
+              { path: '/clients', lazy: () => import('@/pages/clients/ClientsIndexPage') },
+            ],
+          },
+
+          // Detalle de boleto/encomienda — accesible a todos (backend valida pertenencia)
+          { path: '/tickets/:id', lazy: () => import('@/pages/tickets/TicketDetailPage') },
           { path: '/packages/:id', lazy: () => import('@/pages/packages/PackageDetailPage') },
 
-          // Tickets
-          { path: '/tickets/confirmation', lazy: () => import('@/pages/tickets/TicketConfirmationPage') },
-          { path: '/tickets/:id', lazy: () => import('@/pages/tickets/TicketDetailPage') },
-
-          // Clients & Bookings
-          { path: '/clients', lazy: () => import('@/pages/clients/ClientsIndexPage') },
-          { path: '/tickets', lazy: () => import('@/pages/tickets/TicketsIndexPage') },
+          // Vistas del cliente — solo rol client
+          {
+            element: <RoleGuardOutlet roles={['client']} />,
+            children: [
+              { path: '/my-tickets', lazy: () => import('@/pages/my/MyTicketsPage') },
+              { path: '/my-packages', lazy: () => import('@/pages/my/MyPackagesPage') },
+            ],
+          },
         ],
       },
     ],

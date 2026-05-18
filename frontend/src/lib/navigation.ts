@@ -122,10 +122,10 @@ const CLIENT_NAV: NavGroup[] = [
     ],
   },
   {
-    title: 'Mis Viajes',
+    title: 'Mis Movimientos',
     items: [
-      { to: ROUTES.TRIPS, label: 'Viajes', icon: MapPin },
-      { to: ROUTES.PACKAGES, label: 'Encomiendas', icon: Package },
+      { to: ROUTES.MY_TICKETS, label: 'Mis Boletos', icon: Ticket },
+      { to: ROUTES.MY_PACKAGES, label: 'Mis Encomiendas', icon: Package },
     ],
   },
 ]
